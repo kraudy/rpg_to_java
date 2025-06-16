@@ -18,11 +18,15 @@ No alloc, malloc and free. `new` allocates memory for objects and when the objec
 
 > A reference reffers to an allocated space.
 
-Does this means that even local variables that sould be freed when the function stack gets pop up also need to be deallocated by the garbage collector?
-
 Methods are loaded into the stack at execution and locar variables are liberated after finishing. Grabage collection is mostly for the heap data, similar to the `free` operation in **C**. In Java, this means that if a variable in the heap is only refenced by the executing method, it gets freed after execution finishes. Which is nice.
 
-No `structures` or `unions`, only classes, which makes sense.
+## Object oriented programming
+
+No `structures` or `unions`, only `classes`, which makes sense.
+
+Objects in object oriented programming langauges like java are made possible thanks to the dynamic nature of the heap. The stack stores a pointer to the object in the heap.
+
+Functionla languages like `Lisp` or `Javascript` take this dynamic nature of the stack and leverage upon it to provide their `higher abstractions` natures. Python also uses the heap to alloctes its objects.
 
 
 
