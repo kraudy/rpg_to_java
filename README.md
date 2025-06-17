@@ -34,6 +34,20 @@ The class loader subsystem is responsible for: **loading**, **linking** and **in
 
 TODO: Ask about JAR files and CLASPATHS
 
+`Static` means that the method or variable is part of the class bytecode stored at the **metadata space** and not part of any specific class instance where object are stored in the heap.
+
+`Non Static` methods require an instance and operate on the instance context data wich is usually in the heap.
+
+`javac` generates a compiled bytecode .class file. If this class references others `.class` files, they use the `classpath`, default is current directory.
+
+Doing `java HeapStackExample` runs the `main` method of the `HeapStackExample` class in the `HeapStackExample.class` file.
+The **JVM** loads the `.class` file into memory, creates the `Class` object `HeapStackExample` in the **metadata space** and calls the `main` method.
+
+Seems like the **JVM** works purely on the concept of Classes.
+
+This idea of class file is the base of the java modular object oriented ecosystem.
+
+`java -cp` is used to explicity define the `classpath`
 
 
 ## Hello World
@@ -49,6 +63,12 @@ Call is
 
 ```js
 Java HelloWorld
+```
+
+HeapStackExample
+```js
+javac HeapStackExample.java         // Compile class file 
+java -cp ./ HeapStackExample.class  // Execute with curdir as classpath
 ```
 
 ## xx
