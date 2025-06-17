@@ -47,7 +47,30 @@ Seems like the **JVM** works purely on the concept of Classes.
 
 This idea of class file is the base of the java modular object oriented ecosystem.
 
-`java -cp` is used to explicity define the `classpath`
+`java -cp` is used to explicity define the `classpath`. If not set the system uses the current dir or the `CLASSPATH` environment variable (if set).
+
+A `Jar` file is a compressed file of `.class` files, images, configurations, and metadata.
+```js
+jar cvf myapp.jar HeapStackExample.class // Create myapp.jar with verbose option
+```
+
+A `Jar` file can also be included in the `classpath` to provide classes.
+```js
+java -cp ./myapp.jar HeapStackExample
+java -cp ./myapp.jar:./lib.jar HeapStackExample // Multiple jar separated by :
+```
+
+To run the `jar` file it nees a `MANIFEST.MF` with a `Main-Class` similar to a **PEP**
+
+`MANIFEST.MF` Example
+```js
+Main-Class: HeapStackExample
+Class-Path: lib.jar otherlib.jar
+```
+Call it.
+```js
+java -jar myapp.jar
+```
 
 
 ## Hello World
