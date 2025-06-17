@@ -28,6 +28,12 @@ Objects in object oriented programming langauges like java are made possible tha
 
 Functionla languages like `Lisp` or `Javascript` take this dynamic nature of the stack and leverage upon it to provide their `higher abstractions` natures. Python also uses the heap to alloctes its objects.
 
+In Java, classes and methods are stored in the meta space or class data storage of the JVM. Instances of the classes are created in the heap and storage for method's local variables are alloated in the frame stack.
+
+The class loader subsystem is responsible for: **loading**, **linking** and **initialization**
+
+TODO: Ask about JAR files and CLASPATHS
+
 
 
 ## Hello World
