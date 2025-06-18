@@ -1,8 +1,8 @@
 public class Construct{
 
   public static void main(String[] args){
-    Point a = new Point(3.0, 5.0);
-    System.out.println(a.x);
+    Recatangle rect = new Recatangle();
+    System.out.println(rect.lowerLeft.x);
   }
 
 }
@@ -21,5 +21,15 @@ class Point {
     this.y = y;
   }
 
+}
+
+class Recatangle {
+  public Point lowerLeft;
+  public Point upperRight;
+
+  Recatangle(){
+    lowerLeft   = new Point();
+    upperRight  = new Point();
+  }
 
 }
