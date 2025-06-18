@@ -78,7 +78,10 @@ No operation overloading, create a class with it's corresponding variables and m
 
 No more pointers since there are no more structures, arrays and strings, they are all objects. References are actually pointers under the hood with with safety guards.
 
-Java satisfies the needs of client-server and distributed sofware where **objects** can be passed around networks. 
+Java satisfies the needs of client-server and distributed sofware where **objects** can be passed around networks.
+
+An object's behavior is defined by its methods and the state by its variables
+A class defines how an object is initialized: data(state) and methods (behavior)
 
 ## Hello World
 
