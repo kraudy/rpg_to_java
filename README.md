@@ -72,6 +72,13 @@ Call it.
 java -jar myapp.jar
 ```
 
+There are not multiple inheritance, **Interfaces** give a set of methods and constants the one or more classes will implement.
+
+No operation overloading, create a class with it's corresponding variables and methods.
+
+No more pointers since there are no more structures, arrays and strings, they are all objects. References are actually pointers under the hood with with safety guards.
+
+Java satisfies the needs of client-server and distributed sofware where **objects** can be passed around networks. 
 
 ## Hello World
 
