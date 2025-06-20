@@ -83,6 +83,8 @@ Java satisfies the needs of client-server and distributed sofware where **object
 An object's behavior is defined by its methods and the state by its variables
 A class defines how an object is initialized: data(state) and methods (behavior)
 
+Access to the object data or state is defined by the access methods which defines how to interact with the object. This allows more control over the class.
+
 ## Hello World
 
 Deploy source files

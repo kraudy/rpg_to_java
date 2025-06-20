@@ -1,15 +1,16 @@
 public class Construct{
 
   public static void main(String[] args){
-    Recatangle rect = new Recatangle();
-    System.out.println(rect.lowerLeft.x);
+    Point a = new Point();
+    a.Set_x(10.0); 
+    a.Set_y(25.7);
   }
 
 }
 
 class Point {
-  private double x;
-  private double y;
+  protected double x;
+  protected double y;
 
   Point(){
     x = 0.0;
@@ -37,6 +38,20 @@ class Point {
     return y;
   }
 
+}
+
+class ThreePoint extends Point{
+  protected double z;
+  ThreePoint (){
+    x = 0.0;
+    y = 0.0;
+    z = 0.0;
+  }
+  ThreePoint (double x, double y, double z){
+    this.x = x;
+    this.y = y;
+    this.z = z;
+  }
 }
 
 class Recatangle {
