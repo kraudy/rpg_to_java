@@ -105,6 +105,18 @@ Classes are loades as required.
 
 In C++, adding methods to the super class requires all the inherited classes to be recompiled, this is not necessary in Java, as it automatically loads the new methods and variables into the inherited classes. The symbolic resolution of names is resolved as class are being linked and the layout of objects in memory is deffered at run time. After this, the Java interpreter goes at full speed. Updated classes with new methods and variables can be linked without affecting existing code. It just have to perform a name lookup. The run time object representation has the metadata to do this, it is not just a pointer.
 
+**Thread safe** means that the application can be executed by multiple concurrenct threads of execution. **synchronized** is the keyword to declare methods that can't run concurrently on the same object. The running method has to finish por the lock to free up. This means that the object state (variables) can be changed by only one method at the time.
+
+Java has a **JIT** compiler to translate bytecodes on the fly.
+
+OOP operates on Objects as their data, not directly on data structures like procedural languages. This is a really important idea. The astraction of the data allows the abstraction of the operations made on the data.
+
+# Dev Java
+
+The **JRE** is no longer distributed by the **OpenJDK** or **Oracle**
+
+J2EE, Java EE or Jakarta reffer to the Java Enterprise Edition. The Java EE (enterprise edition) differs from the JDK
+
 ## Hello World
 
 Deploy source files
