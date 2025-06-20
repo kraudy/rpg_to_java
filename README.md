@@ -95,6 +95,16 @@ A **Package** is just a colletion of classes and interfaces. They are usually st
 
 **Abstract** classes lets you define like a blueprint to be inherited by other classes and implement its **abstract methods**
 
+Java is created for the distributed world. Tha is why it compiles to an instruction set (similar to the **TIMI**) for a virtual machine (**JVM**)
+
+Java data types: byte, short, int, long, float, double and char. The Java compiler is written in Java and the run-time system in ANSI C.
+
+Quote of the day: *Programmers using "traditional" software development tools have become resigned to the artificial **edit-compile-link-load-throw-the-application-off-the-cliff-let-it-crash-and-start-all-over-again** style of current development practice.* Java is intended to catch bugs before the cliff.
+
+Classes are loades as required.
+
+In C++, adding methods to the super class requires all the inherited classes to be recompiled, this is not necessary in Java, as it automatically loads the new methods and variables into the inherited classes. The symbolic resolution of names is resolved as class are being linked and the layout of objects in memory is deffered at run time. After this, the Java interpreter goes at full speed. Updated classes with new methods and variables can be linked without affecting existing code. It just have to perform a name lookup. The run time object representation has the metadata to do this, it is not just a pointer.
+
 ## Hello World
 
 Deploy source files
