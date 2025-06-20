@@ -85,6 +85,16 @@ A class defines how an object is initialized: data(state) and methods (behavior)
 
 Access to the object data or state is defined by the access methods which defines how to interact with the object. This allows more control over the class.
 
+Since java implements singe inheritance, simliar classes can inheritance from the same super class with some tweaks, to keep them consistent and avoid multiple inheritance, **interfaces** are implemented. A class can implement multiple interfaces.
+
+An interface defines methods, it does not implement them, that is leave to the class.
+
+**Access control** defines how a class methods can be accessed by other classes: **private**, **proctected**, **public** and **friendly** (accesible within the same package)
+
+A **Package** is just a colletion of classes and interfaces. They are usually stored on different directories in the file system.
+
+**Abstract** classes lets you define like a blueprint to be inherited by other classes and implement its **abstract methods**
+
 ## Hello World
 
 Deploy source files
