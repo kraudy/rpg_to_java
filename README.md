@@ -117,6 +117,12 @@ The **JRE** is no longer distributed by the **OpenJDK** or **Oracle**
 
 J2EE, Java EE or Jakarta reffer to the Java Enterprise Edition. The Java EE (enterprise edition) differs from the JDK
 
+At this point i switched to Ubuntu since PUB400 is at JDK 8.
+
+Install Apache Commons Lang: `sudo apt-get install libcommons-lang3-java`
+
+Run it like `java -cp /usr/share/java/commons-lang3-3.11.jar ReferenceNonJDKClass.java`
+
 ## Hello World
 
 Deploy source files
