@@ -182,6 +182,32 @@ public class SomeStoredProcs {
 }
 ```
 
+
+```js
+// This does not works because java does not uses the IFS to locate the `.class`
+CREATE OR REPLACE PROCEDURE ROBKRAUDY2.SPJAVA ()
+EXTERNAL NAME '/home/ROBKRAUDY/builds/rpg_to_java/source/SpExample!returnTwoResultSets'
+PARAMETER STYLE DB2GENERAL
+RESULT SETS 2
+LANGUAGE JAVA;
+
+// ! naming like SpExample!returnTwoResultSets is supposed to work with RPG/CL programs.
+//
+CREATE OR REPLACE PROCEDURE ROBKRAUDY2.SPJAVA ()
+EXTERNAL NAME 'SpExample.returnTwoResultSets'
+PARAMETER STYLE DB2GENERAL
+RESULT SETS 2
+LANGUAGE JAVA;
+
+// Add ENVVAR to the job
+ADDENVVAR ENVVAR(CLASSPATH) VALUE('/home/ROBKRAUDY/builds/rpg_to_java/source:/QIBM/ProdData/Java400/db2java.zip') REPLACE(*YES)
+
+// Some useful commands
+go CMDENVVAR
+go CMDQSH
+go CMDLNK
+```
+
 ## xx
 
 ## xx
