@@ -144,7 +144,43 @@ javac HeapStackExample.java         // Compile class file
 java -cp ./ HeapStackExample.class  // Execute with curdir as classpath
 ```
 
-## xx
+## RPG and Java
+
+It is now possible to have one stored procedure that returns data in a result set that all languages can read:  RPG, Java, etc.
+
+JDBC connection
+```js
+Connection con = DriverManager.getConnection("jdbc:default:connection");
+Connection con = getConnection();
+```
+
+Java external procedure
+```js
+CREATE PROCEDURE SPWITHTWORESULTSETS (IN INTEGER, OUT VARCHAR(50))
+EXTERNAL NAME MyClass!myJavaStoredProcedure
+PARAMETER STYLE JAVA
+RESULT SETS 2
+LANGUAGE JAVA
+```
+
+This db2 Java procedure means that it could be called from an IWS end-point or maybe an RPG program.
+
+```js
+import java.sql.*;
+public class SomeStoredProcs {
+  public static void myJavaStoredProcedure(
+    int myInputInteger,
+    String[] myOutputString,
+    ResultSet[] myFirstResultSet, 
+    ResultSet[] mySecondResultSet) {
+    // SP implementation
+    ...
+    myFirstResultSet[0] = stmt1.executeQuery(qry1); 
+    ...
+    mySecondResultSet[0] = stmt2.executeQuery(qry2); 
+  }
+}
+```
 
 ## xx
 
