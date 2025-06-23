@@ -211,6 +211,24 @@ go CMDLNK
 javac -cp /QIBM/ProdData/OS400/JT400/lib/jt400.jar SpExample.java
 ```
 
+JDBC example
+
+```js
+CallableStatement cs = conn.prepareCall("CALL ROBKRAUDY2.SPJAVA()");
+cs.execute();
+ResultSet rs = cs.getResultSet(); // First result set
+while (rs.next()) {
+    // Process first result set
+}
+if (cs.getMoreResults()) {
+    rs = cs.getResultSet(); // Second result set
+    while (rs.next()) {
+        // Process second result set
+    }
+}
+
+```
+
 ## xx
 
 ## xx
