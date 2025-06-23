@@ -206,6 +206,9 @@ ADDENVVAR ENVVAR(CLASSPATH) VALUE('/home/ROBKRAUDY/builds/rpg_to_java/source:/QI
 go CMDENVVAR
 go CMDQSH
 go CMDLNK
+
+// Compilation
+javac -cp /QIBM/ProdData/OS400/JT400/lib/jt400.jar SpExample.java
 ```
 
 ## xx
