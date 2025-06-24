@@ -229,6 +229,12 @@ if (cs.getMoreResults()) {
 
 ```
 
+SLQJ
+
+```js
+sqlj DB2SQLJCusInCity2.sqlj
+```
+
 ## xx
 
 ## xx
