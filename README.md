@@ -242,7 +242,25 @@ javac DB2SQLJCusInCity2.java
 ls /QIBM/ProdData/OS400/Java400/ext
 ```
 
-The creted functions should be at `/QIBM/UserData/OS400/SQLLib/Function` which may be a problem since we don't have access.
+The creted functions should be at `/QIBM/UserData/OS400/SQLLib/Function` which may be a problem since we don't have access. All Java stored procedure classes must reside in the /QIBM/UserData/OS400/SQLLib/Function directory.
+
+Created procedures are stored in SYSROUTINES and SYSPARMS tables.
+
+`CRTJVAPGM` can be used to created optimized java programs with native IBM i instructions.
+
+```js
+CRTJVAPGM CLSF(Db2CusInCity.class) OPTIMIZE(40)
+```
+
+Create Jar
+```js
+jar -cvf SpExample.jar SpExample*.class
+
+// Install at /QIBM/UserData/OS400/SQLLib/Function
+CALL SQLJ.INSTALL_JAR('file:/home/ROBKRAUDY/builds/rpg_to_java/source/SpExample.jar', 'MySpExample_jar', 0);
+// Remove from /QIBM/UserData/OS400/SQLLib/Function
+CALL SQLJ.REMOVE_JAR('MySpExample_jar', 0)
+```
 
 
 | Parameter style | Database connection |  File that is required in the classpath |
@@ -253,5 +271,15 @@ The creted functions should be at `/QIBM/UserData/OS400/SQLLib/Function` which m
 | DB2GENERAL   | SQLJ | db2_classes.jar, db2routines_classes.jar, translator.zip, and runtime.zip |
 
 ## xx
+
+Java SP example
+
+```js
+CREATE PROCEDURE DB2SQLJCUSINCITY(IN S CHAR(20), OUT I INTEGER)
+LANGUAGE JAVA 
+PARAMETER STYLE DB2GENERAL 
+NOT FENCED
+EXTERNAL NAME 'DB2SQLJCUSINCITY.DB2SQLJCUSINCITY'; 
+```
 
 ## xx
