@@ -229,11 +229,28 @@ if (cs.getMoreResults()) {
 
 ```
 
-SLQJ
+SLQJ requires pre-compilation with `sqlj DB2SQLJCusInCity2.sqlj`. This creates a `.ser` file, 2 `.class` files and a `.class` file for each iterator.
 
 ```js
-sqlj DB2SQLJCusInCity2.sqlj
+
+// Compilation
+javac DB2SQLJCusInCity2.java
 ```
+
+```js
+// Location of the classes
+ls /QIBM/ProdData/OS400/Java400/ext
+```
+
+The creted functions should be at `/QIBM/UserData/OS400/SQLLib/Function` which may be a problem since we don't have access.
+
+
+| Parameter style | Database connection |  File that is required in the classpath |
+|----------|----------|----------|
+| JAVA    | JDBC | db2_classes.jar |
+| JAVA    | SQLJ | db2_classes.jar, translator.zip, and runtime.zip |
+| DB2GENERAL   | JDBC | db2_classes.jar and db2routines_classes.jar |
+| DB2GENERAL   | SQLJ | db2_classes.jar, db2routines_classes.jar, translator.zip, and runtime.zip |
 
 ## xx
 
