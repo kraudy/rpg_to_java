@@ -247,7 +247,6 @@ The creted functions should be at `/QIBM/UserData/OS400/SQLLib/Function` which m
 Created procedures are stored in SYSROUTINES and SYSPARMS tables.
 
 `CRTJVAPGM` can be used to created optimized java programs with native IBM i instructions.
-
 ```js
 CRTJVAPGM CLSF(Db2CusInCity.class) OPTIMIZE(40)
 ```
@@ -257,9 +256,31 @@ Create Jar
 jar -cvf SpExample.jar SpExample*.class
 
 // Install at /QIBM/UserData/OS400/SQLLib/Function
+// jar-url, jar-id           
 CALL SQLJ.INSTALL_JAR('file:/home/ROBKRAUDY/builds/rpg_to_java/source/SpExample.jar', 'MySpExample_jar', 0);
 // Remove from /QIBM/UserData/OS400/SQLLib/Function
 CALL SQLJ.REMOVE_JAR('MySpExample_jar', 0)
+
+CALL SQLJ.REPLACE_JAR('file:/home/ROBKRAUDY/builds/rpg_to_java/source/SpExample.jar', 'MySpExample_jar')
+
+CALL SQLJ.UPDATEJARINFO('MySpExample_jar', ‘mypackage.myclass’, 'file:/home/ROBKRAUDY/builds/rpg_to_java/source/SpExample.jar')
+
+CALL SQLJ.RECOVERJAR('MySpExample_jar')
+```
+
+The install command creates `/QIBM/UserData/OS400/SQLLib/Function/jar/schema/MySpExample_jar.jar` where `schema` is the user profile.
+
+## Java Debug
+
+```js
+// Compile the class with debug info
+javac -g MyClass.java
+// Find job from acs
+WRKOBJLCK OBJ(QSYS/ROBKRAUDY) OBJTYPE(*USRPRF)
+// Start srvjob
+STRSRVJOB JOB(076853/QUSER/QZDASOINIT)
+// You can debug it normally
+STRDBG CLASS(myClass)
 ```
 
 
