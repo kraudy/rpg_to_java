@@ -146,6 +146,30 @@ java -cp ./ HeapStackExample.class  // Execute with curdir as classpath
 
 ## RPG and Java
 
+
+## Java Debug
+
+```js
+// Compile the class with debug info
+javac -g MyClass.java
+// Find job from acs
+WRKOBJLCK OBJ(QSYS/ROBKRAUDY) OBJTYPE(*USRPRF)
+// Start srvjob
+STRSRVJOB JOB(076853/QUSER/QZDASOINIT)
+// You can debug it normally
+STRDBG CLASS(myClass)
+```
+
+
+| Parameter style | Database connection |  File that is required in the classpath |
+|----------|----------|----------|
+| JAVA    | JDBC | db2_classes.jar |
+| JAVA    | SQLJ | db2_classes.jar, translator.zip, and runtime.zip |
+| DB2GENERAL   | JDBC | db2_classes.jar and db2routines_classes.jar |
+| DB2GENERAL   | SQLJ | db2_classes.jar, db2routines_classes.jar, translator.zip, and runtime.zip |
+
+# Java and Stored Procedures
+
 It is now possible to have one stored procedure that returns data in a result set that all languages can read:  RPG, Java, etc.
 
 JDBC connection
@@ -270,31 +294,8 @@ CALL SQLJ.RECOVERJAR('MySpExample_jar')
 
 The install command creates `/QIBM/UserData/OS400/SQLLib/Function/jar/schema/MySpExample_jar.jar` where `schema` is the user profile.
 
-## Java Debug
-
-```js
-// Compile the class with debug info
-javac -g MyClass.java
-// Find job from acs
-WRKOBJLCK OBJ(QSYS/ROBKRAUDY) OBJTYPE(*USRPRF)
-// Start srvjob
-STRSRVJOB JOB(076853/QUSER/QZDASOINIT)
-// You can debug it normally
-STRDBG CLASS(myClass)
-```
-
-
-| Parameter style | Database connection |  File that is required in the classpath |
-|----------|----------|----------|
-| JAVA    | JDBC | db2_classes.jar |
-| JAVA    | SQLJ | db2_classes.jar, translator.zip, and runtime.zip |
-| DB2GENERAL   | JDBC | db2_classes.jar and db2routines_classes.jar |
-| DB2GENERAL   | SQLJ | db2_classes.jar, db2routines_classes.jar, translator.zip, and runtime.zip |
-
-## xx
 
 Java SP example
-
 ```js
 CREATE PROCEDURE DB2SQLJCUSINCITY(IN S CHAR(20), OUT I INTEGER)
 LANGUAGE JAVA 
