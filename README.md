@@ -4,6 +4,8 @@ Learning java as an rpgle developer
 
 ## Notes
 
+Java was intended to create programs as a collection of objects interacting with each other through well defined interfaces.
+
 Java was intended to keep the OOP independent of the hardware. That means run everywhere which is something needed for multiple OS where the sofware is dependent on the hardware. 
 
 This is not a problem on the IBM I since everything compiled is independent from the specific arch.
@@ -144,8 +146,23 @@ javac HeapStackExample.java         // Compile class file
 java -cp ./ HeapStackExample.class  // Execute with curdir as classpath
 ```
 
-## RPG and Java
+## Java and RPG
 
+
+## Java and IBM I
+
+- Database access
+- work with IFS Stream files
+- Call programs (PCML)
+- Execute non-interactive CL commands
+- Work with data queues
+- Work with out queues and spool files
+- Access job and job logs.
+- Use user spaces and data areas.
+
+A new set of instructions were created for the **TIMI** to implement the **JVM**. The actual Java and JDK were implemented above. This was the original but had some compatibility problems.
+
+Now, IBM Technology for Java is implemented on **PASE**
 
 ## Java Debug
 
