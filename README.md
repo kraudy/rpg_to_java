@@ -162,7 +162,18 @@ java -cp ./ HeapStackExample.class  // Execute with curdir as classpath
 
 A new set of instructions were created for the **TIMI** to implement the **JVM**. The actual Java and JDK were implemented above. This was the original but had some compatibility problems.
 
-Now, IBM Technology for Java is implemented on **PASE**
+Now, IBM Technology for Java is implemented on **PASE** and optimized for the PowerPC
+
+Call java program
+```js
+RUNJVA
+ADDENVVAR // Add env var
+```
+
+Java location `/QOpenSys/QIBM/ProdData/JavaVM/...`
+Java home `t /QOpenSys/QIBM/ProdData/JavaVM/jdk.../64bit`
+
+Should you use java for as your modernization language? Well, it depends: Is it the correct tool for the job? Do you need to manage complex components and focus on reusability, scalability, and flexibility? Maybe you should use an object-oriented language then. A paradigm is a way of thinking.
 
 ## Java Debug
 
