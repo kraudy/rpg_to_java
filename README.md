@@ -175,6 +175,14 @@ Java home `t /QOpenSys/QIBM/ProdData/JavaVM/jdk.../64bit`
 
 Should you use java for as your modernization language? Well, it depends: Is it the correct tool for the job? Do you need to manage complex components and focus on reusability, scalability, and flexibility? Maybe you should use an object-oriented language then. A paradigm is a way of thinking.
 
+**Is Java hard to learn?** Well, if you are used to good ILE practices were you create small modules with one responsability then moving to OOP should be easy. Don't get stuck in framwork jungle, focuns on one at a time and learn the pattern (unerlying technique)
+
+In summary
+- Learning how to think in the OOP paradigm
+- Learning the Java grammar and syntax
+- Becoming familiar with the tools
+- Understanding the frameworks for web and database access
+
 ## Java Debug
 
 ```js
