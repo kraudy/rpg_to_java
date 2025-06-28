@@ -331,4 +331,16 @@ NOT FENCED
 EXTERNAL NAME 'DB2SQLJCUSINCITY.DB2SQLJCUSINCITY'; 
 ```
 
+## Web Serving
+
+The web server is the http server that handles the request and serves static data back to the browser. If dynamic content is needed, the the web server invokes the aplication server for that (could be through a CGI methodology)
+
+The Apache HTTP server is the foundation for the IBM HTTP Server (**IHS**). On IBM I, this is the only opiton for web serving.
+
 ## xx
+
+
+
+## xx
+
+
