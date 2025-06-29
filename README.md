@@ -359,11 +359,15 @@ Management GUI: http://hostname:2001/HTTPAdmin
 
 ## Tomcat
 
+Open source web server and servlet container. It is a pure Java application and can be quickly and easily started on IBM I
 
+## PHP: Zend Technologies
 
-## xx
+PHP is a Scripting language and can be more easly to learn for an RPG devoloper than the OOP nature of Java.
 
-## xx
+## Ruby: PowerRuby.com
+
+Another alternative, Ruby is an OOP language.
 
 ## xx
 
