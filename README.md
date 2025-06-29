@@ -341,12 +341,29 @@ The IBM Java Toolbox allows the application server to access ILE Objects and the
 
 > Some application server languages: Java, PHP, and Ruby.
 
-## WebSphere Application Server
 
-A Java based application server
+## WebSphere Application Server (WAS)
+
+A Java based application server that can scale from the most simple to the most complex environments.
+
+Management GUI: http://hostname:2001/HTTPAdmin
+
+## Integrated Web Application Server (IAS) 
+
+Java application server intended to be a minimal footprint.
+Based on Lightweight Infrastructure (LWI) and Open Services Gateway initiative (OSGi) technology.
+
+IAS is itended to run and develop simple web applications which can be migrated to a full WebSphere application server container.
+
+Management GUI: http://hostname:2001/HTTPAdmin
+
+## Tomcat
+
+
 
 ## xx
 
+## xx
 
 ## xx
 
