@@ -331,14 +331,21 @@ NOT FENCED
 EXTERNAL NAME 'DB2SQLJCUSINCITY.DB2SQLJCUSINCITY'; 
 ```
 
-## Web Serving
+# Web Serving
 
 The web server is the http server that handles the request and serves static data back to the browser. If dynamic content is needed, the the web server invokes the aplication server for that (could be through a CGI methodology)
 
 The Apache HTTP server is the foundation for the IBM HTTP Server (**IHS**). On IBM I, this is the only opiton for web serving.
 
-## xx
+The IBM Java Toolbox allows the application server to access ILE Objects and the DB. The application server acts as a middleware between back-end systems and the clients.
 
+> Some application server languages: Java, PHP, and Ruby.
+
+## WebSphere Application Server
+
+A Java based application server
+
+## xx
 
 
 ## xx
