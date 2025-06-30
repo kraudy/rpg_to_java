@@ -365,10 +365,33 @@ Open source web server and servlet container. It is a pure Java application and 
 
 PHP is a Scripting language and can be more easly to learn for an RPG devoloper than the OOP nature of Java.
 
-## Ruby: PowerRuby.com
+## Ruby
 
 Another alternative, Ruby is an OOP language.
 
-## xx
+# JTOpen
+
+```js
+mvn archetype:generate -DgroupId=com.example -DartifactId=AS400JDBCExample -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
+```
+
+# IBM Toolbox for Java
+
+The Jar should be under `/QIBM/ProdData/OS400/jt400/lib/`
+
+Compile it like this 
+
+```js
+// Compile
+javac -cp /QIBM/ProdData/OS400/jt400/lib/jt400.jar CmdCall.java
+// Run it!. Note the ":." at the end to include the cur dir
+java -cp /QIBM/ProdData/OS400/jt400/lib/jt400.jar:. CmdCall
+```
+
+##
+
+##
+
+##
 
 
