@@ -14,14 +14,20 @@ public class CmdCall {
       
       AS400Message[] messageList = command.getMessageList(); 
       for (int i=0; i<messageList.length; i++){
+        // Show messages
         System.out.println(messageList[i].getText());
+        // Load additional information
+        messageList[i].load();
+        // show help
+        System.out.println(messageList[i].getHelp());
       }
     }
     catch (Exception e){
+      System.out.println("Command " + command.getCommand() + " issued an exception!");
       e.printStackTrace();
     }
   
-    System.exit(0);
+    system.disconnectService(AS400.COMMAND);
   }
    
 }
