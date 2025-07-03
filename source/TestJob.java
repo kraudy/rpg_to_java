@@ -5,5 +5,7 @@ public class TestJob {
     AS400 system = new AS400();
     Job job = new Job(system);
 
+    System.out.println("Qualified name: " + job.getQualifiedJobName());
+
   }
 }
