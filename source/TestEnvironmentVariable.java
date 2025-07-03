@@ -7,7 +7,11 @@ public class TestEnvironmentVariable {
 
     try{
       System.out.println(path.getValue());
-    } catch (Exception e){
+    } catch (ObjectDoesNotExistException e) {
+      // Try adding the env var here with the cmd object
+      System.err.println("Environment variable 'PATH' does not exist on the system.");
+      e.printStackTrace();
+    }catch (Exception e){
       e.printStackTrace();
     }
 
