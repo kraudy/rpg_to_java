@@ -29,11 +29,7 @@ public class TestReadJson {
       if(!file.canRead()){
         System.out.println("Can't read from file: " + file.getPath());
       }
-    } catch(Exception e){
-      e.printStackTrace();
-    }    
 
-    try{
       // Establish JDBC connection using AS400JDBCConnection
       AS400JDBCDataSource dataSource = new AS400JDBCDataSource(sys);
       conn = dataSource.getConnection();
@@ -97,8 +93,14 @@ public class TestReadJson {
       System.out.println("File CCSID: " + file.getCCSID());
       System.out.println("Free Space: " + (file.getFreeSpace(sys)/1024) + " MG");
 
-    } catch (Exception e2){
-      e2.printStackTrace();
+    } catch (Exception e){
+      e.printStackTrace();
+    } finally {
+      try {
+        conn.close();
+      } catch (Exception closeEx) {
+        closeEx.printStackTrace();
+      }
     }
 
     // Check if the file exists exists()
