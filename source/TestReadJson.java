@@ -50,6 +50,19 @@ public class TestReadJson {
       // Example: Print the array or process it
       System.out.println("Parsed JSON Array: " + jsonArray.toString());
 
+      for(int i=0; i < jsonArray.length(); i++){
+        JSONObject employee = jsonArray.getJSONObject(i); 
+        System.out.println("Id: " + employee.getInt("id"));
+        System.out.println("First name: " + employee.getString("firstName"));
+        System.out.println("Last name: " + employee.getString("lastName"));
+        System.out.println("Department: " + employee.getString("department"));
+        System.out.println("Salary: " + employee.getInt("salary"));
+      }
+
+      // Additional file checks
+      System.out.println("File CCSID: " + file.getCCSID());
+      System.out.println("Free Space: " + (file.getFreeSpace(sys)/1024) + " MG");
+
     } catch (Exception e2){
       e2.printStackTrace();
     }
