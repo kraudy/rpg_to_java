@@ -396,6 +396,16 @@ javac -cp /QIBM/ProdData/OS400/jt400/lib/jt400.jar:/home/ROBKRAUDY/builds/rpg_to
 java -cp /QIBM/ProdData/OS400/jt400/lib/jt400.jar:/home/ROBKRAUDY/builds/rpg_to_java/source/json-20231013.jar:. TestReadJson
 ```
 
+Create logging table
+```sql
+CREATE TABLE ROBKRAUDY2.NOTIF_LOG (
+  LOG_TIMESTAMP TIMESTAMP NOT NULL,
+  LOG_ID INTEGER GENERATED ALWAYS AS IDENTITY (START WITH 1, INCREMENT BY 1, CYCLE),
+  LOG_MESSAGE VARCHAR(100) NOT NULL,
+  PRIMARY KEY (LOG_TIMESTAMP, LOG_ID)
+)
+```
+
 ##
 
 ##

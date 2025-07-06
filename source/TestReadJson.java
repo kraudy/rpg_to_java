@@ -3,6 +3,8 @@ import com.ibm.as400.access.*;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.util.Date;
 
 import org.json.JSONArray;
@@ -15,6 +17,8 @@ public class TestReadJson {
     //TODO: Add listener
     IFSFile file = new IFSFile(sys, "/home/ROBKRAUDY/notif.json");
     IFSFile logFile = new IFSFile(sys, "/home/ROBKRAUDY/log.txt"); // Log file path
+
+    Connection conn = null;
 
     try {
       if(!file.exists()){
@@ -30,6 +34,15 @@ public class TestReadJson {
     }    
 
     try{
+      // Establish JDBC connection using AS400JDBCConnection
+      AS400JDBCDataSource dataSource = new AS400JDBCDataSource(sys);
+      conn = dataSource.getConnection();
+      conn.setAutoCommit(true); // We don't want transaction control
+
+      // Prepare SQL statement for inserting logs
+      String sql = "INSERT INTO ROBKRAUDY2.NOTIF_LOG (LOG_TIMESTAMP, LOG_MESSAGE) VALUES (CURRENT_TIMESTAMP, ?)";
+      PreparedStatement pstmt = conn.prepareStatement(sql);
+      
       IFSFileInputStream fis = new IFSFileInputStream(file);
       BufferedReader reader = new BufferedReader(new InputStreamReader(fis));
 
@@ -67,10 +80,18 @@ public class TestReadJson {
         // Write to log file with timestamp
         String logEntry = new Date() + " - Processed: " + employee.getString("firstName") + " " + employee.getString("lastName");
         logWriter.println(logEntry);
+
+        // Insert into database
+        pstmt.setString(1, logEntry);
+        pstmt.executeUpdate();
       }
       // Close log file
       logWriter.close();
       fos.close();
+
+      // Close connection
+      pstmt.close();
+      conn.close();
 
       // Additional file checks
       System.out.println("File CCSID: " + file.getCCSID());
