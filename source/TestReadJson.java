@@ -2,6 +2,7 @@ import com.ibm.as400.access.*;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.util.Date;
 
 import org.json.JSONArray;
@@ -13,6 +14,7 @@ public class TestReadJson {
     AS400 sys = new AS400();
     //TODO: Add listener
     IFSFile file = new IFSFile(sys, "/home/ROBKRAUDY/notif.json");
+    IFSFile logFile = new IFSFile(sys, "/home/ROBKRAUDY/log.txt"); // Log file path
 
     try {
       if(!file.exists()){
@@ -47,7 +49,11 @@ public class TestReadJson {
       // Extract the "employees" array
       JSONArray jsonArray = jsonObject.getJSONArray("employees");
 
-      // Example: Print the array or process it
+      // Open log file for writing (append mode)
+      IFSFileOutputStream fos = new IFSFileOutputStream(logFile); // creates or replace
+      PrintWriter logWriter = new PrintWriter(fos);
+ 
+            // Example: Print the array or process it
       System.out.println("Parsed JSON Array: " + jsonArray.toString());
 
       for (Object obj : jsonArray) {
@@ -57,7 +63,14 @@ public class TestReadJson {
         System.out.println("Last name: " + employee.getString("lastName"));
         System.out.println("Department: " + employee.getString("department"));
         System.out.println("Salary: " + employee.getInt("salary"));
+
+        // Write to log file with timestamp
+        String logEntry = new Date() + " - Processed: " + employee.getString("firstName") + " " + employee.getString("lastName");
+        logWriter.println(logEntry);
       }
+      // Close log file
+      logWriter.close();
+      fos.close();
 
       // Additional file checks
       System.out.println("File CCSID: " + file.getCCSID());
