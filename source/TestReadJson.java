@@ -4,6 +4,9 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.Date;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 
 public class TestReadJson {
   public static void main(String... args){
@@ -28,13 +31,25 @@ public class TestReadJson {
       IFSFileInputStream fis = new IFSFileInputStream(file);
       BufferedReader reader = new BufferedReader(new InputStreamReader(fis));
 
-      // Read the entire file into a StringBuilder
+      /* 
+      So, we read the entire file into a StringBuilder, generate the json object
+      and extract the json array
+      */
       StringBuilder jsonContent = new StringBuilder();
       String line;
       while ((line = reader.readLine()) != null) {
           jsonContent.append(line);
       }
-      
+      reader.close();
+
+      // Parse JSON as JSONObject
+      JSONObject jsonObject = new JSONObject(jsonContent.toString());
+      // Extract the "employees" array
+      JSONArray jsonArray = jsonObject.getJSONArray("employees");
+
+      // Example: Print the array or process it
+      System.out.println("Parsed JSON Array: " + jsonArray.toString());
+
     } catch (Exception e2){
       e2.printStackTrace();
     }

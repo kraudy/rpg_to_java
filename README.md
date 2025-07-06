@@ -388,6 +388,14 @@ javac -cp /QIBM/ProdData/OS400/jt400/lib/jt400.jar CmdCall.java
 java -cp /QIBM/ProdData/OS400/jt400/lib/jt400.jar:. CmdCall
 ```
 
+Reading json
+
+```js
+javac -cp /QIBM/ProdData/OS400/jt400/lib/jt400.jar:/home/ROBKRAUDY/builds/rpg_to_java/source/json-20231013.jar TestReadJson.java
+
+java -cp /QIBM/ProdData/OS400/jt400/lib/jt400.jar:/home/ROBKRAUDY/builds/rpg_to_java/source/json-20231013.jar:. TestReadJson
+```
+
 ##
 
 ##
