@@ -390,10 +390,11 @@ java -cp /QIBM/ProdData/OS400/jt400/lib/jt400.jar:. CmdCall
 
 Reading json
 I'm using the [JSON-java](https://github.com/stleary/JSON-java/tree/master) library 
+And [Apache PDFBox](https://pdfbox.apache.org/download.html) to generate the pdf. It starts kinda slow the first time when it need to build the fonts.
 ```js
-javac -cp /QIBM/ProdData/OS400/jt400/lib/jt400.jar:/home/ROBKRAUDY/builds/rpg_to_java/source/json-20231013.jar TestReadJson.java
+javac -cp /QIBM/ProdData/OS400/jt400/lib/jt400.jar:/home/ROBKRAUDY/builds/rpg_to_java/source/json-20231013.jar:/home/ROBKRAUDY/builds/rpg_to_java/source/pdfbox-app-3.0.5.jar TestReadJson.java
 
-java -cp /QIBM/ProdData/OS400/jt400/lib/jt400.jar:/home/ROBKRAUDY/builds/rpg_to_java/source/json-20231013.jar:. TestReadJson
+java -cp .:/QIBM/ProdData/OS400/jt400/lib/jt400.jar:/home/ROBKRAUDY/builds/rpg_to_java/source/json-20231013.jar:/home/ROBKRAUDY/builds/rpg_to_java/source/pdfbox-app-3.0.5.jar TestReadJson
 ```
 
 Create logging table
