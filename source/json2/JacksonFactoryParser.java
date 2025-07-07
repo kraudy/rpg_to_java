@@ -1,8 +1,7 @@
+package json2;
+
 import com.ibm.as400.access.*;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.Date;
@@ -12,11 +11,8 @@ import org.json.JSONObject;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 
-public class JacksonJsonParser {
+public class JacksonFactoryParser {
   public static void main(String... args){
     AS400 sys = new AS400();
     IFSFile file = new IFSFile(sys, "/home/ROBKRAUDY/notif.json");
@@ -43,29 +39,25 @@ public class JacksonJsonParser {
       PreparedStatement pstmt = conn.prepareStatement(sql);
       
       // Initialize ObjectMapper for JSON parsing
-      ObjectMapper mapper = new ObjectMapper();
       IFSFileInputStream fis = new IFSFileInputStream(file);
 
-      // Parse JSON file
-      JsonNode rootNode = mapper.readTree(fis);
-      JsonNode employeesNode = rootNode.get("employees");
+      JsonFactory factory = new JsonFactory();
+      JsonParser parser = factory.createParser(fis);
+      while (parser.nextToken() != JsonToken.END_ARRAY) {
+          if (parser.currentName() != null && parser.currentName().equals("employees")) {
+              parser.nextToken(); // Move to array start
+              while (parser.nextToken() != JsonToken.END_ARRAY) {
+                  // Process each employee object
+                  JSONObject employee = new JSONObject(parser.readValueAsTree().toString());
+                  String logEntry = new Date() + " JsonParser - Processed: " + employee.getString("firstName") + " " + employee.getString("lastName");
 
-      // Check if employeesNode is an array
-      if (employeesNode != null && employeesNode.isArray()) {
-        for (JsonNode employeeNode : (ArrayNode) employeesNode) {
-            // Convert JsonNode to JSONObject if needed
-            JSONObject employee = new JSONObject(employeeNode.toString());
-
-            // Write to log file with timestamp
-            String logEntry = new Date() + " - Processed: " + employee.getString("firstName") + " " + employee.getString("lastName");
-
-            // Optionally, log to database
-            pstmt.setString(1, logEntry);
-            pstmt.executeUpdate();
-        }
-      } else {
-          System.out.println("No 'employees' array found in JSON");
+                  // Optionally, log to database
+                  pstmt.setString(1, logEntry);
+                  pstmt.executeUpdate();
+              }
+          }
       }
+      parser.close();
 
       // Close connection
       pstmt.close();
