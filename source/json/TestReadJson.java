@@ -95,7 +95,11 @@ public class TestReadJson {
       contentStream.endText();
       yPosition -= lineHeight;
 
-      // Example: Print the array or process it
+      /*
+        This example only uses org.json which lets you parse the whole json file directly
+        It is more straigthforward than jackson but you are loading the whole file into memory
+        which is something that you may or may not want.
+      */
       System.out.println("Parsed JSON Array: " + jsonArray.toString());
 
       for (Object obj : jsonArray) {

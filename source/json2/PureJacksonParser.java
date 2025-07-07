@@ -6,13 +6,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.Date;
 
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
-
-public class JacksonFactoryParser {
+public class PureJacksonParser {
   public static void main(String... args){
     AS400 sys = new AS400();
     IFSFile file = new IFSFile(sys, "/home/ROBKRAUDY/notif.json");
@@ -40,24 +37,25 @@ public class JacksonFactoryParser {
       
       // Initialize ObjectMapper for JSON parsing
       IFSFileInputStream fis = new IFSFileInputStream(file);
+      ObjectMapper mapper = new ObjectMapper();
+      JsonNode rootNode = mapper.readTree(fis);
 
-      JsonFactory factory = new JsonFactory();
-      JsonParser parser = factory.createParser(fis);
-      while (parser.nextToken() != JsonToken.END_ARRAY) {
-          if (parser.currentName() != null && parser.currentName().equals("employees")) {
-              parser.nextToken(); // Move to array start
-              while (parser.nextToken() != JsonToken.END_ARRAY) {
-                  // Process each employee object
-                  JSONObject employee = new JSONObject(parser.readValueAsTree().toString());
-                  String logEntry = new Date() + " JsonParser - Processed: " + employee.getString("firstName") + " " + employee.getString("lastName");
+      // Access the "employees" array
+      JsonNode employees = rootNode.get("employees");
+      if (employees != null && employees.isArray()) {
+        for (JsonNode employee : employees) {
+            String firstName = employee.get("firstName").asText();
+            String lastName = employee.get("lastName").asText();
+            String logEntry = new Date() + " JsonParser - Processed: " + firstName + " " + lastName;
 
-                  // Optionally, log to database
-                  pstmt.setString(1, logEntry);
-                  pstmt.executeUpdate();
-              }
-          }
+            System.out.println(logEntry);
+            // Log to database
+            pstmt.setString(1, logEntry);
+            pstmt.executeUpdate();
+        }
+      } else {
+        System.out.println("No 'employees' array found in JSON");
       }
-      parser.close();
 
       // Close connection
       pstmt.close();

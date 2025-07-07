@@ -397,12 +397,14 @@ javac -cp /QIBM/ProdData/OS400/jt400/lib/jt400.jar:/home/ROBKRAUDY/builds/rpg_to
 java -cp .:/QIBM/ProdData/OS400/jt400/lib/jt400.jar:/home/ROBKRAUDY/builds/rpg_to_java/source/json-20231013.jar:/home/ROBKRAUDY/builds/rpg_to_java/source/pdfbox-app-3.0.5.jar TestReadJson
 ```
 
-Using [Jackso JSON parser](https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core/2.2.3)
+Using only [Jackson JSON parser](https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core/2.2.3)
 
 ```js
-javac -cp /QIBM/ProdData/OS400/jt400/lib/jt400.jar:/home/ROBKRAUDY/builds/rpg_to_java/source/json-20231013.jar:/home/ROBKRAUDY/builds/rpg_to_java/source/jackson-core-2.19.1.jar:/home/ROBKRAUDY/builds/rpg_to_java/source/jackson-databind-2.19.1.jar:/home/ROBKRAUDY/builds/rpg_to_java/source/jackson-annotations-2.19.1.jar JacksonJsonParser.java
+run from /source
 
-java -cp .:/QIBM/ProdData/OS400/jt400/lib/jt400.jar:/home/ROBKRAUDY/builds/rpg_to_java/source/json-20231013.jar:/home/ROBKRAUDY/builds/rpg_to_java/source/jackson-core-2.19.1.jar:/home/ROBKRAUDY/builds/rpg_to_java/source/jackson-databind-2.19.1.jar:/home/ROBKRAUDY/builds/rpg_to_java/source/jackson-annotations-2.19.1.jar JacksonJsonParser
+javac -cp /QIBM/ProdData/OS400/jt400/lib/jt400.jar:/home/ROBKRAUDY/builds/rpg_to_java/source/json-20231013.jar:/home/ROBKRAUDY/builds/rpg_to_java/source/jackson-core-2.19.1.jar:/home/ROBKRAUDY/builds/rpg_to_java/source/jackson-databind-2.19.1.jar:/home/ROBKRAUDY/builds/rpg_to_java/source/jackson-annotations-2.19.1.jar json2/PureJacksonParser.java 
+
+java -cp .:/QIBM/ProdData/OS400/jt400/lib/jt400.jar:/home/ROBKRAUDY/builds/rpg_to_java/source/json-20231013.jar:/home/ROBKRAUDY/builds/rpg_to_java/source/jackson-core-2.19.1.jar:/home/ROBKRAUDY/builds/rpg_to_java/source/jackson-databind-2.19.1.jar:/home/ROBKRAUDY/builds/rpg_to_java/source/jackson-annotations-2.19.1.jar json2.PureJacksonParser
 ```
 
 Using **Apache PDFBox** can be a little awkard since you have to manually specify the format in code which is something i was already running away from (you know, print files on the O page of RPG).

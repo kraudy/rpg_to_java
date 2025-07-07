@@ -50,6 +50,11 @@ public class JacksonJsonParser {
       JsonNode rootNode = mapper.readTree(fis);
       JsonNode employeesNode = rootNode.get("employees");
 
+      /* 
+       * This uses a mix of org.json and jackson packages which i don't really like.
+       * Kinda messy
+      */
+
       // Check if employeesNode is an array
       if (employeesNode != null && employeesNode.isArray()) {
         for (JsonNode employeeNode : (ArrayNode) employeesNode) {
@@ -58,6 +63,7 @@ public class JacksonJsonParser {
 
             // Write to log file with timestamp
             String logEntry = new Date() + " - Processed: " + employee.getString("firstName") + " " + employee.getString("lastName");
+            System.out.println(logEntry);
 
             // Optionally, log to database
             pstmt.setString(1, logEntry);
