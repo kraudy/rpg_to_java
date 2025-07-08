@@ -1,3 +1,5 @@
+package json;
+
 import com.ibm.as400.access.*;
 
 import java.io.BufferedReader;
@@ -17,7 +19,7 @@ import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 
 
-public class TestReadJson {
+public class JsonObjectPdfBoxParser {
   public static void main(String... args){
     AS400 sys = new AS400();
     //TODO: Add listener
