@@ -1,22 +1,18 @@
+package json;
+
 import com.ibm.as400.access.*;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.Date;
 
 import org.json.JSONObject;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
-public class JacksonJsonParser {
+public class MixedJacksonJsonParser {
   public static void main(String... args){
     AS400 sys = new AS400();
     IFSFile file = new IFSFile(sys, "/home/ROBKRAUDY/notif.json");
