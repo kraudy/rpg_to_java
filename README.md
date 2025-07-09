@@ -415,6 +415,10 @@ mvn clean compile
 mvn exec:java
 mvn exec:java -Dexec.mainClass="jasperpdf.SimpleJasperTest"
 mvn exec:java -Dexec.mainClass="jasperpdf.CreateJasperPdf"
+// generate a jar file
+mvn clean package
+// test
+java -jar target/jasperpdf-1.0-SNAPSHOT.jar
 ```
 
 Create logging table

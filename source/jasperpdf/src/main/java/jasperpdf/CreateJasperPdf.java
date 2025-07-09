@@ -15,8 +15,10 @@ public class CreateJasperPdf {
         IFSFile pdfFile = new IFSFile(sys, "/home/ROBKRAUDY/employees.pdf");
         
         try {
+            JasperReport report = JasperCompileManager.compileReport(
+              CreateJasperPdf.class.getResourceAsStream("/employee_report.jrxml")
+            );
             JsonDataSource dataSource = new JsonDataSource(new IFSFileInputStream(jsonFile), "employees");
-            JasperReport report = JasperCompileManager.compileReport("/path/to/employee_report.jrxml");
             JasperPrint print = JasperFillManager.fillReport(report, new HashMap<>(), dataSource);
             JasperExportManager.exportReportToPdfStream(print, new IFSFileOutputStream(pdfFile));
         } catch (Exception e) {
