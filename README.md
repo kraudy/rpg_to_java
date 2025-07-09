@@ -409,6 +409,14 @@ java -cp .:/QIBM/ProdData/OS400/jt400/lib/jt400.jar:/home/ROBKRAUDY/builds/rpg_t
 
 Using **Apache PDFBox** can be a little awkard since you have to manually specify the format in code which is something i was already running away from (you know, print files on the O page of RPG).
 
+MVN compilation
+```js
+mvn clean compile
+mvn exec:java
+mvn exec:java -Dexec.mainClass="jasperpdf.SimpleJasperTest"
+mvn exec:java -Dexec.mainClass="jasperpdf.CreateJasperPdf"
+```
+
 Create logging table
 ```sql
 CREATE TABLE ROBKRAUDY2.NOTIF_LOG (
