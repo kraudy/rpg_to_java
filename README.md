@@ -422,6 +422,8 @@ java -jar target/jasperpdf-1.0-SNAPSHOT.jar
 mvn dependency:tree
 // generate a jar file
 mvn clean package
+// execute it
+java -jar JacksonAS400Parser-1.0-SNAPSHOT.jar
 ```
 
 The test file is executed at compilation

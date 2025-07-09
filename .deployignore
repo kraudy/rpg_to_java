@@ -1,2 +1,6 @@
-jt400/**
-src/**
+#jt400/**
+# Ignore all files and directories by default
+**
+
+# Allow the specific JAR file in the target directory
+!target/JacksonAS400Parser-1.0-SNAPSHOT.jar
