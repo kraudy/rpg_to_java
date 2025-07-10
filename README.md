@@ -424,6 +424,16 @@ mvn dependency:tree
 mvn clean package
 // execute it
 java -jar JacksonAS400Parser-1.0-SNAPSHOT.jar
+
+// Create new mvn project por Cmd Call example
+mvn archetype:generate \
+  -DgroupId=com.example \
+  -DartifactId=CmdCall \
+  -DarchetypeArtifactId=maven-archetype-quickstart \
+  -DarchetypeVersion=1.4 \
+  -DinteractiveMode=false
+
+java -jar CmdCall-1.0-SNAPSHOT.jar
 ```
 
 The test file is executed at compilation
