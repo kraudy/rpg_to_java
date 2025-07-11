@@ -1,3 +1,5 @@
+package com.example;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -5,6 +7,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 
+/*
+ * 
+ *  This thing doesn't works!
+ * 
+ */
 public class AS400JDBCExample {
     public static void main(String[] args) {
         String url = "jdbc:as400://pub400.com";
