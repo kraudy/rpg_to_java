@@ -433,7 +433,9 @@ java -jar CmdCall-1.0-SNAPSHOT.jar
 
 mvn archetype:generate -DgroupId=com.example -DartifactId=AS400JDBCExample -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
 
+mvn archetype:generate -DgroupId=com.example -DartifactId=AS400Object -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
 
+java -jar AS400Object-1.0-SNAPSHOT.jar
 
 
 ```
