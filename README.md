@@ -437,6 +437,10 @@ mvn archetype:generate -DgroupId=com.example -DartifactId=AS400Object -Darchetyp
 
 java -jar AS400Object-1.0-SNAPSHOT.jar
 
+mvn archetype:generate -DgroupId=com.example -DartifactId=MixedJacksonJsonParser -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
+
+java -jar MixedJacksonJsonParser-1.0-SNAPSHOT.jar
+
 
 ```
 
