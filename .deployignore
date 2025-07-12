@@ -1,6 +1,6 @@
 # Exclude everything but target/*.jar
 *
-!source/
-!source/*
-!source/*/target
-!source/*/target/*.jar
+!ibmi_projects/
+!ibmi_projects/*
+!ibmi_projects/*/target
+!ibmi_projects/*/target/*.jar
