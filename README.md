@@ -441,6 +441,11 @@ mvn archetype:generate -DgroupId=com.example -DartifactId=MixedJacksonJsonParser
 
 java -jar MixedJacksonJsonParser-1.0-SNAPSHOT.jar
 
+mvn archetype:generate -DgroupId=com.example -DartifactId=JsonObjectPdfBoxParser -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
+
+java -jar JsonObjectPdfBoxParser-1.0-SNAPSHOT.jar
+
+
 
 ```
 
