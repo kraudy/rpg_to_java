@@ -447,7 +447,7 @@ java -jar JsonObjectPdfBoxParser-1.0-SNAPSHOT.jar
 
 mvn archetype:generate -DgroupId=com.example -DartifactId=ReadDataQueue -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
 
-java -jar ReadDataQueue-1.0-SNAPSHOT.jar
+mvn archetype:generate -DgroupId=com.example -DartifactId=GetEnvVar -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
 
 
 
