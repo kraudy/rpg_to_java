@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuite tests="1" failures="0" name="com.example.MixedJacksonJsonParserTest" time="0.004" errors="0" skipped="0">
+<testsuite tests="1" failures="0" name="com.example.MixedJacksonJsonParserTest" time="0.006" errors="0" skipped="0">
   <properties>
     <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
     <property name="java.vm.version" value="21.0.7+6-Ubuntu-0ubuntu122.04"/>
     <property name="sun.boot.library.path" value="/usr/lib/jvm/java-21-openjdk-amd64/lib"/>
-    <property name="maven.multiModuleProjectDirectory" value="/home/kraudy/ibm/rpg_to_java/source/MixedJacksonJsonParser"/>
+    <property name="maven.multiModuleProjectDirectory" value="/home/kraudy/ibm/rpg_to_java/ibmi_projects/MixedJacksonJsonParser"/>
     <property name="java.vm.vendor" value="Ubuntu"/>
     <property name="java.vendor.url" value="https://ubuntu.com/"/>
     <property name="path.separator" value=":"/>
@@ -12,7 +12,7 @@
     <property name="java.vm.name" value="OpenJDK 64-Bit Server VM"/>
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="java.vm.specification.name" value="Java Virtual Machine Specification"/>
-    <property name="user.dir" value="/home/kraudy/ibm/rpg_to_java/source/MixedJacksonJsonParser"/>
+    <property name="user.dir" value="/home/kraudy/ibm/rpg_to_java/ibmi_projects/MixedJacksonJsonParser"/>
     <property name="java.vm.compressedOopsMode" value="Zero based"/>
     <property name="java.runtime.version" value="21.0.7+6-Ubuntu-0ubuntu122.04"/>
     <property name="os.arch" value="amd64"/>
@@ -56,5 +56,5 @@
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="sun.cpu.endian" value="little"/>
   </properties>
-  <testcase classname="com.example.MixedJacksonJsonParserTest" name="testApp" time="0.004"/>
+  <testcase classname="com.example.MixedJacksonJsonParserTest" name="testApp" time="0.006"/>
 </testsuite>
