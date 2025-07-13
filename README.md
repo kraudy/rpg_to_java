@@ -428,27 +428,19 @@ java -jar JacksonAS400Parser-1.0-SNAPSHOT.jar
 // Create new mvn project por Cmd Call example
 mvn archetype:generate -DgroupId=com.example -DartifactId=CmdCall -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
 
-java -jar CmdCall-1.0-SNAPSHOT.jar
-
-
 mvn archetype:generate -DgroupId=com.example -DartifactId=AS400JDBCExample -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
 
 mvn archetype:generate -DgroupId=com.example -DartifactId=AS400Object -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
 
-java -jar AS400Object-1.0-SNAPSHOT.jar
-
 mvn archetype:generate -DgroupId=com.example -DartifactId=MixedJacksonJsonParser -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
 
-java -jar MixedJacksonJsonParser-1.0-SNAPSHOT.jar
-
 mvn archetype:generate -DgroupId=com.example -DartifactId=JsonObjectPdfBoxParser -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
-
-java -jar JsonObjectPdfBoxParser-1.0-SNAPSHOT.jar
 
 mvn archetype:generate -DgroupId=com.example -DartifactId=ReadDataQueue -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
 
 mvn archetype:generate -DgroupId=com.example -DartifactId=GetEnvVar -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
 
+mvn archetype:generate -DgroupId=com.example -DartifactId=ReadIFSFile -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
 
 
 ```
