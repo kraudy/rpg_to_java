@@ -442,6 +442,8 @@ mvn archetype:generate -DgroupId=com.example -DartifactId=GetEnvVar -DarchetypeA
 
 mvn archetype:generate -DgroupId=com.example -DartifactId=ReadIFSFile -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
 
+mvn archetype:generate -DgroupId=com.example -DartifactId=GetJobData -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
+
 
 ```
 
