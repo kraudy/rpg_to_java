@@ -4,9 +4,12 @@ import com.ibm.as400.access.*;
 
 import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
-import com.lowagie.text.Paragraph;
-import com.lowagie.text.pdf.PdfName;
-import com.lowagie.text.pdf.PdfString;
+import com.lowagie.text.Font;
+import com.lowagie.text.FontFactory;
+import com.lowagie.text.PageSize;
+import com.lowagie.text.Phrase;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 
 import java.io.FileOutputStream;
@@ -14,26 +17,72 @@ import java.io.IOException;
 
 public class CreateOpenPDF {
   public static void main( String... args ){
-    System.out.println("Hello World");
+    Font font8 = FontFactory.getFont(FontFactory.HELVETICA, 8);
 
-    // step 1: creation of a document-object
-    Document document = new Document();
+    // step 1
+    Document document = new Document(PageSize.A4);
+
     try {
-      // step 2:
-      // we create a writer that listens to the document
-      // and directs a PDF-stream to a file
-      final PdfWriter instance = PdfWriter.getInstance(document, new FileOutputStream("HelloWorld.pdf"));
+        // step 2
+        PdfWriter writer = PdfWriter.getInstance(document,
+                new FileOutputStream("tables.pdf"));
+        float width = document.getPageSize().getWidth();
+        float height = document.getPageSize().getHeight();
+        // step 3
+        document.open();
 
-      // step 3: we open the document
-      document.open();
-      instance.getInfo().put(PdfName.CREATOR, new PdfString(Document.getVersion()));
-      // step 4: we add a paragraph to the document
-      document.add(new Paragraph("Hello World"));
+        // step 4
+        float[] columnDefinitionSize = {33.33F, 33.33F, 33.33F};
+
+        float pos = height / 2;
+        PdfPTable table = null;
+        PdfPCell cell = null;
+
+        table = new PdfPTable(columnDefinitionSize);
+        table.getDefaultCell().setBorder(0);
+        table.setHorizontalAlignment(0);
+        table.setTotalWidth(width - 72);
+        table.setLockedWidth(true);
+
+        cell = new PdfPCell(new Phrase("Table added with document.add()"));
+        cell.setColspan(columnDefinitionSize.length);
+        table.addCell(cell);
+        table.addCell(new Phrase("Louis Pasteur", font8));
+        table.addCell(new Phrase("Albert Einstein", font8));
+        table.addCell(new Phrase("Isaac Newton", font8));
+        table.addCell(new Phrase("8, Rabic street", font8));
+        table.addCell(new Phrase("2 Photons Avenue", font8));
+        table.addCell(new Phrase("32 Gravitation Court", font8));
+        table.addCell(new Phrase("39100 Dole France", font8));
+        table.addCell(new Phrase("12345 Ulm Germany", font8));
+        table.addCell(new Phrase("45789 Cambridge  England", font8));
+
+        document.add(table);
+
+        table = new PdfPTable(columnDefinitionSize);
+        table.getDefaultCell().setBorder(0);
+        table.setHorizontalAlignment(0);
+        table.setTotalWidth(width - 72);
+        table.setLockedWidth(true);
+
+        cell = new PdfPCell(new Phrase("Table added with writeSelectedRows"));
+        cell.setColspan(columnDefinitionSize.length);
+        table.addCell(cell);
+        table.addCell(new Phrase("Louis Pasteur", font8));
+        table.addCell(new Phrase("Albert Einstein", font8));
+        table.addCell(new Phrase("Isaac Newton", font8));
+        table.addCell(new Phrase("8, Rabic street", font8));
+        table.addCell(new Phrase("2 Photons Avenue", font8));
+        table.addCell(new Phrase("32 Gravitation Court", font8));
+        table.addCell(new Phrase("39100 Dole France", font8));
+        table.addCell(new Phrase("12345 Ulm Germany", font8));
+        table.addCell(new Phrase("45789 Cambridge  England", font8));
+
+        table.writeSelectedRows(0, -1, 50, pos, writer.getDirectContent());
     } catch (DocumentException | IOException de) {
-      System.err.println(de.getMessage());
+        System.err.println(de.getMessage());
     }
-
-    // step 5: we close the document
+    // step 5
     document.close();
   }
 }
