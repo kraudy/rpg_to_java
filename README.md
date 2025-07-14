@@ -416,36 +416,12 @@ mvn exec:java
 mvn exec:java -Dexec.mainClass="jasperpdf.SimpleJasperTest"
 mvn exec:java -Dexec.mainClass="jasperpdf.CreateJasperPdf"
 
-// test
-java -jar target/jasperpdf-1.0-SNAPSHOT.jar
+// Create new mvn project 
+mvn archetype:generate -DgroupId=com.example -DartifactId=CreateOpenPDF -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
 // Check pom pacakges dependencies
 mvn dependency:tree
 // generate a jar file
 mvn clean package
-// execute it
-java -jar JacksonAS400Parser-1.0-SNAPSHOT.jar
-
-// Create new mvn project por Cmd Call example
-mvn archetype:generate -DgroupId=com.example -DartifactId=CmdCall -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
-
-mvn archetype:generate -DgroupId=com.example -DartifactId=AS400JDBCExample -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
-
-mvn archetype:generate -DgroupId=com.example -DartifactId=AS400Object -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
-
-mvn archetype:generate -DgroupId=com.example -DartifactId=MixedJacksonJsonParser -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
-
-mvn archetype:generate -DgroupId=com.example -DartifactId=JsonObjectPdfBoxParser -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
-
-mvn archetype:generate -DgroupId=com.example -DartifactId=ReadDataQueue -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
-
-mvn archetype:generate -DgroupId=com.example -DartifactId=GetEnvVar -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
-
-mvn archetype:generate -DgroupId=com.example -DartifactId=ReadIFSFile -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
-
-mvn archetype:generate -DgroupId=com.example -DartifactId=GetJobData -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
-
-mvn archetype:generate -DgroupId=com.example -DartifactId=CallRPGProgram -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
-
 
 ```
 
