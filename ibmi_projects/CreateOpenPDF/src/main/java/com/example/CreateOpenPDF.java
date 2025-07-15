@@ -2,6 +2,8 @@ package com.example;
 
 import com.ibm.as400.access.*; 
 
+import java.util.Date;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -22,8 +24,6 @@ public class CreateOpenPDF {
   public static void main( String... args ){
     AS400 sys = new AS400();
     IFSFile file = new IFSFile(sys, "/home/ROBKRAUDY/notif.json");
-
-    Connection conn = null;
 
     // Prepare document
     Font font8 = FontFactory.getFont(FontFactory.HELVETICA, 8);
@@ -70,7 +70,7 @@ public class CreateOpenPDF {
         cell = new PdfPCell(new Phrase("Table added with document.add()"));
         cell.setColspan(columnDefinitionSize.length);
         table.addCell(cell);
-        
+
         for (JsonNode employee : employees) {
             String firstName = employee.get("firstName").asText();
             String lastName = employee.get("lastName").asText();
@@ -112,7 +112,7 @@ public class CreateOpenPDF {
 
       table.writeSelectedRows(0, -1, 50, pos, writer.getDirectContent());
 
-    } catch (DocumentException | IOException de) {
+    } catch (DocumentException | IOException | AS400SecurityException de) {
         System.err.println(de.getMessage());
     }
     // step 5
