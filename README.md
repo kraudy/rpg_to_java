@@ -423,6 +423,9 @@ mvn dependency:tree
 // generate a jar file
 mvn clean package
 
+CHGCURDIR DIR('/home/ROBKRAUDY/builds/rpg_to_java')
+STRDBG UPDPROD(*YES) OPMSRC(*YES) CLASS('ibmi_projects/CreateOpenPDF/target/Crea
+teOpnPDF-1.0-SNAPSHOT.jar/com.example.CreateOpenPDF')
 ```
 
 The test file is executed at compilation

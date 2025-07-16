@@ -44,8 +44,7 @@ public class CreateOpenPDF {
       JsonNode rootNode = mapper.readTree(fis);
 
       // step 2
-      PdfWriter writer = PdfWriter.getInstance(document,
-              new FileOutputStream("tables.pdf"));
+      PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream("tables.pdf"));
       float width = document.getPageSize().getWidth();
       float height = document.getPageSize().getHeight();
       // step 3
@@ -111,16 +110,15 @@ public class CreateOpenPDF {
 
         // Add table to document
         table.writeSelectedRows(0, -1, 36, pos, writer.getDirectContent());
+        // This lets you add the object on the next cursor position. Useful for not dealing with line numbers
+        //document.add(table);
+
         pos -= (table.getTotalHeight() + 20); // Adjust position for next table
 
         // Log on succes bit
 
-        document.add(table);
-
       }
 
-      // Add created table
-      //document.add(table);
 
     } catch (DocumentException | IOException | AS400SecurityException de) {
       System.err.println(de.getMessage());

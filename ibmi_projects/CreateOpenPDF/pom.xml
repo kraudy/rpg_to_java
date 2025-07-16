@@ -54,6 +54,8 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.14.0</version>
         <configuration>
+          <debug>true</debug> <!-- Enable debug information -->
+          <debuglevel>lines,vars,source</debuglevel> <!-- Include line numbers, variables, and source file info -->
           <source>1.8</source>
           <target>1.8</target>
         </configuration>
