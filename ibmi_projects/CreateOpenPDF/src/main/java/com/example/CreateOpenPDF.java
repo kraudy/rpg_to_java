@@ -101,6 +101,10 @@ public class CreateOpenPDF {
         System.out.println("Created table for " + firstName + " " + lastName);
 
         for (JsonNode transaction : transactions) {
+          if (!transaction.has("transactionCode") || !transaction.has("businessName") || !transaction.has("amount")) {
+            System.out.println("Missing transaction data");
+            continue;
+          }
           table.addCell(new Phrase(transaction.get("transactionCode").asText(), font8));
           table.addCell(new Phrase(transaction.get("businessName").asText(), font8));
           table.addCell(new Phrase("$" + transaction.get("amount").asText(), font8));
