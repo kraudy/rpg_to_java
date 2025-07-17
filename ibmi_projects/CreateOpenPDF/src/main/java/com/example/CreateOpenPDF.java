@@ -112,6 +112,10 @@ public class CreateOpenPDF {
           System.out.println("Added transacction : " +  transaction.get("amount").asText());
         }
 
+        if (pos < table.getTotalHeight() + document.bottomMargin()) {
+          document.newPage();
+          pos = height - 50;
+        }
         // Add table to document
         table.writeSelectedRows(0, -1, 36, pos, writer.getDirectContent());
         // This lets you add the object on the next cursor position. Useful for not dealing with line numbers
