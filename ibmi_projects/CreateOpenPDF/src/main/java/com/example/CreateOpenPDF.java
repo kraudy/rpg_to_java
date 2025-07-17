@@ -22,8 +22,14 @@ import java.io.IOException;
 
 public class CreateOpenPDF {
   public static void main( String... args ){
+    if (args.length < 1) {
+      System.out.println("Provide the input JSON file path as argument");
+      return;
+    }
+    String inputFilePath = args[0];
+
     AS400 sys = new AS400();
-    IFSFile file = new IFSFile(sys, "/home/ROBKRAUDY/notif2.json");
+    IFSFile file = new IFSFile(sys, inputFilePath);
 
     // Prepare document
     Font font8 = FontFactory.getFont(FontFactory.HELVETICA, 8);
@@ -31,13 +37,17 @@ public class CreateOpenPDF {
 
     try {
       if(!file.exists()){
-      System.out.println("File does not exists: " + file.getPath());
-      return;
+        System.out.println("File does not exists: " + file.getPath());
+        return;
       }
+      System.out.println("Found JSON file");
   
       if(!file.canRead()){
         System.out.println("Can't read from file: " + file.getPath());
+        return;
       }
+      System.out.println("File can be read");
+
       // Initialize ObjectMapper for JSON parsing
       IFSFileInputStream fis = new IFSFileInputStream(file);
       ObjectMapper mapper = new ObjectMapper();

@@ -426,6 +426,10 @@ mvn clean package
 CHGCURDIR DIR('/home/ROBKRAUDY/builds/rpg_to_java')
 STRDBG UPDPROD(*YES) OPMSRC(*YES) CLASS('ibmi_projects/CreateOpenPDF/target/Crea
 teOpnPDF-1.0-SNAPSHOT.jar/com.example.CreateOpenPDF')
+
+java -jar CreateOpenPDF-1.0-SNAPSHOT.jar /home/ROBKRAUDY/notif.json
+java -jar CreateOpenPDF-1.0-SNAPSHOT.jar /home/ROBKRAUDY/notif2.json
+java -jar CreateOpenPDF-1.0-SNAPSHOT.jar /home/ROBKRAUDY/notif3.json
 ```
 
 The test file is executed at compilation
