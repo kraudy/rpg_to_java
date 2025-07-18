@@ -28,25 +28,15 @@ public class CreateOpenPDF {
     }
     String inputFilePath = args[0];
 
+    // TODO: Validate if is needed by various methods.
     AS400 sys = new AS400();
-    IFSFile file = new IFSFile(sys, inputFilePath);
 
     // Prepare document
     Font font8 = FontFactory.getFont(FontFactory.HELVETICA, 8);
     Document document = new Document(PageSize.A4);
 
     try {
-      if(!file.exists()){
-        System.out.println("File does not exists: " + file.getPath());
-        return;
-      }
-      System.out.println("Found JSON file");
-  
-      if(!file.canRead()){
-        System.out.println("Can't read from file: " + file.getPath());
-        return;
-      }
-      System.out.println("File can be read");
+      IFSFile file = ValidateFile(sys, inputFilePath);
 
       // Initialize ObjectMapper for JSON parsing
       IFSFileInputStream fis = new IFSFileInputStream(file);
@@ -144,5 +134,23 @@ public class CreateOpenPDF {
       // Step 5: Close document
       document.close();
     }
+  }
+
+  private static IFSFile ValidateFile(AS400 sys, String filePath) throws AS400SecurityException, IOException{
+    IFSFile file = new IFSFile(sys, filePath);
+
+    if(!file.exists()){
+      System.out.println("File does not exists: " + file.getPath());
+      throw new IOException("File does not exist: " + file.getPath());
+    }
+    System.out.println("Found JSON file");
+
+    if(!file.canRead()){
+      System.out.println("Can't read from file: " + file.getPath());
+      throw new IOException("Can't read from file:  " + file.getPath());
+    }
+    System.out.println("File can be read");
+
+    return file;
   }
 }
