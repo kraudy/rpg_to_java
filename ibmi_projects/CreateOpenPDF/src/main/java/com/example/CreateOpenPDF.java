@@ -38,10 +38,7 @@ public class CreateOpenPDF {
     try {
       IFSFile file = ValidateFile(sys, inputFilePath);
 
-      // Initialize ObjectMapper for JSON parsing
-      IFSFileInputStream fis = new IFSFileInputStream(file);
-      ObjectMapper mapper = new ObjectMapper();
-      JsonNode rootNode = mapper.readTree(fis);
+      JsonNode rootNode = ParseJson(file);
 
       // step 2
       PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream("tables.pdf"));
@@ -57,12 +54,7 @@ public class CreateOpenPDF {
       PdfPTable table = null;
       PdfPCell cell = null;
 
-      // Access the "employees" array
-      //JsonNode employees = rootNode.get("employees");
-      if (!rootNode.isArray()){
-        System.out.println("Root node is not an array");
-        return;
-      }
+      
       for (JsonNode node: rootNode){
         JsonNode employee     = node.get("employee");
         JsonNode transactions = node.get("transactions");
@@ -153,4 +145,18 @@ public class CreateOpenPDF {
 
     return file;
   }
+
+  private static JsonNode ParseJson(IFSFile JsonFile) throws AS400SecurityException, IOException, IllegalArgumentException{
+    IFSFileInputStream fis = new IFSFileInputStream(JsonFile);
+    ObjectMapper mapper = new ObjectMapper();
+
+    JsonNode rootNode = mapper.readTree(fis);
+    if (!rootNode.isArray()){
+      System.out.println("Root node is not an array");
+      throw new IllegalArgumentException("Invalid JSON structure");
+    }
+    
+    return rootNode;
+  }
+
 }
