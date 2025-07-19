@@ -23,6 +23,7 @@ import java.io.IOException;
 public class CreateOpenPDF {
   private static final Font FONT_8 = FontFactory.getFont(FontFactory.HELVETICA, 8);
   private static final float[] COLUMN_WIDTHS = {33.33F, 33.33F, 33.33F};
+  
   public static void main( String... args ){
     if (args.length < 1) {
       System.out.println("Provide the input JSON file path as argument");
@@ -94,8 +95,6 @@ public class CreateOpenPDF {
   private static void ProcessEmployees(JsonNode rootNode, Document document, PdfWriter writer)
       throws DocumentException{
     
-    Font font8 = FontFactory.getFont(FontFactory.HELVETICA, 8);
-    // step 2
     float width = document.getPageSize().getWidth();
     float height = document.getPageSize().getHeight();
     float pos = height - 50; // Starting position for tables
@@ -118,16 +117,7 @@ public class CreateOpenPDF {
 
       PdfPTable table = CreateEmployeeTable(employee, transactions, width);
 
-      if (pos < table.getTotalHeight() + document.bottomMargin()) {
-        document.newPage();
-        pos = height - 50;
-      }
-      // Add table to document
-      table.writeSelectedRows(0, -1, 36, pos, writer.getDirectContent());
-      // This lets you add the object on the next cursor position. Useful for not dealing with line numbers
-      //document.add(table);
-
-      pos -= (table.getTotalHeight() + 20); // Adjust position for next table
+      pos = WriteTableToDocument(table, document, writer, pos, height);
 
       // Log on succes bit
 
@@ -169,6 +159,22 @@ public class CreateOpenPDF {
     }
 
     return table;
-}
+  }
+
+  private static float WriteTableToDocument(PdfPTable table, Document document, PdfWriter writer, 
+            float currentPos, float pageHeight) throws DocumentException{
+
+    if (currentPos < table.getTotalHeight() + document.bottomMargin()) {
+      document.newPage();
+      currentPos = pageHeight - 50;
+    }
+    // Add table to document
+    table.writeSelectedRows(0, -1, 36, currentPos, writer.getDirectContent());
+    // This lets you add the object on the next cursor position. Useful for not dealing with line numbers
+    //document.add(table);
+
+    return currentPos - (table.getTotalHeight() + 20); // Adjust position for next table
+
+  }
 
 }
