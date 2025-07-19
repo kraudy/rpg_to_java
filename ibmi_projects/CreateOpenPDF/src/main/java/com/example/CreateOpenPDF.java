@@ -40,12 +40,12 @@ public class CreateOpenPDF {
 
       JsonNode rootNode = ParseJson(file);
 
+      PdfWriter writer = CreatePdfWriter(document);
+
       // step 2
-      PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream("tables.pdf"));
       float width = document.getPageSize().getWidth();
       float height = document.getPageSize().getHeight();
       // step 3
-      document.open();
 
       // step 4
       float[] columnDefinitionSize = {33.33F, 33.33F, 33.33F};
@@ -157,6 +157,12 @@ public class CreateOpenPDF {
     }
     
     return rootNode;
+  }
+
+  private static PdfWriter CreatePdfWriter(Document document) throws DocumentException, IOException{
+    PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream("tables.pdf"));
+    document.open();
+    return writer;
   }
 
 }
