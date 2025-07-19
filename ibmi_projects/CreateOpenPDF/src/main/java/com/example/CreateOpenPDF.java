@@ -32,7 +32,6 @@ public class CreateOpenPDF {
     AS400 sys = new AS400();
 
     // Prepare document
-    Font font8 = FontFactory.getFont(FontFactory.HELVETICA, 8);
     Document document = new Document(PageSize.A4);
 
     try {
@@ -42,82 +41,7 @@ public class CreateOpenPDF {
 
       PdfWriter writer = CreatePdfWriter(document);
 
-      // step 2
-      float width = document.getPageSize().getWidth();
-      float height = document.getPageSize().getHeight();
-      // step 3
-
-      // step 4
-      float[] columnDefinitionSize = {33.33F, 33.33F, 33.33F};
-
-      float pos = height - 50; // Starting position for tables
-      PdfPTable table = null;
-      PdfPCell cell = null;
-
-      
-      for (JsonNode node: rootNode){
-        JsonNode employee     = node.get("employee");
-        JsonNode transactions = node.get("transactions");
-
-        if (employee == null){
-          System.out.println("No employee data");
-          // Log on bit error
-          continue;
-        }
-
-        if (transactions == null || !transactions.isArray()){
-          System.out.println("No transaction data");
-          // Log on bit error
-          continue;
-        }
-
-        String firstName  = employee.get("firstName").asText();
-        String lastName   = employee.get("lastName").asText();
-
-        table = new PdfPTable(columnDefinitionSize);
-        table.getDefaultCell().setBorder(0);
-        table.setHorizontalAlignment(0);
-        table.setTotalWidth(width - 72);
-        table.setLockedWidth(true);
-
-        // Add header
-        cell = new PdfPCell(new Phrase("Notifications for client: " + firstName + " " + lastName));
-        cell.setColspan(columnDefinitionSize.length);
-        table.addCell(cell);
-
-        // Add column headers for transactions
-        table.addCell(new Phrase("Trans. Code", font8));
-        table.addCell(new Phrase("Business Name", font8));
-        table.addCell(new Phrase("Amount", font8));
-
-        System.out.println("Created table for " + firstName + " " + lastName);
-
-        for (JsonNode transaction : transactions) {
-          if (!transaction.has("transactionCode") || !transaction.has("businessName") || !transaction.has("amount")) {
-            System.out.println("Missing transaction data");
-            continue;
-          }
-          table.addCell(new Phrase(transaction.get("transactionCode").asText(), font8));
-          table.addCell(new Phrase(transaction.get("businessName").asText(), font8));
-          table.addCell(new Phrase("$" + transaction.get("amount").asText(), font8));
-
-          System.out.println("Added transacction : " +  transaction.get("amount").asText());
-        }
-
-        if (pos < table.getTotalHeight() + document.bottomMargin()) {
-          document.newPage();
-          pos = height - 50;
-        }
-        // Add table to document
-        table.writeSelectedRows(0, -1, 36, pos, writer.getDirectContent());
-        // This lets you add the object on the next cursor position. Useful for not dealing with line numbers
-        //document.add(table);
-
-        pos -= (table.getTotalHeight() + 20); // Adjust position for next table
-
-        // Log on succes bit
-
-      }
+      ProcessEmployees(rootNode, document, writer);
 
 
     } catch (DocumentException | IOException | AS400SecurityException de) {
@@ -163,6 +87,89 @@ public class CreateOpenPDF {
     PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream("tables.pdf"));
     document.open();
     return writer;
+  }
+
+  private static void ProcessEmployees(JsonNode rootNode, Document document, PdfWriter writer)
+      throws DocumentException{
+    
+    Font font8 = FontFactory.getFont(FontFactory.HELVETICA, 8);
+    // step 2
+    float width = document.getPageSize().getWidth();
+    float height = document.getPageSize().getHeight();
+    float pos = height - 50; // Starting position for tables
+
+    // step 3
+
+    // step 4
+    float[] columnDefinitionSize = {33.33F, 33.33F, 33.33F};
+
+    PdfPTable table = null;
+    PdfPCell cell = null;
+
+    
+    for (JsonNode node: rootNode){
+      JsonNode employee     = node.get("employee");
+      JsonNode transactions = node.get("transactions");
+
+      if (employee == null){
+        System.out.println("No employee data");
+        // Log on bit error
+        continue;
+      }
+
+      if (transactions == null || !transactions.isArray()){
+        System.out.println("No transaction data");
+        // Log on bit error
+        continue;
+      }
+
+      String firstName  = employee.get("firstName").asText();
+      String lastName   = employee.get("lastName").asText();
+
+      table = new PdfPTable(columnDefinitionSize);
+      table.getDefaultCell().setBorder(0);
+      table.setHorizontalAlignment(0);
+      table.setTotalWidth(width - 72);
+      table.setLockedWidth(true);
+
+      // Add header
+      cell = new PdfPCell(new Phrase("Notifications for client: " + firstName + " " + lastName));
+      cell.setColspan(columnDefinitionSize.length);
+      table.addCell(cell);
+
+      // Add column headers for transactions
+      table.addCell(new Phrase("Trans. Code", font8));
+      table.addCell(new Phrase("Business Name", font8));
+      table.addCell(new Phrase("Amount", font8));
+
+      System.out.println("Created table for " + firstName + " " + lastName);
+
+      for (JsonNode transaction : transactions) {
+        if (!transaction.has("transactionCode") || !transaction.has("businessName") || !transaction.has("amount")) {
+          System.out.println("Missing transaction data");
+          continue;
+        }
+        table.addCell(new Phrase(transaction.get("transactionCode").asText(), font8));
+        table.addCell(new Phrase(transaction.get("businessName").asText(), font8));
+        table.addCell(new Phrase("$" + transaction.get("amount").asText(), font8));
+
+        System.out.println("Added transacction : " +  transaction.get("amount").asText());
+      }
+
+      if (pos < table.getTotalHeight() + document.bottomMargin()) {
+        document.newPage();
+        pos = height - 50;
+      }
+      // Add table to document
+      table.writeSelectedRows(0, -1, 36, pos, writer.getDirectContent());
+      // This lets you add the object on the next cursor position. Useful for not dealing with line numbers
+      //document.add(table);
+
+      pos -= (table.getTotalHeight() + 20); // Adjust position for next table
+
+      // Log on succes bit
+
+    }
   }
 
 }
