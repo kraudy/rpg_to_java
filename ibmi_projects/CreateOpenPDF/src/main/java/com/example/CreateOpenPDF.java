@@ -21,6 +21,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class CreateOpenPDF {
+  private static final Font FONT_8 = FontFactory.getFont(FontFactory.HELVETICA, 8);
+  private static final float[] COLUMN_WIDTHS = {33.33F, 33.33F, 33.33F};
   public static void main( String... args ){
     if (args.length < 1) {
       System.out.println("Provide the input JSON file path as argument");
@@ -97,15 +99,6 @@ public class CreateOpenPDF {
     float width = document.getPageSize().getWidth();
     float height = document.getPageSize().getHeight();
     float pos = height - 50; // Starting position for tables
-
-    // step 3
-
-    // step 4
-    float[] columnDefinitionSize = {33.33F, 33.33F, 33.33F};
-
-    PdfPTable table = null;
-    PdfPCell cell = null;
-
     
     for (JsonNode node: rootNode){
       JsonNode employee     = node.get("employee");
@@ -123,38 +116,7 @@ public class CreateOpenPDF {
         continue;
       }
 
-      String firstName  = employee.get("firstName").asText();
-      String lastName   = employee.get("lastName").asText();
-
-      table = new PdfPTable(columnDefinitionSize);
-      table.getDefaultCell().setBorder(0);
-      table.setHorizontalAlignment(0);
-      table.setTotalWidth(width - 72);
-      table.setLockedWidth(true);
-
-      // Add header
-      cell = new PdfPCell(new Phrase("Notifications for client: " + firstName + " " + lastName));
-      cell.setColspan(columnDefinitionSize.length);
-      table.addCell(cell);
-
-      // Add column headers for transactions
-      table.addCell(new Phrase("Trans. Code", font8));
-      table.addCell(new Phrase("Business Name", font8));
-      table.addCell(new Phrase("Amount", font8));
-
-      System.out.println("Created table for " + firstName + " " + lastName);
-
-      for (JsonNode transaction : transactions) {
-        if (!transaction.has("transactionCode") || !transaction.has("businessName") || !transaction.has("amount")) {
-          System.out.println("Missing transaction data");
-          continue;
-        }
-        table.addCell(new Phrase(transaction.get("transactionCode").asText(), font8));
-        table.addCell(new Phrase(transaction.get("businessName").asText(), font8));
-        table.addCell(new Phrase("$" + transaction.get("amount").asText(), font8));
-
-        System.out.println("Added transacction : " +  transaction.get("amount").asText());
-      }
+      PdfPTable table = CreateEmployeeTable(employee, transactions, width);
 
       if (pos < table.getTotalHeight() + document.bottomMargin()) {
         document.newPage();
@@ -171,5 +133,42 @@ public class CreateOpenPDF {
 
     }
   }
+
+  private static PdfPTable CreateEmployeeTable(JsonNode employee, JsonNode transactions, float pageWidth){
+    String firstName  = employee.get("firstName").asText();
+    String lastName   = employee.get("lastName").asText();
+
+    PdfPTable table = new PdfPTable(COLUMN_WIDTHS);
+    table.getDefaultCell().setBorder(0);
+    table.setHorizontalAlignment(0);
+    table.setTotalWidth(pageWidth - 72);
+    table.setLockedWidth(true);
+
+    // Add header
+    PdfPCell cell = new PdfPCell(new Phrase("Notifications for client: " + firstName + " " + lastName));
+    cell.setColspan(COLUMN_WIDTHS.length);
+    table.addCell(cell);
+
+    // Add column headers for transactions
+    table.addCell(new Phrase("Trans. Code", FONT_8));
+    table.addCell(new Phrase("Business Name", FONT_8));
+    table.addCell(new Phrase("Amount", FONT_8));
+
+    System.out.println("Created table for " + firstName + " " + lastName);
+
+    for (JsonNode transaction : transactions) {
+      if (!transaction.has("transactionCode") || !transaction.has("businessName") || !transaction.has("amount")) {
+        System.out.println("Missing transaction data");
+        continue;
+      }
+      table.addCell(new Phrase(transaction.get("transactionCode").asText(), FONT_8));
+      table.addCell(new Phrase(transaction.get("businessName").asText(), FONT_8));
+      table.addCell(new Phrase("$" + transaction.get("amount").asText(), FONT_8));
+
+      System.out.println("Added transacction : " +  transaction.get("amount").asText());
+    }
+
+    return table;
+}
 
 }
