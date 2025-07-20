@@ -46,9 +46,8 @@ public class CreateOpenPDF {
 
       ProcessEmployees(rootNode, document, writer);
 
-
-    } catch (DocumentException | IOException | AS400SecurityException de) {
-      System.err.println(de.getMessage());
+    } catch (DocumentException | IOException | AS400SecurityException e) {
+      System.err.println(e.getMessage());
     } finally {
       // Step 5: Close document
       document.close();
