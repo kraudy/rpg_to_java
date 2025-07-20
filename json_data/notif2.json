@@ -1,0 +1,75 @@
+[
+  {
+    "employee": {
+      "id": 1,
+      "firstName": "John",
+      "lastName": "Doe",
+      "department": "Engineering",
+      "salary": 75000
+    },
+    "transactions": [
+      {
+        "transactionCode": "TXN1001",
+        "businessName": "TechGadgets Store",
+        "amount": 249.99
+      },
+      {
+        "transactionCode": "TXN1002",
+        "businessName": "Coffee Haven",
+        "amount": 12.50
+      },
+      {
+        "transactionCode": "TXN1003",
+        "businessName": "Book Nook",
+        "amount": 45.00
+      }
+    ]
+  },
+  {
+    "employee": {
+      "id": 2,
+      "firstName": "Jane",
+      "lastName": "Smith",
+      "department": "Marketing",
+      "salary": 65000
+    },
+    "transactions": [
+      {
+        "transactionCode": "TXN2001",
+        "businessName": "Fashion Outlet",
+        "amount": 89.99
+      },
+      {
+        "transactionCode": "TXN2002",
+        "businessName": "Smoothie Bar",
+        "amount": 8.75
+      }
+    ]
+  },
+  {
+    "employee": {
+      "id": 3,
+      "firstName": "Bob",
+      "lastName": "Johnson",
+      "department": "Sales",
+      "salary": 70000
+    },
+    "transactions": [
+      {
+        "transactionCode": "TXN3001",
+        "businessName": "Gourmet Restaurant",
+        "amount": 120.00
+      },
+      {
+        "transactionCode": "TXN3002",
+        "businessName": "Electronics Hub",
+        "amount": 499.99
+      },
+      {
+        "transactionCode": "TXN3003",
+        "businessName": "Local Pharmacy",
+        "amount": 22.30
+      }
+    ]
+  }
+]
