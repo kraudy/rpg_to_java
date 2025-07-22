@@ -417,7 +417,7 @@ mvn exec:java -Dexec.mainClass="jasperpdf.SimpleJasperTest"
 mvn exec:java -Dexec.mainClass="jasperpdf.CreateJasperPdf"
 
 // Create new mvn project 
-mvn archetype:generate -DgroupId=com.example -DartifactId=CreateOpenPDF -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
+mvn archetype:generate -DgroupId=com.example -DartifactId=SendPdfMail -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
 // Check pom pacakges dependencies
 mvn dependency:tree
 // generate a jar file
@@ -430,6 +430,10 @@ teOpnPDF-1.0-SNAPSHOT.jar/com.example.CreateOpenPDF')
 java -jar CreateOpenPDF-1.0-SNAPSHOT.jar /home/ROBKRAUDY/notif.json
 java -jar CreateOpenPDF-1.0-SNAPSHOT.jar /home/ROBKRAUDY/notif2.json
 java -jar CreateOpenPDF-1.0-SNAPSHOT.jar /home/ROBKRAUDY/notif3.json
+
+java -jar SendPdfMail-1.0-SNAPSHOT.jar /home/ROBKRAUDY/notif.json
+java -jar SendPdfMail-1.0-SNAPSHOT.jar /home/ROBKRAUDY/notif2.json
+java -jar SendPdfMail-1.0-SNAPSHOT.jar /home/ROBKRAUDY/notif3.json
 ```
 
 The test file is executed at compilation
