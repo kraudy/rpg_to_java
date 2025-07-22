@@ -27,6 +27,7 @@ import jakarta.mail.util.ByteArrayDataSource;
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.FileNotFoundException;
 
 public class SendPdfMail {
   private static final Font FONT_8 = FontFactory.getFont(FontFactory.HELVETICA, 8);
@@ -200,7 +201,8 @@ public class SendPdfMail {
 
   }
 
-  private static void sendEmailWithAttachment(byte[] pdfBytes, String fileName) throws MessagingException {
+  private static void sendEmailWithAttachment(byte[] pdfBytes, String fileName) 
+    throws MessagingException, FileNotFoundException,  IOException {
     // Set up mail server properties
     Properties props = new Properties();
     props.put("mail.smtp.auth", "true");
@@ -242,8 +244,15 @@ public class SendPdfMail {
     message.setContent(multipart);
 
     // Send the email
-    Transport.send(message);
-    System.out.println("Email sent successfully with PDF attachment");
+    //Transport.send(message);
+    //x`System.out.println("Email sent successfully with PDF attachment");
+
+    // Save email to file instead of sending for now
+    String emlFilePath = "email.eml"; // Specify IFS path
+    FileOutputStream fos = new FileOutputStream(emlFilePath);
+    message.writeTo(fos);
+    System.out.println("Email saved to " + emlFilePath);
+    
     }
 
 }
