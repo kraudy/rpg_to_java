@@ -3,6 +3,7 @@ package com.example;
 import com.ibm.as400.access.*; 
 
 import java.util.Date;
+import java.util.Properties;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,7 +31,14 @@ import java.io.IOException;
 public class SendPdfMail {
   private static final Font FONT_8 = FontFactory.getFont(FontFactory.HELVETICA, 8);
   private static final float[] COLUMN_WIDTHS = {33.33F, 33.33F, 33.33F};
-  
+
+  private static final String SMTP_HOST = "smtp.gmail.com";
+  private static final String SMTP_PORT = "587";
+  private static final String SMTP_USERNAME = "your-email@gmail.com";
+  private static final String SMTP_PASSWORD = "your-app-password";
+  private static final String FROM_EMAIL = "your-email@gmail.com";
+  private static final String TO_EMAIL = "recipient@yourdomain.com";
+    
   public static void main( String... args ){
     if (args.length < 1) {
       System.out.println("Provide the input JSON file path as argument");
@@ -62,7 +70,7 @@ public class SendPdfMail {
 
       System.out.println(pdfBytes);
 
-    } catch (DocumentException | IOException | AS400SecurityException e) {
+    } catch (DocumentException | IOException | AS400SecurityException | MessagingException e) {
       System.err.println(e.getMessage());
     } finally {
       // Step 5: Close document
