@@ -192,6 +192,50 @@ public class SendPdfMail {
 
   }
 
-  
+  private static void sendEmailWithAttachment(byte[] pdfBytes, String fileName) throws MessagingException {
+    // Set up mail server properties
+    Properties props = new Properties();
+    props.put("mail.smtp.auth", "true");
+    props.put("mail.smtp.starttls.enable", "true");
+    props.put("mail.smtp.host", SMTP_HOST);
+    props.put("mail.smtp.port", SMTP_PORT);
+
+    // Create a session with authentication
+    Session session = Session.getInstance(props, new Authenticator() {
+        @Override
+        protected PasswordAuthentication getPasswordAuthentication() {
+            return new PasswordAuthentication(SMTP_USERNAME, SMTP_PASSWORD);
+        }
+    });
+
+    // Create a new email message
+    Message message = new MimeMessage(session);
+    message.setFrom(new InternetAddress(FROM_EMAIL));
+    message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(TO_EMAIL));
+    message.setSubject("Employee Transaction Report - " + new Date());
+    message.setSentDate(new Date());
+
+    // Create the message part
+    BodyPart messageBodyPart = new MimeBodyPart();
+    messageBodyPart.setText("Please find attached the employee transaction report.");
+
+    // Create the attachment part
+    MimeBodyPart attachmentPart = new MimeBodyPart();
+    DataSource source = new ByteArrayDataSource(pdfBytes, "application/pdf");
+    attachmentPart.setDataHandler(new DataHandler(source));
+    attachmentPart.setFileName(fileName);
+
+    // Create a multipart message
+    Multipart multipart = new MimeMultipart();
+    multipart.addBodyPart(messageBodyPart);
+    multipart.addBodyPart(attachmentPart);
+
+    // Set the multipart message to the email
+    message.setContent(multipart);
+
+    // Send the email
+    Transport.send(message);
+    System.out.println("Email sent successfully with PDF attachment");
+    }
 
 }
