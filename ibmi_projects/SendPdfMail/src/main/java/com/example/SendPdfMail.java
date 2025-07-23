@@ -248,11 +248,12 @@ public class SendPdfMail {
     //x`System.out.println("Email sent successfully with PDF attachment");
 
     // Save email to file instead of sending for now
+    //TODO: Fix this.
     String emlFilePath = "email.eml"; // Specify IFS path
-    FileOutputStream fos = new FileOutputStream(emlFilePath);
-    message.writeTo(fos);
-    System.out.println("Email saved to " + emlFilePath);
-    
+    try (FileOutputStream fos = new FileOutputStream(emlFilePath)) {
+      message.writeTo(fos);
+      System.out.println("Email saved to " + emlFilePath);
+    }
     }
 
 }
