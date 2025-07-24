@@ -434,6 +434,11 @@ java -jar CreateOpenPDF-1.0-SNAPSHOT.jar /home/ROBKRAUDY/notif3.json
 java -jar SendPdfMail-1.0-SNAPSHOT.jar /home/ROBKRAUDY/notif.json
 java -jar SendPdfMail-1.0-SNAPSHOT.jar /home/ROBKRAUDY/notif2.json
 java -jar SendPdfMail-1.0-SNAPSHOT.jar /home/ROBKRAUDY/notif3.json
+
+java -jar HtmlOpenPdf-1.0-SNAPSHOT.jar /home/ROBKRAUDY/notif3.json
+
+This can be latter called from rpgle using RUNJVA
+ADDENVVAR ENVVAR(JAVA_HOME) VALUE('/QOpenSys/QIBM/ProdData/JavaVM/jdk80/64bit') LEVEL(*JOB)
 ```
 
 The test file is executed at compilation

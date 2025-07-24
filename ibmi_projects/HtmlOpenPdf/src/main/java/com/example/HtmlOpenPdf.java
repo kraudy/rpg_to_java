@@ -129,5 +129,13 @@ public class HtmlOpenPdf {
     return html.toString();
   }
 
-  
+  private static void createPdfFromHtml(String html) throws IOException {
+    //TODO: keep it in memory
+    try (FileOutputStream outputStream = new FileOutputStream("employee-tables.pdf")) {
+      ITextRenderer renderer = new ITextRenderer();
+      renderer.setDocumentFromString(html);
+      renderer.layout();
+      renderer.createPDF(outputStream);
+    }
+  }
 }
