@@ -12,6 +12,8 @@ public class BicycleDemo {
     bike2.speedUp(20);
     bike2.changeGear(3);
     bike2.printStates();
+
+    System.out.println("Total of bikes: " + Bicycle.getNumberOfBikes());
   }
 }
 
@@ -24,20 +26,25 @@ interface BikeInter {
 
 public class Bicycle implements BikeInter{
   /* Class states */
-  int cadence = 0;
-  int speed = 0;
-  int gear = 1;
+  private int cadence = 0;
+  private int speed = 0;
+  private int gear = 1;
+  private int id;
+  private static int numberOfBikes = 0;
+
+  public static int getNumberOfBikes(){
+    return numberOfBikes;
+  }
 
   public Bicycle(){
-    gear = 0;
-    cadence = 0;
-    speed = 1;
+    this(0,0,1);
   }
 
   public Bicycle(int startCadence, int startSpeed, int startGear){
-    gear = startGear;
-    cadence = startCadence;
-    speed = startSpeed;
+    this.cadence = startCadence;
+    this.speed = startSpeed;
+    this.gear = startGear;
+    this.id = ++numberOfBikes;
   }
 
   /* Methods to change the object's states */
@@ -53,10 +60,15 @@ public class Bicycle implements BikeInter{
     speed += increment; 
   }
 
+  public int getId(){
+    return this.id;
+  }
+
   public void printStates() {
     System.out.println("cadence:" +
         cadence + " speed:" + 
-        speed + " gear:" + gear);
+        speed + " gear:" + gear +
+        " id: " + this.getId());
   }
 
 }
