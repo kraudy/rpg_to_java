@@ -15,26 +15,45 @@ public class BicycleDemo {
   }
 }
 
-public class Bicycle {
+/* This is like a prototype that allows some standarization among classes */
+interface BikeInter {
+  void changeCadence(int newValue);
+  void changeGear(int newValue);
+  void speedUp(int increment);
+}
+
+public class Bicycle implements BikeInter{
   /* Class states */
   int cadence = 0;
   int speed = 0;
   int gear = 1;
 
+  public Bicycle(){
+    gear = 0;
+    cadence = 0;
+    speed = 1;
+  }
+
+  public Bicycle(int startCadence, int startSpeed, int startGear){
+    gear = startGear;
+    cadence = startCadence;
+    speed = startSpeed;
+  }
+
   /* Methods to change the object's states */
-  void changeCadence(int newValue){
+  public void changeCadence(int newValue){
     cadence = newValue;
   }
 
-  void changeGear(int newValue){
+  public void changeGear(int newValue){
     gear = newValue;
   }
   
-  void speedUp(int increment){
+  public void speedUp(int increment){
     speed += increment; 
   }
 
-  void printStates() {
+  public void printStates() {
     System.out.println("cadence:" +
         cadence + " speed:" + 
         speed + " gear:" + gear);

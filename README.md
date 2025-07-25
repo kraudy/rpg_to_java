@@ -453,6 +453,12 @@ CREATE TABLE ROBKRAUDY2.NOTIF_LOG (
 )
 ```
 
+A method's signature (used to identify methods when overloading), is similar to a service program firms. An identification of the specific procedure.
+
+Methods can be used as procedures that receive some input, performs an operation and produces some output, but they can also change the object states which is more like the nature of the OOP paradigm.
+
+Primitive arguments like `int` and `double` are passes by value to methods.
+
 ##
 
 ##
