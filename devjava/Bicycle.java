@@ -31,6 +31,7 @@ public class Bicycle implements BikeInter{
   private int gear = 1;
   private int id;
   private static int numberOfBikes = 0;
+  private static final int maxBikes = 10;
 
   public static int getNumberOfBikes(){
     return numberOfBikes;
@@ -68,7 +69,7 @@ public class Bicycle implements BikeInter{
     System.out.println("cadence:" +
         cadence + " speed:" + 
         speed + " gear:" + gear +
-        " id: " + this.getId());
+        " id: " + this.getId() + " out of max: " + maxBikes);
   }
 
 }
