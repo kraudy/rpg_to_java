@@ -34,5 +34,29 @@ public class ListFileShares {
     }
   }
 
-  
+  private static void listFileShares(ISeriesNetServer ns) throws 
+      AS400Exception, AS400SecurityException, ErrorCompletingRequestException, 
+      InterruptedException, IOException, ObjectDoesNotExistException {
+    System.out.println("\nExisting File Shares:");
+    System.out.println("---------------------");
+
+    // Retrieve the list of file shares.
+    ISeriesNetServerFileShare[] shares = ns.listFileShares();
+
+    if (shares.length == 0) {
+        System.out.println("No file shares found.");
+        return;
+    }
+
+    // Iterate through the file shares and print details.
+    for (ISeriesNetServerFileShare share : shares) {
+      System.out.println("Share Name: " + share.getName());
+      System.out.println("Path: " + share.getPath());
+      System.out.println("Description: " + share.getDescription());
+      System.out.println("Read-Only: " + share.READ_ONLY);
+      System.out.println("Maximum Users: " + (share.getMaximumNumberOfUsers() == -1 ? "Unlimited" : share.getMaximumNumberOfUsers()));
+      System.out.println("Current Users: " + share.getCurrentNumberOfUsers());
+      System.out.println("---------------------");
+    }
+  }
 }
