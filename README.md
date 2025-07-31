@@ -417,7 +417,7 @@ mvn exec:java -Dexec.mainClass="jasperpdf.SimpleJasperTest"
 mvn exec:java -Dexec.mainClass="jasperpdf.CreateJasperPdf"
 
 // Create new mvn project 
-mvn archetype:generate -DgroupId=com.example -DartifactId=ListFileShares -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
+mvn archetype:generate -DgroupId=com.example -DartifactId=CheckFileShare -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
 // Check pom pacakges dependencies
 mvn dependency:tree
 // generate a jar file
