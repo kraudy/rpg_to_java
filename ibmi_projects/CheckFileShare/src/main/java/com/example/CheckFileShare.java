@@ -45,5 +45,14 @@ public class CheckFileShare {
 
   }
 
-  
+  private static Object checkShare(ISeriesNetServer ns, String shareName) throws 
+      AS400Exception, AS400SecurityException, ErrorCompletingRequestException, 
+      InterruptedException, IOException, ObjectDoesNotExistException {
+    System.out.println("\nExisting File Shares:");
+    System.out.println("---------------------");
+
+    // Retrieve the list of file shares.
+   return ns.listFileShares(shareName);
+
+  }
 }
