@@ -420,7 +420,7 @@ mvn exec:java -Dexec.mainClass="jasperpdf.CreateJasperPdf"
 // This creates a different structure
 mvn archetype:generate -DarchetypeGroupId=org.apache.maven.archetypes -DarchetypeArtifactId=maven-archetype-quickstart -DarchetypeVersion=1.5 -DgroupId=com.example -DartifactId=CmdCallParam -DinteractiveMode=false
 
-mvn archetype:generate -DgroupId=com.example -DartifactId=CmdCallParam -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
+mvn archetype:generate -DgroupId=com.example -DartifactId=GetSourcePf -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
 
 
 // Check pom pacakges dependencies
