@@ -81,6 +81,19 @@ public class GetSourcePf {
     }
   }
 
+  /* This is faster than the regex but may ignore lines ended with more than one \n */
+  private static void printSourceRemoveLastChar(ResultSet rsSource) throws SQLException{
+    while (rsSource.next()) {
+      String sourceData = rsSource.getString("SRCDTA");
+      if (sourceData != null) {
+        if (sourceData.endsWith("\n")) {
+          sourceData = sourceData.substring(0, sourceData.length() - 1);
+        }
+        System.out.println(sourceData);
+      }
+    }
+  }
+  
   /* Regex can be slow for large code bases */
   private static void printSourceWithRegex(ResultSet rsSource) throws SQLException{
     while (rsSource.next()) {
@@ -94,7 +107,5 @@ public class GetSourcePf {
       }
     }
   }
-  
-  
 
 }
