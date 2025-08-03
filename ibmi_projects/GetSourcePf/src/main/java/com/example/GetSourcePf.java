@@ -45,15 +45,7 @@ public class GetSourcePf {
         ResultSet rsSource = sourceStmt.executeQuery("SELECT SRCDTA FROM QTEMP.SourceCode");
 
         // Process and print source lines
-        while (rsSource.next()) {
-          String sourceData = rsSource.getString("SRCDTA");
-          if (sourceData != null) {
-            sourceData = sourceData.trim(); // Remove trailing and leading whitespace
-            if (!sourceData.isEmpty()) { // Skip empty lines
-              System.out.println(sourceData);
-            }
-          }
-        }
+        printSource(rsSource);
 
         // Close source ResultSet
         rsSource.close();
@@ -85,6 +77,18 @@ public class GetSourcePf {
     } catch (SQLException e) {
         e.printStackTrace();
     }
+    }
+  }
+
+  private static void printSource(ResultSet rsSource) throws SQLException{
+    while (rsSource.next()) {
+      String sourceData = rsSource.getString("SRCDTA");
+      if (sourceData != null) {
+        sourceData = sourceData.trim(); // Remove trailing and leading whitespace
+        if (!sourceData.isEmpty()) { // Skip empty lines
+          System.out.println(sourceData);
+        }
+      }
     }
   }
 }
