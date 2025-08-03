@@ -45,7 +45,8 @@ public class GetSourcePf {
         ResultSet rsSource = sourceStmt.executeQuery("SELECT SRCDTA FROM QTEMP.SourceCode");
 
         // Process and print source lines
-        printSource(rsSource);
+        //printSourceWithRegex(rsSource);
+        printSourceRemoveLastChar(rsSource);
 
         // Close source ResultSet
         rsSource.close();
@@ -80,15 +81,20 @@ public class GetSourcePf {
     }
   }
 
-  private static void printSource(ResultSet rsSource) throws SQLException{
+  /* Regex can be slow for large code bases */
+  private static void printSourceWithRegex(ResultSet rsSource) throws SQLException{
     while (rsSource.next()) {
       String sourceData = rsSource.getString("SRCDTA");
       if (sourceData != null) {
-        sourceData = sourceData.trim(); // Remove trailing and leading whitespace
-        if (!sourceData.isEmpty()) { // Skip empty lines
-          System.out.println(sourceData);
-        }
+        //sourceData = sourceData.trim(); // Remove trailing and leading whitespace
+        sourceData = sourceData.replaceAll("\\n$", "");
+        //if (!sourceData.isEmpty()) { // Skip empty lines
+        System.out.println(sourceData);
+        //}
       }
     }
   }
+  
+  
+
 }
