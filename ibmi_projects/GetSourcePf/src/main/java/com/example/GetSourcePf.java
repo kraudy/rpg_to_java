@@ -2,6 +2,7 @@ package com.example;
 
 import com.ibm.as400.access.*;
 import java.sql.*;
+import java.io.*;
 
 public class GetSourcePf {
   public static void main( String[] args ){
@@ -11,8 +12,18 @@ public class GetSourcePf {
     Statement sourceStmt = null;
     ResultSet rsMembers = null;
 
+    //TODO: Add the source pf as another dir
+    // Base dir
+    String ifsOutputDir = "/home/ROBKRAUDY/sources"; 
+
     try{
       //CommandCall cmd = new CommandCall(system);
+
+      // Ensure the IFS output directory exists
+      File outputDir = new File(ifsOutputDir);
+      if (!outputDir.exists()) {
+          outputDir.mkdirs(); // Create directory if it doesn't exist
+      }
 
       // Establish JDBC connection using AS400JDBCConnection
       AS400JDBCDataSource dataSource = new AS400JDBCDataSource(system);
@@ -21,7 +32,6 @@ public class GetSourcePf {
 
       // Create separate Statement objects
       memberStmt = conn.createStatement();
-      sourceStmt = conn.createStatement();
 
 
        // Query SYSPARTITIONSTAT to get all members of the source file
@@ -31,29 +41,8 @@ public class GetSourcePf {
                   "AND SYSTEM_TABLE_NAME = 'QRPGLESRC'";
       rsMembers = memberStmt.executeQuery(sql);
       
-      // Iterate through each member
-      while (rsMembers.next()) {
-        String memberName = rsMembers.getString("SYSTEM_TABLE_MEMBER").trim();
-        System.out.println("\n=== Processing Member: " + memberName + " ===");
-
-        // Create alias for the current member
-        String aliasSql = "CREATE OR REPLACE ALIAS QTEMP.SourceCode " +
-                        "FOR ROBKRAUDY2.QRPGLESRC(" + memberName + ")";
-        sourceStmt.execute(aliasSql);
-
-        // Get source code for the current member
-        ResultSet rsSource = sourceStmt.executeQuery("SELECT SRCDTA FROM QTEMP.SourceCode");
-
-        // Process and print source lines
-        //printSourceWithRegex(rsSource);
-        printSourceRemoveLastChar(rsSource);
-
-        // Close source ResultSet
-        rsSource.close();
-
-        // Drop the alias
-        sourceStmt.execute("DROP ALIAS QTEMP.SourceCode");
-      }
+      sourceStmt = conn.createStatement();
+      iterateThroughMembers(rsMembers, sourceStmt);
 
     } catch (Exception e){
       e.printStackTrace();
@@ -78,6 +67,33 @@ public class GetSourcePf {
     } catch (SQLException e) {
         e.printStackTrace();
     }
+    }
+  }
+
+  private static void iterateThroughMembers(ResultSet rsMembers, Statement sourceStmt) 
+        throws SQLException{
+    // Iterate through each member
+    while (rsMembers.next()) {
+      String memberName = rsMembers.getString("SYSTEM_TABLE_MEMBER").trim();
+      System.out.println("\n=== Processing Member: " + memberName + " ===");
+
+      // Create alias for the current member
+      String aliasSql = "CREATE OR REPLACE ALIAS QTEMP.SourceCode " +
+                      "FOR ROBKRAUDY2.QRPGLESRC(" + memberName + ")";
+      sourceStmt.execute(aliasSql);
+
+      // Get source code for the current member
+      ResultSet rsSource = sourceStmt.executeQuery("SELECT SRCDTA FROM QTEMP.SourceCode");
+
+      // Process and print source lines
+      //printSourceWithRegex(rsSource);
+      printSourceRemoveLastChar(rsSource);
+
+      // Close source ResultSet
+      rsSource.close();
+
+      // Drop the alias
+      sourceStmt.execute("DROP ALIAS QTEMP.SourceCode");
     }
   }
 
