@@ -42,7 +42,7 @@ public class GetSourcePf {
       rsMembers = memberStmt.executeQuery(sql);
       
       sourceStmt = conn.createStatement();
-      iterateThroughMembers(rsMembers, sourceStmt);
+      iterateThroughMembers(rsMembers, sourceStmt, ifsOutputDir);
 
     } catch (Exception e){
       e.printStackTrace();
@@ -70,7 +70,7 @@ public class GetSourcePf {
     }
   }
 
-  private static void iterateThroughMembers(ResultSet rsMembers, Statement sourceStmt) 
+  private static void iterateThroughMembers(ResultSet rsMembers, Statement sourceStmt, String ifsOutputDir) 
         throws SQLException{
     // Iterate through each member
     while (rsMembers.next()) {
@@ -85,9 +85,14 @@ public class GetSourcePf {
       // Get source code for the current member
       ResultSet rsSource = sourceStmt.executeQuery("SELECT SRCDTA FROM QTEMP.SourceCode");
 
-      // Process and print source lines
+      // Print with regex
       //printSourceWithRegex(rsSource);
-      printSourceRemoveLastChar(rsSource);
+      // Print with string replacemente
+      //printSourceRemoveLastChar(rsSource);
+
+      // Write source code to a file in the IFS
+      String outputFilePath = "/" + ifsOutputDir + "/" + memberName + ".rpgle";
+      writeSourceToIFS(rsSource, outputFilePath);
 
       // Close source ResultSet
       rsSource.close();
@@ -96,6 +101,8 @@ public class GetSourcePf {
       sourceStmt.execute("DROP ALIAS QTEMP.SourceCode");
     }
   }
+
+  
 
   /* This is faster than the regex but may ignore lines ended with more than one \n */
   private static void printSourceRemoveLastChar(ResultSet rsSource) throws SQLException{
