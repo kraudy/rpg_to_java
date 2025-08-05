@@ -71,7 +71,7 @@ public class GetSourcePf {
   }
 
   private static void iterateThroughMembers(ResultSet rsMembers, Statement sourceStmt, String ifsOutputDir) 
-        throws SQLException{
+        throws SQLException, IOException{
     // Iterate through each member
     while (rsMembers.next()) {
       String memberName = rsMembers.getString("SYSTEM_TABLE_MEMBER").trim();
@@ -102,7 +102,42 @@ public class GetSourcePf {
     }
   }
 
-  
+  /* 
+    To get the source out of the PF we actually don't need to do it line by line.
+    We could just do this
+    CmdStr = 'CPYTOSTMF FROMMBR('''
+                   + %TrimR(ASP_Prefix)
+                   + '/QSYS.lib/'
+                   + %TrimR(pLibrary) + '.lib/'
+                   + %TrimR(pSRCPF) + '.file/'
+                   + %TrimR(LmMember) + '.mbr'') '
+                 + 'TOSTMF('''
+                   + DirName + %TrimR(LmMember) + '.'
+                    + %TrimR(LmType) + ''') '
+                 + 'STMFOPT(*REPLACE) STMFCCSID(' + %TrimR(pCCSID) 
+                 + ') ENDLINFMT(*LF)'; 
+    We only need to get the source out of Source PFs for the ones that are not already on the git repo.
+    So we don't really care about much else other thant the code.
+  */
+
+   // Method to write source code to a file in the IFS
+  private static void writeSourceToIFS(ResultSet rsSource, String outputFilePath) throws SQLException, IOException {
+    //TODO: Check if file exists
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilePath))) {
+      while (rsSource.next()) {
+        String sourceData = rsSource.getString("SRCDTA");
+        if (sourceData != null) {
+          if (sourceData.endsWith("\n")) {
+            sourceData = sourceData.substring(0, sourceData.length() - 1);
+          }
+        //TODO: This adds an extra tab for some reason. Writing line by line like this is tedious.
+          writer.write(sourceData);
+          writer.newLine(); // Add newline after each source line
+        }
+      }
+      System.out.println("Wrote source to: " + outputFilePath);
+    }
+  }
 
   /* This is faster than the regex but may ignore lines ended with more than one \n */
   private static void printSourceRemoveLastChar(ResultSet rsSource) throws SQLException{
