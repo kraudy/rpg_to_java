@@ -70,6 +70,7 @@ public class GetSourcePf {
     }
   }
 
+  //TODO: Remove sourceStmt and pass the coneection to create the statement here or define it as global
   private static void iterateThroughMembers(ResultSet rsMembers, Statement sourceStmt, String ifsOutputDir) 
         throws SQLException, IOException{
     // Iterate through each member
@@ -77,28 +78,9 @@ public class GetSourcePf {
       String memberName = rsMembers.getString("SYSTEM_TABLE_MEMBER").trim();
       System.out.println("\n=== Processing Member: " + memberName + " ===");
 
-      // Create alias for the current member
-      String aliasSql = "CREATE OR REPLACE ALIAS QTEMP.SourceCode " +
-                      "FOR ROBKRAUDY2.QRPGLESRC(" + memberName + ")";
-      sourceStmt.execute(aliasSql);
-
-      // Get source code for the current member
-      ResultSet rsSource = sourceStmt.executeQuery("SELECT SRCDTA FROM QTEMP.SourceCode");
-
-      // Print with regex
-      //printSourceWithRegex(rsSource);
-      // Print with string replacemente
-      //printSourceRemoveLastChar(rsSource);
-
-      // Write source code to a file in the IFS
-      String outputFilePath = "/" + ifsOutputDir + "/" + memberName + ".rpgle";
-      writeSourceToIFS(rsSource, outputFilePath);
-
-      // Close source ResultSet
-      rsSource.close();
-
-      // Drop the alias
-      sourceStmt.execute("DROP ALIAS QTEMP.SourceCode");
+      useAliases(sourceStmt, memberName, ifsOutputDir);
+      //useCommand();
+      
     }
   }
 
@@ -119,6 +101,33 @@ public class GetSourcePf {
     We only need to get the source out of Source PFs for the ones that are not already on the git repo.
     So we don't really care about much else other thant the code.
   */
+
+  private static void useAliases(Statement sourceStmt, String memberName, String ifsOutputDir)
+      throws SQLException, IOException{
+    // Create alias for the current member
+    String aliasSql = "CREATE OR REPLACE ALIAS QTEMP.SourceCode " +
+                    "FOR ROBKRAUDY2.QRPGLESRC(" + memberName + ")";
+
+    sourceStmt.execute(aliasSql);
+
+    // Get source code for the current member
+    ResultSet rsSource = sourceStmt.executeQuery("SELECT SRCDTA FROM QTEMP.SourceCode");
+
+    // Print with regex
+    //printSourceWithRegex(rsSource);
+    // Print with string replacemente
+    //printSourceRemoveLastChar(rsSource);
+
+    // Write source code to a file in the IFS
+    String outputFilePath = "/" + ifsOutputDir + "/" + memberName + ".rpgle";
+    writeSourceToIFS(rsSource, outputFilePath);
+
+    // Close source ResultSet
+    rsSource.close();
+
+    // Drop the alias
+    sourceStmt.execute("DROP ALIAS QTEMP.SourceCode");
+  }
 
    // Method to write source code to a file in the IFS
   private static void writeSourceToIFS(ResultSet rsSource, String outputFilePath) throws SQLException, IOException {
