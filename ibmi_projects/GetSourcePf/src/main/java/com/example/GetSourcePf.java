@@ -3,6 +3,7 @@ package com.example;
 import com.ibm.as400.access.*;
 import java.sql.*;
 import java.io.*;
+import java.beans.PropertyVetoException;
 
 public class GetSourcePf {
   public static void main( String[] args ){
@@ -35,14 +36,14 @@ public class GetSourcePf {
 
 
        // Query SYSPARTITIONSTAT to get all members of the source file
-      String sql = "SELECT SYSTEM_TABLE_MEMBER " +
+      String sql = "SELECT SYSTEM_TABLE_MEMBER, SOURCE_TYPE " +
                   "FROM QSYS2.SYSPARTITIONSTAT " +
                   "WHERE SYSTEM_TABLE_SCHEMA = 'ROBKRAUDY2' " +
                   "AND SYSTEM_TABLE_NAME = 'QRPGLESRC'";
       rsMembers = memberStmt.executeQuery(sql);
       
       sourceStmt = conn.createStatement();
-      iterateThroughMembers(rsMembers, sourceStmt, ifsOutputDir);
+      iterateThroughMembers(rsMembers, sourceStmt, ifsOutputDir, system);
 
     } catch (Exception e){
       e.printStackTrace();
@@ -71,33 +72,44 @@ public class GetSourcePf {
   }
 
   //TODO: Remove sourceStmt and pass the coneection to create the statement here or define it as global
-  private static void iterateThroughMembers(ResultSet rsMembers, Statement sourceStmt, String ifsOutputDir) 
-        throws SQLException, IOException{
+  private static void iterateThroughMembers(ResultSet rsMembers, Statement sourceStmt, String ifsOutputDir, AS400 system) 
+        throws SQLException, IOException, AS400SecurityException, 
+                ErrorCompletingRequestException, InterruptedException, PropertyVetoException{
     // Iterate through each member
     while (rsMembers.next()) {
       String memberName = rsMembers.getString("SYSTEM_TABLE_MEMBER").trim();
+      String sourceType = rsMembers.getString("SOURCE_TYPE").trim();
       System.out.println("\n=== Processing Member: " + memberName + " ===");
 
-      useAliases(sourceStmt, memberName, ifsOutputDir);
-      //useCommand();
+      //useAliases(sourceStmt, memberName, ifsOutputDir);
+      useCommand("ROBKRAUDY2", "QRPGLESRC", memberName, sourceType, system, ifsOutputDir);
       
     }
+  }
+
+  private static void useCommand(String library, String sourcePf, String memberName, String sourceType, 
+      AS400 system, String ifsOutputDir) 
+      throws IOException, AS400SecurityException, ErrorCompletingRequestException, InterruptedException, PropertyVetoException{
+
+    String ccsid = "1208";
+
+    
+
+    CommandCall cmd = new CommandCall(system);
+    if(!cmd.run(commandStr)){
+      System.out.println("Could not migrate " + memberName + " ===");
+      return;
+    }
+
+    System.out.println("Migrateed " + memberName + " successfully ===");
+
   }
 
   /* 
     To get the source out of the PF we actually don't need to do it line by line.
     We could just do this
-    CmdStr = 'CPYTOSTMF FROMMBR('''
-                   + %TrimR(ASP_Prefix)
-                   + '/QSYS.lib/'
-                   + %TrimR(pLibrary) + '.lib/'
-                   + %TrimR(pSRCPF) + '.file/'
-                   + %TrimR(LmMember) + '.mbr'') '
-                 + 'TOSTMF('''
-                   + DirName + %TrimR(LmMember) + '.'
-                    + %TrimR(LmType) + ''') '
-                 + 'STMFOPT(*REPLACE) STMFCCSID(' + %TrimR(pCCSID) 
-                 + ') ENDLINFMT(*LF)'; 
+    
+
     We only need to get the source out of Source PFs for the ones that are not already on the git repo.
     So we don't really care about much else other thant the code.
   */
