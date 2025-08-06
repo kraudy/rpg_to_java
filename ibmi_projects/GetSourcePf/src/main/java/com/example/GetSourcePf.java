@@ -93,7 +93,15 @@ public class GetSourcePf {
 
     String ccsid = "1208";
 
-    
+    String commandStr = "CPYTOSTMF FROMMBR('/QSYS.lib/" 
+                   + library + ".lib/" 
+                   + sourcePf + ".file/" 
+                   + memberName + ".mbr') "
+                   + "TOSTMF('" 
+                   + ifsOutputDir + "/" 
+                   + memberName + "." + sourceType + "') "
+                   + "STMFOPT(*REPLACE) STMFCCSID(" + ccsid 
+                   + ") ENDLINFMT(*LF)";
 
     CommandCall cmd = new CommandCall(system);
     if(!cmd.run(commandStr)){
