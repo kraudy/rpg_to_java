@@ -9,7 +9,12 @@ public class GetUser {
     try{
       // Get current user
       User user = new User(system, system.getUserId());
-      System.out.println("User dir: " + user.getHomeDirectory());
+
+      // Get user's home dir
+      System.out.println("User's dir: " + user.getHomeDirectory());
+
+      // Retrieve the current user library
+      System.out.println("User's library: " + user.getCurrentLibraryName());
 
     } catch (Exception e){
       e.printStackTrace();
