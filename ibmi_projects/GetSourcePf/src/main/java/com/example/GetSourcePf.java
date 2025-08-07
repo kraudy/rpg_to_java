@@ -105,11 +105,11 @@ public class GetSourcePf {
 
     CommandCall cmd = new CommandCall(system);
     if(!cmd.run(commandStr)){
-      System.out.println("Could not migrate " + memberName + " ===");
+      System.out.println("Could not migrate " + memberName + " ***");
       return;
     }
 
-    System.out.println("Migrateed " + memberName + " successfully ===");
+    System.out.println("Migrateed " + memberName + " successfully");
 
   }
 
