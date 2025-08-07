@@ -6,7 +6,8 @@ import java.io.*;
 import java.beans.PropertyVetoException;
 
 public class GetSourcePf {
-  public static void main( String[] args ){
+  public static void main( String... args ){
+    BufferedReader inputStream = new BufferedReader(new InputStreamReader(System.in),1);
     AS400 system = new AS400();
     Connection conn = null;
     Statement memberStmt = null;
@@ -15,16 +16,41 @@ public class GetSourcePf {
 
     //TODO: Add the source pf as another dir
     // Base dir
-    String ifsOutputDir = "/home/ROBKRAUDY/sources"; 
+    String ifsOutputDir = null; 
+    String library = null;
 
     try{
-      //CommandCall cmd = new CommandCall(system);
+      // Get current user
+      User user = new User(system, system.getUserId());
+      String homeDir = user.getHomeDirectory();
+
+      if (homeDir == null) {
+        System.out.println("The current user has no home dir");
+        return;
+      }
+      // Construct exporation directory
+      ifsOutputDir = homeDir + "/" + "sources";
+
+      System.out.println("Source files will be migrated to: " + ifsOutputDir);
 
       // Ensure the IFS output directory exists
       File outputDir = new File(ifsOutputDir);
       if (!outputDir.exists()) {
+          System.out.println("Creating dir: " + ifsOutputDir);
           outputDir.mkdirs(); // Create directory if it doesn't exist
       }
+
+      System.out.println("Specify the name of a library or press enter to search in the current library: ");
+      library = inputStream.readLine().trim().toUpperCase();
+
+      if (library == "") {
+        library = user.getCurrentLibraryName();
+        if (library.equals("*CRTDFT")){
+          System.out.println("The user does not have a current library");
+          return;
+        }
+      }
+      
 
       // Establish JDBC connection using AS400JDBCConnection
       AS400JDBCDataSource dataSource = new AS400JDBCDataSource(system);
@@ -38,12 +64,16 @@ public class GetSourcePf {
        // Query SYSPARTITIONSTAT to get all members of the source file
       String sql = "SELECT SYSTEM_TABLE_MEMBER, SOURCE_TYPE " +
                   "FROM QSYS2.SYSPARTITIONSTAT " +
-                  "WHERE SYSTEM_TABLE_SCHEMA = 'ROBKRAUDY2' " +
+                  "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
                   "AND SYSTEM_TABLE_NAME = 'QRPGLESRC'";
       rsMembers = memberStmt.executeQuery(sql);
+
+      System.out.println("Specify the name of a source Pf or press enter to migrate all the source Pf: ");
       
       sourceStmt = conn.createStatement();
       iterateThroughMembers(rsMembers, sourceStmt, ifsOutputDir, system);
+
+      System.out.println("Specify the name of a source member or press enter to migrate all the source members: ");
 
     } catch (Exception e){
       e.printStackTrace();
