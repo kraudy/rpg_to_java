@@ -21,6 +21,9 @@ public class GetSourcePf {
     // Base dir
     String ifsOutputDir = null; 
     String library = null;
+    String sourcePf = null;
+    // TODO: Fix this to show the actual name instead of LOCALHOST
+    String systemName = system.getSystemName().toUpperCase();
 
     try{
       // Get current user
@@ -61,7 +64,7 @@ public class GetSourcePf {
 
       // Validates if library exists
       if (!conn.createStatement().executeQuery(
-          "Select 1 As Exist " +
+          "Select 1 As Exists " +
           "From QSYS2.SYSPARTITIONSTAT " + 
           "Where SYSTEM_TABLE_SCHEMA = '" + library + "' limit 1 ")
           .next()) {
@@ -76,15 +79,29 @@ public class GetSourcePf {
         "Group by SYSTEM_TABLE_NAME"
       );
 
-      System.out.println("List of availables Source Pf in the library: ");
-
+      System.out.println("\nList of available Source PFs in the library: ");
+      System.out.println("    SourcePf      | Number of Members"); // Header with aligned spacing
+      System.out.println("    ------------- | -----------------"); // Separator line for clarity
       while(rsshowSourcePf.next()){
-        String sourcePf = rsshowSourcePf.getString("SourcePf").trim();
+        String rsSourcePf = rsshowSourcePf.getString("SourcePf").trim();
         String membersCount = rsshowSourcePf.getString("Members").trim();
-        System.out.println("    SourcePf: " + sourcePf + ". Number of members: " + membersCount);
+        System.out.println(String.format("    %-13s | %17s", rsSourcePf, membersCount));
       }
       
-      System.out.println("Specify the name of a source Pf or press 'Enter' to migrate all the source Pf: ");
+      System.out.println("\nSpecify the name of a source PF or press 'Enter' to migrate all the source PFs: ");
+      sourcePf = inputStream.readLine().trim().toUpperCase();
+
+      if (sourcePf != "") {
+        // Validates if SourcePF exists
+        if (!conn.createStatement().executeQuery(
+            "Select 1 As Exist From QSYS2.SYSPARTITIONSTAT " + 
+            "Where SYSTEM_TABLE_SCHEMA = '" + library + "' " + 
+            "AND SYSTEM_TABLE_NAME = '" + sourcePf + "' limit 1")
+            .next()) {
+          System.out.println("Source PF does not exists in library " + library);
+          return;
+        }
+      }
 
       // Create separate Statement objects
       memberStmt = conn.createStatement();
