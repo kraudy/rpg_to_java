@@ -12,7 +12,10 @@ public class GetSourcePf {
     Connection conn = null;
     Statement memberStmt = null;
     Statement sourceStmt = null;
+    //Statemente showSourcePf = null;
+
     ResultSet rsMembers = null;
+    ResultSet rsshowSourcePf = null;
 
     //TODO: Add the source pf as another dir
     // Base dir
@@ -50,16 +53,33 @@ public class GetSourcePf {
           return;
         }
       }
-      
 
       // Establish JDBC connection using AS400JDBCConnection
       AS400JDBCDataSource dataSource = new AS400JDBCDataSource(system);
       conn = dataSource.getConnection();
       conn.setAutoCommit(true); // We don't want transaction control
 
+      
+
+      rsshowSourcePf = conn.createStatement().executeQuery(
+        "Select SYSTEM_TABLE_NAME As SourcePf, Count(*) As Members " +
+        "From QSYS2.SYSPARTITIONSTAT " +
+        "Where SYSTEM_TABLE_SCHEMA = '" + library + "' " +
+        "Group by SYSTEM_TABLE_NAME"
+      );
+
+      System.out.println("List of availables Source Pf in the library: ");
+
+      while(rsshowSourcePf.next()){
+        String sourcePf = rsshowSourcePf.getString("SourcePf").trim();
+        String membersCount = rsshowSourcePf.getString("Members").trim();
+        System.out.println("    SourcePf: " + sourcePf + ". Number of members: " + membersCount);
+      }
+      
+      System.out.println("Specify the name of a source Pf or press 'Enter' to migrate all the source Pf: ");
+
       // Create separate Statement objects
       memberStmt = conn.createStatement();
-
 
        // Query SYSPARTITIONSTAT to get all members of the source file
       String sql = "SELECT SYSTEM_TABLE_MEMBER, SOURCE_TYPE " +
@@ -68,8 +88,6 @@ public class GetSourcePf {
                   "AND SYSTEM_TABLE_NAME = 'QRPGLESRC'";
       rsMembers = memberStmt.executeQuery(sql);
 
-      System.out.println("Specify the name of a source Pf or press enter to migrate all the source Pf: ");
-      
       sourceStmt = conn.createStatement();
       iterateThroughMembers(rsMembers, sourceStmt, ifsOutputDir, system);
 
