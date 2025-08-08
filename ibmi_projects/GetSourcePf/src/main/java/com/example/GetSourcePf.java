@@ -59,7 +59,15 @@ public class GetSourcePf {
       conn = dataSource.getConnection();
       conn.setAutoCommit(true); // We don't want transaction control
 
-      
+      // Validates if library exists
+      if (!conn.createStatement().executeQuery(
+          "Select 1 As Exist " +
+          "From QSYS2.SYSPARTITIONSTAT " + 
+          "Where SYSTEM_TABLE_SCHEMA = '" + library + "' limit 1 ")
+          .next()) {
+        System.out.println("Library does not exists in your system");
+        return;
+      }
 
       rsshowSourcePf = conn.createStatement().executeQuery(
         "Select SYSTEM_TABLE_NAME As SourcePf, Count(*) As Members " +
