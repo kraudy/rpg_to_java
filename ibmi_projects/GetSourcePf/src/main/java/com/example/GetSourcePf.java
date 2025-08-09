@@ -103,15 +103,14 @@ public class GetSourcePf {
         }
       }
 
-      // Create separate Statement objects
-      memberStmt = conn.createStatement();
+      // Get members
 
-       // Query SYSPARTITIONSTAT to get all members of the source file
-      String sql = "SELECT SYSTEM_TABLE_MEMBER, SOURCE_TYPE " +
-                  "FROM QSYS2.SYSPARTITIONSTAT " +
-                  "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
-                  "AND SYSTEM_TABLE_NAME = 'QRPGLESRC'";
-      rsMembers = memberStmt.executeQuery(sql);
+      rsMembers = conn.createStatement().executeQuery(
+        "SELECT SYSTEM_TABLE_MEMBER, SOURCE_TYPE " +
+        "FROM QSYS2.SYSPARTITIONSTAT " +
+        "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
+        "AND SYSTEM_TABLE_NAME = 'QRPGLESRC'"
+      );
 
       sourceStmt = conn.createStatement();
       iterateThroughMembers(rsMembers, sourceStmt, ifsOutputDir, system);
