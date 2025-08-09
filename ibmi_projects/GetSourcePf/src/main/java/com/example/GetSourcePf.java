@@ -27,27 +27,36 @@ public class GetSourcePf {
       // Get current user
       User user = new User(system, system.getUserId());
       String homeDir = user.getHomeDirectory();
+      String sourceDir = "sources";
 
       if (homeDir == null) {
         System.out.println("The current user has no home dir");
         return;
       }
-      // Construct exporation directory
-      ifsOutputDir = homeDir + "/" + "sources";
+      // Construct exportation directory
+      ifsOutputDir = homeDir + "/" + sourceDir;
 
-      System.out.println("Source files will be migrated to: " + ifsOutputDir);
+      System.out.println("Specify the source dir destination or press 'Enter' to use: " + ifsOutputDir);
+      sourceDir = inputStream.readLine().trim();
+
+      if (!sourceDir.isEmpty()) {
+        ifsOutputDir = homeDir + "/" + sourceDir;
+      }
 
       // Ensure the IFS output directory exists
       File outputDir = new File(ifsOutputDir);
       if (!outputDir.exists()) {
-          System.out.println("Creating dir: " + ifsOutputDir);
+          System.out.println("Creating dir: " + ifsOutputDir + " ...");
           outputDir.mkdirs(); // Create directory if it doesn't exist
       }
+      
+      System.out.println("Created");
+      System.out.println("Source files will be migrated to dir: " + ifsOutputDir);
 
-      System.out.println("Specify the name of a library or press enter to search in the current library: ");
+      System.out.println("\nSpecify the name of a library or press enter to search in the current library: " + user.getCurrentLibraryName());
       library = inputStream.readLine().trim().toUpperCase();
 
-      if (library == "") {
+      if (library.isEmpty()) {
         library = user.getCurrentLibraryName();
         if (library.equals("*CRTDFT")){
           System.out.println("The user does not have a current library");
@@ -66,6 +75,7 @@ public class GetSourcePf {
           "From QSYS2.SYSPARTITIONSTAT " + 
           "Where SYSTEM_TABLE_SCHEMA = '" + library + "' limit 1 ")
           .next()) {
+        //TODO: Add validation to show related libraries. If this las !.next() do the return.
         System.out.println("Library does not exists in your system");
         return;
       }
