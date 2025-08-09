@@ -11,7 +11,6 @@ public class GetSourcePf {
     AS400 system = new AS400();
     Connection conn = null;
     Statement memberStmt = null;
-    Statement sourceStmt = null;
     //Statemente showSourcePf = null;
 
     ResultSet rsMembers = null;
@@ -112,8 +111,7 @@ public class GetSourcePf {
         "AND SYSTEM_TABLE_NAME = 'QRPGLESRC'"
       );
 
-      sourceStmt = conn.createStatement();
-      iterateThroughMembers(rsMembers, sourceStmt, ifsOutputDir, system);
+      iterateThroughMembers(rsMembers, conn, ifsOutputDir, system);
 
       System.out.println("Specify the name of a source member or press enter to migrate all the source members: ");
 
@@ -128,9 +126,6 @@ public class GetSourcePf {
         if (memberStmt != null) {
             memberStmt.close();
         }
-        if (sourceStmt != null) {
-            sourceStmt.close();
-        }
         if (conn != null) {
             conn.close();
         }
@@ -144,7 +139,7 @@ public class GetSourcePf {
   }
 
   //TODO: Remove sourceStmt and pass the coneection to create the statement here or define it as global
-  private static void iterateThroughMembers(ResultSet rsMembers, Statement sourceStmt, String ifsOutputDir, AS400 system) 
+  private static void iterateThroughMembers(ResultSet rsMembers, Connection conn, String ifsOutputDir, AS400 system) 
         throws SQLException, IOException, AS400SecurityException, 
                 ErrorCompletingRequestException, InterruptedException, PropertyVetoException{
     // Iterate through each member
@@ -153,8 +148,8 @@ public class GetSourcePf {
       String sourceType = rsMembers.getString("SOURCE_TYPE").trim();
       System.out.println("\n=== Processing Member: " + memberName + " ===");
 
-      //useAliases(sourceStmt, memberName, ifsOutputDir);
-      useCommand("ROBKRAUDY2", "QRPGLESRC", memberName, sourceType, system, ifsOutputDir);
+      useAliases(conn, memberName, ifsOutputDir);
+      //useCommand("ROBKRAUDY2", "QRPGLESRC", memberName, sourceType, system, ifsOutputDir);
       
     }
   }
@@ -194,16 +189,18 @@ public class GetSourcePf {
     So we don't really care about much else other thant the code.
   */
 
-  private static void useAliases(Statement sourceStmt, String memberName, String ifsOutputDir)
+  private static void useAliases(Connection conn, String memberName, String ifsOutputDir)
       throws SQLException, IOException{
     // Create alias for the current member
-    String aliasSql = "CREATE OR REPLACE ALIAS QTEMP.SourceCode " +
-                    "FOR ROBKRAUDY2.QRPGLESRC(" + memberName + ")";
-
-    sourceStmt.execute(aliasSql);
+    conn.createStatement().execute(
+      "CREATE OR REPLACE ALIAS QTEMP.SourceCode " +
+      "FOR ROBKRAUDY2.QRPGLESRC(" + memberName + ")"
+    );
 
     // Get source code for the current member
-    ResultSet rsSource = sourceStmt.executeQuery("SELECT SRCDTA FROM QTEMP.SourceCode");
+    ResultSet rsSource = conn.createStatement().executeQuery(
+      "SELECT SRCDTA FROM QTEMP.SourceCode"
+    );
 
     // Print with regex
     //printSourceWithRegex(rsSource);
@@ -218,7 +215,9 @@ public class GetSourcePf {
     rsSource.close();
 
     // Drop the alias
-    sourceStmt.execute("DROP ALIAS QTEMP.SourceCode");
+    conn.createStatement().execute(
+      "DROP ALIAS QTEMP.SourceCode"
+    );
   }
 
    // Method to write source code to a file in the IFS
