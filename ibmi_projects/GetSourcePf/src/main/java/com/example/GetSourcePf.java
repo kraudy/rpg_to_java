@@ -50,10 +50,10 @@ public class GetSourcePf {
           outputDir.mkdirs(); // Create directory if it doesn't exist
       }
       
-      System.out.println("Created");
+      System.out.println("Created dir: " + ifsOutputDir);
       System.out.println("Source files will be migrated to dir: " + ifsOutputDir);
 
-      System.out.println("\nSpecify the name of a library or press enter to search in the current library: " + user.getCurrentLibraryName());
+      System.out.println("\nSpecify the name of a library or press enter to search for Source PFs in the current library: " + user.getCurrentLibraryName());
       library = inputStream.readLine().trim().toUpperCase();
 
       if (library.isEmpty()) {
@@ -64,7 +64,7 @@ public class GetSourcePf {
         }
       }
 
-      // Establish JDBC connection using AS400JDBCConnection
+      // Establish JDBC connection
       AS400JDBCDataSource dataSource = new AS400JDBCDataSource(system);
       conn = dataSource.getConnection();
       conn.setAutoCommit(true); // We don't want transaction control
@@ -75,7 +75,7 @@ public class GetSourcePf {
           "From QSYS2.SYSPARTITIONSTAT " + 
           "Where SYSTEM_TABLE_SCHEMA = '" + library + "' limit 1 ")
           .next()) {
-        //TODO: Add validation to show related libraries. If this las !.next() do the return.
+        //TODO: Add validation to show related libraries. If this last !.next() do the return.
         System.out.println("Library does not exists in your system");
         return;
       }
@@ -91,7 +91,7 @@ public class GetSourcePf {
         "Group by SYSTEM_TABLE_NAME"
       );
 
-      System.out.println("\nList of available Source PFs in the library: ");
+      System.out.println("\nList of available Source PFs in library: " + library + " to dir " + ifsOutputDir);
       System.out.println("    SourcePf      | Number of Members"); // Header with aligned spacing
       System.out.println("    ------------- | -----------------"); // Separator line for clarity
       while(rsshowSourcePf.next()){
@@ -100,22 +100,46 @@ public class GetSourcePf {
         System.out.println(String.format("    %-13s | %17s", rsSourcePf, membersCount));
       }
       
-      System.out.println("\nSpecify the name of a source PF or press 'Enter' to migrate all the source PFs: ");
+      System.out.println("\nSpecify the name of a source PF or press 'Enter' to migrate all the source PFs in this library: ");
       sourcePf = inputStream.readLine().trim().toUpperCase();
 
-      if (sourcePf != "") {
+      ResultSet rsMembers = null;
+
+      //TODO: Add logic when is empty to load all the sources. For this i only need to change the result set query and that's it.
+      //TODO: This could be return by a method to not have the if else thing here
+      if (!sourcePf.isEmpty()) {
         // Validates if SourcePF exists
         if (!conn.createStatement().executeQuery(
             "Select 1 As Exist From QSYS2.SYSPARTITIONSTAT " + 
             "Where SYSTEM_TABLE_SCHEMA = '" + library + "' " + 
-            "AND SYSTEM_TABLE_NAME = '" + sourcePf + "' limit 1")
+            "AND SYSTEM_TABLE_NAME = '" + sourcePf + "' " +
+            "And Trim(SOURCE_TYPE) <> '' limit 1")
             .next()) {
           System.out.println("Source PF does not exists in library " + library);
           return;
         }
+        /* Creates result set with members of an specific Source Pf */
+        rsMembers = conn.createStatement().executeQuery(
+          "SELECT SYSTEM_TABLE_MEMBER As Member, SOURCE_TYPE As SourceType, SYSTEM_TABLE_NAME As SourcePf,  SYSTEM_TABLE_SCHEMA As Library " +
+          "FROM QSYS2.SYSPARTITIONSTAT " +
+          "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
+          "AND SYSTEM_TABLE_NAME = '" + sourcePf + "' " +
+          "And Trim(SOURCE_TYPE) <> ''"
+        );
+      } else {
+        /* Creates result set with members of all the Source Pf in the chosen library*/
+        rsMembers = conn.createStatement().executeQuery(
+          "SELECT SYSTEM_TABLE_MEMBER As Member, SOURCE_TYPE As SourceType, SYSTEM_TABLE_NAME As SourcePf,  SYSTEM_TABLE_SCHEMA As Library " +
+          "FROM QSYS2.SYSPARTITIONSTAT " +
+          "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
+          "And Trim(SOURCE_TYPE) <> ''"
+        );
       }
 
-      iterateThroughMembers(conn, library, ifsOutputDir, system);
+      iterateThroughMembers(conn, rsMembers, ifsOutputDir, system);
+
+      //TODO: Validate if this close should be here 
+      rsMembers.close();
 
       System.out.println("Specify the name of a source member or press enter to migrate all the source members: ");
 
@@ -139,32 +163,26 @@ public class GetSourcePf {
     }
   }
 
-  private static void iterateThroughMembers(Connection conn, String library, String ifsOutputDir, AS400 system) 
+  private static void iterateThroughMembers(Connection conn, ResultSet rsMembers, String ifsOutputDir, AS400 system) 
         throws SQLException, IOException, AS400SecurityException, 
                 ErrorCompletingRequestException, InterruptedException, PropertyVetoException{
-    
-    ResultSet rsMembers = conn.createStatement().executeQuery(
-      "SELECT SYSTEM_TABLE_MEMBER, SOURCE_TYPE " +
-      "FROM QSYS2.SYSPARTITIONSTAT " +
-      "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
-      "AND SYSTEM_TABLE_NAME = 'QRPGLESRC'"
-    );
+
     // Iterate through each member
     while (rsMembers.next()) {
-      String memberName = rsMembers.getString("SYSTEM_TABLE_MEMBER").trim();
-      String sourceType = rsMembers.getString("SOURCE_TYPE").trim();
+      String library = rsMembers.getString("Library").trim();
+      String sourcePf = rsMembers.getString("SourcePf").trim();
+      String memberName = rsMembers.getString("Member").trim();
+      String sourceType = rsMembers.getString("SourceType").trim();
       System.out.println("\n=== Processing Member: " + memberName + " ===");
 
       //useAliases(conn, memberName, ifsOutputDir);
-      useCommand("ROBKRAUDY2", "QRPGLESRC", memberName, sourceType, system, ifsOutputDir);      
+      useCommand(library, sourcePf, memberName, sourceType, ifsOutputDir, system);      
     }
-
-    rsMembers.close();
 
   }
 
   private static void useCommand(String library, String sourcePf, String memberName, String sourceType, 
-      AS400 system, String ifsOutputDir) 
+      String ifsOutputDir, AS400 system) 
       throws IOException, AS400SecurityException, ErrorCompletingRequestException, InterruptedException, PropertyVetoException{
 
     String ccsid = "1208";
