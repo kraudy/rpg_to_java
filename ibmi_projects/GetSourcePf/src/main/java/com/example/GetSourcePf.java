@@ -13,7 +13,6 @@ public class GetSourcePf {
     Statement memberStmt = null;
     //Statemente showSourcePf = null;
 
-    ResultSet rsMembers = null;
     ResultSet rsshowSourcePf = null;
 
     //TODO: Add the source pf as another dir
@@ -71,10 +70,14 @@ public class GetSourcePf {
         return;
       }
 
+      //TODO: Move this to a method
+
+      //TODO: Validate if this only shows source pf
       rsshowSourcePf = conn.createStatement().executeQuery(
         "Select SYSTEM_TABLE_NAME As SourcePf, Count(*) As Members " +
         "From QSYS2.SYSPARTITIONSTAT " +
         "Where SYSTEM_TABLE_SCHEMA = '" + library + "' " +
+        "And Trim(SOURCE_TYPE) <> ''" +
         "Group by SYSTEM_TABLE_NAME"
       );
 
@@ -102,16 +105,7 @@ public class GetSourcePf {
         }
       }
 
-      // Get members
-
-      rsMembers = conn.createStatement().executeQuery(
-        "SELECT SYSTEM_TABLE_MEMBER, SOURCE_TYPE " +
-        "FROM QSYS2.SYSPARTITIONSTAT " +
-        "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
-        "AND SYSTEM_TABLE_NAME = 'QRPGLESRC'"
-      );
-
-      iterateThroughMembers(rsMembers, conn, ifsOutputDir, system);
+      iterateThroughMembers(conn, library, ifsOutputDir, system);
 
       System.out.println("Specify the name of a source member or press enter to migrate all the source members: ");
 
@@ -120,9 +114,6 @@ public class GetSourcePf {
     } finally {
       try {
         // Clean up resources
-        if (rsMembers != null) {
-            rsMembers.close();
-        }
         if (memberStmt != null) {
             memberStmt.close();
         }
@@ -138,20 +129,28 @@ public class GetSourcePf {
     }
   }
 
-  //TODO: Remove sourceStmt and pass the coneection to create the statement here or define it as global
-  private static void iterateThroughMembers(ResultSet rsMembers, Connection conn, String ifsOutputDir, AS400 system) 
+  private static void iterateThroughMembers(Connection conn, String library, String ifsOutputDir, AS400 system) 
         throws SQLException, IOException, AS400SecurityException, 
                 ErrorCompletingRequestException, InterruptedException, PropertyVetoException{
+    
+    ResultSet rsMembers = conn.createStatement().executeQuery(
+      "SELECT SYSTEM_TABLE_MEMBER, SOURCE_TYPE " +
+      "FROM QSYS2.SYSPARTITIONSTAT " +
+      "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
+      "AND SYSTEM_TABLE_NAME = 'QRPGLESRC'"
+    );
     // Iterate through each member
     while (rsMembers.next()) {
       String memberName = rsMembers.getString("SYSTEM_TABLE_MEMBER").trim();
       String sourceType = rsMembers.getString("SOURCE_TYPE").trim();
       System.out.println("\n=== Processing Member: " + memberName + " ===");
 
-      useAliases(conn, memberName, ifsOutputDir);
-      //useCommand("ROBKRAUDY2", "QRPGLESRC", memberName, sourceType, system, ifsOutputDir);
-      
+      //useAliases(conn, memberName, ifsOutputDir);
+      useCommand("ROBKRAUDY2", "QRPGLESRC", memberName, sourceType, system, ifsOutputDir);      
     }
+
+    rsMembers.close();
+
   }
 
   private static void useCommand(String library, String sourcePf, String memberName, String sourceType, 
