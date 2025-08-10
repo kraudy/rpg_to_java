@@ -45,7 +45,7 @@ public class GetSourcePf {
         ifsOutputDir = homeDir + "/" + sourceDir;
       }
 
-      // Ensure the IFS output directory exists
+      // Ensure the IFS source output directory exists
       File outputDir = new File(ifsOutputDir);
       if (!outputDir.exists()) {
           System.out.println("Creating dir: " + ifsOutputDir + " ...");
@@ -65,6 +65,10 @@ public class GetSourcePf {
           return;
         }
       }
+
+      // Add library to the export path
+      ifsOutputDir = ifsOutputDir + "/" + library;
+      createDir(ifsOutputDir);
 
       // Establish JDBC connection
       AS400JDBCDataSource dataSource = new AS400JDBCDataSource(system);
@@ -145,6 +149,8 @@ public class GetSourcePf {
         );
       }
 
+      //System.out.println("Specify the name of a source member or press enter to migrate all the source members: ");
+
       //TODO: Start timing here 
       //TODO: Return number of migrated members
       while(rsSourcePFs.next()){
@@ -159,7 +165,6 @@ public class GetSourcePf {
       //TODO: Validate if this close should be here 
       rsSourcePFs.close();
 
-      System.out.println("Specify the name of a source member or press enter to migrate all the source members: ");
 
     } catch (Exception e){
       e.printStackTrace();
@@ -186,6 +191,7 @@ public class GetSourcePf {
                 ErrorCompletingRequestException, InterruptedException, PropertyVetoException{
 
     // Ensure the SourcePf Dir exists
+    // TODO: Move this to its own method
     File outputDir = new File(ifsOutputDir);
     if (!outputDir.exists()) {
         System.out.println("Creating Source PF dir: " + ifsOutputDir + " ...");
@@ -312,6 +318,14 @@ public class GetSourcePf {
         System.out.println(sourceData);
         //}
       }
+    }
+  }
+
+  private static void createDir(String dirPath){
+    File outputDir = new File(dirPath);
+    if (!outputDir.exists()) {
+        System.out.println("Creating dir: " + dirPath + " ...");
+        outputDir.mkdirs(); // Create directory if it doesn't exist
     }
   }
 
