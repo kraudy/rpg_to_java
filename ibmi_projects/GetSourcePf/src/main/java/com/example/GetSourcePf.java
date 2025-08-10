@@ -6,6 +6,8 @@ import java.io.*;
 import java.beans.PropertyVetoException;
 
 public class GetSourcePf {
+  private static final String CCSID = "1208";
+
   public static void main( String... args ){
     BufferedReader inputStream = new BufferedReader(new InputStreamReader(System.in),1);
     AS400 system = new AS400();
@@ -91,7 +93,7 @@ public class GetSourcePf {
         "Group by SYSTEM_TABLE_NAME"
       );
 
-      System.out.println("\nList of available Source PFs in library: " + library + " to dir " + ifsOutputDir);
+      System.out.println("\nList of available Source PFs in library: " + library);
       System.out.println("    SourcePf      | Number of Members"); // Header with aligned spacing
       System.out.println("    ------------- | -----------------"); // Separator line for clarity
       while(rsshowSourcePf.next()){
@@ -100,7 +102,7 @@ public class GetSourcePf {
         System.out.println(String.format("    %-13s | %17s", rsSourcePf, membersCount));
       }
       
-      System.out.println("\nSpecify the name of a source PF or press 'Enter' to migrate all the source PFs in this library: ");
+      System.out.println("\nSpecify the name of a source PF or press 'Enter' to migrate all the source PFs in library: " + library + " to dir: " + ifsOutputDir);
       sourcePf = inputStream.readLine().trim().toUpperCase();
 
       ResultSet rsMembers = null;
@@ -118,6 +120,8 @@ public class GetSourcePf {
           System.out.println("Source PF does not exists in library " + library);
           return;
         }
+        // Show all members
+
         /* Creates result set with members of an specific Source Pf */
         rsMembers = conn.createStatement().executeQuery(
           "SELECT SYSTEM_TABLE_MEMBER As Member, SOURCE_TYPE As SourceType, SYSTEM_TABLE_NAME As SourcePf,  SYSTEM_TABLE_SCHEMA As Library " +
@@ -136,7 +140,11 @@ public class GetSourcePf {
         );
       }
 
+      //TODO: Start timing here 
+      //TODO: Return number of migrated members
       iterateThroughMembers(conn, rsMembers, ifsOutputDir, system);
+
+      //TODO: End timing here
 
       //TODO: Validate if this close should be here 
       rsMembers.close();
@@ -185,8 +193,6 @@ public class GetSourcePf {
       String ifsOutputDir, AS400 system) 
       throws IOException, AS400SecurityException, ErrorCompletingRequestException, InterruptedException, PropertyVetoException{
 
-    String ccsid = "1208";
-
     String commandStr = "CPYTOSTMF FROMMBR('/QSYS.lib/" 
                    + library + ".lib/" 
                    + sourcePf + ".file/" 
@@ -194,7 +200,7 @@ public class GetSourcePf {
                    + "TOSTMF('" 
                    + ifsOutputDir + "/" 
                    + memberName + "." + sourceType + "') "
-                   + "STMFOPT(*REPLACE) STMFCCSID(" + ccsid 
+                   + "STMFOPT(*REPLACE) STMFCCSID(" + CCSID 
                    + ") ENDLINFMT(*LF)";
 
     CommandCall cmd = new CommandCall(system);
@@ -206,15 +212,6 @@ public class GetSourcePf {
     System.out.println("Migrateed " + memberName + " successfully");
 
   }
-
-  /* 
-    To get the source out of the PF we actually don't need to do it line by line.
-    We could just do this
-    
-
-    We only need to get the source out of Source PFs for the ones that are not already on the git repo.
-    So we don't really care about much else other thant the code.
-  */
 
   private static void useAliases(Connection conn, String memberName, String ifsOutputDir)
       throws SQLException, IOException{
