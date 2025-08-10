@@ -110,12 +110,13 @@ public class GetSourcePf {
 
       //TODO: Create new statment rsSourcePf which will be used to form the result set rsMembers inside the iterateThroughMembers method
       // which will receive the name of the source PF and iterate through each members. This allows more flexibility.
-      System.out.println("\nSpecify the name of a source PF or press 'Enter' to migrate all the source PFs in library: " + library + " to dir: " + ifsOutputDir);
-      String sourcePf = inputStream.readLine().trim().toUpperCase();
+      ResultSet rsSourcePFs = null;
+      String sourcePf = null;
+      while (rsSourcePFs == null) {
+        System.out.println("\nSpecify the name of a source PF or press 'Enter' to migrate all the source PFs in library: " + library + " to dir: " + ifsOutputDir);
+        sourcePf = inputStream.readLine().trim().toUpperCase();
 
-      ResultSet rsSourcePFs = getSourcePfs(conn, sourcePf, library);
-      if (rsSourcePFs == null) {
-        return;
+        rsSourcePFs = getSourcePfs(conn, sourcePf, library);
       }
 
       //System.out.println("Specify the name of a source member or press enter to migrate all the source members: ");
@@ -303,7 +304,7 @@ public class GetSourcePf {
           "AND SYSTEM_TABLE_NAME = '" + sourcePf + "' " +
           "And Trim(SOURCE_TYPE) <> '' limit 1")
           .next()) {
-        System.out.println("Source PF does not exists in library " + library);
+        System.out.println(" *Source PF does not exists in library " + library);
         return null;
       }
       // Show all members
