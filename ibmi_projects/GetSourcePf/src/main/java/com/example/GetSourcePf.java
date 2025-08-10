@@ -152,9 +152,9 @@ public class GetSourcePf {
         sourcePf = rsSourcePFs.getString("SourcePf").trim();
 
         System.out.println("\n\nMigrating Source PF: " + sourcePf + " in library: " + library);
-        iterateThroughMembers(conn, library, sourcePf, ifsOutputDir, system);
+        iterateThroughMembers(conn, library, sourcePf, ifsOutputDir + '/' + sourcePf, system);
       }
-      //TODO: End timing here
+      //TODO: add End timing here
 
       //TODO: Validate if this close should be here 
       rsSourcePFs.close();
@@ -185,6 +185,13 @@ public class GetSourcePf {
         throws SQLException, IOException, AS400SecurityException, 
                 ErrorCompletingRequestException, InterruptedException, PropertyVetoException{
 
+    // Ensure the SourcePf Dir exists
+    File outputDir = new File(ifsOutputDir);
+    if (!outputDir.exists()) {
+        System.out.println("Creating Source PF dir: " + ifsOutputDir + " ...");
+        outputDir.mkdirs(); // Create directory if it doesn't exist
+    }
+
     ResultSet rsMembers =  conn.createStatement().executeQuery(
       "SELECT SYSTEM_TABLE_MEMBER As Member, SOURCE_TYPE As SourceType " +
       "FROM QSYS2.SYSPARTITIONSTAT " +
@@ -210,6 +217,7 @@ public class GetSourcePf {
       String ifsOutputDir, AS400 system) 
       throws IOException, AS400SecurityException, ErrorCompletingRequestException, InterruptedException, PropertyVetoException{
 
+    //TODO: Consider ASP
     String commandStr = "CPYTOSTMF FROMMBR('/QSYS.lib/" 
                    + library + ".lib/" 
                    + sourcePf + ".file/" 
