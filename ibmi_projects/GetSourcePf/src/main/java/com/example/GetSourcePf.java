@@ -21,7 +21,6 @@ public class GetSourcePf {
     // Base dir
     String ifsOutputDir = null; 
     String library = null;
-    String sourcePf = null;
     // TODO: Fix this to show the actual name instead of LOCALHOST
     String systemName = system.getSystemName().toUpperCase();
 
@@ -102,46 +101,21 @@ public class GetSourcePf {
         System.out.println(String.format("    %-13s | %17s", rsSourcePf, membersCount));
       }
       
-      System.out.println("\nSpecify the name of a source PF or press 'Enter' to migrate all the source PFs in library: " + library + " to dir: " + ifsOutputDir);
-      sourcePf = inputStream.readLine().trim().toUpperCase();
+      //System.out.println("\nSpecify the name of a source PF or press 'Enter' to migrate all the source PFs in library: " + library + " to dir: " + ifsOutputDir);
+      //sourcePf = inputStream.readLine().trim().toUpperCase();
 
-      ResultSet rsSourcePFs = null;
+      //ResultSet rsSourcePFs = null;
 
       //TODO: This could be return by a method to not have the if else thing here
 
       //TODO: Create new statment rsSourcePf which will be used to form the result set rsMembers inside the iterateThroughMembers method
       // which will receive the name of the source PF and iterate through each members. This allows more flexibility.
-      if (!sourcePf.isEmpty()) {
-        // Validates if SourcePF exists
-        if (!conn.createStatement().executeQuery(
-            "Select 1 As Exist From QSYS2.SYSPARTITIONSTAT " + 
-            "Where SYSTEM_TABLE_SCHEMA = '" + library + "' " + 
-            "AND SYSTEM_TABLE_NAME = '" + sourcePf + "' " +
-            "And Trim(SOURCE_TYPE) <> '' limit 1")
-            .next()) {
-          System.out.println("Source PF does not exists in library " + library);
-          return;
-        }
-        // Show all members
+      System.out.println("\nSpecify the name of a source PF or press 'Enter' to migrate all the source PFs in library: " + library + " to dir: " + ifsOutputDir);
+      String sourcePf = inputStream.readLine().trim().toUpperCase();
 
-        /* Creates result set with members of an specific Source Pf */
-        rsSourcePFs = conn.createStatement().executeQuery(
-          "SELECT SYSTEM_TABLE_NAME As SourcePf,  SYSTEM_TABLE_SCHEMA As Library " +
-          "FROM QSYS2.SYSPARTITIONSTAT " +
-          "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
-          "AND SYSTEM_TABLE_NAME = '" + sourcePf + "' " +
-          "And Trim(SOURCE_TYPE) <> ''" +
-          "Group by SYSTEM_TABLE_NAME, SYSTEM_TABLE_SCHEMA"
-        );
-      } else {
-        /* Creates result set with members of all the Source Pf in the chosen library*/
-        rsSourcePFs = conn.createStatement().executeQuery(
-          "SELECT SYSTEM_TABLE_NAME As SourcePf,  SYSTEM_TABLE_SCHEMA As Library " +
-          "FROM QSYS2.SYSPARTITIONSTAT " +
-          "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
-          "And Trim(SOURCE_TYPE) <> ''" +
-          "Group by SYSTEM_TABLE_NAME, SYSTEM_TABLE_SCHEMA"
-        );
+      ResultSet rsSourcePFs = getSourcePfs(conn, sourcePf, library);
+      if (rsSourcePFs == null) {
+        return;
       }
 
       //System.out.println("Specify the name of a source member or press enter to migrate all the source members: ");
@@ -317,6 +291,42 @@ public class GetSourcePf {
         System.out.println("Creating dir: " + dirPath + " ...");
         outputDir.mkdirs(); // Create directory if it doesn't exist
     }
+  }
+
+  private static ResultSet getSourcePfs(Connection conn, String sourcePf, String library)
+      throws SQLException{
+    if (!sourcePf.isEmpty()) {
+      // Validates if SourcePF exists
+      if (!conn.createStatement().executeQuery(
+          "Select 1 As Exist From QSYS2.SYSPARTITIONSTAT " + 
+          "Where SYSTEM_TABLE_SCHEMA = '" + library + "' " + 
+          "AND SYSTEM_TABLE_NAME = '" + sourcePf + "' " +
+          "And Trim(SOURCE_TYPE) <> '' limit 1")
+          .next()) {
+        System.out.println("Source PF does not exists in library " + library);
+        return null;
+      }
+      // Show all members
+
+      /* Creates result set with members of an specific Source Pf */
+      return conn.createStatement().executeQuery(
+        "SELECT SYSTEM_TABLE_NAME As SourcePf,  SYSTEM_TABLE_SCHEMA As Library " +
+        "FROM QSYS2.SYSPARTITIONSTAT " +
+        "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
+        "AND SYSTEM_TABLE_NAME = '" + sourcePf + "' " +
+        "And Trim(SOURCE_TYPE) <> ''" +
+        "Group by SYSTEM_TABLE_NAME, SYSTEM_TABLE_SCHEMA"
+      );
+    } 
+    
+    /* Creates result set with members of all the Source Pf in the chosen library*/
+    return conn.createStatement().executeQuery(
+      "SELECT SYSTEM_TABLE_NAME As SourcePf,  SYSTEM_TABLE_SCHEMA As Library " +
+      "FROM QSYS2.SYSPARTITIONSTAT " +
+      "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
+      "And Trim(SOURCE_TYPE) <> ''" +
+      "Group by SYSTEM_TABLE_NAME, SYSTEM_TABLE_SCHEMA"
+    );
   }
 
 }
