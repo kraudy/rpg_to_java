@@ -45,12 +45,8 @@ public class GetSourcePf {
         ifsOutputDir = homeDir + "/" + sourceDir;
       }
 
-      // Ensure the IFS source output directory exists
-      File outputDir = new File(ifsOutputDir);
-      if (!outputDir.exists()) {
-          System.out.println("Creating dir: " + ifsOutputDir + " ...");
-          outputDir.mkdirs(); // Create directory if it doesn't exist
-      }
+      // Create root export dir
+      createDir(ifsOutputDir);
       
       System.out.println("Created dir: " + ifsOutputDir);
       System.out.println("Source files will be migrated to dir: " + ifsOutputDir);
@@ -111,7 +107,6 @@ public class GetSourcePf {
 
       ResultSet rsSourcePFs = null;
 
-      //TODO: Add logic when is empty to load all the sources. For this i only need to change the result set query and that's it.
       //TODO: This could be return by a method to not have the if else thing here
 
       //TODO: Create new statment rsSourcePf which will be used to form the result set rsMembers inside the iterateThroughMembers method
@@ -191,12 +186,7 @@ public class GetSourcePf {
                 ErrorCompletingRequestException, InterruptedException, PropertyVetoException{
 
     // Ensure the SourcePf Dir exists
-    // TODO: Move this to its own method
-    File outputDir = new File(ifsOutputDir);
-    if (!outputDir.exists()) {
-        System.out.println("Creating Source PF dir: " + ifsOutputDir + " ...");
-        outputDir.mkdirs(); // Create directory if it doesn't exist
-    }
+    createDir(ifsOutputDir);
 
     ResultSet rsMembers =  conn.createStatement().executeQuery(
       "SELECT SYSTEM_TABLE_MEMBER As Member, SOURCE_TYPE As SourceType " +
