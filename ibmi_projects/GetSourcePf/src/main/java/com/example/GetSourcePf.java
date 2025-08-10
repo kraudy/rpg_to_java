@@ -105,10 +105,13 @@ public class GetSourcePf {
       System.out.println("\nSpecify the name of a source PF or press 'Enter' to migrate all the source PFs in library: " + library + " to dir: " + ifsOutputDir);
       sourcePf = inputStream.readLine().trim().toUpperCase();
 
-      ResultSet rsMembers = null;
+      ResultSet rsSourcePFs = null;
 
       //TODO: Add logic when is empty to load all the sources. For this i only need to change the result set query and that's it.
       //TODO: This could be return by a method to not have the if else thing here
+
+      //TODO: Create new statment rsSourcePf which will be used to form the result set rsMembers inside the iterateThroughMembers method
+      // which will receive the name of the source PF and iterate through each members. This allows more flexibility.
       if (!sourcePf.isEmpty()) {
         // Validates if SourcePF exists
         if (!conn.createStatement().executeQuery(
@@ -123,31 +126,38 @@ public class GetSourcePf {
         // Show all members
 
         /* Creates result set with members of an specific Source Pf */
-        rsMembers = conn.createStatement().executeQuery(
-          "SELECT SYSTEM_TABLE_MEMBER As Member, SOURCE_TYPE As SourceType, SYSTEM_TABLE_NAME As SourcePf,  SYSTEM_TABLE_SCHEMA As Library " +
+        rsSourcePFs = conn.createStatement().executeQuery(
+          "SELECT SYSTEM_TABLE_NAME As SourcePf,  SYSTEM_TABLE_SCHEMA As Library " +
           "FROM QSYS2.SYSPARTITIONSTAT " +
           "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
           "AND SYSTEM_TABLE_NAME = '" + sourcePf + "' " +
-          "And Trim(SOURCE_TYPE) <> ''"
+          "And Trim(SOURCE_TYPE) <> ''" +
+          "Group by SYSTEM_TABLE_NAME, SYSTEM_TABLE_SCHEMA"
         );
       } else {
         /* Creates result set with members of all the Source Pf in the chosen library*/
-        rsMembers = conn.createStatement().executeQuery(
-          "SELECT SYSTEM_TABLE_MEMBER As Member, SOURCE_TYPE As SourceType, SYSTEM_TABLE_NAME As SourcePf,  SYSTEM_TABLE_SCHEMA As Library " +
+        rsSourcePFs = conn.createStatement().executeQuery(
+          "SELECT SYSTEM_TABLE_NAME As SourcePf,  SYSTEM_TABLE_SCHEMA As Library " +
           "FROM QSYS2.SYSPARTITIONSTAT " +
           "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
-          "And Trim(SOURCE_TYPE) <> ''"
+          "And Trim(SOURCE_TYPE) <> ''" +
+          "Group by SYSTEM_TABLE_NAME, SYSTEM_TABLE_SCHEMA"
         );
       }
 
       //TODO: Start timing here 
       //TODO: Return number of migrated members
-      iterateThroughMembers(conn, rsMembers, ifsOutputDir, system);
+      while(rsSourcePFs.next()){
+        library = rsSourcePFs.getString("Library").trim();
+        sourcePf = rsSourcePFs.getString("SourcePf").trim();
 
+        System.out.println("\n\nMigrating Source PF: " + sourcePf + " in library: " + library);
+        iterateThroughMembers(conn, library, sourcePf, ifsOutputDir, system);
+      }
       //TODO: End timing here
 
       //TODO: Validate if this close should be here 
-      rsMembers.close();
+      rsSourcePFs.close();
 
       System.out.println("Specify the name of a source member or press enter to migrate all the source members: ");
 
@@ -171,14 +181,19 @@ public class GetSourcePf {
     }
   }
 
-  private static void iterateThroughMembers(Connection conn, ResultSet rsMembers, String ifsOutputDir, AS400 system) 
+  private static void iterateThroughMembers(Connection conn, String library, String sourcePf, String ifsOutputDir, AS400 system) 
         throws SQLException, IOException, AS400SecurityException, 
                 ErrorCompletingRequestException, InterruptedException, PropertyVetoException{
 
+    ResultSet rsMembers =  conn.createStatement().executeQuery(
+      "SELECT SYSTEM_TABLE_MEMBER As Member, SOURCE_TYPE As SourceType " +
+      "FROM QSYS2.SYSPARTITIONSTAT " +
+      "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
+      "AND SYSTEM_TABLE_NAME = '" + sourcePf + "' " +
+      "And Trim(SOURCE_TYPE) <> ''"
+    );
     // Iterate through each member
     while (rsMembers.next()) {
-      String library = rsMembers.getString("Library").trim();
-      String sourcePf = rsMembers.getString("SourcePf").trim();
       String memberName = rsMembers.getString("Member").trim();
       String sourceType = rsMembers.getString("SourceType").trim();
       System.out.println("\n=== Processing Member: " + memberName + " ===");
@@ -186,6 +201,8 @@ public class GetSourcePf {
       //useAliases(conn, memberName, ifsOutputDir);
       useCommand(library, sourcePf, memberName, sourceType, ifsOutputDir, system);      
     }
+    
+    rsMembers.close();
 
   }
 
