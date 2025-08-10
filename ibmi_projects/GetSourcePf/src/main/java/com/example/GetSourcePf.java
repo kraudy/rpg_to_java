@@ -30,11 +30,17 @@ public class GetSourcePf {
       String homeDir = user.getHomeDirectory();
       String sourceDir = "sources";
 
+      //TODO: Move this to the start.
+      // Establish JDBC connection
+      AS400JDBCDataSource dataSource = new AS400JDBCDataSource(system);
+      conn = dataSource.getConnection();
+      conn.setAutoCommit(true); // We don't want transaction control
+
       if (homeDir == null) {
         System.out.println("The current user has no home dir");
         return;
       }
-      // Construct exportation directory
+      // Construct default exportation directory
       ifsOutputDir = homeDir + "/" + sourceDir;
 
       System.out.println("Specify the source dir destination or press 'Enter' to use: " + ifsOutputDir);
@@ -61,15 +67,6 @@ public class GetSourcePf {
         }
       }
 
-      // Add library to the export path
-      ifsOutputDir = ifsOutputDir + "/" + library;
-      createDir(ifsOutputDir);
-
-      // Establish JDBC connection
-      AS400JDBCDataSource dataSource = new AS400JDBCDataSource(system);
-      conn = dataSource.getConnection();
-      conn.setAutoCommit(true); // We don't want transaction control
-
       // Validates if library exists
       if (!conn.createStatement().executeQuery(
           "Select 1 As Exists " +
@@ -80,6 +77,10 @@ public class GetSourcePf {
         System.out.println("Library does not exists in your system");
         return;
       }
+
+      // Add library to the export path
+      ifsOutputDir = ifsOutputDir + "/" + library;
+      createDir(ifsOutputDir);
 
       //TODO: Move this to a method
 
@@ -92,6 +93,7 @@ public class GetSourcePf {
         "Group by SYSTEM_TABLE_NAME"
       );
 
+      // Show list of SourcePFs inside library
       System.out.println("\nList of available Source PFs in library: " + library);
       System.out.println("    SourcePf      | Number of Members"); // Header with aligned spacing
       System.out.println("    ------------- | -----------------"); // Separator line for clarity
@@ -100,16 +102,7 @@ public class GetSourcePf {
         String membersCount = rsshowSourcePf.getString("Members").trim();
         System.out.println(String.format("    %-13s | %17s", rsSourcePf, membersCount));
       }
-      
-      //System.out.println("\nSpecify the name of a source PF or press 'Enter' to migrate all the source PFs in library: " + library + " to dir: " + ifsOutputDir);
-      //sourcePf = inputStream.readLine().trim().toUpperCase();
 
-      //ResultSet rsSourcePFs = null;
-
-      //TODO: This could be return by a method to not have the if else thing here
-
-      //TODO: Create new statment rsSourcePf which will be used to form the result set rsMembers inside the iterateThroughMembers method
-      // which will receive the name of the source PF and iterate through each members. This allows more flexibility.
       ResultSet rsSourcePFs = null;
       String sourcePf = null;
       while (rsSourcePFs == null) {
