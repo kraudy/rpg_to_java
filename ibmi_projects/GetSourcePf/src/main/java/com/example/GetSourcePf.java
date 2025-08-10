@@ -20,7 +20,6 @@ public class GetSourcePf {
     //TODO: Add the source pf as another dir
     // Base dir
     String ifsOutputDir = null; 
-    String library = null;
     // TODO: Fix this to show the actual name instead of LOCALHOST
     String systemName = system.getSystemName().toUpperCase();
 
@@ -53,30 +52,23 @@ public class GetSourcePf {
       // Create root export dir
       createDir(ifsOutputDir);
       
-      System.out.println("Created dir: " + ifsOutputDir);
       System.out.println("Source files will be migrated to dir: " + ifsOutputDir);
 
-      System.out.println("\nSpecify the name of a library or press enter to search for Source PFs in the current library: " + user.getCurrentLibraryName());
-      library = inputStream.readLine().trim().toUpperCase();
+      String library = "";
+      while (library.isEmpty()) {
+        System.out.println("\nSpecify the name of a library or press enter to search for Source PFs in the current library: " + user.getCurrentLibraryName());
+        library = inputStream.readLine().trim().toUpperCase();
 
-      if (library.isEmpty()) {
-        library = user.getCurrentLibraryName();
-        if (library.equals("*CRTDFT")){
-          System.out.println("The user does not have a current library");
-          return;
+        if (library.isEmpty()) {
+          library = user.getCurrentLibraryName();
+          if (library.equals("*CRTDFT")){
+            System.out.println("The user does not have a current library");
+            library = "";
+          }
+          break;
         }
-      }
-
-      // Validates if library exists
-      if (!conn.createStatement().executeQuery(
-          "Select 1 As Exists " +
-          "From QSYS2.SYSPARTITIONSTAT " + 
-          "Where SYSTEM_TABLE_SCHEMA = '" + library + "' limit 1 ")
-          .next()) {
-        //TODO: Add validation to show related libraries. If this last !.next() do the return.
-        System.out.println("Library does not exists in your system");
-        return;
-      }
+        library = getLibrary(conn, library);
+      }  
 
       // Add library to the export path
       ifsOutputDir = ifsOutputDir + "/" + library;
@@ -85,6 +77,7 @@ public class GetSourcePf {
       //TODO: Move this to a method
 
       //TODO: Validate if this only shows source pf
+      // getSourcePfs
       rsshowSourcePf = conn.createStatement().executeQuery(
         "Select SYSTEM_TABLE_NAME As SourcePf, Count(*) As Members " +
         "From QSYS2.SYSPARTITIONSTAT " +
@@ -322,5 +315,22 @@ public class GetSourcePf {
       "Group by SYSTEM_TABLE_NAME, SYSTEM_TABLE_SCHEMA"
     );
   }
+
+  //TODO: Validate resturning the result set
+  private static String getLibrary(Connection conn, String library)
+      throws SQLException{
+    // Validates if library exists
+    if (!conn.createStatement().executeQuery(
+        "Select 1 As Exists " +
+        "From QSYS2.SYSPARTITIONSTAT " + 
+        "Where SYSTEM_TABLE_SCHEMA = '" + library + "' limit 1 ")
+        .next()) {
+      //TODO: Add validation to show related libraries. If this last !.next() do the return.
+      System.out.println("Library " + library  + " does not exists in your system");
+      return "";
+    }
+    return library;
+  }
+
 
 }
