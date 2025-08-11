@@ -47,9 +47,11 @@ public class GetSourcePf {
         System.out.println("The system's ccsid is: " + SYSTEM_CCSID);
       }
       // 37 is standard EBCDIC 
-      if (SYSTEM_CCSID.equals("37")) {
-        SYSTEM_CCSID = CCSID;
-      }
+      // if (SYSTEM_CCSID.equals("37")) {
+      //   SYSTEM_CCSID = CCSID;
+      // }
+
+      SYSTEM_CCSID = "37";
 
       if (homeDir == null) {
         System.out.println("The current user has no home dir");
