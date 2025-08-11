@@ -6,7 +6,8 @@ import java.io.*;
 import java.beans.PropertyVetoException;
 
 public class GetSourcePf {
-  private static final String CCSID = "1208";
+   private static final String CCSID = "1208";
+   private static String SYSTEM_CCSID = "";
    private static String ifsOutputDir = "";
    private static int totalMembersMigrated = 0;
 
@@ -32,6 +33,23 @@ public class GetSourcePf {
       AS400JDBCDataSource dataSource = new AS400JDBCDataSource(system);
       conn = dataSource.getConnection();
       conn.setAutoCommit(true); // We don't want transaction control
+
+      ResultSet rsCCSID = conn.createStatement().executeQuery(
+        "Select CCSID " +
+        "From QSYS2.SYSCOLUMNS " +
+        "WHERE TABLE_NAME = 'SYSPARTITIONSTAT' " +
+        "And TABLE_SCHEMA = 'QSYS2' " +
+        "And COLUMN_NAME = 'SYSTEM_TABLE_NAME' "
+      );
+
+      if (rsCCSID.next()) {
+        SYSTEM_CCSID = rsCCSID.getString("CCSID").trim();
+        System.out.println("The system's ccsid is: " + SYSTEM_CCSID);
+      }
+      // 37 is standard EBCDIC 
+      if (SYSTEM_CCSID.equals("37")) {
+        SYSTEM_CCSID = CCSID;
+      }
 
       if (homeDir == null) {
         System.out.println("The current user has no home dir");
@@ -167,7 +185,7 @@ public class GetSourcePf {
                    + "TOSTMF('" 
                    + ifsOutputDir + "/" 
                    + memberName + "." + sourceType + "') "
-                   + "STMFOPT(*REPLACE) STMFCCSID(" + CCSID 
+                   + "STMFOPT(*REPLACE) STMFCCSID(" + CCSID  // We want it in UT8
                    + ") ENDLINFMT(*LF)";
 
     CommandCall cmd = new CommandCall(system);
@@ -270,7 +288,7 @@ public class GetSourcePf {
   private static void showSourcePfs(Connection conn, String library)
       throws SQLException{
     ResultSet rsshowSourcePf = conn.createStatement().executeQuery(
-      "Select Cast(SYSTEM_TABLE_NAME As Varchar(10) CCSID " + CCSID + ") As SourcePf, " +
+      "Select Cast(SYSTEM_TABLE_NAME As Varchar(10) CCSID " + SYSTEM_CCSID + ") As SourcePf, " +
       "Count(*) As Members " +
       "From QSYS2.SYSPARTITIONSTAT " +
       "Where SYSTEM_TABLE_SCHEMA = '" + library + "' " +
@@ -317,7 +335,7 @@ public class GetSourcePf {
     
     /* Creates result set with members of all the Source Pf in the chosen library*/
     return conn.createStatement().executeQuery(
-      "SELECT Cast(SYSTEM_TABLE_NAME As Varchar(10) CCSID " + CCSID + " ) As SourcePf, " + 
+      "SELECT Cast(SYSTEM_TABLE_NAME As Varchar(10) CCSID " + SYSTEM_CCSID + " ) As SourcePf, " + 
       "SYSTEM_TABLE_SCHEMA As Library " +
       "FROM QSYS2.SYSPARTITIONSTAT " +
       "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
