@@ -28,6 +28,16 @@ public class GetSourcePf {
       String homeDir = user.getHomeDirectory();
       String sourceDir = "sources";
 
+      // Set PASE shell to UTF8
+      CommandCall cmd = new CommandCall(system);
+      if(!cmd.run("ADDENVVAR ENVVAR(QIBM_PASE_CCSID) VALUE(1208) REPLACE(*YES)")){
+        for (AS400Message message : cmd.getMessageList()) {
+          System.out.println(message.getText());
+        }
+        System.out.println("Could not set PASE Shell ccsid to UTF8, some characters may be translated wrongly");
+        System.out.println("You can set it directly in your shell with: 'export QIBM_PASE_CCSID=1208'");
+      }
+
       //TODO: Move this to the start.
       // Establish JDBC connection
       AS400JDBCDataSource dataSource = new AS400JDBCDataSource(system);
