@@ -7,7 +7,8 @@ import java.beans.PropertyVetoException;
 
 public class GetSourcePf {
   private static final String CCSID = "1208";
-   private static String ifsOutputDir;
+   private static String ifsOutputDir = "";
+   private static int totalMembersMigrated = 0;
 
   public static void main( String... args ){
     BufferedReader inputStream = new BufferedReader(new InputStreamReader(System.in),1);
@@ -73,8 +74,10 @@ public class GetSourcePf {
       ifsOutputDir = ifsOutputDir + "/" + library;
       createDir(ifsOutputDir);
 
+      // Show list of Source PFs
       showSourcePfs(conn, library);
 
+      // Choose source pf
       ResultSet rsSourcePFs = null;
       String sourcePf = null;
       while (rsSourcePFs == null) {
@@ -84,10 +87,11 @@ public class GetSourcePf {
         rsSourcePFs = getSourcePfs(conn, sourcePf, library);
       }
 
+      //TODO: Add member selection?
       //System.out.println("Specify the name of a source member or press enter to migrate all the source members: ");
 
-      //TODO: Start timing here 
-      //TODO: Return number of migrated members
+      // Migration cycle
+      long startTime = System.nanoTime();
       while(rsSourcePFs.next()){
         library = rsSourcePFs.getString("Library").trim();
         sourcePf = rsSourcePFs.getString("SourcePf").trim();
@@ -95,11 +99,13 @@ public class GetSourcePf {
         System.out.println("\n\nMigrating Source PF: " + sourcePf + " in library: " + library);
         iterateThroughMembers(conn, library, sourcePf, ifsOutputDir + '/' + sourcePf, system);
       }
-      //TODO: add End timing here
 
-      //TODO: Validate if this close should be here 
+      // Output results
+      System.out.println("\nMigration completed.");
+      System.out.println("Total members migrated: " + totalMembersMigrated);
+      System.out.printf("Total time taken: %.2f seconds%n", (System.nanoTime() - startTime) / 1_000_000_000.0);
+
       rsSourcePFs.close();
-
 
     } catch (Exception e){
       e.printStackTrace();
@@ -170,6 +176,8 @@ public class GetSourcePf {
       return;
     }
 
+    // Increment counter
+    totalMembersMigrated ++;
     System.out.println("Migrateed " + memberName + " successfully");
 
   }
