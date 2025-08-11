@@ -327,6 +327,23 @@ public class GetSourcePf {
         .next()) {
       //TODO: Add validation to show related libraries. If this last !.next() do the return.
       System.out.println("Library " + library  + " does not exists in your system");
+
+      // Show related libraries if they exists
+      ResultSet relatedLibraries = conn.createStatement().executeQuery(
+        "Select SYSTEM_TABLE_SCHEMA As library " +
+        "From QSYS2.SYSPARTITIONSTAT " + 
+        "Where SYSTEM_TABLE_SCHEMA like '%" + library + "%'" +
+        "Group by SYSTEM_TABLE_SCHEMA limit 10"
+      );
+      if (relatedLibraries.next()) {
+        System.out.println("Did you mean: ");
+        System.out.println(relatedLibraries.getString("library").trim());
+      }
+      while(relatedLibraries.next()){
+        System.out.println(relatedLibraries.getString("library").trim());
+        //System.out.println(String.format("    %-13s | %17s", rsSourcePf, membersCount));     
+      }
+
       return "";
     }
     return library;
