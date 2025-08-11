@@ -7,19 +7,16 @@ import java.beans.PropertyVetoException;
 
 public class GetSourcePf {
   private static final String CCSID = "1208";
+   private static String ifsOutputDir;
 
   public static void main( String... args ){
     BufferedReader inputStream = new BufferedReader(new InputStreamReader(System.in),1);
     AS400 system = new AS400();
     Connection conn = null;
     Statement memberStmt = null;
-    //Statemente showSourcePf = null;
 
     ResultSet rsshowSourcePf = null;
 
-    //TODO: Add the source pf as another dir
-    // Base dir
-    String ifsOutputDir = null; 
     // TODO: Fix this to show the actual name instead of LOCALHOST
     String systemName = system.getSystemName().toUpperCase();
 
@@ -54,6 +51,7 @@ public class GetSourcePf {
       
       System.out.println("Source files will be migrated to dir: " + ifsOutputDir);
 
+      //TODO: Refacto this
       String library = "";
       while (library.isEmpty()) {
         System.out.println("\nSpecify the name of a library or press enter to search for Source PFs in the current library: " + user.getCurrentLibraryName());
@@ -64,6 +62,7 @@ public class GetSourcePf {
           if (library.equals("*CRTDFT")){
             System.out.println("The user does not have a current library");
             library = "";
+            continue;
           }
           break;
         }
@@ -74,27 +73,7 @@ public class GetSourcePf {
       ifsOutputDir = ifsOutputDir + "/" + library;
       createDir(ifsOutputDir);
 
-      //TODO: Move this to a method
-
-      //TODO: Validate if this only shows source pf
-      // getSourcePfs
-      rsshowSourcePf = conn.createStatement().executeQuery(
-        "Select SYSTEM_TABLE_NAME As SourcePf, Count(*) As Members " +
-        "From QSYS2.SYSPARTITIONSTAT " +
-        "Where SYSTEM_TABLE_SCHEMA = '" + library + "' " +
-        "And Trim(SOURCE_TYPE) <> ''" +
-        "Group by SYSTEM_TABLE_NAME"
-      );
-
-      // Show list of SourcePFs inside library
-      System.out.println("\nList of available Source PFs in library: " + library);
-      System.out.println("    SourcePf      | Number of Members"); // Header with aligned spacing
-      System.out.println("    ------------- | -----------------"); // Separator line for clarity
-      while(rsshowSourcePf.next()){
-        String rsSourcePf = rsshowSourcePf.getString("SourcePf").trim();
-        String membersCount = rsshowSourcePf.getString("Members").trim();
-        System.out.println(String.format("    %-13s | %17s", rsSourcePf, membersCount));
-      }
+      showSourcePfs(conn, library);
 
       ResultSet rsSourcePFs = null;
       String sourcePf = null;
@@ -277,6 +256,27 @@ public class GetSourcePf {
     if (!outputDir.exists()) {
         System.out.println("Creating dir: " + dirPath + " ...");
         outputDir.mkdirs(); // Create directory if it doesn't exist
+    }
+  }
+
+  private static void showSourcePfs(Connection conn, String library)
+      throws SQLException{
+    ResultSet rsshowSourcePf = conn.createStatement().executeQuery(
+      "Select SYSTEM_TABLE_NAME As SourcePf, Count(*) As Members " +
+      "From QSYS2.SYSPARTITIONSTAT " +
+      "Where SYSTEM_TABLE_SCHEMA = '" + library + "' " +
+      "And Trim(SOURCE_TYPE) <> ''" +
+      "Group by SYSTEM_TABLE_NAME"
+    );
+
+    // Show list of SourcePFs inside a given library
+    System.out.println("\nList of available Source PFs in library: " + library);
+    System.out.println("    SourcePf      | Number of Members"); // Header with aligned spacing
+    System.out.println("    ------------- | -----------------"); // Separator line for clarity
+    while(rsshowSourcePf.next()){
+      String rsSourcePf = rsshowSourcePf.getString("SourcePf").trim();
+      String membersCount = rsshowSourcePf.getString("Members").trim();
+      System.out.println(String.format("    %-13s | %17s", rsSourcePf, membersCount));
     }
   }
 
