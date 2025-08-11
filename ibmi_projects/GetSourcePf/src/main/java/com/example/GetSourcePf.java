@@ -270,7 +270,8 @@ public class GetSourcePf {
   private static void showSourcePfs(Connection conn, String library)
       throws SQLException{
     ResultSet rsshowSourcePf = conn.createStatement().executeQuery(
-      "Select SYSTEM_TABLE_NAME As SourcePf, Count(*) As Members " +
+      "Select Cast(SYSTEM_TABLE_NAME As Varchar(10) CCSID " + CCSID + ") As SourcePf, " +
+      "Count(*) As Members " +
       "From QSYS2.SYSPARTITIONSTAT " +
       "Where SYSTEM_TABLE_SCHEMA = '" + library + "' " +
       "And Trim(SOURCE_TYPE) <> ''" +
@@ -316,7 +317,8 @@ public class GetSourcePf {
     
     /* Creates result set with members of all the Source Pf in the chosen library*/
     return conn.createStatement().executeQuery(
-      "SELECT SYSTEM_TABLE_NAME As SourcePf,  SYSTEM_TABLE_SCHEMA As Library " +
+      "SELECT Cast(SYSTEM_TABLE_NAME As Varchar(10) CCSID " + CCSID + " ) As SourcePf, " + 
+      "SYSTEM_TABLE_SCHEMA As Library " +
       "FROM QSYS2.SYSPARTITIONSTAT " +
       "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
       "And Trim(SOURCE_TYPE) <> ''" +
