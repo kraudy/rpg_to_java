@@ -5,6 +5,12 @@ import java.sql.*;
 import java.io.*;
 import java.beans.PropertyVetoException;
 
+/*
+#!/QOpenSys/pkgs/bin/bash
+export QIBM_PASE_CCSID=1208
+java -jar GetSourcePf-1.0-SNAPSHOT.jar
+*/
+
 public class GetSourcePf {
    private static final String CCSID = "1208";
    private static String SYSTEM_CCSID = "";
@@ -29,6 +35,7 @@ public class GetSourcePf {
       String sourceDir = "sources";
 
       // Set PASE shell to UTF8
+      /*
       CommandCall cmd = new CommandCall(system);
       if(!cmd.run("ADDENVVAR ENVVAR(QIBM_PASE_CCSID) VALUE(1208) REPLACE(*YES)")){
         for (AS400Message message : cmd.getMessageList()) {
@@ -37,6 +44,7 @@ public class GetSourcePf {
         System.out.println("Could not set PASE Shell ccsid to UTF8, some characters may be translated wrongly");
         System.out.println("You can set it directly in your shell with: 'export QIBM_PASE_CCSID=1208'");
       }
+      */
 
       //TODO: Move this to the start.
       // Establish JDBC connection
@@ -300,7 +308,8 @@ public class GetSourcePf {
   private static void showSourcePfs(Connection conn, String library)
       throws SQLException{
     ResultSet rsshowSourcePf = conn.createStatement().executeQuery(
-      "Select Cast(SYSTEM_TABLE_NAME As Varchar(10) CCSID " + SYSTEM_CCSID + ") As SourcePf, " +
+      //"Select Cast(SYSTEM_TABLE_NAME As Varchar(10) CCSID " + SYSTEM_CCSID + ") As SourcePf, " +
+      "Select SYSTEM_TABLE_NAME As SourcePf, " +
       "Count(*) As Members " +
       "From QSYS2.SYSPARTITIONSTAT " +
       "Where SYSTEM_TABLE_SCHEMA = '" + library + "' " +
@@ -347,7 +356,8 @@ public class GetSourcePf {
     
     /* Creates result set with members of all the Source Pf in the chosen library*/
     return conn.createStatement().executeQuery(
-      "SELECT Cast(SYSTEM_TABLE_NAME As Varchar(10) CCSID " + SYSTEM_CCSID + " ) As SourcePf, " + 
+      //"SELECT Cast(SYSTEM_TABLE_NAME As Varchar(10) CCSID " + SYSTEM_CCSID + " ) As SourcePf, " + 
+      "SELECT SYSTEM_TABLE_NAME As SourcePf, " + 
       "SYSTEM_TABLE_SCHEMA As Library " +
       "FROM QSYS2.SYSPARTITIONSTAT " +
       "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
