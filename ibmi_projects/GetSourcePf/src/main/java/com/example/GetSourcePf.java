@@ -12,21 +12,18 @@ java -jar GetSourcePf-1.0-SNAPSHOT.jar
 */
 
 public class GetSourcePf {
-   private static final String CCSID = "1208";
-   private static String SYSTEM_CCSID = "";
-   private static String ifsOutputDir = "";
-   private static int totalMembersMigrated = 0;
+  private static final String CCSID = "1208";
+  private static String SYSTEM_CCSID = "";
+  private static int totalMembersMigrated = 0;
 
   public static void main( String... args ){
     BufferedReader inputStream = new BufferedReader(new InputStreamReader(System.in),1);
     AS400 system = new AS400();
     Connection conn = null;
-    Statement memberStmt = null;
-
-    ResultSet rsshowSourcePf = null;
 
     // TODO: Fix this to show the actual name instead of LOCALHOST
     String systemName = system.getSystemName().toUpperCase();
+    String ifsOutputDir = "";
 
     try{
       // Get current user
@@ -39,6 +36,7 @@ public class GetSourcePf {
       conn = dataSource.getConnection();
       conn.setAutoCommit(true); // We don't want transaction control
 
+      // Get system CCSID if we want to do some CCSID conversion latter
       ResultSet rsCCSID = conn.createStatement().executeQuery(
         "Select CCSID " +
         "From QSYS2.SYSCOLUMNS " +
@@ -51,10 +49,6 @@ public class GetSourcePf {
         SYSTEM_CCSID = rsCCSID.getString("CCSID").trim();
         System.out.println("The system's ccsid is: " + SYSTEM_CCSID);
       }
-      // 37 is standard EBCDIC 
-      // if (SYSTEM_CCSID.equals("37")) {
-      //   SYSTEM_CCSID = CCSID;
-      // }
 
       SYSTEM_CCSID = "37";
 
@@ -136,10 +130,6 @@ public class GetSourcePf {
       e.printStackTrace();
     } finally {
       try {
-        // Clean up resources
-        if (memberStmt != null) {
-            memberStmt.close();
-        }
         if (conn != null) {
             conn.close();
         }
@@ -295,7 +285,6 @@ public class GetSourcePf {
   private static void showSourcePfs(Connection conn, String library)
       throws SQLException{
     ResultSet rsshowSourcePf = conn.createStatement().executeQuery(
-      //"Select Cast(SYSTEM_TABLE_NAME As Varchar(10) CCSID " + SYSTEM_CCSID + ") As SourcePf, " +
       "Select SYSTEM_TABLE_NAME As SourcePf, " +
       "Count(*) As Members " +
       "From QSYS2.SYSPARTITIONSTAT " +
@@ -343,7 +332,6 @@ public class GetSourcePf {
     
     /* Creates result set with members of all the Source Pf in the chosen library*/
     return conn.createStatement().executeQuery(
-      //"SELECT Cast(SYSTEM_TABLE_NAME As Varchar(10) CCSID " + SYSTEM_CCSID + " ) As SourcePf, " + 
       "SELECT SYSTEM_TABLE_NAME As SourcePf, " + 
       "SYSTEM_TABLE_SCHEMA As Library " +
       "FROM QSYS2.SYSPARTITIONSTAT " +
