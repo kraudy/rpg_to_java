@@ -21,7 +21,6 @@ public class GetSourcePf {
     AS400 system = new AS400();
     Connection conn = null;
 
-    // TODO: Fix this to show the actual name instead of LOCALHOST
     String systemName = null;
     String ifsOutputDir = "";
     String sourceDir = "sources";
@@ -31,10 +30,22 @@ public class GetSourcePf {
       User user = new User(system, system.getUserId());
       String homeDir = user.getHomeDirectory();
 
+      System.out.println("User: " + system.getUserId().trim().toUpperCase());
+
       // Establish JDBC connection
       AS400JDBCDataSource dataSource = new AS400JDBCDataSource(system);
       conn = dataSource.getConnection();
       conn.setAutoCommit(true); // We don't want transaction control
+      
+      // Get system name
+      ResultSet rsCurrentServer = conn.createStatement().executeQuery(
+        "Select CURRENT_SERVER As Server From SYSIBM.SYSDUMMY1"
+      );
+
+      if (rsCurrentServer.next()) {
+        systemName = rsCurrentServer.getString("Server").trim();
+        System.out.println("System: " + systemName);
+      }
 
       // Get system CCSID if we want to do some CCSID conversion latter
       ResultSet rsCCSID = conn.createStatement().executeQuery(
@@ -47,20 +58,8 @@ public class GetSourcePf {
 
       if (rsCCSID.next()) {
         SYSTEM_CCSID = rsCCSID.getString("CCSID").trim();
-        System.out.println("The system's ccsid is: " + SYSTEM_CCSID);
-      }
-
-      // Get system name
-      ResultSet rsCurrentServer = conn.createStatement().executeQuery(
-        "Select CURRENT_SERVER As Server From SYSIBM.SYSDUMMY1"
-      );
-
-      if (rsCurrentServer.next()) {
-        systemName = rsCurrentServer.getString("Server").trim();
-        System.out.println("System's name: " + systemName);
-      }
-
-      
+        System.out.println("System's CCSID: " + SYSTEM_CCSID);
+      }  
 
       if (homeDir == null) {
         System.out.println("The current user has no home dir");

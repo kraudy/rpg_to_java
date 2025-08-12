@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuite tests="1" failures="0" name="com.example.GetSourcePfTest" time="0.007" errors="0" skipped="0">
+<testsuite tests="1" failures="0" name="com.example.GetSourcePfTest" time="0.006" errors="0" skipped="0">
   <properties>
     <property name="java.runtime.name" value="OpenJDK Runtime Environment"/>
     <property name="java.vm.version" value="21.0.8+9-Ubuntu-0ubuntu122.04.1"/>
@@ -56,5 +56,5 @@
     <property name="sun.io.unicode.encoding" value="UnicodeLittle"/>
     <property name="sun.cpu.endian" value="little"/>
   </properties>
-  <testcase classname="com.example.GetSourcePfTest" name="testApp" time="0.007"/>
+  <testcase classname="com.example.GetSourcePfTest" name="testApp" time="0.006"/>
 </testsuite>
