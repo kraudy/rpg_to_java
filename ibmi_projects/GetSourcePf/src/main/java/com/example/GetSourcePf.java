@@ -22,14 +22,14 @@ public class GetSourcePf {
     Connection conn = null;
 
     // TODO: Fix this to show the actual name instead of LOCALHOST
-    String systemName = system.getSystemName().toUpperCase();
+    String systemName = null;
     String ifsOutputDir = "";
+    String sourceDir = "sources";
 
     try{
       // Get current user
       User user = new User(system, system.getUserId());
       String homeDir = user.getHomeDirectory();
-      String sourceDir = "sources";
 
       // Establish JDBC connection
       AS400JDBCDataSource dataSource = new AS400JDBCDataSource(system);
@@ -50,7 +50,17 @@ public class GetSourcePf {
         System.out.println("The system's ccsid is: " + SYSTEM_CCSID);
       }
 
-      SYSTEM_CCSID = "37";
+      // Get system name
+      ResultSet rsCurrentServer = conn.createStatement().executeQuery(
+        "Select CURRENT_SERVER As Server From SYSIBM.SYSDUMMY1"
+      );
+
+      if (rsCurrentServer.next()) {
+        systemName = rsCurrentServer.getString("Server").trim();
+        System.out.println("System's name: " + systemName);
+      }
+
+      
 
       if (homeDir == null) {
         System.out.println("The current user has no home dir");
