@@ -38,29 +38,14 @@ public class GetSourcePf {
       conn.setAutoCommit(true); // We don't want transaction control
       
       // Get system name
-      ResultSet rsCurrentServer = conn.createStatement().executeQuery(
-        "Select CURRENT_SERVER As Server From SYSIBM.SYSDUMMY1"
-      );
-
-      if (rsCurrentServer.next()) {
-        systemName = rsCurrentServer.getString("Server").trim();
-        System.out.println("System: " + systemName);
-      }
+      systemName = getServerName(conn);
+      System.out.println("System: " + systemName);
 
       // Get system CCSID if we want to do some CCSID conversion latter
-      ResultSet rsCCSID = conn.createStatement().executeQuery(
-        "Select CCSID " +
-        "From QSYS2.SYSCOLUMNS " +
-        "WHERE TABLE_NAME = 'SYSPARTITIONSTAT' " +
-        "And TABLE_SCHEMA = 'QSYS2' " +
-        "And COLUMN_NAME = 'SYSTEM_TABLE_NAME' "
-      );
+      SYSTEM_CCSID = getServerCCSID(conn);
+      System.out.println("System's CCSID: " + SYSTEM_CCSID);
 
-      if (rsCCSID.next()) {
-        SYSTEM_CCSID = rsCCSID.getString("CCSID").trim();
-        System.out.println("System's CCSID: " + SYSTEM_CCSID);
-      }  
-
+      // Check home dir
       if (homeDir == null) {
         System.out.println("The current user has no home dir");
         return;
@@ -68,7 +53,7 @@ public class GetSourcePf {
       // Construct default exportation directory
       ifsOutputDir = homeDir + "/" + sourceDir;
 
-      System.out.println("Specify the source dir destination or press 'Enter' to use: " + ifsOutputDir);
+      System.out.println("\nSpecify the source dir destination or press 'Enter' to use: " + ifsOutputDir);
       sourceDir = inputStream.readLine().trim();
 
       if (!sourceDir.isEmpty()) {
@@ -289,6 +274,32 @@ public class GetSourcePf {
         System.out.println("Creating dir: " + dirPath + " ...");
         outputDir.mkdirs(); // Create directory if it doesn't exist
     }
+  }
+
+  private static String getServerName(Connection conn)
+      throws SQLException{
+    ResultSet rsCurrentServer = conn.createStatement().executeQuery(
+      "Select CURRENT_SERVER As Server From SYSIBM.SYSDUMMY1"
+    );
+    if (rsCurrentServer.next()) {
+      return rsCurrentServer.getString("Server").trim();
+    }
+    return "";
+  }
+
+  private static String getServerCCSID(Connection conn)
+      throws SQLException{
+    ResultSet rsCCSID = conn.createStatement().executeQuery(
+      "Select CCSID " +
+      "From QSYS2.SYSCOLUMNS " +
+      "WHERE TABLE_NAME = 'SYSPARTITIONSTAT' " +
+      "And TABLE_SCHEMA = 'QSYS2' " +
+      "And COLUMN_NAME = 'SYSTEM_TABLE_NAME' "
+    );
+    if (rsCCSID.next()) {
+      return rsCCSID.getString("CCSID").trim();
+    } 
+    return "";
   }
 
   private static void showSourcePfs(Connection conn, String library)
