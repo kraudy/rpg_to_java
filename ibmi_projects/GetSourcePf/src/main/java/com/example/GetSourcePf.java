@@ -14,7 +14,9 @@ java -jar GetSourcePf-1.0-SNAPSHOT.jar
 public class GetSourcePf {
   private static final String CCSID = "1208";
   private static String SYSTEM_CCSID = "";
+  private static int totalSourcePfMigrated = 0;
   private static int totalMembersMigrated = 0;
+  private static int errorsMigrating = 0;
 
   public static void main( String... args ){
     BufferedReader inputStream = new BufferedReader(new InputStreamReader(System.in),1);
@@ -106,6 +108,7 @@ public class GetSourcePf {
       // Migration cycle
       long startTime = System.nanoTime();
       while(rsSourcePFs.next()){
+        totalSourcePfMigrated ++;
         library = rsSourcePFs.getString("Library").trim();
         sourcePf = rsSourcePFs.getString("SourcePf").trim();
 
@@ -114,8 +117,10 @@ public class GetSourcePf {
       }
 
       // Output results
-      System.out.println("\nMigration completed.");
+      System.out.println("\n... Migration completed ...");
+      System.out.println("\nIterated through: " + totalSourcePfMigrated + " Source PFs");
       System.out.println("Total members migrated: " + totalMembersMigrated);
+      System.out.println("Members that could not be migrated: " + errorsMigrating);
       System.out.printf("Total time taken: %.2f seconds%n", (System.nanoTime() - startTime) / 1_000_000_000.0);
 
       rsSourcePFs.close();
@@ -181,6 +186,7 @@ public class GetSourcePf {
 
     CommandCall cmd = new CommandCall(system);
     if(!cmd.run(commandStr)){
+      errorsMigrating ++;
       System.out.println("Could not migrate " + memberName + " ***");
       return;
     }
