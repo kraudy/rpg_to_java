@@ -18,12 +18,10 @@ import java.util.concurrent.TimeUnit;
 
 /*
   Tool for migrating IBM i source physical files (PFs) to IFS stream files.
-  This class handles connection to the system, user input for libraries and PFs,
-  and performs the migration using CPYTOSTMF commands.
 */
 public class SourceMigrator { 
-  private static final String UTF8_CCSID = "1208"; // UTF-8 for stream files
-  private static final String INVARIANT_CCSID = "37"; // EBCDIC US for invariant object names (handles '#' vs 'ñ') 
+  private static final String UTF8_CCSID = "1208";    // UTF-8 for stream files
+  private static final String INVARIANT_CCSID = "37"; // EBCDIC
   private final AS400 system;
   private final Connection connection;
   private final BufferedReader inputReader;
@@ -142,8 +140,7 @@ public class SourceMigrator {
                           "FROM QSYS2.SYSPARTITIONSTAT " +
                           "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
                           "AND SYSTEM_TABLE_NAME = '" + sourcePf + "' " +
-                          "AND TRIM(SOURCE_TYPE) <> ''")
-      ){ 
+                          "AND TRIM(SOURCE_TYPE) <> ''")){ 
         while (rsMembers.next()) {
           String memberName = rsMembers.getString("Member").trim();
           String sourceType = rsMembers.getString("SourceType").trim();
@@ -196,13 +193,13 @@ public class SourceMigrator {
   } 
   private void showSourcePFs(String library) throws SQLException {
     try (Statement stmt = connection.createStatement();
-        ResultSet rs = stmt.executeQuery(
-                "SELECT CAST(SYSTEM_TABLE_NAME AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS SourcePf, " +
-                        "COUNT(*) AS Members " +
-                "FROM QSYS2.SYSPARTITIONSTAT " +
-                "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
-                "AND TRIM(SOURCE_TYPE) <> '' " +
-                "GROUP BY SYSTEM_TABLE_NAME")) {     
+          ResultSet rs = stmt.executeQuery(
+                  "SELECT SYSTEM_TABLE_NAME AS SourcePf, " +
+                          "COUNT(*) AS Members " +
+                  "FROM QSYS2.SYSPARTITIONSTAT " +
+                  "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
+                  "AND TRIM(SOURCE_TYPE) <> '' " +
+                  "GROUP BY SYSTEM_TABLE_NAME")) {     
       System.out.println("\nList of available Source PFs in library: " + library);
       System.out.println("    SourcePf      | Number of Members");
       System.out.println("    ------------- | -----------------");
@@ -229,8 +226,8 @@ public class SourceMigrator {
           return null;
         }
       }
-
-      query = "SELECT CAST(SYSTEM_TABLE_NAME AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS SourcePf, " +
+      // Get specific Source PF
+      query = "SELECT SYSTEM_TABLE_NAME AS SourcePf, " +
               "SYSTEM_TABLE_SCHEMA AS Library " +
               "FROM QSYS2.SYSPARTITIONSTAT " +
               "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
@@ -238,7 +235,8 @@ public class SourceMigrator {
               "AND TRIM(SOURCE_TYPE) <> '' " +
               "GROUP BY SYSTEM_TABLE_NAME, SYSTEM_TABLE_SCHEMA";
     } else {
-      query = "SELECT CAST(SYSTEM_TABLE_NAME AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS SourcePf, " +
+      // Get all Source PF
+      query = "SELECT SYSTEM_TABLE_NAME AS SourcePf, " +
               "SYSTEM_TABLE_SCHEMA AS Library " +
               "FROM QSYS2.SYSPARTITIONSTAT " +
               "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
@@ -257,6 +255,7 @@ public class SourceMigrator {
                         "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' LIMIT 1")) {     
       if (!validateRs.next()) {
         System.out.println("Library " + library + " does not exist in your system.");
+        // Show similar libs
         try (Statement relatedStmt = connection.createStatement();
               ResultSet relatedRs = relatedStmt.executeQuery(
                       "SELECT SYSTEM_TABLE_SCHEMA AS library " +
