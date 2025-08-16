@@ -194,7 +194,7 @@ public class SourceMigrator {
   private void showSourcePFs(String library) throws SQLException {
     try (Statement stmt = connection.createStatement();
           ResultSet rs = stmt.executeQuery(
-                  "SELECT SYSTEM_TABLE_NAME AS SourcePf, " +
+                  "SELECT CAST(SYSTEM_TABLE_NAME AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS SourcePf, " +
                           "COUNT(*) AS Members " +
                   "FROM QSYS2.SYSPARTITIONSTAT " +
                   "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
