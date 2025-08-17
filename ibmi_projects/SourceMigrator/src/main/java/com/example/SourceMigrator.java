@@ -61,7 +61,9 @@ public class SourceMigrator {
 
       String ifsOutputDir = promptForOutputDirectory(homeDir);
 
+      // TODO: Add query for Tracked Libs
       String library = promptForLibrary();
+      ResultSet rsTrackedLibs = getTrackedLibraries();
 
       ifsOutputDir = ifsOutputDir + "/" + library;
       createDirectory(ifsOutputDir);
@@ -109,6 +111,15 @@ public class SourceMigrator {
     }
     return library; 
   } 
+  private ResultSet getTrackedLibraries() throws SQLException{
+    try(
+      Statement stmt = connection.createStatement();
+      ResultSet rsTrackedLibs = stmt.executeQuery(
+        "SELECT Library_Name, Last_Scan FROM ROBKRAUDY2.TRACKEDLIB"
+      )){
+      return rsTrackedLibs;
+    }
+  }
   private ResultSet promptForSourcePFs(String library) throws IOException, SQLException {
     ResultSet sourcePFs = null;
     while (sourcePFs == null) {
