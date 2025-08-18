@@ -62,8 +62,9 @@ public class SourceMigrator {
       String ifsOutputDir = promptForOutputDirectory(homeDir);
 
       // TODO: Add query for Tracked Libs
-      String library = promptForLibrary();
       ResultSet rsTrackedLibs = getTrackedLibraries();
+
+      String library = promptForLibrary();
 
       ifsOutputDir = ifsOutputDir + "/" + library;
       createDirectory(ifsOutputDir);
@@ -115,7 +116,9 @@ public class SourceMigrator {
     try(
       Statement stmt = connection.createStatement();
       ResultSet rsTrackedLibs = stmt.executeQuery(
-        "SELECT Library_Name, Last_Scan FROM ROBKRAUDY2.TRACKEDLIB"
+        "SELECT Library_Name, Last_Scan FROM ROBKRAUDY2.TRACKEDLIB" +
+        "INNER JOIN QSYS2.SYSPARTITIONSTAT ON (Library_Name = SYSTEM_TABLE_SCHEMA)" + // Validates if library exists
+        "GROUP BY Library_Name, Last_Scan"
       )){
       return rsTrackedLibs;
     }
