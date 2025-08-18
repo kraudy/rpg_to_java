@@ -66,6 +66,7 @@ public class SourceMigrator {
 
       // TODO: Add query for Tracked Libs
       ResultSet rsTrackedLibs = getTrackedLibraries();
+      System.out.println("\nRetrieved tracked libraries.");
 
       while(rsTrackedLibs.next()){
         String library = rsTrackedLibs.getString("Library_Name").trim();
@@ -124,15 +125,12 @@ public class SourceMigrator {
     return library; 
   } 
   private ResultSet getTrackedLibraries() throws SQLException{
-    try(
-      Statement stmt = connection.createStatement();
-      ResultSet rsTrackedLibs = stmt.executeQuery(
-        "SELECT Library_Name, Last_Scan FROM ROBKRAUDY2.TRACKEDLIB" +
-        "INNER JOIN QSYS2.SYSPARTITIONSTAT ON (Library_Name = SYSTEM_TABLE_SCHEMA)" + // Validates if library exists
-        "GROUP BY Library_Name, Last_Scan"
-      )){
-      return rsTrackedLibs;
-    }
+    String query = "SELECT Library_Name, Last_Scan FROM ROBKRAUDY2.TRACKEDLIB " + //TODO: Remove lib qualification
+                   "INNER JOIN QSYS2.SYSPARTITIONSTAT ON (Library_Name = SYSTEM_TABLE_SCHEMA) " + // Validates if library exists
+                   "GROUP BY Library_Name, Last_Scan";
+
+    Statement stmt = connection.createStatement();
+    return stmt.executeQuery(query); 
   }
   //private ResultSet promptForSourcePFs(String library) throws IOException, SQLException {
   //  ResultSet sourcePFs = null;
