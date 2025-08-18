@@ -74,10 +74,8 @@ public class SourceMigrator {
         ifsOutputDir = defaultDir + "/" + library;
         createDirectory(ifsOutputDir);
 
-        ResultSet sourcePFs = getSourcePFs(library, lastScan);
-
         long startTime = System.nanoTime();
-        migrateSourcePFs(sourcePFs, ifsOutputDir);
+        migrateSourcePFs(library, lastScan, ifsOutputDir);
 
         System.out.println("\nMigration completed.");
         System.out.println("Total Source PFs migrated: " + totalSourcePFsMigrated);
@@ -134,9 +132,11 @@ public class SourceMigrator {
   //  }
   //  return sourcePFs;
   //} 
-  private void migrateSourcePFs(ResultSet sourcePFs, String baseOutputDir) throws SQLException, IOException, AS400SecurityException, ErrorCompletingRequestException, InterruptedException, PropertyVetoException {
+  private void migrateSourcePFs(String library, Timestamp lastScan, String baseOutputDir) throws SQLException, IOException, AS400SecurityException, ErrorCompletingRequestException, InterruptedException, PropertyVetoException {
+
+    ResultSet sourcePFs = getSourcePFs(library, lastScan);
+
     while (sourcePFs.next()) {
-      String library = sourcePFs.getString("Library").trim();
       String sourcePf = sourcePFs.getString("SourcePf").trim();     
       System.out.println("\n\nMigrating Source PF: " + sourcePf + " in library: " + library);
 
@@ -228,15 +228,17 @@ public class SourceMigrator {
   //  } 
   //} 
   private ResultSet getSourcePFs(String library, Timestamp lastScan) throws SQLException {
+    //TODO: Put this in a try
     String query;
     // Get all Source PF
-    query = "SELECT CAST(SYSTEM_TABLE_NAME AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS SourcePf, " +
-            "SYSTEM_TABLE_SCHEMA AS Library " +
+    query = "SELECT CAST(SYSTEM_TABLE_NAME AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS SourcePf " +
+            //"SYSTEM_TABLE_SCHEMA AS Library " + // TODO: I think i don't need this
             "FROM QSYS2.SYSPARTITIONSTAT " +
             "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
             "AND TRIM(SOURCE_TYPE) <> '' " +
             "AND LAST_CHANGE_TIMESTAMP > '" + lastScan + "' " +
-            "GROUP BY SYSTEM_TABLE_NAME, SYSTEM_TABLE_SCHEMA";
+            //"GROUP BY SYSTEM_TABLE_NAME, SYSTEM_TABLE_SCHEMA"
+            "GROUP BY SYSTEM_TABLE_NAME";
 
     Statement stmt = connection.createStatement();
     return stmt.executeQuery(query); 
