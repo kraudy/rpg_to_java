@@ -60,7 +60,6 @@ public class SourceMigrator {
         return;
       }
 
-      //String ifsOutputDir = promptForOutputDirectory(homeDir);
       String defaultDir = homeDir + "/sources";
       String ifsOutputDir = null;
 
@@ -87,12 +86,6 @@ public class SourceMigrator {
         long durationNanos = System.nanoTime() - startTime;
         System.out.printf("Total time taken: %.2f seconds%n", TimeUnit.NANOSECONDS.toMillis(durationNanos) / 1000.0);
       }
-
-      //String library = promptForLibrary();
-
-      //showSourcePFs(library);
-
-      //ResultSet sourcePFs = promptForSourcePFs(library);
       
     } catch (Exception e) {
       e.printStackTrace();
@@ -100,30 +93,30 @@ public class SourceMigrator {
       cleanup();
     }
   } 
-  private String promptForOutputDirectory(String homeDir) throws IOException {
-    String defaultDir = homeDir + "/sources";
-    System.out.println("\nSpecify the source dir destination or press 'Enter' to use: " + defaultDir);
-    String sourceDir = inputReader.readLine().trim();
-    return sourceDir.isEmpty() ? defaultDir : homeDir + "/" + sourceDir;
-  } 
-  private String promptForLibrary() throws IOException, SQLException {
-    String library = "";
-    while (library.isEmpty()) {
-      System.out.println("\nSpecify the name of a library or press enter to search for Source PFs in the current library: " + currentUser.getCurrentLibraryName());
-      library = inputReader.readLine().trim().toUpperCase();     
-      if (library.isEmpty()) {
-        library = currentUser.getCurrentLibraryName();
-        if ("*CRTDFT".equals(library)) {
-          System.out.println("The user does not have a current library");
-          library = "";
-          continue;
-        }
-      } else {
-        library = validateAndGetLibrary(library);
-      } 
-    }
-    return library; 
-  } 
+  //private String promptForOutputDirectory(String homeDir) throws IOException {
+  //  String defaultDir = homeDir + "/sources";
+  //  System.out.println("\nSpecify the source dir destination or press 'Enter' to use: " + defaultDir);
+  //  String sourceDir = inputReader.readLine().trim();
+  //  return sourceDir.isEmpty() ? defaultDir : homeDir + "/" + sourceDir;
+  //} 
+  //private String promptForLibrary() throws IOException, SQLException {
+  //  String library = "";
+  //  while (library.isEmpty()) {
+  //    System.out.println("\nSpecify the name of a library or press enter to search for Source PFs in the current library: " + currentUser.getCurrentLibraryName());
+  //    library = inputReader.readLine().trim().toUpperCase();     
+  //    if (library.isEmpty()) {
+  //      library = currentUser.getCurrentLibraryName();
+  //      if ("*CRTDFT".equals(library)) {
+  //        System.out.println("The user does not have a current library");
+  //        library = "";
+  //        continue;
+  //      }
+  //    } else {
+  //      library = validateAndGetLibrary(library);
+  //    } 
+  //  }
+  //  return library; 
+  //} 
   private ResultSet getTrackedLibraries() throws SQLException{
     String query = "SELECT Library_Name, Last_Scan FROM ROBKRAUDY2.TRACKEDLIB " + //TODO: Remove lib qualification
                    "INNER JOIN QSYS2.SYSPARTITIONSTAT ON (Library_Name = SYSTEM_TABLE_SCHEMA) " + // Validates if library exists
@@ -214,26 +207,26 @@ public class SourceMigrator {
     }
     return "UNKNOWN";
   } 
-  private void showSourcePFs(String library) throws SQLException {
-    try (Statement stmt = connection.createStatement();
-          ResultSet rs = stmt.executeQuery(
-                  "SELECT CAST(SYSTEM_TABLE_NAME AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS SourcePf, " +
-                          "COUNT(*) AS Members " +
-                  "FROM QSYS2.SYSPARTITIONSTAT " +
-                  "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
-                  "AND TRIM(SOURCE_TYPE) <> '' " +
-                  "GROUP BY SYSTEM_TABLE_NAME")) {     
-      System.out.println("\nList of available Source PFs in library: " + library);
-      System.out.println("    SourcePf      | Number of Members");
-      System.out.println("    ------------- | -----------------");
+  //private void showSourcePFs(String library) throws SQLException {
+  //  try (Statement stmt = connection.createStatement();
+  //        ResultSet rs = stmt.executeQuery(
+  //                "SELECT CAST(SYSTEM_TABLE_NAME AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS SourcePf, " +
+  //                        "COUNT(*) AS Members " +
+  //                "FROM QSYS2.SYSPARTITIONSTAT " +
+  //                "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
+  //                "AND TRIM(SOURCE_TYPE) <> '' " +
+  //                "GROUP BY SYSTEM_TABLE_NAME")) {     
+  //    System.out.println("\nList of available Source PFs in library: " + library);
+  //    System.out.println("    SourcePf      | Number of Members");
+  //    System.out.println("    ------------- | -----------------");
 
-      while (rs.next()) {
-        String sourcePf = rs.getString("SourcePf").trim();
-        String membersCount = rs.getString("Members").trim();
-        System.out.printf("    %-13s | %17s%n", sourcePf, membersCount);
-      }
-    } 
-  } 
+  //    while (rs.next()) {
+  //      String sourcePf = rs.getString("SourcePf").trim();
+  //      String membersCount = rs.getString("Members").trim();
+  //      System.out.printf("    %-13s | %17s%n", sourcePf, membersCount);
+  //    }
+  //  } 
+  //} 
   private ResultSet getSourcePFs(String library, Timestamp lastScan) throws SQLException {
     String query;
     // Get all Source PF
