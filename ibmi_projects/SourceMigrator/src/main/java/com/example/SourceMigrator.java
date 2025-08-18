@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.concurrent.TimeUnit;
@@ -59,29 +60,39 @@ public class SourceMigrator {
         return;
       }
 
-      String ifsOutputDir = promptForOutputDirectory(homeDir);
+      //String ifsOutputDir = promptForOutputDirectory(homeDir);
+      String defaultDir = homeDir + "/sources";
+      String ifsOutputDir = null;
 
       // TODO: Add query for Tracked Libs
       ResultSet rsTrackedLibs = getTrackedLibraries();
 
-      String library = promptForLibrary();
+      while(rsTrackedLibs.next()){
+        String library = rsTrackedLibs.getString("Library_Name").trim();
+        Timestamp lastScan = rsTrackedLibs.getTimestamp("Last_Scan");
 
-      ifsOutputDir = ifsOutputDir + "/" + library;
-      createDirectory(ifsOutputDir);
+        ifsOutputDir = defaultDir + "/" + library;
+        createDirectory(ifsOutputDir);
 
-      showSourcePFs(library);
+        ResultSet sourcePFs = getSourcePFs(library, lastScan);
 
-      ResultSet sourcePFs = promptForSourcePFs(library);
+        long startTime = System.nanoTime();
+        migrateSourcePFs(sourcePFs, ifsOutputDir);
 
-      long startTime = System.nanoTime();
-      migrateSourcePFs(sourcePFs, ifsOutputDir);
+        System.out.println("\nMigration completed.");
+        System.out.println("Total Source PFs migrated: " + totalSourcePFsMigrated);
+        System.out.println("Total members migrated: " + totalMembersMigrated);
+        System.out.println("Migration errors: " + migrationErrors);
+        long durationNanos = System.nanoTime() - startTime;
+        System.out.printf("Total time taken: %.2f seconds%n", TimeUnit.NANOSECONDS.toMillis(durationNanos) / 1000.0);
+      }
 
-      System.out.println("\nMigration completed.");
-      System.out.println("Total Source PFs migrated: " + totalSourcePFsMigrated);
-      System.out.println("Total members migrated: " + totalMembersMigrated);
-      System.out.println("Migration errors: " + migrationErrors);
-      long durationNanos = System.nanoTime() - startTime;
-      System.out.printf("Total time taken: %.2f seconds%n", TimeUnit.NANOSECONDS.toMillis(durationNanos) / 1000.0);
+      //String library = promptForLibrary();
+
+      //showSourcePFs(library);
+
+      //ResultSet sourcePFs = promptForSourcePFs(library);
+      
     } catch (Exception e) {
       e.printStackTrace();
     } finally {
@@ -123,15 +134,15 @@ public class SourceMigrator {
       return rsTrackedLibs;
     }
   }
-  private ResultSet promptForSourcePFs(String library) throws IOException, SQLException {
-    ResultSet sourcePFs = null;
-    while (sourcePFs == null) {
-      System.out.println("\nSpecify the name of a source PF or press 'Enter' to migrate all the source PFs in library: " + library);
-      String sourcePf = inputReader.readLine().trim().toUpperCase();
-      sourcePFs = getSourcePFs(sourcePf, library);
-    }
-    return sourcePFs;
-  } 
+  //private ResultSet promptForSourcePFs(String library) throws IOException, SQLException {
+  //  ResultSet sourcePFs = null;
+  //  while (sourcePFs == null) {
+  //    System.out.println("\nSpecify the name of a source PF or press 'Enter' to migrate all the source PFs in library: " + library);
+  //    String sourcePf = inputReader.readLine().trim().toUpperCase();
+  //    sourcePFs = getSourcePFs(sourcePf, library);
+  //  }
+  //  return sourcePFs;
+  //} 
   private void migrateSourcePFs(ResultSet sourcePFs, String baseOutputDir) throws SQLException, IOException, AS400SecurityException, ErrorCompletingRequestException, InterruptedException, PropertyVetoException {
     while (sourcePFs.next()) {
       String library = sourcePFs.getString("Library").trim();
@@ -225,38 +236,16 @@ public class SourceMigrator {
       }
     } 
   } 
-  private ResultSet getSourcePFs(String sourcePf, String library) throws SQLException {
+  private ResultSet getSourcePFs(String library, Timestamp lastScan) throws SQLException {
     String query;
-    if (!sourcePf.isEmpty()) {
-      // Validate if Source PF exists
-      try (Statement validateStmt = connection.createStatement();
-          ResultSet validateRs = validateStmt.executeQuery(
-                  "SELECT 1 AS Exist FROM QSYS2.SYSPARTITIONSTAT " +
-                          "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
-                          "AND SYSTEM_TABLE_NAME = '" + sourcePf + "' " +
-                          "AND TRIM(SOURCE_TYPE) <> '' LIMIT 1")) {         
-        if (!validateRs.next()) {
-          System.out.println(" *Source PF does not exist in library " + library);
-          return null;
-        }
-      }
-      // Get specific Source PF
-      query = "SELECT CAST(SYSTEM_TABLE_NAME AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS SourcePf, " +
-              "SYSTEM_TABLE_SCHEMA AS Library " +
-              "FROM QSYS2.SYSPARTITIONSTAT " +
-              "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
-              "AND SYSTEM_TABLE_NAME = '" + sourcePf + "' " +
-              "AND TRIM(SOURCE_TYPE) <> '' " +
-              "GROUP BY SYSTEM_TABLE_NAME, SYSTEM_TABLE_SCHEMA";
-    } else {
-      // Get all Source PF
-      query = "SELECT CAST(SYSTEM_TABLE_NAME AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS SourcePf, " +
-              "SYSTEM_TABLE_SCHEMA AS Library " +
-              "FROM QSYS2.SYSPARTITIONSTAT " +
-              "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
-              "AND TRIM(SOURCE_TYPE) <> '' " +
-              "GROUP BY SYSTEM_TABLE_NAME, SYSTEM_TABLE_SCHEMA";
-    }
+    // Get all Source PF
+    query = "SELECT CAST(SYSTEM_TABLE_NAME AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS SourcePf, " +
+            "SYSTEM_TABLE_SCHEMA AS Library " +
+            "FROM QSYS2.SYSPARTITIONSTAT " +
+            "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
+            "AND TRIM(SOURCE_TYPE) <> '' " +
+            "AND LAST_CHANGE_TIMESTAMP > '" + lastScan + "' " +
+            "GROUP BY SYSTEM_TABLE_NAME, SYSTEM_TABLE_SCHEMA";
 
     Statement stmt = connection.createStatement();
     return stmt.executeQuery(query); 
