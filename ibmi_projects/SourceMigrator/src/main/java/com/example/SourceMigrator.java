@@ -63,7 +63,7 @@ public class SourceMigrator {
       String defaultDir = homeDir + "/sources";
       String ifsOutputDir = null;
 
-      // TODO: Add query for Tracked Libs
+      // TODO: Add query with try for auto close resources
       ResultSet rsTrackedLibs = getTrackedLibraries();
       System.out.println("\nRetrieved tracked libraries.");
 
@@ -133,21 +133,27 @@ public class SourceMigrator {
   //  return sourcePFs;
   //} 
   private void migrateSourcePFs(String library, Timestamp lastScan, String baseOutputDir) throws SQLException, IOException, AS400SecurityException, ErrorCompletingRequestException, InterruptedException, PropertyVetoException {
+    try(Statement stmt = connection.createStatement();
+        ResultSet sourcePFs = stmt.executeQuery(
+          "SELECT CAST(SYSTEM_TABLE_NAME AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS SourcePf " +
+          "FROM QSYS2.SYSPARTITIONSTAT " +
+          "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
+          "AND TRIM(SOURCE_TYPE) <> '' " +
+          "AND LAST_CHANGE_TIMESTAMP > '" + lastScan + "' " +
+          "GROUP BY SYSTEM_TABLE_NAME"
+        )){
+      while (sourcePFs.next()) {
+        String sourcePf = sourcePFs.getString("SourcePf").trim();     
+        System.out.println("\n\nMigrating Source PF: " + sourcePf + " in library: " + library);
 
-    ResultSet sourcePFs = getSourcePFs(library, lastScan);
+        String pfOutputDir = baseOutputDir + '/' + sourcePf;
+        createDirectory(pfOutputDir);
 
-    while (sourcePFs.next()) {
-      String sourcePf = sourcePFs.getString("SourcePf").trim();     
-      System.out.println("\n\nMigrating Source PF: " + sourcePf + " in library: " + library);
+        migrateMembers(library, sourcePf, pfOutputDir);
 
-      String pfOutputDir = baseOutputDir + '/' + sourcePf;
-      createDirectory(pfOutputDir);
-
-      migrateMembers(library, sourcePf, pfOutputDir);
-
-      totalSourcePFsMigrated++;
+        totalSourcePFsMigrated++;
+      }
     }
-    sourcePFs.close(); 
   } 
   private void migrateMembers(String library, String sourcePf, String ifsOutputDir) throws SQLException, IOException, AS400SecurityException, ErrorCompletingRequestException, InterruptedException, PropertyVetoException {
     try (Statement stmt = connection.createStatement();
@@ -227,22 +233,6 @@ public class SourceMigrator {
   //    }
   //  } 
   //} 
-  private ResultSet getSourcePFs(String library, Timestamp lastScan) throws SQLException {
-    //TODO: Put this in a try
-    String query;
-    // Get all Source PF
-    query = "SELECT CAST(SYSTEM_TABLE_NAME AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS SourcePf " +
-            //"SYSTEM_TABLE_SCHEMA AS Library " + // TODO: I think i don't need this
-            "FROM QSYS2.SYSPARTITIONSTAT " +
-            "WHERE SYSTEM_TABLE_SCHEMA = '" + library + "' " +
-            "AND TRIM(SOURCE_TYPE) <> '' " +
-            "AND LAST_CHANGE_TIMESTAMP > '" + lastScan + "' " +
-            //"GROUP BY SYSTEM_TABLE_NAME, SYSTEM_TABLE_SCHEMA"
-            "GROUP BY SYSTEM_TABLE_NAME";
-
-    Statement stmt = connection.createStatement();
-    return stmt.executeQuery(query); 
-  } 
   private String validateAndGetLibrary(String library) throws SQLException {
     try (Statement validateStmt = connection.createStatement();
         ResultSet validateRs = validateStmt.executeQuery(
