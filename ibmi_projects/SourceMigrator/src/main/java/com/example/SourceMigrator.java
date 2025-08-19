@@ -64,26 +64,33 @@ public class SourceMigrator {
       String ifsOutputDir = null;
 
       // TODO: Add query with try for auto close resources
-      ResultSet rsTrackedLibs = getTrackedLibraries();
-      System.out.println("\nRetrieved tracked libraries.");
+      //ResultSet rsTrackedLibs = getTrackedLibraries();
+      //System.out.println("\nRetrieved tracked libraries.");
 
-      while(rsTrackedLibs.next()){
-        String library = rsTrackedLibs.getString("Library_Name").trim();
-        Timestamp lastScan = rsTrackedLibs.getTimestamp("Last_Scan");
+      try(Statement stmt = connection.createStatement();
+          ResultSet rsTrackedLibs = stmt.executeQuery(
+            "SELECT Library_Name, Last_Scan FROM ROBKRAUDY2.TRACKEDLIB " + //TODO: Remove lib qualification
+            "INNER JOIN QSYS2.SYSPARTITIONSTAT ON (Library_Name = SYSTEM_TABLE_SCHEMA) " + // Validates if library exists
+            "GROUP BY Library_Name, Last_Scan"
+          )){
+        while(rsTrackedLibs.next()){
+          String library = rsTrackedLibs.getString("Library_Name").trim();
+          Timestamp lastScan = rsTrackedLibs.getTimestamp("Last_Scan");
 
-        ifsOutputDir = defaultDir + "/" + library;
-        createDirectory(ifsOutputDir);
+          ifsOutputDir = defaultDir + "/" + library;
+          createDirectory(ifsOutputDir);
 
-        long startTime = System.nanoTime();
-        migrateSourcePFs(library, lastScan, ifsOutputDir);
+          long startTime = System.nanoTime();
+          migrateSourcePFs(library, lastScan, ifsOutputDir);
 
-        System.out.println("\nMigration completed.");
-        System.out.println("Total Source PFs migrated: " + totalSourcePFsMigrated);
-        System.out.println("Total members migrated: " + totalMembersMigrated);
-        System.out.println("Migration errors: " + migrationErrors);
-        long durationNanos = System.nanoTime() - startTime;
-        System.out.printf("Total time taken: %.2f seconds%n", TimeUnit.NANOSECONDS.toMillis(durationNanos) / 1000.0);
-      }
+          System.out.println("\nMigration completed.");
+          System.out.println("Total Source PFs migrated: " + totalSourcePFsMigrated);
+          System.out.println("Total members migrated: " + totalMembersMigrated);
+          System.out.println("Migration errors: " + migrationErrors);
+          long durationNanos = System.nanoTime() - startTime;
+          System.out.printf("Total time taken: %.2f seconds%n", TimeUnit.NANOSECONDS.toMillis(durationNanos) / 1000.0);
+        }
+      }  
       
     } catch (Exception e) {
       e.printStackTrace();
@@ -115,14 +122,14 @@ public class SourceMigrator {
   //  }
   //  return library; 
   //} 
-  private ResultSet getTrackedLibraries() throws SQLException{
-    String query = "SELECT Library_Name, Last_Scan FROM ROBKRAUDY2.TRACKEDLIB " + //TODO: Remove lib qualification
-                   "INNER JOIN QSYS2.SYSPARTITIONSTAT ON (Library_Name = SYSTEM_TABLE_SCHEMA) " + // Validates if library exists
-                   "GROUP BY Library_Name, Last_Scan";
+  //private ResultSet getTrackedLibraries() throws SQLException{
+  //  String query = "SELECT Library_Name, Last_Scan FROM ROBKRAUDY2.TRACKEDLIB " + //TODO: Remove lib qualification
+  //                 "INNER JOIN QSYS2.SYSPARTITIONSTAT ON (Library_Name = SYSTEM_TABLE_SCHEMA) " + // Validates if library exists
+  //                 "GROUP BY Library_Name, Last_Scan";
 
-    Statement stmt = connection.createStatement();
-    return stmt.executeQuery(query); 
-  }
+  //  Statement stmt = connection.createStatement();
+  //  return stmt.executeQuery(query); 
+  //}
   //private ResultSet promptForSourcePFs(String library) throws IOException, SQLException {
   //  ResultSet sourcePFs = null;
   //  while (sourcePFs == null) {
