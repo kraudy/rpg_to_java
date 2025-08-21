@@ -65,7 +65,6 @@ public class SourceMigrator {
 
       // TODO: Add query with try for auto close resources
       //ResultSet rsTrackedLibs = getTrackedLibraries();
-      //System.out.println("\nRetrieved tracked libraries.");
 
       try(Statement stmt = connection.createStatement();
           ResultSet rsTrackedLibs = stmt.executeQuery(
@@ -73,6 +72,7 @@ public class SourceMigrator {
             "INNER JOIN QSYS2.SYSPARTITIONSTAT ON (Library_Name = SYSTEM_TABLE_SCHEMA) " + // Validates if library exists
             "GROUP BY Library_Name, Last_Scan"
           )){
+        System.out.println("\nRetrieved tracked libraries.");
         while(rsTrackedLibs.next()){
           String library = rsTrackedLibs.getString("Library_Name").trim();
           Timestamp lastScan = rsTrackedLibs.getTimestamp("Last_Scan");
@@ -89,6 +89,8 @@ public class SourceMigrator {
           System.out.println("Migration errors: " + migrationErrors);
           long durationNanos = System.nanoTime() - startTime;
           System.out.printf("Total time taken: %.2f seconds%n", TimeUnit.NANOSECONDS.toMillis(durationNanos) / 1000.0);
+
+          updateLastScanTime(library);
         }
       }  
       
@@ -197,7 +199,16 @@ public class SourceMigrator {
     System.out.println("Migrated " + memberName + " successfully");
     return true; 
   } 
-  
+  private void updateLastScanTime(String library) throws SQLException{
+    try(Statement stmt = connection.createStatement()){
+      stmt.executeUpdate(
+            "UPDATE ROBKRAUDY2.TRACKEDLIB " + //TODO: Remove lib qualification
+            "SET Last_Scan = CURRENT_TIMESTAMP " +
+            "WHERE Library_Name = '" + library + "'"
+      );
+      System.out.println("\nUpdated library " + library + " last scan time");
+    }
+  }
   private String getCcsid() throws SQLException {
     try (Statement stmt = connection.createStatement();
       ResultSet rs = stmt.executeQuery(
