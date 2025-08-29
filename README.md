@@ -416,7 +416,7 @@ MVN compilation
 // This creates a different structure
 mvn archetype:generate -DarchetypeGroupId=org.apache.maven.archetypes -DarchetypeArtifactId=maven-archetype-quickstart -DarchetypeVersion=1.5 -DgroupId=com.example -DartifactId=CmdCallParam -DinteractiveMode=false
 
-mvn archetype:generate -DgroupId=com.github.kraudy -DartifactId=Example -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
+mvn archetype:generate -DgroupId=com.github.kraudy -DartifactId=ObjectDependency -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
 
 
 // Check pom pacakges dependencies
