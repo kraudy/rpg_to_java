@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.ibm.as400.access.AS400;
 import com.ibm.as400.access.AS400SecurityException;
@@ -14,24 +17,36 @@ import com.ibm.as400.access.ErrorCompletingRequestException;
 import com.ibm.as400.access.User;
 
 import io.github.theprez.dotenv_ibmi.IBMiDotEnv;
+import com.github.kraudy.Nodes;
 
 public class ObjectDependency {
   private static final String UTF8_CCSID = "1208"; // UTF-8 for stream files
   public static final String INVARIANT_CCSID = "37"; // EBCDIC
   private final AS400 system;
   private final Connection connection;
+  private final User currentUser;
   private List<Nodes> nodes;
   // user
-  public ObjectDependency(AS400 system){
+  public ObjectDependency(AS400 system) throws Exception {
+    this(system, new AS400JDBCDataSource(system).getConnection());
+  }
+
+  public ObjectDependency(AS400 system, Connection connection) throws Exception {
+    this.system = system;
+
+    // Database
+    this.connection = connection;
+    this.connection.setAutoCommit(true);
+
+    // User
+    this.currentUser = new User(system, system.getUserId());
+    this.currentUser.loadUserInformation();
   }
   private void dependencies(){
     String library = "ROBKRAUDY2";
     try {
-      ResultSet rsobjs = getObjects();
-      if (rsobjs = null){
-        return;
-      }
-      getDepencies(rsobjs, library);
+      getObjects(library);
+
 
     } catch (Exception e) {
       e.printStackTrace();
@@ -40,13 +55,13 @@ public class ObjectDependency {
     }
   }
   //TODO: I think this should be recursive too
-  private ResultSet getObjects(){
+  private void getObjects(String library) throws SQLException {
     try(Statement objsStmt = connection.createStatement();
         ResultSet rsobjs = objsStmt.executeQuery(
               "WITH SourcePf (SourcePf) AS ( " + 
                   "SELECT TABLE_NAME AS SourcePf " +
                   "FROM QSYS2.SYSTABLES " + 
-                  "WHERE TABLE_SCHEMA = 'ROBKRAUDY2' " +
+                  "WHERE TABLE_SCHEMA = '" + library + "' " +
                   "AND FILE_TYPE = 'S' " +
               ") " +
               "SELECT " +
@@ -54,31 +69,32 @@ public class ObjectDependency {
                   "CAST(OBJTYPE AS VARCHAR(10) CCSID " + INVARIANT_CCSID + " AS object_type, " +
                   "CAST(OBJTEXT AS VARCHAR(20) CCSID " + INVARIANT_CCSID + " AS text_description, " + 
                   "CAST((CASE TRIM(OBJATTRIBUTE) WHEN '' THEN SQL_OBJECT_TYPE ELSE OBJATTRIBUTE END) AS VARCHAR(10) CCSID " + INVARIANT_CCSID + " As attribute + " +
-              "FROM TABLE(QSYS2.OBJECT_STATISTICS('ROBKRAUDY2', '*ALL')) " +
+              "FROM TABLE(QSYS2.OBJECT_STATISTICS('" + library + "', '*ALL')) " +
               "EXCEPTION JOIN SourcePf " +
               "ON (SourcePf.SourcePf = OBJNAME AND " +
                   "OBJTYPE = '*FILE'")){
-     
+      //TODO: Maybe move this out to just use return in the recursion
+      while(rsobjs.next()){
+        String objName = rsobjs.getString("object_name");
+        String objType = rsobjs.getString("object_type");
+        String objAttr = rsobjs.getString("text_description");
+        System.out.println("Object: " + objName + ", Type: " + objType + ", Attribute: " + objAttr);
+
+        getDepencies(library, objName, objType, objAttr);
+
+      }
     }
   }
-  private void getDepencies(ResultSet rsobjs, String library){
+  private void getDepencies(String library, String objName, String objType, String objAttr){
     String object = "PAYROLL";   // Object name (e.g., program name)
     String outfileLib = "QTEMP";   // Use QTEMP for temporary storage
     String outfileName = "PGMREFS"; // Outfile name
-
-    //TODO: Maybe move this out to just use return in the recursion
-    while(rsobjs.next()){
-      String objName = rsobjs.getString("object_name");
-      String objType = rsobjs.getString("object_type");
-      String objAttr = rsobjs.getString("text_description");
-      System.out.println("Object: " + objName + ", Type: " + objType + ", Attribute: " + objAttr);
-    }
 
     try {
       String commandStr = "DSPPGMREF PGM(" + library + "/" + objName + ") " + 
           "OUTPUT(*OUTFILE) " +
           "OBJTYPE(*"+ objType +") " + //TODO: For SQL types use db2 services
-          "OUTFILE(" + library + "/PGMREF)";
+          "OUTFILE(" + "QTEMP" + "/PGMREF)";
 
       //TODO: Add switch to use the corresponding function to get the dependencies: dsppgmref or sql services
       //TODO: Remember to do the return so this can be called recursively
@@ -87,9 +103,8 @@ public class ObjectDependency {
       if (!cmd.run(commandStr)) {
         System.out.println("Could not get dependencies for " + objName + ": Failed");
         return;
-      } else {
-        System.out.println("dependencies for " + objName + ": OK");
-      }
+      } 
+      System.out.println("dependencies for " + objName + ": OK");
 
     } catch (AS400SecurityException | ErrorCompletingRequestException | IOException | InterruptedException
         | PropertyVetoException e) {
@@ -123,8 +138,4 @@ public class ObjectDependency {
       e.printStackTrace();
     }
   }
-}
-
-public class Nodes {
-  private int id; //public
 }
