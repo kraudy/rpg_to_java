@@ -39,6 +39,7 @@ public class ObjectDependency {
       cleanup();
     }
   }
+  //TODO: I think this should be recursive too
   private ResultSet getObjects(){
     try(Statement objsStmt = connection.createStatement();
         ResultSet rsobjs = objsStmt.executeQuery(
@@ -65,6 +66,7 @@ public class ObjectDependency {
     String outfileLib = "QTEMP";   // Use QTEMP for temporary storage
     String outfileName = "PGMREFS"; // Outfile name
 
+    //TODO: Maybe move this out to just use return in the recursion
     while(rsobjs.next()){
       String objName = rsobjs.getString("object_name");
       String objType = rsobjs.getString("object_type");
@@ -78,9 +80,13 @@ public class ObjectDependency {
           "OBJTYPE(*"+ objType +") " + //TODO: For SQL types use db2 services
           "OUTFILE(" + library + "/PGMREF)";
 
+      //TODO: Add switch to use the corresponding function to get the dependencies: dsppgmref or sql services
+      //TODO: Remember to do the return so this can be called recursively
+      //TODO: Remember to create an idnetifyier for every node to check if it exist and prevent loops
       CommandCall cmd = new CommandCall(system);
       if (!cmd.run(commandStr)) {
         System.out.println("Could not get dependencies for " + objName + ": Failed");
+        return;
       } else {
         System.out.println("dependencies for " + objName + ": OK");
       }
