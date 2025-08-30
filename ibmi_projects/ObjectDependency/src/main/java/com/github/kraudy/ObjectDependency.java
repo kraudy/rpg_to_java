@@ -95,12 +95,12 @@ public class ObjectDependency {
 
         System.out.println("Object: " + objName + ", Type: " + objType + ", Attribute: " + objAttr);
         
-        getDepencies(library, objName, objType, objAttr, objKey);
+        getDependencies(library, objName, objType, objAttr, objKey);
 
       }
     }
   }
-  private void getDepencies(String library, String objName, String objType, String objAttr , String objKey){
+  private void getDependencies(String library, String objName, String objType, String objAttr , String objKey){
     String object = "PAYROLL";   // Object name (e.g., program name)
     String outfileLib = "QTEMP";   // Use QTEMP for temporary storage
     String outfileName = "PGMREFS";  // Could make unique if parallel
@@ -128,28 +128,35 @@ public class ObjectDependency {
         //}
         System.out.println("Dependencies for " + objName + ": OK");
 
-        // Query outfile immediately (model QWHDRPGM)
+        // Query outfile immediately (model QADSPPGM/QWHDRPPR)
         try (Statement depStmt = connection.createStatement();
           ResultSet rsDeps = depStmt.executeQuery(
                   "SELECT " + 
                   "CAST(WHFNAM AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS WHFNAM, " +
-                  "CAST(WHFLIB AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS WHFLIB, " +
+                  "CAST(WHLNAM AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS WHLNAM, " +
                   "CAST(WHOTYP AS VARCHAR(8) CCSID " + INVARIANT_CCSID + ") AS WHOTYP " +
                   "FROM " + outfileLib + "." + outfileName)) { //TODO: Do CAST 37
           while (rsDeps.next()) {
             String depName = rsDeps.getString("WHFNAM").trim();
-            String depLib = rsDeps.getString("WHFLIB").trim();
+            String depLib = rsDeps.getString("WHLNAM").trim();
             String depType = rsDeps.getString("WHOTYP").trim();
-            if (!depName.isEmpty()) {
-              String depKey = depLib + "/" + depName + "/" + depType;
-              graph.get(objKey).add(depKey);  // Add edge: obj depends on dep
-              graph.putIfAbsent(depKey, new HashSet<>());  // Ensure dep node exists
+            if (depName.isEmpty()) {
+              continue;
             }
+            if (depLib.equals("QSYS") || depLib.equals("QSYS2")) {
+              continue;
+            }
+            String depKey = depLib + "/" + depName + "/" + depType;
+            graph.get(objKey).add(depKey);  // Add edge: obj depends on dep
+            graph.putIfAbsent(depKey, new HashSet<>());  // Ensure dep node exists
           }
         }
       } else if (objType.equals("*FILE") && objAttr.equals("LF")) {
           // TODO: Use DSPFD to outfile or SQL SYSTABLEDEP for based-on PFs
           /* SELECT BASE_SCHEMA, BASE_TABLE FROM QSYS2.SYSTABLEDEP WHERE DEPENDENT_SCHEMA = ? AND DEPENDENT_TABLE = ? */
+          /* SELECT BASE_SCHEMA AS depLib, BASE_TABLE AS depName 
+          FROM QSYS2.SYSTABLEDEP WHERE DEPENDENT_SCHEMA = '" + library + "' AND DEPENDENT_TABLE = '" + objName + "' */
+          // depType = "*FILE"
       } else {
           // Skip or handle other types (e.g., SQL views with SYSVIEWDEP)
       }
