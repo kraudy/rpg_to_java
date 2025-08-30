@@ -1,6 +1,7 @@
 package com.github.kraudy;
 
 import java.beans.PropertyVetoException;
+import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -18,6 +19,7 @@ import java.util.Set;
 
 import com.ibm.as400.access.AS400;
 import com.ibm.as400.access.AS400SecurityException;
+import com.ibm.as400.access.ErrorCompletingRequestException;
 import com.ibm.as400.access.AS400JDBCDataSource;
 import com.ibm.as400.access.CommandCall;
 import com.ibm.as400.access.ErrorCompletingRequestException;
@@ -26,7 +28,13 @@ import com.ibm.as400.access.User;
 import io.github.theprez.dotenv_ibmi.IBMiDotEnv;
 import com.github.kraudy.Nodes;
 
-public class ObjectDependency { // ObjectReferencer
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Parameters;
+import picocli.CommandLine.Option;
+
+@Command(name = "ObjectReferencer", mixinStandardHelpOptions = true, version = "ObjectReferencer 0.0.1")
+public class ObjectDependency implements Runnable { // ObjectReferencer
   private static final String UTF8_CCSID = "1208"; // UTF-8 for stream files
   public static final String INVARIANT_CCSID = "37"; // EBCDIC
   private final AS400 system;
@@ -34,10 +42,54 @@ public class ObjectDependency { // ObjectReferencer
   private final User currentUser;
   private Map<String, Set<String>> graph = new HashMap<>(); // objectKey -> dependsOn
   //private List<Nodes> nodes;
+  @Option(names = "--lib", description = "Primary library to scan") private String library;
 
+  @Option(names = { "-l", "--list" }, arity = "0..*", paramLabel = "LIBRARIES", description = "Library list")
+  private List<String> libraryList = new ArrayList<>();
+  //List<String> libraryList;
+  //String[] libraryList;
+  //@Parameters(index = "0..*", paramLabel = "LIBRARIES", description = "Library List") String[] libraryList;
+
+  @Option(names = "-v", description = "Verbose output")
+  private boolean verbose = false;
+
+  @Option(names = "--json", description = "Output as JSON")
+  private boolean jsonOutput = false;
+
+
+  @Option(names = { "-h", "--help" }, usageHelp = true, description = "Builds dependency graph for IBM i objects")
+  private boolean helpRequested = false;
+
+  public void run() {
+    if (library == null){
+      System.err.println("Error: A library is required via --lib or positional args.");
+      CommandLine.usage(this, System.err);
+      return;
+    }
+    if (!libraryList.contains(library)) {
+      libraryList.add(library);
+    }
+    String commandStr = "CHGLIBL LIBL(" + String.join(" ", libraryList) + ")";
+    try {
+      CommandCall cmd = new CommandCall(system);
+      if (!cmd.run(commandStr)) {
+          System.out.println("Could not change library list to " + libraryList   + ": Failed");
+          return;
+      }
+    } catch (AS400SecurityException | ErrorCompletingRequestException | IOException | InterruptedException | PropertyVetoException e){
+      e.printStackTrace();
+      return;
+    }
+    
+    this.dependencies();
+  }
   // TODO: Maybe use json to describe the depencency context
   // TODO: Add librar list as param and change it with CHGLIBL, then revet it.
   // TODO: This should be the same library send to the ObjectCompiler which should use the SourceMigrator to get the data or use IFS
+  /*
+   * -l : List of libraries
+   * -v : Verbose
+   */
   public ObjectDependency(AS400 system) throws Exception {
     this(system, new AS400JDBCDataSource(system).getConnection());
   }
@@ -53,6 +105,7 @@ public class ObjectDependency { // ObjectReferencer
     this.currentUser = new User(system, system.getUserId());
     this.currentUser.loadUserInformation();
   }
+
   private void dependencies(){
     String library = "ROBKRAUDY2";
     //String library = "ROBKRAUDY1";
@@ -254,7 +307,7 @@ public class ObjectDependency { // ObjectReferencer
     try {
       system = IBMiDotEnv.getNewSystemConnection(true); // Get system
       dependencies = new ObjectDependency(system);
-      dependencies.dependencies();
+      new CommandLine(dependencies).execute(args);
     } catch (Exception e) {
       e.printStackTrace();
     }
