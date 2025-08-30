@@ -26,7 +26,7 @@ import com.ibm.as400.access.User;
 import io.github.theprez.dotenv_ibmi.IBMiDotEnv;
 import com.github.kraudy.Nodes;
 
-public class ObjectDependency {
+public class ObjectDependency { // ObjectReferencer
   private static final String UTF8_CCSID = "1208"; // UTF-8 for stream files
   public static final String INVARIANT_CCSID = "37"; // EBCDIC
   private final AS400 system;
@@ -35,7 +35,9 @@ public class ObjectDependency {
   private Map<String, Set<String>> graph = new HashMap<>(); // objectKey -> dependsOn
   //private List<Nodes> nodes;
 
-  // user
+  // TODO: Maybe use json to describe the depencency context
+  // TODO: Add librar list as param and change it with CHGLIBL, then revet it.
+  // TODO: This should be the same library send to the ObjectCompiler which should use the SourceMigrator to get the data or use IFS
   public ObjectDependency(AS400 system) throws Exception {
     this(system, new AS400JDBCDataSource(system).getConnection());
   }
@@ -53,6 +55,7 @@ public class ObjectDependency {
   }
   private void dependencies(){
     String library = "ROBKRAUDY2";
+    //String library = "ROBKRAUDY1";
     try {
       getObjects(library);
       // After building graph, toposort it
@@ -93,7 +96,7 @@ public class ObjectDependency {
         String objKey = library + "/" + objName + "/" + objType;
         graph.putIfAbsent(objKey, new HashSet<>());
 
-        System.out.println("Object: " + objName + ", Type: " + objType + ", Attribute: " + objAttr);
+        System.out.println("Library: " + library + ", Object: " + objName + ", Type: " + objType + ", Attribute: " + objAttr);
         
         getDependencies(library, objName, objType, objAttr, objKey);
 
@@ -140,11 +143,38 @@ public class ObjectDependency {
             String depName = rsDeps.getString("WHFNAM").trim();
             String depLib = rsDeps.getString("WHLNAM").trim();
             String depType = rsDeps.getString("WHOTYP").trim();
-            if (depName.isEmpty()) {
-              continue;
+            if (depName.isEmpty() || depName.equals("*EXPR") || depLib.equals("*EXPR")) {
+              continue;  // Skip expressions/unresolved
             }
             if (depLib.equals("QSYS") || depLib.equals("QSYS2")) {
               continue;
+            }
+            //TODO: Add suggestion if not found
+            // Resolve *LIBL to actual library using current lib list
+            if (depLib.equals("*LIBL")) {
+              String objdOutfile = "OBJD";  // Temp outfile for DSPOBJD
+              String resolveCmd = "DSPOBJD OBJ(*LIBL/" + depName + ") OBJTYPE(" + depType + ") " +
+                      "OUTPUT(*OUTFILE) OUTFILE(" + outfileLib + "/" + objdOutfile + ") OUTMBR(*FIRST *REPLACE)";
+              try (Statement resolveStmt = connection.createStatement()) { //TODO: Move to SQL
+                resolveStmt.execute("CALL QSYS2.QCMDEXC('" + resolveCmd + "')");
+              } catch (SQLException e) {
+                System.out.println("Could not resolve *LIBL for " + depName + ": Failed");
+                e.printStackTrace();
+                continue;  // Skip if resolution fails
+              }
+
+              // Query DSPOBJD outfile for resolved lib (model QADSPOBJ, field ODLBNM)
+              try (Statement objdStmt = connection.createStatement();
+                    ResultSet rsObjd = objdStmt.executeQuery(
+                            "SELECT CAST(ODLBNM AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS ODLBNM " +
+                            "FROM " + outfileLib + "." + objdOutfile)) {
+                if (rsObjd.next()) {
+                  depLib = rsObjd.getString("ODLBNM").trim();
+                } else {
+                  System.out.println("*LIBL resolution for " + depName + " found no object.");
+                  continue;
+                }
+              }
             }
             String depKey = depLib + "/" + depName + "/" + depType;
             graph.get(objKey).add(depKey);  // Add edge: obj depends on dep
@@ -152,11 +182,13 @@ public class ObjectDependency {
           }
         }
       } else if (objType.equals("*FILE") && objAttr.equals("LF")) {
-          // TODO: Use DSPFD to outfile or SQL SYSTABLEDEP for based-on PFs
+          // TODO: Use DSPFD to outfile or SQL SYSTABLEDEP for based-on PFs (already gives exact schemas/libs)
           /* SELECT BASE_SCHEMA, BASE_TABLE FROM QSYS2.SYSTABLEDEP WHERE DEPENDENT_SCHEMA = ? AND DEPENDENT_TABLE = ? */
           /* SELECT BASE_SCHEMA AS depLib, BASE_TABLE AS depName 
           FROM QSYS2.SYSTABLEDEP WHERE DEPENDENT_SCHEMA = '" + library + "' AND DEPENDENT_TABLE = '" + objName + "' */
           // depType = "*FILE"
+          // QSYS2.PROGRAM_INFO
+          // QSYS2.SYSROUTINEDEP
       } else {
           // Skip or handle other types (e.g., SQL views with SYSVIEWDEP)
       }
