@@ -6,8 +6,15 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 
 import com.ibm.as400.access.AS400;
 import com.ibm.as400.access.AS400SecurityException;
@@ -25,7 +32,9 @@ public class ObjectDependency {
   private final AS400 system;
   private final Connection connection;
   private final User currentUser;
-  private List<Nodes> nodes;
+  private Map<String, Set<String>> graph = new HashMap<>(); // objectKey -> dependsOn
+  //private List<Nodes> nodes;
+
   // user
   public ObjectDependency(AS400 system) throws Exception {
     this(system, new AS400JDBCDataSource(system).getConnection());
@@ -46,7 +55,9 @@ public class ObjectDependency {
     String library = "ROBKRAUDY2";
     try {
       getObjects(library);
-
+      // After building graph, toposort it
+      List<String> ordered = topologicalSort(graph);
+      System.out.println("Topological Order: " + ordered);
 
     } catch (Exception e) {
       e.printStackTrace();
@@ -65,55 +76,126 @@ public class ObjectDependency {
                   "AND FILE_TYPE = 'S' " +
               ") " +
               "SELECT " +
-                  "CAST(OBJNAME AS VARCHAR(10) CCSID " + INVARIANT_CCSID + " AS object_name, " +
-                  "CAST(OBJTYPE AS VARCHAR(10) CCSID " + INVARIANT_CCSID + " AS object_type, " +
-                  "CAST(OBJTEXT AS VARCHAR(20) CCSID " + INVARIANT_CCSID + " AS text_description, " + 
-                  "CAST((CASE TRIM(OBJATTRIBUTE) WHEN '' THEN SQL_OBJECT_TYPE ELSE OBJATTRIBUTE END) AS VARCHAR(10) CCSID " + INVARIANT_CCSID + " As attribute + " +
+                  "CAST(OBJNAME AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS object_name, " +
+                  "CAST(OBJTYPE AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS object_type, " +
+                  "CAST(OBJTEXT AS VARCHAR(50) CCSID " + INVARIANT_CCSID + ") AS text_description, " + 
+                  "CAST((CASE TRIM(OBJATTRIBUTE) WHEN '' THEN SQL_OBJECT_TYPE ELSE OBJATTRIBUTE END) AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") As attribute " +
               "FROM TABLE(QSYS2.OBJECT_STATISTICS('" + library + "', '*ALL')) " +
               "EXCEPTION JOIN SourcePf " +
               "ON (SourcePf.SourcePf = OBJNAME AND " +
-                  "OBJTYPE = '*FILE'")){
+                  "OBJTYPE = '*FILE')")){
       //TODO: Maybe move this out to just use return in the recursion
       while(rsobjs.next()){
         String objName = rsobjs.getString("object_name");
         String objType = rsobjs.getString("object_type");
-        String objAttr = rsobjs.getString("text_description");
-        System.out.println("Object: " + objName + ", Type: " + objType + ", Attribute: " + objAttr);
+        String objDesc = rsobjs.getString("text_description");
+        String objAttr = rsobjs.getString("attribute");
+        String objKey = library + "/" + objName + "/" + objType;
+        graph.putIfAbsent(objKey, new HashSet<>());
 
-        getDepencies(library, objName, objType, objAttr);
+        System.out.println("Object: " + objName + ", Type: " + objType + ", Attribute: " + objAttr);
+        
+        getDepencies(library, objName, objType, objAttr, objKey);
 
       }
     }
   }
-  private void getDepencies(String library, String objName, String objType, String objAttr){
+  private void getDepencies(String library, String objName, String objType, String objAttr , String objKey){
     String object = "PAYROLL";   // Object name (e.g., program name)
     String outfileLib = "QTEMP";   // Use QTEMP for temporary storage
-    String outfileName = "PGMREFS"; // Outfile name
+    String outfileName = "PGMREFS";  // Could make unique if parallel
 
     try {
-      String commandStr = "DSPPGMREF PGM(" + library + "/" + objName + ") " + 
-          "OUTPUT(*OUTFILE) " +
-          "OBJTYPE(*"+ objType +") " + //TODO: For SQL types use db2 services
-          "OUTFILE(" + "QTEMP" + "/PGMREF)";
+      // Switch based on type/attr (TODO: expand for files/SQL)
+      if (objType.equals("*PGM") || objType.equals("*SRVPGM") || objType.equals("*MODULE") || objType.equals("*SQLPKG")) {
+        //TODO: SELECT * FROM TABLE(PGMREFS(OBJECT_NAME=>?))
+        String commandStr = "DSPPGMREF PGM(" + library + "/" + objName + ") " +
+                "OUTPUT(*OUTFILE) OBJTYPE(" + objType + ") " +
+                "OUTFILE(" + outfileLib + "/" + outfileName + ") OUTMBR(*FIRST *REPLACE)";
 
-      //TODO: Add switch to use the corresponding function to get the dependencies: dsppgmref or sql services
-      //TODO: Remember to do the return so this can be called recursively
-      //TODO: Remember to create an idnetifyier for every node to check if it exist and prevent loops
-      CommandCall cmd = new CommandCall(system);
-      if (!cmd.run(commandStr)) {
-        System.out.println("Could not get dependencies for " + objName + ": Failed");
-        return;
-      } 
-      System.out.println("dependencies for " + objName + ": OK");
+        try (Statement cmdStmt = connection.createStatement()) { //TODO: Use this to create the UDF function in QTEMP
+          cmdStmt.execute("CALL QSYS2.QCMDEXC('" + commandStr + "')");
+        } catch (SQLException e) {
+          System.out.println("Could not get dependencies for " + objName + ": Failed");
+          e.printStackTrace();
+          return;
+        }
 
-    } catch (AS400SecurityException | ErrorCompletingRequestException | IOException | InterruptedException
-        | PropertyVetoException e) {
+        //CommandCall cmd = new CommandCall(system);
+        //if (!cmd.run(commandStr)) {
+        //    System.out.println("Could not get dependencies for " + objName + ": Failed");
+        //    return;
+        //}
+        System.out.println("Dependencies for " + objName + ": OK");
 
-      System.out.println("Could not get dependencies for " + objName + ": Failed");
-      e.printStackTrace();
+        // Query outfile immediately (model QWHDRPGM)
+        try (Statement depStmt = connection.createStatement();
+          ResultSet rsDeps = depStmt.executeQuery(
+                  "SELECT " + 
+                  "CAST(WHFNAM AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS WHFNAM, " +
+                  "CAST(WHFLIB AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS WHFLIB, " +
+                  "CAST(WHOTYP AS VARCHAR(8) CCSID " + INVARIANT_CCSID + ") AS WHOTYP " +
+                  "FROM " + outfileLib + "." + outfileName)) { //TODO: Do CAST 37
+          while (rsDeps.next()) {
+            String depName = rsDeps.getString("WHFNAM").trim();
+            String depLib = rsDeps.getString("WHFLIB").trim();
+            String depType = rsDeps.getString("WHOTYP").trim();
+            if (!depName.isEmpty()) {
+              String depKey = depLib + "/" + depName + "/" + depType;
+              graph.get(objKey).add(depKey);  // Add edge: obj depends on dep
+              graph.putIfAbsent(depKey, new HashSet<>());  // Ensure dep node exists
+            }
+          }
+        }
+      } else if (objType.equals("*FILE") && objAttr.equals("LF")) {
+          // TODO: Use DSPFD to outfile or SQL SYSTABLEDEP for based-on PFs
+          /* SELECT BASE_SCHEMA, BASE_TABLE FROM QSYS2.SYSTABLEDEP WHERE DEPENDENT_SCHEMA = ? AND DEPENDENT_TABLE = ? */
+      } else {
+          // Skip or handle other types (e.g., SQL views with SYSVIEWDEP)
       }
-
+    } catch (Exception e) {
+        System.out.println("Could not get dependencies for " + objName + ": Failed");
+        e.printStackTrace();
+    }
   }
+
+  // Kahn's algorithm (assumes no cycles; add detection if needed)
+  private List<String> topologicalSort(Map<String, Set<String>> graph) {
+    Map<String, Integer> indegree = new HashMap<>();
+    for (String node : graph.keySet()) {
+      indegree.put(node, 0);
+    }
+    for (Set<String> deps : graph.values()) {
+      for (String dep : deps) {
+        indegree.put(dep, indegree.getOrDefault(dep, 0) + 1);
+      }
+    }
+
+    Queue<String> queue = new LinkedList<>();
+    for (Map.Entry<String, Integer> entry : indegree.entrySet()) {
+      if (entry.getValue() == 0) {
+        queue.add(entry.getKey());
+      }
+    }
+
+    List<String> order = new ArrayList<>();
+    while (!queue.isEmpty()) {
+      String node = queue.poll();
+      order.add(node);
+      for (String dep : graph.getOrDefault(node, new HashSet<>())) {
+        indegree.put(dep, indegree.get(dep) - 1);
+        if (indegree.get(dep) == 0) {
+          queue.add(dep);
+        }
+      }
+    }
+
+    if (order.size() != graph.size()) {
+      throw new RuntimeException("Cycle detected in dependencies");
+    }
+    return order;  // Dependencies first
+  }
+
   private void cleanup(){
     try {
       if (connection != null && !connection.isClosed()) {
