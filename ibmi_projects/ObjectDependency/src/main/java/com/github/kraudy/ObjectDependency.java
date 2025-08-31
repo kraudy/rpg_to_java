@@ -45,11 +45,39 @@ public class ObjectDependency implements Runnable { // ObjectReferencer
   //private List<Nodes> nodes;
   @Option(names = "--lib", description = "Primary library to scan") private String library;
 
+  @Option(names = { "-l", "--libs" }, required = true, arity = "1..*", description = "Library list (first is primary)")
   @Option(names = { "-l", "--list" }, arity = "0..*", paramLabel = "library list", description = "Library list")
   private List<String> libraryList = new ArrayList<>();
   //List<String> libraryList;
   //String[] libraryList;
   //@Parameters(index = "0..*", paramLabel = "LIBRARIES", description = "Library List") String[] libraryList;
+
+  @Option(names = "--pgm", description = "Program object")
+  private String program = null;
+
+  @Option(names = "--srvpgm", description = "Service Program object")
+  private String serviceProgram = null;
+
+  @Option(names = "--module", description = "Module object")
+  private String module = null;
+
+  @Option(names = "--table", description = "Table object")
+  private String table = null;
+
+  @Option(names = "--lf", description = "Logical File object")
+  private String logicalFile = null;
+
+  @Option(names = "--view", description = "View object")
+  private String view = null;
+
+  @Option(names = "--alias", description = "Alias object")
+  private String alias = null;
+
+  @Option(names = "--sp", description = "Store Procedure object")
+  private String storeProcedure = null;
+
+  @Option(names = "--func", description = "User Defined Function object")
+  private String userDefinedFunction = null;
 
   @Option(names = "-x", description = "Debug")
   private boolean debug = false;
@@ -60,11 +88,11 @@ public class ObjectDependency implements Runnable { // ObjectReferencer
   @Option(names = "--json", description = "Output as JSON")
   private boolean jsonOutput = false;
 
-
   @Option(names = { "-h", "--help" }, usageHelp = true, description = "Builds dependency graph for IBM i objects")
   private boolean helpRequested = false;
 
   public void run() {
+    //TODO: Validate if library and objects exists
     if (library == null){
       System.err.println("Error: A library is required via --lib or positional args.");
       CommandLine.usage(this, System.err);
@@ -141,7 +169,15 @@ public class ObjectDependency implements Runnable { // ObjectReferencer
               "FROM TABLE(QSYS2.OBJECT_STATISTICS('" + library + "', '*ALL')) " +
               "EXCEPTION JOIN SourcePf " +
               "ON (SourcePf.SourcePf = OBJNAME AND " +
-                  "OBJTYPE = '*FILE')")){
+                  "OBJTYPE = '*FILE') " +
+              (program == null ? "" : "WHERE OBJNAME = '" + program.trim().toUpperCase() + "' AND OBJTYPE = '*PGM'") +
+              (serviceProgram == null ? "" : "WHERE OBJNAME = '" + serviceProgram.trim().toUpperCase() + "' AND OBJTYPE = '*SRVPGM'") +
+              (module == null ? "" : "WHERE OBJNAME = '" + module.trim().toUpperCase() + "' AND OBJTYPE = '*MODULE'") +
+              (table == null ? "" : "WHERE OBJNAME = '" + table.trim().toUpperCase() + "' AND OBJTYPE = '*FILE' AND SQL_OBJECT_TYPE = 'TABLE'") +
+              (storeProcedure == null ? "" : "WHERE OBJNAME = '" + storeProcedure.trim().toUpperCase() + "' AND SQL_OBJECT_TYPE = 'PROCEDURE'") + 
+              (userDefinedFunction == null ? "" : "WHERE OBJNAME = '" + userDefinedFunction.trim().toUpperCase() + " AND OBJTYPE = '*PGM' AND SQL_OBJECT_TYPE = 'FUNCTION'") + 
+              (view == null ? "" : "WHERE OBJNAME = '" + view.trim().toUpperCase() + " AND OBJTYPE = '*FILE' AND SQL_OBJECT_TYPE = 'VIEW'") +
+              (alias == null ? "" : "WHERE OBJNAME = '" + alias.trim().toUpperCase() + " AND OBJTYPE = '*FILE' AND SQL_OBJECT_TYPE = 'ALIAS'"))){
       //TODO: Maybe move this out to just use return in the recursion
       while(rsobjs.next()){
         String objName = rsobjs.getString("object_name");
