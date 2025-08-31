@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -43,41 +44,30 @@ public class ObjectDependency implements Runnable { // ObjectReferencer
   private final User currentUser;
   private Map<String, Set<String>> graph = new HashMap<>(); // objectKey -> dependsOn
   //private List<Nodes> nodes;
-  @Option(names = "--lib", description = "Primary library to scan") private String library;
 
+  static class ObjectTypeConverter implements CommandLine.ITypeConverter<ObjectType> {
+    @Override
+    public ObjectType convert(String value) throws Exception {
+      try {
+        return ObjectType.valueOf(value.toUpperCase().trim()); //TODO: Validate * for *pgm, *module, etc
+      } catch (IllegalArgumentException e) {
+        throw new CommandLine.TypeConversionException("Invalid object type: '" + value + "'. Must be one of: " + Arrays.toString(ObjectType.values()));
+      }
+    }
+  }
   @Option(names = { "-l", "--libs" }, required = true, arity = "1..*", description = "Library list (first is primary)")
-  @Option(names = { "-l", "--list" }, arity = "0..*", paramLabel = "library list", description = "Library list")
   private List<String> libraryList = new ArrayList<>();
-  //List<String> libraryList;
-  //String[] libraryList;
-  //@Parameters(index = "0..*", paramLabel = "LIBRARIES", description = "Library List") String[] libraryList;
 
-  @Option(names = "--pgm", description = "Program object")
-  private String program = null;
+  enum ObjectType { PGM, SRVPGM, MODULE, TABLE, LF, VIEW, ALIAS, PROCEDURE, FUNCTION; } // Add more as needed
 
-  @Option(names = "--srvpgm", description = "Service Program object")
-  private String serviceProgram = null;
+  @Option(names = "--object", description = "Object name")
+  private String objectName;
 
-  @Option(names = "--module", description = "Module object")
-  private String module = null;
+  @Option(names = "--type", description = "Object type (e.g., PGM, SRVPGM)", converter = ObjectTypeConverter.class)
+  private ObjectType objectType;
 
-  @Option(names = "--table", description = "Table object")
-  private String table = null;
-
-  @Option(names = "--lf", description = "Logical File object")
-  private String logicalFile = null;
-
-  @Option(names = "--view", description = "View object")
-  private String view = null;
-
-  @Option(names = "--alias", description = "Alias object")
-  private String alias = null;
-
-  @Option(names = "--sp", description = "Store Procedure object")
-  private String storeProcedure = null;
-
-  @Option(names = "--func", description = "User Defined Function object")
-  private String userDefinedFunction = null;
+  @Option(names = "-o", description = "Output")
+  private String outLibrary = "QTEMP";
 
   @Option(names = "-x", description = "Debug")
   private boolean debug = false;
@@ -93,17 +83,13 @@ public class ObjectDependency implements Runnable { // ObjectReferencer
 
   public void run() {
     //TODO: Validate if library and objects exists
-    if (library == null){
-      System.err.println("Error: A library is required via --lib or positional args.");
-      CommandLine.usage(this, System.err);
-      return;
+    if (objectName != null && objectType == null || objectName == null && objectType != null) {
+      throw new IllegalArgumentException("--object and --type must both be provided or omitted.");
     }
-    library = library.trim().toUpperCase();
-    if (!libraryList.contains(library)) {
-      libraryList.add(library);
-    }
-    libraryList = libraryList.stream().map(lib -> lib.trim().toUpperCase()).collect(Collectors.toList());
+    libraryList = libraryList.stream().map(String::trim).map(String::toUpperCase).distinct().collect(Collectors.toList());
+    //TODO: Add lib validation
     if (debug) System.out.println("Library list: " + String.join(" ", libraryList));
+
     String commandStr = "CHGLIBL LIBL(" + String.join(" ", libraryList) + ")";
     try (Statement cmdStmt = connection.createStatement()) { //TODO: Use this to create the UDF function in QTEMP
       cmdStmt.execute("CALL QSYS2.QCMDEXC('" + commandStr + "')");
@@ -113,7 +99,7 @@ public class ObjectDependency implements Runnable { // ObjectReferencer
       return;
     }
     
-    this.dependencies(library);
+    this.dependencies(libraryList.get(0)); // First library for scan
   }
   // TODO: Maybe use json to describe the depencency context
   // TODO: Add librar list as param and change it with CHGLIBL, then revet it.
@@ -153,6 +139,43 @@ public class ObjectDependency implements Runnable { // ObjectReferencer
   }
   //TODO: Should this be recursive?
   private void getObjects(String library) throws SQLException {
+    String whereClause = "";
+    if (objectName != null && objectType != null) {
+      String objName = objectName;  // Already sanitized in run() TODO: Use only objectName
+      switch (objectType) {
+        case PGM:
+            whereClause = "WHERE OBJNAME = '" + objName + "' AND OBJTYPE = '*PGM'";
+            break;
+        case SRVPGM:
+            whereClause = "WHERE OBJNAME = '" + objName + "' AND OBJTYPE = '*SRVPGM'";
+            break;
+        case MODULE:
+            whereClause = "WHERE OBJNAME = '" + objName + "' AND OBJTYPE = '*MODULE'";
+            break;
+        case TABLE:
+            whereClause = "WHERE OBJNAME = '" + objName + "' AND OBJTYPE = '*FILE' AND SQL_OBJECT_TYPE = 'TABLE'";
+            break;
+        case LF:
+            whereClause = "WHERE OBJNAME = '" + objName + "' AND OBJTYPE = '*FILE' AND OBJATTRIBUTE = 'LF'";
+            break;
+        case VIEW:
+            whereClause = "WHERE OBJNAME = '" + objName + "' AND OBJTYPE = '*FILE' AND SQL_OBJECT_TYPE = 'VIEW'";
+            break;
+        case ALIAS:
+            whereClause = "WHERE OBJNAME = '" + objName + "' AND OBJTYPE = '*FILE' AND SQL_OBJECT_TYPE = 'ALIAS'";
+            break;
+        case PROCEDURE:
+            // Procedures are special: Primarily identified by SQL_OBJECT_TYPE; OBJTYPE often '*PGM' or '*SRVPGM' but not always enforced
+            whereClause = "WHERE OBJNAME = '" + objName + "' AND SQL_OBJECT_TYPE = 'PROCEDURE'";
+            break;
+        case FUNCTION:
+            // Functions typically '*PGM' with SQL_OBJECT_TYPE
+            whereClause = "WHERE OBJNAME = '" + objName + "' AND OBJTYPE = '*PGM' AND SQL_OBJECT_TYPE = 'FUNCTION'";
+            break;
+        default:
+            throw new IllegalArgumentException("Unsupported object type: " + objectType);
+      }
+    }
     try(Statement objsStmt = connection.createStatement();
         ResultSet rsobjs = objsStmt.executeQuery(
               "WITH SourcePf (SourcePf) AS ( " + 
@@ -170,14 +193,7 @@ public class ObjectDependency implements Runnable { // ObjectReferencer
               "EXCEPTION JOIN SourcePf " +
               "ON (SourcePf.SourcePf = OBJNAME AND " +
                   "OBJTYPE = '*FILE') " +
-              (program == null ? "" : "WHERE OBJNAME = '" + program.trim().toUpperCase() + "' AND OBJTYPE = '*PGM'") +
-              (serviceProgram == null ? "" : "WHERE OBJNAME = '" + serviceProgram.trim().toUpperCase() + "' AND OBJTYPE = '*SRVPGM'") +
-              (module == null ? "" : "WHERE OBJNAME = '" + module.trim().toUpperCase() + "' AND OBJTYPE = '*MODULE'") +
-              (table == null ? "" : "WHERE OBJNAME = '" + table.trim().toUpperCase() + "' AND OBJTYPE = '*FILE' AND SQL_OBJECT_TYPE = 'TABLE'") +
-              (storeProcedure == null ? "" : "WHERE OBJNAME = '" + storeProcedure.trim().toUpperCase() + "' AND SQL_OBJECT_TYPE = 'PROCEDURE'") + 
-              (userDefinedFunction == null ? "" : "WHERE OBJNAME = '" + userDefinedFunction.trim().toUpperCase() + " AND OBJTYPE = '*PGM' AND SQL_OBJECT_TYPE = 'FUNCTION'") + 
-              (view == null ? "" : "WHERE OBJNAME = '" + view.trim().toUpperCase() + " AND OBJTYPE = '*FILE' AND SQL_OBJECT_TYPE = 'VIEW'") +
-              (alias == null ? "" : "WHERE OBJNAME = '" + alias.trim().toUpperCase() + " AND OBJTYPE = '*FILE' AND SQL_OBJECT_TYPE = 'ALIAS'"))){
+              whereClause)){
       //TODO: Maybe move this out to just use return in the recursion
       while(rsobjs.next()){
         String objName = rsobjs.getString("object_name");
