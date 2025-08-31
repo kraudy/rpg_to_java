@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.ibm.as400.access.AS400;
 import com.ibm.as400.access.AS400SecurityException;
@@ -44,11 +45,14 @@ public class ObjectDependency implements Runnable { // ObjectReferencer
   //private List<Nodes> nodes;
   @Option(names = "--lib", description = "Primary library to scan") private String library;
 
-  @Option(names = { "-l", "--list" }, arity = "0..*", paramLabel = "LIBRARIES", description = "Library list")
+  @Option(names = { "-l", "--list" }, arity = "0..*", paramLabel = "library list", description = "Library list")
   private List<String> libraryList = new ArrayList<>();
   //List<String> libraryList;
   //String[] libraryList;
   //@Parameters(index = "0..*", paramLabel = "LIBRARIES", description = "Library List") String[] libraryList;
+
+  @Option(names = "-x", description = "Debug")
+  private boolean debug = false;
 
   @Option(names = "-v", description = "Verbose output")
   private boolean verbose = false;
@@ -66,22 +70,22 @@ public class ObjectDependency implements Runnable { // ObjectReferencer
       CommandLine.usage(this, System.err);
       return;
     }
+    library = library.trim().toUpperCase();
     if (!libraryList.contains(library)) {
       libraryList.add(library);
     }
+    libraryList = libraryList.stream().map(lib -> lib.trim().toUpperCase()).collect(Collectors.toList());
+    if (debug) System.out.println("Library list: " + String.join(" ", libraryList));
     String commandStr = "CHGLIBL LIBL(" + String.join(" ", libraryList) + ")";
-    try {
-      CommandCall cmd = new CommandCall(system);
-      if (!cmd.run(commandStr)) {
-          System.out.println("Could not change library list to " + libraryList   + ": Failed");
-          return;
-      }
-    } catch (AS400SecurityException | ErrorCompletingRequestException | IOException | InterruptedException | PropertyVetoException e){
+    try (Statement cmdStmt = connection.createStatement()) { //TODO: Use this to create the UDF function in QTEMP
+      cmdStmt.execute("CALL QSYS2.QCMDEXC('" + commandStr + "')");
+    } catch (SQLException e) {
+      System.out.println("Could not change library list to " + libraryList + ": Failed");
       e.printStackTrace();
       return;
     }
     
-    this.dependencies();
+    this.dependencies(library);
   }
   // TODO: Maybe use json to describe the depencency context
   // TODO: Add librar list as param and change it with CHGLIBL, then revet it.
@@ -106,9 +110,7 @@ public class ObjectDependency implements Runnable { // ObjectReferencer
     this.currentUser.loadUserInformation();
   }
 
-  private void dependencies(){
-    String library = "ROBKRAUDY2";
-    //String library = "ROBKRAUDY1";
+  private void dependencies(String library){
     try {
       getObjects(library);
       // After building graph, toposort it
@@ -121,7 +123,7 @@ public class ObjectDependency implements Runnable { // ObjectReferencer
       cleanup();
     }
   }
-  //TODO: I think this should be recursive too
+  //TODO: Should this be recursive?
   private void getObjects(String library) throws SQLException {
     try(Statement objsStmt = connection.createStatement();
         ResultSet rsobjs = objsStmt.executeQuery(
