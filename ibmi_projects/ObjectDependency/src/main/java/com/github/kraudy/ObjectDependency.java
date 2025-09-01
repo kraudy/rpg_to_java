@@ -47,11 +47,22 @@ public class ObjectDependency implements Runnable { // ObjectReferencer
 
   static class ObjectTypeConverter implements CommandLine.ITypeConverter<ObjectType> {
     @Override
-    public ObjectType convert(String value) throws Exception {
+    public ObjectType convert(String type) throws Exception {
       try {
-        return ObjectType.valueOf(value.toUpperCase().trim()); //TODO: Validate * for *pgm, *module, etc
+        return ObjectType.valueOf(type.toUpperCase().trim()); //TODO: Validate * for *pgm, *module, etc
       } catch (IllegalArgumentException e) {
-        throw new CommandLine.TypeConversionException("Invalid object type: '" + value + "'. Must be one of: " + Arrays.toString(ObjectType.values()));
+        throw new CommandLine.TypeConversionException("Invalid object type: '" + type + "'. Must be one of: " + Arrays.toString(ObjectType.values()));
+      }
+    }
+  }
+
+  static class objectNameConverter implements CommandLine.ITypeConverter<String> {
+    @Override
+    public String convert(String name) throws Exception {
+      try {
+        return name.toUpperCase().trim();
+      } catch (IllegalArgumentException e) {
+        throw new CommandLine.TypeConversionException("Invalid object name: '" + name);
       }
     }
   }
@@ -60,7 +71,7 @@ public class ObjectDependency implements Runnable { // ObjectReferencer
 
   enum ObjectType { PGM, SRVPGM, MODULE, TABLE, LF, VIEW, ALIAS, PROCEDURE, FUNCTION; } // Add more as needed
 
-  @Option(names = "--object", description = "Object name")
+  @Option(names = "--obj", description = "Object name", converter = objectNameConverter.class)
   private String objectName;
 
   @Option(names = "--type", description = "Object type (e.g., PGM, SRVPGM)", converter = ObjectTypeConverter.class)
