@@ -301,9 +301,17 @@ public class ObjectDependency implements Runnable { // ObjectReferencer
         }
       } else if (objType.equals("*FILE") && objAttr.equals("LF")) {
           // TODO: Use DSPFD to outfile or SQL SYSTABLEDEP for based-on PFs (already gives exact schemas/libs)
+          //  for LF/PF relationships 
           /* SELECT BASE_SCHEMA, BASE_TABLE FROM QSYS2.SYSTABLEDEP WHERE DEPENDENT_SCHEMA = ? AND DEPENDENT_TABLE = ? */
           /* SELECT BASE_SCHEMA AS depLib, BASE_TABLE AS depName 
           FROM QSYS2.SYSTABLEDEP WHERE DEPENDENT_SCHEMA = '" + library + "' AND DEPENDENT_TABLE = '" + objName + "' */
+
+          // For views/indexes: QSYS2.SYSVIEWDEP and QSYS2.SYSIXDEP.
+
+          // For SQL routines: QSYS2.SYSROUTINEDEP
+
+          // For full program info: QSYS2.PROGRAM_INFO or DSPPGM to outfile for bound modules/services
+
           // depType = "*FILE"
           // QSYS2.PROGRAM_INFO
           // QSYS2.SYSROUTINEDEP
@@ -317,6 +325,7 @@ public class ObjectDependency implements Runnable { // ObjectReferencer
   }
 
   // Kahn's algorithm (assumes no cycles; add detection if needed)
+  // TODO:  Use a more formal graph lib like JGraphT 
   private List<String> topologicalSort(Map<String, Set<String>> graph) {
     Map<String, Integer> indegree = new HashMap<>();
     for (String node : graph.keySet()) {
@@ -378,3 +387,5 @@ public class ObjectDependency implements Runnable { // ObjectReferencer
     }
   }
 }
+
+
