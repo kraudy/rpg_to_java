@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.ibm.as400.access.AS400;
@@ -27,25 +28,19 @@ import com.ibm.as400.access.ErrorCompletingRequestException;
 import com.ibm.as400.access.User;
 
 import io.github.theprez.dotenv_ibmi.IBMiDotEnv;
-import com.github.kraudy.Nodes;
-import com.github.kraudy.ObjectDependency;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Option;
 
-@Command
-(name = "compiler", description = "OPM/ILE Object Compiler")
+@Command (name = "compiler", description = "OPM/ILE Object Compiler", mixinStandardHelpOptions = true, version = "ObjectCompiler 0.0.1")
 public class ObjectCompiler implements Runnable{
   private static final String UTF8_CCSID = "1208"; // UTF-8 for stream files
   public static final String INVARIANT_CCSID = "37"; // EBCDIC
   private final AS400 system;
   private final Connection connection;
   private final User currentUser;
-
-  @Option(names = { "-l", "--lib" }, required = true,  description = "Library to build)")
-  private String libraryList = null;
 
   enum SysCmd { CHGLIBL, DSPPGMREF, DSPOBJD, DSPDBR } 
 
@@ -63,13 +58,54 @@ public class ObjectCompiler implements Runnable{
 
   enum PostCmpCmd { CHGOBJD } 
 
-  @Option(names = "--obj", description = "Object name", converter = objectNameConverter.class)
+  static class ObjectNameConverter implements CommandLine.ITypeConverter<String> {
+    @Override
+    public String convert(String value) throws Exception {
+      try{
+        value = value.trim().toUpperCase();
+        if (value.length() > 10 || value.isEmpty()) {
+          throw new Exception("Invalid object name: must be 1-10 characters");
+        }
+        return value;
+
+      } catch (IllegalArgumentException e) {
+        throw new Exception("Invalid object name: " + value);
+      }
+    }
+  }  
+
+  static class ObjectTypeConverter implements CommandLine.ITypeConverter<ObjectType> {
+    @Override
+    public ObjectType convert(String value) throws Exception {
+      try {
+        return ObjectType.valueOf(value.trim().toUpperCase());
+      } catch (IllegalArgumentException e) {
+        throw new Exception("Invalid object type: " + value);
+      }
+    }
+  }  
+
+  static class SourceTypeConverter implements CommandLine.ITypeConverter<SourceType> {
+    @Override
+    public SourceType convert(String value) throws Exception {
+      try {
+        return SourceType.valueOf(value.trim().toUpperCase());
+      } catch (IllegalArgumentException e) {
+        throw new Exception("Invalid source type: " + value);
+      }
+    }
+  }
+
+  @Option(names = { "-l", "--lib" }, required = true,  description = "Library to build)") //TODO: Change to library list
+  private String library;
+
+  @Option(names = "--obj", required = true, description = "Object name", converter = ObjectNameConverter.class)
   private String objectName;
 
-  @Option(names = "--type", description = "Object type (e.g., PGM, SRVPGM)", converter = ObjectTypeConverter.class)
+  @Option(names = "--type", required = true, description = "Object type (e.g., PGM, SRVPGM)", converter = ObjectTypeConverter.class)
   private ObjectType objectType;
 
-  @Option(names = "--source-type", description = "Source type (e.g., RPGLE, CLLE)", converter = SourceTypeConverter.class)
+  @Option(names = "--source-type", required = true, description = "Source type (e.g., RPGLE, CLLE)", converter = SourceTypeConverter.class)
   private SourceType sourceType;
 
   /* Maps source type to its compilation command */
@@ -81,6 +117,9 @@ public class ObjectCompiler implements Runnable{
 
   /* Maps params to values */
   private static final Map<ParamCmd, Set<ValCmd>> valueParamsMap = new EnumMap<>(ParamCmd.class); 
+
+  // Map fields to ParamCmd for easy lookup (use reflection or manual map)
+  private static final Map<ValCmd, Supplier<String>> valueSuppliers = new EnumMap<>(ValCmd.class);
 
   static {
     /*
@@ -167,42 +206,21 @@ public class ObjectCompiler implements Runnable{
     valueParamsMap.put(ParamCmd.OBJ, EnumSet.of(ValCmd.LIBL, ValCmd.FILE, ValCmd.DTAARA));
     // TODO: for parms with no defined value: EnumSet.noneOf(ValCmd.class)
 
+    // TODO: I think this Supliers is what i really need
+    // Maybe i can send enums as parameters too
+
+    //TODO: Add validation based on input param
+    valueSuppliers.put(ValCmd.FIRST, () -> "*" + ValCmd.FIRST.name());
+    valueSuppliers.put(ValCmd.REPLACE, () -> "*" + ValCmd.REPLACE.name());
+    valueSuppliers.put(ValCmd.OUTFILE, () -> "*" + ValCmd.OUTFILE.name());
+    valueSuppliers.put(ValCmd.LIBL, () -> "*" + ValCmd.LIBL.name());
+    valueSuppliers.put(ValCmd.FILE, () -> "*" + ValCmd.FILE.name());
+    valueSuppliers.put(ValCmd.DTAARA, () -> "*" + ValCmd.DTAARA.name());
+    valueSuppliers.put(ValCmd.PGM, () -> "*" + ValCmd.PGM.name());
+    valueSuppliers.put(ValCmd.SRVPGM, () -> "*" + ValCmd.SRVPGM.name());
+
   }
 
-  static class ObjectNameConverter implements ITypeConverter<String> {
-    @Override
-    public String convert(String value) throws Exception {
-      value = value.trim().toUpperCase();
-      if (value.length() > 10 || value.isEmpty()) {
-        throw new Exception("Invalid object name: must be 1-10 characters");
-      }
-      return value;
-    }
-  }  
-
-  static class ObjectTypeConverter implements ITypeConverter<ObjectType> {
-    @Override
-    public ObjectType convert(String value) throws Exception {
-      try {
-        return ObjectType.valueOf(value.trim().toUpperCase());
-      } catch (IllegalArgumentException e) {
-        throw new Exception("Invalid object type: " + value);
-      }
-    }
-  }  
-
-  static class SourceTypeConverter implements ITypeConverter<SourceType> {
-    @Override
-    public SourceType convert(String value) throws Exception {
-      try {
-        return SourceType.valueOf(value.trim().toUpperCase());
-      } catch (IllegalArgumentException e) {
-        throw new Exception("Invalid source type: " + value);
-      }
-    }
-  }
-
-  @Override
   public void run() {
     // For now, demonstrate the mappings
     Map<ObjectType, CompCmd> objectMap = typeToCmdMap.get(sourceType);
@@ -221,7 +239,16 @@ public class ObjectCompiler implements Runnable{
     System.out.println("Compilation command: " + CompCmd.name());
     System.out.println("Required parameters: " + reqParams.stream().map(Enum::name).collect(Collectors.joining(", ")));
     System.out.println("Optional parameters: " + optParams.stream().map(Enum::name).collect(Collectors.joining(", ")));
+
+    //TODO: This could be done cleaner
+    //TODO: Add valueParamsMap validation for empty values or non existing default values
+    String commandStr = CompCmd.name() + " " + reqParams.stream().map(Enum::name).map(p -> p + " (*" + valueParamsMap.get(p) + ")").collect(Collectors.joining(" "));
+    //String commandStr = CompCmd.name() + " " + reqParams.stream().map(Enum::name).map(p -> p + " (" + valueSuppliers.get(p).get() + ")").collect(Collectors.joining(" "));
     // Later: build command string, execute via CALL QCMD, etc.  
+
+    System.out.println("Full command: " + commandStr);
+
+    compile();
   }
 
   public ObjectCompiler(AS400 system) throws Exception {
@@ -242,7 +269,7 @@ public class ObjectCompiler implements Runnable{
 
   private void compile(){
     try {
-
+      System.out.println("Compilation... ");
     } catch (Exception e) {
       e.printStackTrace();
     } finally{
@@ -264,7 +291,7 @@ public class ObjectCompiler implements Runnable{
     }
   }
 
-  static void main( String... args ){
+  public static void main( String... args ){
     AS400 system = null;
     ObjectCompiler compiler = null;
     try {
