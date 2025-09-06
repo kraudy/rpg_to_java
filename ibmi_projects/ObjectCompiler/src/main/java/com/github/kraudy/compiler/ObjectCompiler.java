@@ -10,6 +10,7 @@ import java.sql.Statement;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -112,14 +113,11 @@ public class ObjectCompiler implements Runnable{
   private static final Map<SourceType, Map<ObjectType, CompCmd>> typeToCmdMap = new EnumMap<>(SourceType.class);  
 
   /* Maps compilation commands to required and optional params */
-  private static final Map<CompCmd, Set<ParamCmd>> requiredParamsMap = new EnumMap<>(CompCmd.class);  
+  private static final Map<CompCmd, List<ParamCmd>> requiredParamsMap = new EnumMap<>(CompCmd.class);  
   private static final Map<CompCmd, Set<ParamCmd>> optionalParamsMap = new EnumMap<>(CompCmd.class);
 
   /* Maps params to values */
-  private static final Map<ParamCmd, List<ValCmd>> valueParamsMap = new EnumMap<>(ParamCmd.class); 
-
-  // Map fields to ParamCmd for easy lookup (use reflection or manual map)
-  private static final Map<ParamCmd, Supplier<String>> valueSuppliers = new EnumMap<>(ParamCmd.class);
+  public static final Map<ParamCmd, List<ValCmd>> valueParamsMap = new EnumMap<>(ParamCmd.class); 
 
   static {
     /*
@@ -163,20 +161,20 @@ public class ObjectCompiler implements Runnable{
     typeToCmdMap.put(SourceType.SQL, sqlMap);
 
     // Populate required params for each CompCmd
-    requiredParamsMap.put(CompCmd.CRTRPGMOD, EnumSet.of(ParamCmd.MODULE));
-    requiredParamsMap.put(CompCmd.CRTSQLRPGI, EnumSet.of(ParamCmd.OBJ, ParamCmd.OBJTYPE));
-    requiredParamsMap.put(CompCmd.CRTBNDRPG, EnumSet.of(ParamCmd.PGM));
-    requiredParamsMap.put(CompCmd.CRTRPGPGM, EnumSet.of(ParamCmd.PGM));
-    requiredParamsMap.put(CompCmd.CRTCLMOD, EnumSet.of(ParamCmd.MODULE));
-    requiredParamsMap.put(CompCmd.CRTBNDCL, EnumSet.of(ParamCmd.PGM));
-    requiredParamsMap.put(CompCmd.CRTCLPGM, EnumSet.of(ParamCmd.PGM));
-    requiredParamsMap.put(CompCmd.RUNSQLSTM, EnumSet.of(ParamCmd.SRCFILE));
-    requiredParamsMap.put(CompCmd.CRTSRVPGM, EnumSet.of(ParamCmd.OBJ, ParamCmd.MODULE, ParamCmd.BNDSRVPGM));
-    requiredParamsMap.put(CompCmd.CRTDSPF, EnumSet.of(ParamCmd.OBJ));
-    requiredParamsMap.put(CompCmd.CRTLF, EnumSet.of(ParamCmd.OBJ));
-    requiredParamsMap.put(CompCmd.CRTPRTF, EnumSet.of(ParamCmd.OBJ));
-    requiredParamsMap.put(CompCmd.CRTMNU, EnumSet.of(ParamCmd.OBJ));
-    requiredParamsMap.put(CompCmd.CRTQMQRY, EnumSet.of(ParamCmd.OBJ));
+    requiredParamsMap.put(CompCmd.CRTRPGMOD, Arrays.asList(ParamCmd.MODULE));
+    requiredParamsMap.put(CompCmd.CRTSQLRPGI, Arrays.asList(ParamCmd.OBJ, ParamCmd.OBJTYPE));
+    requiredParamsMap.put(CompCmd.CRTBNDRPG, Arrays.asList(ParamCmd.PGM, ParamCmd.SRCFILE));
+    requiredParamsMap.put(CompCmd.CRTRPGPGM, Arrays.asList(ParamCmd.PGM));
+    requiredParamsMap.put(CompCmd.CRTCLMOD, Arrays.asList(ParamCmd.MODULE));
+    requiredParamsMap.put(CompCmd.CRTBNDCL, Arrays.asList(ParamCmd.PGM));
+    requiredParamsMap.put(CompCmd.CRTCLPGM, Arrays.asList(ParamCmd.PGM));
+    requiredParamsMap.put(CompCmd.RUNSQLSTM, Arrays.asList(ParamCmd.SRCFILE));
+    requiredParamsMap.put(CompCmd.CRTSRVPGM, Arrays.asList(ParamCmd.OBJ, ParamCmd.MODULE, ParamCmd.BNDSRVPGM));
+    requiredParamsMap.put(CompCmd.CRTDSPF, Arrays.asList(ParamCmd.OBJ));
+    requiredParamsMap.put(CompCmd.CRTLF, Arrays.asList(ParamCmd.OBJ));
+    requiredParamsMap.put(CompCmd.CRTPRTF, Arrays.asList(ParamCmd.OBJ));
+    requiredParamsMap.put(CompCmd.CRTMNU, Arrays.asList(ParamCmd.OBJ));
+    requiredParamsMap.put(CompCmd.CRTQMQRY, Arrays.asList(ParamCmd.OBJ));
 
     // Populate optional params for each CompCmd
     optionalParamsMap.put(CompCmd.CRTRPGMOD, EnumSet.of(ParamCmd.TEXT, ParamCmd.TGTCCSID, ParamCmd.BNDDIR, ParamCmd.DFTACTGRP));
@@ -212,12 +210,7 @@ public class ObjectCompiler implements Runnable{
     //TODO: These suppliers could be instances and not static to add param validation
     //TODO: If there is not a supplier, then an input param is needed
     //TODO: I can also return the lambda function... that would be nice and would allow a higher abstraction function to get it
-    valueSuppliers.put(ParamCmd.OUTPUT, () -> {return "*" + valueParamsMap.get(ParamCmd.OUTPUT).get(0);});
-    valueSuppliers.put(ParamCmd.OUTMBR, () -> {return "*" + valueParamsMap.get(ParamCmd.OUTMBR).get(0);});
     
-    //valueSuppliers.put(ParamCmd.PGM, () -> library? library: "*" + ValCmd.DTAARA.name());
-    valueSuppliers.put(ParamCmd.PGM, () -> {return ParamCmd.PGM.name() + " (" + "*" + valueParamsMap.get(ParamCmd.PGM).get(0) + "/" + ") ";}); // Get first by default, maybe add overload to select specific
-    //valueSuppliers.put(ParamCmd.PGM, () -> "*" + ValCmd.PGM.name());
 
   }
 
@@ -233,7 +226,7 @@ public class ObjectCompiler implements Runnable{
       System.err.println("No compilation command for source type " + sourceType + " and object type " + objectType);
       return;
     }
-    Set<ParamCmd> reqParams = requiredParamsMap.getOrDefault(CompCmd, EnumSet.noneOf(ParamCmd.class));
+    List<ParamCmd> reqParams = requiredParamsMap.getOrDefault(CompCmd, Collections.emptyList());
     Set<ParamCmd> optParams = optionalParamsMap.getOrDefault(CompCmd, EnumSet.noneOf(ParamCmd.class));
 
     System.out.println("Compilation command: " + CompCmd.name());
@@ -246,9 +239,15 @@ public class ObjectCompiler implements Runnable{
     //TODO: Add valueParamsMap validation for empty values or non existing default values
     //String commandStr = CompCmd.name() + " " + reqParams.stream().map(Enum::name).map(p -> p + " (*" + valueParamsMap.get(p) + ")").collect(Collectors.joining(" "));
     
+    Resolver resolver = new Resolver(library, objectName, objectType, sourceType);
+    
     String commandStr = CompCmd.name() + " " + reqParams.stream()
-      .map(param -> valueSuppliers.get(param).get())
+      .map(param -> resolver.resolve(param))
       .collect(Collectors.joining(" "));
+
+    //String commandStr = CompCmd.name() + " " + reqParams.stream()
+    //  .map(param -> valueSuppliers.get(param).get())
+    //  .collect(Collectors.joining(" "));
 
     //String commandStr = CompCmd.name() + " " + reqParams.stream().map(Enum::name).map(p -> p + " (" + valueSuppliers.get(p).get() + ")").collect(Collectors.joining(" "));
     // Later: build command string, execute via CALL QCMD, etc.  
