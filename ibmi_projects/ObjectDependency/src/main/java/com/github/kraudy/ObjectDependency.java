@@ -10,6 +10,7 @@ import java.sql.Statement;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -45,6 +46,18 @@ public class ObjectDependency implements Runnable { // ObjectReferencer
   private Map<String, Set<String>> graph = new HashMap<>(); // objectKey -> dependsOn
   //private List<Nodes> nodes;
 
+  enum SysCmd { CHGLIBL, DSPPGMREF, DSPOBJD, DSPDBR, DSPFD, DSPPGM, SYSTABLEDEP, SYSVIEWDEP, SYSIXDEP, SYSROUTINEDEP, PROGRAM_INFO } //TODO: I think DSPFD and DSPPGM can be done by sql
+  //enum SysCmd { CHGLIBL, DSPPGMREF, DSPOBJD, DSPDBR, DSPFD, DSPPGM } 
+  //enum Db2Cmd {SYSTABLEDEP, SYSVIEWDEP, SYSIXDEP, SYSROUTINEDEP, PROGRAM_INFO} 
+
+  enum SourceType { RPG, RPGLE, SQLRPGLE, CLP, CLLE, SQL}
+
+  enum ObjectType { PGM, SRVPGM, MODULE, TABLE, LF, VIEW, ALIAS, PROCEDURE, FUNCTION } // Add more as needed
+
+
+  /* Maps source type to its compilation command */
+  private static final Map<SourceType, Map<ObjectType, SysCmd>> typeToCmdMap = new EnumMap<>(SourceType.class); 
+
   static class ObjectTypeConverter implements CommandLine.ITypeConverter<ObjectType> {
     @Override
     public ObjectType convert(String type) throws Exception {
@@ -66,16 +79,29 @@ public class ObjectDependency implements Runnable { // ObjectReferencer
       }
     }
   }
+
+  static class SourceTypeConverter implements CommandLine.ITypeConverter<SourceType> {
+    @Override
+    public SourceType convert(String value) throws Exception {
+      try {
+        return SourceType.valueOf(value.trim().toUpperCase());
+      } catch (IllegalArgumentException e) {
+        throw new Exception("Invalid source type: " + value);
+      }
+    }
+  }
+
   @Option(names = { "-l", "--libs" }, required = true, arity = "1..*", description = "Library list (first is primary)")
   private List<String> libraryList = new ArrayList<>();
-
-  enum ObjectType { PGM, SRVPGM, MODULE, TABLE, LF, VIEW, ALIAS, PROCEDURE, FUNCTION; } // Add more as needed
 
   @Option(names = "--obj", description = "Object name", converter = objectNameConverter.class)
   private String objectName;
 
   @Option(names = "--type", description = "Object type (e.g., PGM, SRVPGM)", converter = ObjectTypeConverter.class)
   private ObjectType objectType;
+
+  @Option(names = "--source-type", required = true, description = "Source type (e.g., RPGLE, CLLE)", converter = SourceTypeConverter.class)
+  private SourceType sourceType;
 
   @Option(names = "-o", description = "Output")
   private String outLibrary = "QTEMP";
@@ -222,7 +248,6 @@ public class ObjectDependency implements Runnable { // ObjectReferencer
     }
   }
   private void getDependencies(String library, String objName, String objType, String objAttr , String objKey){
-    String object = "PAYROLL";   // Object name (e.g., program name)
     String outfileLib = "QTEMP";   // Use QTEMP for temporary storage
     String outfileName = "PGMREFS";  // Could make unique if parallel
 

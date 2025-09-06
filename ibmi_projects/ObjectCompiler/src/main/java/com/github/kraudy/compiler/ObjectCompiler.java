@@ -245,6 +245,9 @@ public class ObjectCompiler implements Runnable{
       .map(param -> resolver.resolve(param))
       .collect(Collectors.joining(" "));
 
+    //TODO: Try to compile everthing from the IFS, is the source is inside a member
+    // try to migrate it and compile it in the IFS. For OPM objects, create a temporary source member
+
     //String commandStr = CompCmd.name() + " " + reqParams.stream()
     //  .map(param -> valueSuppliers.get(param).get())
     //  .collect(Collectors.joining(" "));
