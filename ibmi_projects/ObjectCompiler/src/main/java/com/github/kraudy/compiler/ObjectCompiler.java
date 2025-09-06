@@ -116,7 +116,7 @@ public class ObjectCompiler implements Runnable{
   private static final Map<CompCmd, Set<ParamCmd>> optionalParamsMap = new EnumMap<>(CompCmd.class);
 
   /* Maps params to values */
-  private static final Map<ParamCmd, Set<ValCmd>> valueParamsMap = new EnumMap<>(ParamCmd.class); 
+  private static final Map<ParamCmd, List<ValCmd>> valueParamsMap = new EnumMap<>(ParamCmd.class); 
 
   // Map fields to ParamCmd for easy lookup (use reflection or manual map)
   private static final Map<ParamCmd, Supplier<String>> valueSuppliers = new EnumMap<>(ParamCmd.class);
@@ -195,15 +195,15 @@ public class ObjectCompiler implements Runnable{
     optionalParamsMap.put(CompCmd.CRTQMQRY, EnumSet.of(ParamCmd.TEXT));
 
     // Populate valueParamsMap with special values for each parameter (add * when using in commands)
-    valueParamsMap.put(ParamCmd.OUTPUT, EnumSet.of(ValCmd.OUTFILE));
-    valueParamsMap.put(ParamCmd.OUTMBR, EnumSet.of(ValCmd.FIRST, ValCmd.REPLACE));
-    valueParamsMap.put(ParamCmd.OBJTYPE, EnumSet.of(ValCmd.PGM, ValCmd.SRVPGM));
-    valueParamsMap.put(ParamCmd.MODULE, EnumSet.of(ValCmd.PGM));
-    valueParamsMap.put(ParamCmd.BNDSRVPGM, EnumSet.of(ValCmd.SRVPGM));
-    valueParamsMap.put(ParamCmd.LIBL, EnumSet.of(ValCmd.LIBL));
-    valueParamsMap.put(ParamCmd.SRCFILE, EnumSet.of(ValCmd.FILE, ValCmd.LIBL));
-    valueParamsMap.put(ParamCmd.PGM, EnumSet.of(ValCmd.CURLIB, ValCmd.LIBL));
-    valueParamsMap.put(ParamCmd.OBJ, EnumSet.of(ValCmd.LIBL, ValCmd.FILE, ValCmd.DTAARA));
+    valueParamsMap.put(ParamCmd.OUTPUT, Arrays.asList(ValCmd.OUTFILE));
+    valueParamsMap.put(ParamCmd.OUTMBR, Arrays.asList(ValCmd.FIRST, ValCmd.REPLACE)); // FIRST is now reliably first
+    valueParamsMap.put(ParamCmd.OBJTYPE, Arrays.asList(ValCmd.PGM, ValCmd.SRVPGM));
+    valueParamsMap.put(ParamCmd.MODULE, Arrays.asList(ValCmd.PGM));
+    valueParamsMap.put(ParamCmd.BNDSRVPGM, Arrays.asList(ValCmd.SRVPGM));
+    valueParamsMap.put(ParamCmd.LIBL, Arrays.asList(ValCmd.LIBL));
+    valueParamsMap.put(ParamCmd.SRCFILE, Arrays.asList(ValCmd.FILE, ValCmd.LIBL));
+    valueParamsMap.put(ParamCmd.PGM, Arrays.asList(ValCmd.CURLIB, ValCmd.LIBL)); // CURLIB is now first; swap if you want LIBL first
+    valueParamsMap.put(ParamCmd.OBJ, Arrays.asList(ValCmd.LIBL, ValCmd.FILE, ValCmd.DTAARA));
     // TODO: for parms with no defined value: EnumSet.noneOf(ValCmd.class)
 
     // TODO: I think this Supliers is what i really need
@@ -212,11 +212,11 @@ public class ObjectCompiler implements Runnable{
     //TODO: These suppliers could be instances and not static to add param validation
     //TODO: If there is not a supplier, then an input param is needed
     //TODO: I can also return the lambda function... that would be nice and would allow a higher abstraction function to get it
-    valueSuppliers.put(ParamCmd.OUTPUT, () -> {return "*" + valueParamsMap.get(ParamCmd.OUTPUT).iterator().next();});
-    valueSuppliers.put(ParamCmd.OUTMBR, () -> {return "*" + valueParamsMap.get(ParamCmd.OUTMBR).iterator().next();});
+    valueSuppliers.put(ParamCmd.OUTPUT, () -> {return "*" + valueParamsMap.get(ParamCmd.OUTPUT).get(0);});
+    valueSuppliers.put(ParamCmd.OUTMBR, () -> {return "*" + valueParamsMap.get(ParamCmd.OUTMBR).get(0);});
     
     //valueSuppliers.put(ParamCmd.PGM, () -> library? library: "*" + ValCmd.DTAARA.name());
-    valueSuppliers.put(ParamCmd.PGM, () -> {return "*" + valueParamsMap.get(ParamCmd.PGM).iterator().next();}); // Get first by default, maybe add overload to select specific
+    valueSuppliers.put(ParamCmd.PGM, () -> {return ParamCmd.PGM.name() + " (" + "*" + valueParamsMap.get(ParamCmd.PGM).get(0) + "/" + ") ";}); // Get first by default, maybe add overload to select specific
     //valueSuppliers.put(ParamCmd.PGM, () -> "*" + ValCmd.PGM.name());
 
   }
@@ -247,22 +247,8 @@ public class ObjectCompiler implements Runnable{
     //String commandStr = CompCmd.name() + " " + reqParams.stream().map(Enum::name).map(p -> p + " (*" + valueParamsMap.get(p) + ")").collect(Collectors.joining(" "));
     
     String commandStr = CompCmd.name() + " " + reqParams.stream()
-      .map(param -> {
-          return param.name() + " (" + valueSuppliers.get(param).get() + ")";
-      })
+      .map(param -> valueSuppliers.get(param).get())
       .collect(Collectors.joining(" "));
-    
-    /* 
-    String commandStr = CompCmd.name() + " " + reqParams.stream()
-      .map(param -> {
-          ParamCmd paramCmd = ParamCmd.valueOf(param.name()); // Convert to ParamCmd enum
-          Set<ValCmd> valCmds = valueParamsMap.getOrDefault(paramCmd, EnumSet.noneOf(ValCmd.class));
-          ValCmd valCmd = valCmds.isEmpty() ? null : valCmds.iterator().next(); // Get first ValCmd (or handle differently)
-          String value = (valCmd != null && valueSuppliers.containsKey(valCmd)) ? valueSuppliers.get(valCmd).get() : "*NONE";
-          return param.name() + " (" + value + ")";
-      })
-      .collect(Collectors.joining(" "));
-    */
 
     //String commandStr = CompCmd.name() + " " + reqParams.stream().map(Enum::name).map(p -> p + " (" + valueSuppliers.get(p).get() + ")").collect(Collectors.joining(" "));
     // Later: build command string, execute via CALL QCMD, etc.  
