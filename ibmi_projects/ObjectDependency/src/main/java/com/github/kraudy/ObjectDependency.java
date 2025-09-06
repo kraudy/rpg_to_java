@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.ibm.as400.access.AS400;
@@ -54,9 +55,25 @@ public class ObjectDependency implements Runnable { // ObjectReferencer
 
   enum ObjectType { PGM, SRVPGM, MODULE, TABLE, LF, VIEW, ALIAS, PROCEDURE, FUNCTION } // Add more as needed
 
+  // Similar to typeToCmdMap in ObjectCompiler: Map ObjectType to SysCmd for dependency fetching
+  private static final Map<ObjectType, SysCmd> objTypeToDepCmdMap = new EnumMap<>(ObjectType.class);
 
-  /* Maps source type to its compilation command */
-  private static final Map<SourceType, Map<ObjectType, SysCmd>> typeToCmdMap = new EnumMap<>(SourceType.class); 
+  // Lambda mapping like Resolver's valueSuppliers: Map ObjectType to a function that resolves deps
+  // Function inputs: String[] {library, objName, objAttr} -> Set<depKey>
+  private final Map<ObjectType, Function<String[], Set<String>>> depResolvers = new EnumMap<>(ObjectType.class);
+
+  static {
+    // Populate similar to typeToCmdMap in ObjectCompiler
+    objTypeToDepCmdMap.put(ObjectType.PGM, SysCmd.DSPPGMREF);
+    objTypeToDepCmdMap.put(ObjectType.SRVPGM, SysCmd.DSPPGMREF);
+    objTypeToDepCmdMap.put(ObjectType.MODULE, SysCmd.DSPPGMREF);
+    objTypeToDepCmdMap.put(ObjectType.TABLE, SysCmd.SYSTABLEDEP);
+    objTypeToDepCmdMap.put(ObjectType.LF, SysCmd.SYSTABLEDEP);
+    objTypeToDepCmdMap.put(ObjectType.VIEW, SysCmd.SYSVIEWDEP);
+    objTypeToDepCmdMap.put(ObjectType.ALIAS, SysCmd.SYSIXDEP);  // Or SYSTABLEDEP if alias over table. Could make it a list.
+    objTypeToDepCmdMap.put(ObjectType.PROCEDURE, SysCmd.SYSROUTINEDEP);
+    objTypeToDepCmdMap.put(ObjectType.FUNCTION, SysCmd.SYSROUTINEDEP);
+  }
 
   static class ObjectTypeConverter implements CommandLine.ITypeConverter<ObjectType> {
     @Override
@@ -100,7 +117,7 @@ public class ObjectDependency implements Runnable { // ObjectReferencer
   @Option(names = "--type", description = "Object type (e.g., PGM, SRVPGM)", converter = ObjectTypeConverter.class)
   private ObjectType objectType;
 
-  @Option(names = "--source-type", required = true, description = "Source type (e.g., RPGLE, CLLE)", converter = SourceTypeConverter.class)
+  @Option(names = "--source-type", description = "Source type (e.g., RPGLE, CLLE)", converter = SourceTypeConverter.class)
   private SourceType sourceType;
 
   @Option(names = "-o", description = "Output")
@@ -159,6 +176,21 @@ public class ObjectDependency implements Runnable { // ObjectReferencer
     // User
     this.currentUser = new User(system, system.getUserId());
     this.currentUser.loadUserInformation();
+
+    initDepResolvers();  // Initialize lambdas like initSuppliers in Resolver
+  }
+
+  private void initDepResolvers() {
+    // Lambdas/Method refs like suppliers in Resolver
+    depResolvers.put(ObjectType.PGM, this::getProgramDeps);
+    depResolvers.put(ObjectType.SRVPGM, this::getProgramDeps);  // Same as PGM (DSPPGMREF works)
+    depResolvers.put(ObjectType.MODULE, this::getProgramDeps);
+    depResolvers.put(ObjectType.TABLE, this::getTableDeps);
+    depResolvers.put(ObjectType.LF, this::getTableDeps);  // Logical depends on physical
+    depResolvers.put(ObjectType.VIEW, this::getViewDeps);
+    depResolvers.put(ObjectType.ALIAS, this::getTableDeps);  // Alias depends on base
+    depResolvers.put(ObjectType.PROCEDURE, this::getRoutineDeps);
+    depResolvers.put(ObjectType.FUNCTION, this::getRoutineDeps);
   }
 
   private void dependencies(String library){
@@ -174,47 +206,52 @@ public class ObjectDependency implements Runnable { // ObjectReferencer
       cleanup();
     }
   }
+
   //TODO: Should this be recursive?
   private void getObjects(String library) throws SQLException {
-    String whereClause = "";
+    StringBuilder whereClause = new StringBuilder("");
+    // Build whereClause similar to your code, but use shared enums
+    // ...
+    // (Omit for brevity; keep your existing logic, but reference ObjectType enums)
     if (objectName != null && objectType != null) {
-      String objName = objectName;  // Already sanitized in run() TODO: Use only objectName
+      whereClause.append(" WHERE OBJNAME = '" + objectName + "' AND ");
+      // Already sanitized in run() TODO: Use only objectName
       switch (objectType) {
         case PGM:
-            whereClause = "WHERE OBJNAME = '" + objName + "' AND OBJTYPE = '*PGM'";
+            whereClause.append(" OBJTYPE = '*PGM'");
             break;
         case SRVPGM:
-            whereClause = "WHERE OBJNAME = '" + objName + "' AND OBJTYPE = '*SRVPGM'";
+            whereClause.append(" OBJTYPE = '*SRVPGM'");
             break;
         case MODULE:
-            whereClause = "WHERE OBJNAME = '" + objName + "' AND OBJTYPE = '*MODULE'";
+            whereClause.append(" OBJTYPE = '*MODULE'");
             break;
         case TABLE:
-            whereClause = "WHERE OBJNAME = '" + objName + "' AND OBJTYPE = '*FILE' AND SQL_OBJECT_TYPE = 'TABLE'";
+            whereClause.append(" OBJTYPE = '*FILE' AND SQL_OBJECT_TYPE = 'TABLE'");
             break;
         case LF:
-            whereClause = "WHERE OBJNAME = '" + objName + "' AND OBJTYPE = '*FILE' AND OBJATTRIBUTE = 'LF'";
+            whereClause.append(" OBJTYPE = '*FILE' AND OBJATTRIBUTE = 'LF'");
             break;
         case VIEW:
-            whereClause = "WHERE OBJNAME = '" + objName + "' AND OBJTYPE = '*FILE' AND SQL_OBJECT_TYPE = 'VIEW'";
+            whereClause.append(" OBJTYPE = '*FILE' AND SQL_OBJECT_TYPE = 'VIEW'");
             break;
         case ALIAS:
-            whereClause = "WHERE OBJNAME = '" + objName + "' AND OBJTYPE = '*FILE' AND SQL_OBJECT_TYPE = 'ALIAS'";
+            whereClause.append(" OBJTYPE = '*FILE' AND SQL_OBJECT_TYPE = 'ALIAS'");
             break;
         case PROCEDURE:
             // Procedures are special: Primarily identified by SQL_OBJECT_TYPE; OBJTYPE often '*PGM' or '*SRVPGM' but not always enforced
-            whereClause = "WHERE OBJNAME = '" + objName + "' AND SQL_OBJECT_TYPE = 'PROCEDURE'";
+            whereClause.append(" SQL_OBJECT_TYPE = 'PROCEDURE'");
             break;
         case FUNCTION:
             // Functions typically '*PGM' with SQL_OBJECT_TYPE
-            whereClause = "WHERE OBJNAME = '" + objName + "' AND OBJTYPE = '*PGM' AND SQL_OBJECT_TYPE = 'FUNCTION'";
+            whereClause.append(" OBJTYPE = '*PGM' AND SQL_OBJECT_TYPE = 'FUNCTION'");
             break;
         default:
             throw new IllegalArgumentException("Unsupported object type: " + objectType);
       }
     }
     try(Statement objsStmt = connection.createStatement();
-        ResultSet rsobjs = objsStmt.executeQuery(
+        ResultSet rs = objsStmt.executeQuery(
               "WITH SourcePf (SourcePf) AS ( " + 
                   "SELECT TABLE_NAME AS SourcePf " +
                   "FROM QSYS2.SYSTABLES " + 
@@ -225,128 +262,201 @@ public class ObjectDependency implements Runnable { // ObjectReferencer
                   "CAST(OBJNAME AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS object_name, " +
                   "CAST(OBJTYPE AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS object_type, " +
                   "CAST(OBJTEXT AS VARCHAR(50) CCSID " + INVARIANT_CCSID + ") AS text_description, " + 
-                  "CAST((CASE TRIM(OBJATTRIBUTE) WHEN '' THEN SQL_OBJECT_TYPE ELSE OBJATTRIBUTE END) AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") As attribute " +
+                  "CAST((CASE WHEN SQL_OBJECT_TYPE IS NOT NULL THEN SQL_OBJECT_TYPE ELSE OBJATTRIBUTE END) AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") As attribute " +
               "FROM TABLE(QSYS2.OBJECT_STATISTICS('" + library + "', '*ALL')) " +
               "EXCEPTION JOIN SourcePf " +
               "ON (SourcePf.SourcePf = OBJNAME AND " +
                   "OBJTYPE = '*FILE') " +
-              whereClause)){
+              whereClause.toString())){
       //TODO: Maybe move this out to just use return in the recursion
-      while(rsobjs.next()){
-        String objName = rsobjs.getString("object_name");
-        String objType = rsobjs.getString("object_type");
-        String objDesc = rsobjs.getString("text_description");
-        String objAttr = rsobjs.getString("attribute");
-        String objKey = library + "/" + objName + "/" + objType;
+      while(rs.next()){
+        String objName = rs.getString("object_name");
+        String objTypeStr = rs.getString("object_type");
+        String objAttr = rs.getString("attribute");
+        String objDesc = rs.getString("text_description");
+
+        // Log for debugging
+        if (verbose) {
+            System.out.println("Processing: Library=" + library + ", Object=" + objName + ", Type=" + objTypeStr + ", Attribute=" + (objAttr != null ? objAttr : "NULL"));
+        }
+
+        // Determine ObjectType based on objTypeStr and objAttr
+        ObjectType objTypeEnum;
+        if (objTypeStr.equals("*FILE")) {
+          if (objAttr == null) {
+            if (verbose) {
+              System.out.println("Skipping *FILE with null attribute: " + objName);
+            }
+            continue;
+          }
+          // For files, use objAttr (which is OBJATTRIBUTE or SQL_OBJECT_TYPE)
+          switch (objAttr) {
+            case "TABLE":
+              objTypeEnum = ObjectType.TABLE;
+              break;
+            case "LF":
+              objTypeEnum = ObjectType.LF;
+              break;
+            case "VIEW":
+              objTypeEnum = ObjectType.VIEW;
+              break;
+            case "ALIAS":
+              objTypeEnum = ObjectType.ALIAS;
+              break;
+            default:
+              // Skip or handle unsupported file subtypes (e.g., log "Unsupported file attribute: " + objAttr)
+              if (verbose) {
+                System.out.println("Skipping unsupported *FILE with attribute: " + objAttr);
+              }
+              continue;  // Or throw if you want strict enforcement
+          }
+        } else if (objAttr.equals("PROCEDURE") || objAttr.equals("FUNCTION")) {
+          // Override for SQL routines (may appear as *PGM/*SRVPGM)
+          objTypeEnum = objAttr.equals("PROCEDURE") ? ObjectType.PROCEDURE : ObjectType.FUNCTION;
+        } else {
+          // For non-files (e.g., *PGM, *SRVPGM, *MODULE), use objTypeStr
+          try {
+            objTypeEnum = ObjectType.valueOf(objTypeStr.replace("*", "").trim());
+          } catch (IllegalArgumentException e) {
+            if (verbose) {
+              System.out.println("Skipping unsupported object type: " + objTypeStr);
+            }
+            continue;
+          }
+        }
+
+
+        //ObjectType objTypeEnum = ObjectType.valueOf(objTypeStr.replace("*", "").trim());  // Map "*PGM" to PGM
+        String objKey = library + "/" + objName + "/" + objTypeStr;
         graph.putIfAbsent(objKey, new HashSet<>());
 
-        System.out.println("Library: " + library + ", Object: " + objName + ", Type: " + objType + ", Attribute: " + objAttr);
+        System.out.println("Library: " + library + ", Object: " + objName + ", Type: " + objTypeStr + ", Attribute: " + objAttr);
         
-        getDependencies(library, objName, objType, objAttr, objKey);
-
+        // Use the resolver map/lambda
+        Function<String[], Set<String>> resolver = depResolvers.getOrDefault(objTypeEnum, params -> new HashSet<>());
+        Set<String> deps = resolver.apply(new String[]{library, objName, objAttr});
+        graph.get(objKey).addAll(deps);
+        deps.forEach(depKey -> graph.putIfAbsent(depKey, new HashSet<>()));  // Ensure nodes exist
       }
     }
   }
-  private void getDependencies(String library, String objName, String objType, String objAttr , String objKey){
-    String outfileLib = "QTEMP";   // Use QTEMP for temporary storage
-    String outfileName = "PGMREFS";  // Could make unique if parallel
 
-    try {
-      // Switch based on type/attr (TODO: expand for files/SQL)
-      if (objType.equals("*PGM") || objType.equals("*SRVPGM") || objType.equals("*MODULE") || objType.equals("*SQLPKG")) {
-        //TODO: SELECT * FROM TABLE(PGMREFS(OBJECT_NAME=>?))
-        String commandStr = "DSPPGMREF PGM(" + library + "/" + objName + ") " +
-                "OUTPUT(*OUTFILE) OBJTYPE(" + objType + ") " +
-                "OUTFILE(" + outfileLib + "/" + outfileName + ") OUTMBR(*FIRST *REPLACE)";
-
-        try (Statement cmdStmt = connection.createStatement()) { //TODO: Use this to create the UDF function in QTEMP
-          cmdStmt.execute("CALL QSYS2.QCMDEXC('" + commandStr + "')");
-        } catch (SQLException e) {
-          System.out.println("Could not get dependencies for " + objName + ": Failed");
-          e.printStackTrace();
-          return;
-        }
-
-        //CommandCall cmd = new CommandCall(system);
-        //if (!cmd.run(commandStr)) {
-        //    System.out.println("Could not get dependencies for " + objName + ": Failed");
-        //    return;
-        //}
-        System.out.println("Dependencies for " + objName + ": OK");
-
-        // Query outfile immediately (model QADSPPGM/QWHDRPPR)
-        try (Statement depStmt = connection.createStatement();
-          ResultSet rsDeps = depStmt.executeQuery(
-                  "SELECT " + 
-                  "CAST(WHFNAM AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS WHFNAM, " +
-                  "CAST(WHLNAM AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS WHLNAM, " +
-                  "CAST(WHOTYP AS VARCHAR(8) CCSID " + INVARIANT_CCSID + ") AS WHOTYP " +
-                  "FROM " + outfileLib + "." + outfileName)) { //TODO: Do CAST 37
-          while (rsDeps.next()) {
-            String depName = rsDeps.getString("WHFNAM").trim();
-            String depLib = rsDeps.getString("WHLNAM").trim();
-            String depType = rsDeps.getString("WHOTYP").trim();
-            if (depName.isEmpty() || depName.equals("*EXPR") || depLib.equals("*EXPR")) {
-              continue;  // Skip expressions/unresolved
-            }
-            if (depLib.equals("QSYS") || depLib.equals("QSYS2")) {
+  // Example resolver method (used via lambda)
+  private Set<String> getProgramDeps(String[] args) {
+    String library = args[0], objName = args[1], objAttr = args[2];
+    Set<String> deps = new HashSet<>();
+    String outfileName = "PGMREFS";
+    String commandStr = "DSPPGMREF PGM(" + library + "/" + objName + ") OUTPUT(*OUTFILE) OBJTYPE(*ALL) " +
+                        "OUTFILE(" + outLibrary + "/" + outfileName + ") OUTMBR(*FIRST *REPLACE)";
+    try (Statement cmdStmt = connection.createStatement()) {
+      cmdStmt.execute("CALL QSYS2.QCMDEXC('" + commandStr + "')");
+      try (ResultSet rsDeps = cmdStmt.executeQuery(
+          "SELECT CAST(WHFNAM AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS WHFNAM, " +
+          "CAST(WHLNAM AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS WHLNAM, " +
+          "CAST(WHOTYP AS VARCHAR(8) CCSID " + INVARIANT_CCSID + ") AS WHOTYP " +
+          "FROM " + outLibrary + "." + outfileName)) {
+        while (rsDeps.next()) {
+          String depName = rsDeps.getString("WHFNAM").trim();
+          String depLib = rsDeps.getString("WHLNAM").trim();
+          String depType = rsDeps.getString("WHOTYP").trim();
+          if (depName.isEmpty() || depName.equals("*EXPR") || depLib.equals("*EXPR") || depLib.startsWith("Q")) {
               continue;
-            }
-            //TODO: Add suggestion if not found
-            // Resolve *LIBL to actual library using current lib list
-            if (depLib.equals("*LIBL")) {
-              String objdOutfile = "OBJD";  // Temp outfile for DSPOBJD
-              String resolveCmd = "DSPOBJD OBJ(*LIBL/" + depName + ") OBJTYPE(" + depType + ") " +
-                      "OUTPUT(*OUTFILE) OUTFILE(" + outfileLib + "/" + objdOutfile + ") OUTMBR(*FIRST *REPLACE)";
-              try (Statement resolveStmt = connection.createStatement()) { //TODO: Move to SQL
-                resolveStmt.execute("CALL QSYS2.QCMDEXC('" + resolveCmd + "')");
-              } catch (SQLException e) {
-                System.out.println("Could not resolve *LIBL for " + depName + ": Failed");
-                e.printStackTrace();
-                continue;  // Skip if resolution fails
-              }
-
-              // Query DSPOBJD outfile for resolved lib (model QADSPOBJ, field ODLBNM)
-              try (Statement objdStmt = connection.createStatement();
-                    ResultSet rsObjd = objdStmt.executeQuery(
-                            "SELECT CAST(ODLBNM AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS ODLBNM " +
-                            "FROM " + outfileLib + "." + objdOutfile)) {
-                if (rsObjd.next()) {
-                  depLib = rsObjd.getString("ODLBNM").trim();
-                } else {
-                  System.out.println("*LIBL resolution for " + depName + " found no object.");
-                  continue;
-                }
-              }
-            }
-            String depKey = depLib + "/" + depName + "/" + depType;
-            graph.get(objKey).add(depKey);  // Add edge: obj depends on dep
-            graph.putIfAbsent(depKey, new HashSet<>());  // Ensure dep node exists
           }
+          depLib = resolveLibL(depLib, depName, depType);
+          String depKey = depLib + "/" + depName + "/" + depType;
+          deps.add(depKey);
         }
-      } else if (objType.equals("*FILE") && objAttr.equals("LF")) {
-          // TODO: Use DSPFD to outfile or SQL SYSTABLEDEP for based-on PFs (already gives exact schemas/libs)
-          //  for LF/PF relationships 
-          /* SELECT BASE_SCHEMA, BASE_TABLE FROM QSYS2.SYSTABLEDEP WHERE DEPENDENT_SCHEMA = ? AND DEPENDENT_TABLE = ? */
-          /* SELECT BASE_SCHEMA AS depLib, BASE_TABLE AS depName 
-          FROM QSYS2.SYSTABLEDEP WHERE DEPENDENT_SCHEMA = '" + library + "' AND DEPENDENT_TABLE = '" + objName + "' */
-
-          // For views/indexes: QSYS2.SYSVIEWDEP and QSYS2.SYSIXDEP.
-
-          // For SQL routines: QSYS2.SYSROUTINEDEP
-
-          // For full program info: QSYS2.PROGRAM_INFO or DSPPGM to outfile for bound modules/services
-
-          // depType = "*FILE"
-          // QSYS2.PROGRAM_INFO
-          // QSYS2.SYSROUTINEDEP
-      } else {
-          // Skip or handle other types (e.g., SQL views with SYSVIEWDEP)
       }
-    } catch (Exception e) {
-        System.out.println("Could not get dependencies for " + objName + ": Failed");
-        e.printStackTrace();
+    } catch (SQLException e) {
+        if (verbose) e.printStackTrace();
     }
+    return deps;
+  }
+
+  // Resolver for table/LF/alias (using SQL instead of command)
+  private Set<String> getTableDeps(String[] args) {
+    String library = args[0], objName = args[1];
+    Set<String> deps = new HashSet<>();
+    try (Statement stmt = connection.createStatement();
+        ResultSet rs = stmt.executeQuery(
+              "SELECT CAST(BASE_SCHEMA AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS depLib, " +
+              "CAST(BASE_TABLE AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS depName " +
+              "FROM QSYS2.SYSTABLEDEP WHERE DEPENDENT_SCHEMA = '" + library + "' AND DEPENDENT_TABLE = '" + objName + "'")) {
+      while (rs.next()) {
+        String depLib = rs.getString("depLib").trim();
+        String depName = rs.getString("depName").trim();
+        String depKey = depLib + "/" + depName + "/*FILE";
+        deps.add(depKey);
+      }
+    } catch (SQLException e) {
+      if (verbose) e.printStackTrace();
+    }
+    return deps;
+  }
+
+  // Similar for views
+  private Set<String> getViewDeps(String[] args) {
+    String library = args[0], objName = args[1];
+    Set<String> deps = new HashSet<>();
+    try (Statement stmt = connection.createStatement();
+        ResultSet rs = stmt.executeQuery(
+                "SELECT CAST(VIEW_SCHEMA AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS depLib, " +
+                "CAST(VIEW_NAME AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS depName " +
+                "FROM QSYS2.SYSVIEWDEP WHERE BASE_SCHEMA = '" + library + "' AND BASE_TABLE = '" + objName + "'")) {  // Note: Inverted for dependents, adjust if needed for bases
+      while (rs.next()) {
+          String depLib = rs.getString("depLib").trim();
+          String depName = rs.getString("depName").trim();
+          String depKey = depLib + "/" + depName + "/*FILE";
+          deps.add(depKey);
+      }
+    } catch (SQLException e) {
+      if (verbose) e.printStackTrace();
+    }
+    return deps;
+  }
+
+  // For procedures/functions
+  private Set<String> getRoutineDeps(String[] args) {
+    String library = args[0], objName = args[1];
+    Set<String> deps = new HashSet<>();
+    try (Statement stmt = connection.createStatement();
+        ResultSet rs = stmt.executeQuery(
+            "SELECT CAST(DEPENDENT_SCHEMA AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS depLib, " +
+            "CAST(DEPENDENT_ROUTINE AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS depName, " +
+            "CAST(DEPENDENT_ROUTINE_TYPE AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS depType " +
+            "FROM QSYS2.SYSROUTINEDEP WHERE ROUTINE_SCHEMA = '" + library + "' AND ROUTINE_NAME = '" + objName + "'")) {
+      while (rs.next()) {
+        String depLib = rs.getString("depLib").trim();
+        String depName = rs.getString("depName").trim();
+        String depType = rs.getString("depType").trim();  // e.g., PROCEDURE or FUNCTION
+        String depKey = depLib + "/" + depName + "/" + depType;
+        deps.add(depKey);
+      }
+    } catch (SQLException e) {
+        if (verbose) e.printStackTrace();
+    }
+    return deps;
+  }
+
+  // Helper for *LIBL resolution (used in resolvers)
+  private String resolveLibL(String depLib, String depName, String depType) {
+    if (!depLib.equals("*LIBL")) return depLib;
+    String objdOutfile = "OBJD";
+    String resolveCmd = "DSPOBJD OBJ(*LIBL/" + depName + ") OBJTYPE(" + depType + ") " +
+                        "OUTPUT(*OUTFILE) OUTFILE(" + outLibrary + "/" + objdOutfile + ") OUTMBR(*FIRST *REPLACE)";
+    try (Statement stmt = connection.createStatement()) {
+      stmt.execute("CALL QSYS2.QCMDEXC('" + resolveCmd + "')");
+      try (ResultSet rs = stmt.executeQuery(
+          "SELECT CAST(ODLBNM AS VARCHAR(10) CCSID " + INVARIANT_CCSID + ") AS ODLBNM " +
+          "FROM " + outLibrary + "." + objdOutfile)) {
+        if (rs.next()) {
+          return rs.getString("ODLBNM").trim();
+        }
+      }
+    } catch (SQLException e) {
+        if (verbose) e.printStackTrace();
+    }
+    return depLib;  // Fallback
   }
 
   // Kahn's algorithm (assumes no cycles; add detection if needed)
