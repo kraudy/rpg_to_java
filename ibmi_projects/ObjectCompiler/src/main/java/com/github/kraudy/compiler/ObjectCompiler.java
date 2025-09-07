@@ -97,16 +97,22 @@ public class ObjectCompiler implements Runnable{
     }
   }
 
-  @Option(names = { "-l", "--lib" }, required = true,  description = "Library to build)") //TODO: Change to library list
+  @Option(names = { "-l", "--lib" }, required = true,  description = "Library to build") //TODO: Change to library list
   private String library;
 
   @Option(names = "--obj", required = true, description = "Object name", converter = ObjectNameConverter.class)
   private String objectName;
 
-  @Option(names = "--type", required = true, description = "Object type (e.g., PGM, SRVPGM)", converter = ObjectTypeConverter.class)
+  @Option(names = {"-t","--type"}, required = true, description = "Object type (e.g., PGM, SRVPGM)", converter = ObjectTypeConverter.class)
   private ObjectType objectType;
 
-  @Option(names = "--source-type", required = true, description = "Source type (e.g., RPGLE, CLLE)", converter = SourceTypeConverter.class)
+  @Option(names = { "-sf", "--source-file" },  description = "Source Phisical File")
+  private String sourceFile;
+
+  @Option(names = { "-sn", "--source-name" },  description = "Source member name")
+  private String sourceName;
+
+  @Option(names = {"-st","--source-type"}, required = true, description = "Source type (e.g., RPGLE, CLLE)", converter = SourceTypeConverter.class)
   private SourceType sourceType;
 
   /* Maps source type to its compilation command */
@@ -239,7 +245,7 @@ public class ObjectCompiler implements Runnable{
     //TODO: Add valueParamsMap validation for empty values or non existing default values
     //String commandStr = CompCmd.name() + " " + reqParams.stream().map(Enum::name).map(p -> p + " (*" + valueParamsMap.get(p) + ")").collect(Collectors.joining(" "));
     
-    Resolver resolver = new Resolver(library, objectName, objectType, sourceType);
+    Resolver resolver = new Resolver(library, objectName, sourceFile, sourceName, objectType, sourceType);
     
     String commandStr = CompCmd.name() + " " + reqParams.stream()
       .map(param -> resolver.resolve(param))

@@ -14,12 +14,16 @@ public class Resolver {
   private final Map<ParamCmd, Supplier<String>> valueSuppliers = new EnumMap<>(ParamCmd.class);
   private final String library;
   private final String objectName;
+  private final String sourceFile;
+  private final String sourceName;
   private final ObjectType objectType;
   private final SourceType sourceType;
 
-  public Resolver(String library, String objectName, ObjectType objectType, SourceType sourceType) {
+  public Resolver(String library, String objectName, String sourceFile, String sourceName, ObjectType objectType, SourceType sourceType) {
     this.library = library;
     this.objectName = objectName;
+    this.sourceFile = sourceFile;
+    this.sourceName = sourceName;
     this.objectType = objectType;
     this.sourceType = sourceType;
     initSuppliers();
@@ -32,10 +36,11 @@ public class Resolver {
     valueSuppliers.put(ParamCmd.OUTMBR, () -> "*" + ObjectCompiler.valueParamsMap.get(ParamCmd.OUTMBR).get(0));
     
     // For PGM, use the provided library and objectName (can validate if library is empty, etc.)
-    valueSuppliers.put(ParamCmd.PGM, () -> ParamCmd.PGM.name() + " (" + (library == null ? "*" + ObjectCompiler.valueParamsMap.get(ParamCmd.PGM).get(0) : library) + "/" + objectName + ")");
+    valueSuppliers.put(ParamCmd.PGM, () -> (library == null ? "*" + ObjectCompiler.valueParamsMap.get(ParamCmd.PGM).get(0) : library) + "/" + objectName);
 
-    //TODO: Add source file validation
-    valueSuppliers.put(ParamCmd.SRCFILE, () -> ParamCmd.SRCFILE.name() + " (" + (library == null ? "*" + ObjectCompiler.valueParamsMap.get(ParamCmd.PGM).get(0) : library) + "/" + objectName + ")");
+    //TODO: Add "QRPGLESRC" to its own enum with key being type: RPG, RPGLE, etc
+    valueSuppliers.put(ParamCmd.SRCFILE, () -> (sourceFile == null ? "QRPGLESRC" : sourceFile) + "/" + (sourceName == null ? objectName : sourceName));
+    //valueSuppliers.put(ParamCmd.SRCFILE, () -> ParamCmd.SRCFILE.name() + (sourceFile == null ? "QRPGLESRC" : sourceFile) + "/" + objectName);
     //valueSuppliers.put(ParamCmd.PGM, () -> ParamCmd.PGM.name() + " (*" + ObjectCompiler.valueParamsMap.get(ParamCmd.PGM).get(0) + "/" + objectName + ")");
 
     // Similarly for other common params
@@ -51,6 +56,6 @@ public class Resolver {
   }
 
   public String resolve(ParamCmd param) {
-    return valueSuppliers.get(param).get();
+    return param.name() + " (" + valueSuppliers.get(param).get() + ")";
   }
 }

@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.ibm.as400.access.AS400;
@@ -26,11 +27,11 @@ import com.ibm.as400.access.AS400SecurityException;
 import com.ibm.as400.access.ErrorCompletingRequestException;
 import com.ibm.as400.access.AS400JDBCDataSource;
 import com.ibm.as400.access.CommandCall;
-import com.ibm.as400.access.ErrorCompletingRequestException;
 import com.ibm.as400.access.User;
 
 import io.github.theprez.dotenv_ibmi.IBMiDotEnv;
 import com.github.kraudy.Nodes;
+//import com.github.kraudy.compiler.ObjectCompiler;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -57,14 +58,15 @@ public class ObjectDependency implements Runnable { // ObjectReferencer
 
   // Similar to typeToCmdMap in ObjectCompiler: Map ObjectType to SysCmd for dependency fetching
   private static final Map<ObjectType, SysCmd> objTypeToDepCmdMap = new EnumMap<>(ObjectType.class);
+  private final Map<SysCmd, Supplier<String>> valueSuppliers = new EnumMap<>(SysCmd.class);
 
   // Lambda mapping like Resolver's valueSuppliers: Map ObjectType to a function that resolves deps
   // Function inputs: String[] {library, objName, objAttr} -> Set<depKey>
   private final Map<ObjectType, Function<String[], Set<String>>> depResolvers = new EnumMap<>(ObjectType.class);
 
   static {
-    // Populate similar to typeToCmdMap in ObjectCompiler
-    objTypeToDepCmdMap.put(ObjectType.PGM, SysCmd.DSPPGMREF);
+    /* These work directly on the object, no need for source type */
+    objTypeToDepCmdMap.put(ObjectType.PGM, SysCmd.DSPPGMREF); 
     objTypeToDepCmdMap.put(ObjectType.SRVPGM, SysCmd.DSPPGMREF);
     objTypeToDepCmdMap.put(ObjectType.MODULE, SysCmd.DSPPGMREF);
     objTypeToDepCmdMap.put(ObjectType.TABLE, SysCmd.SYSTABLEDEP);
@@ -73,6 +75,7 @@ public class ObjectDependency implements Runnable { // ObjectReferencer
     objTypeToDepCmdMap.put(ObjectType.ALIAS, SysCmd.SYSIXDEP);  // Or SYSTABLEDEP if alias over table. Could make it a list.
     objTypeToDepCmdMap.put(ObjectType.PROCEDURE, SysCmd.SYSROUTINEDEP);
     objTypeToDepCmdMap.put(ObjectType.FUNCTION, SysCmd.SYSROUTINEDEP);
+
   }
 
   static class ObjectTypeConverter implements CommandLine.ITypeConverter<ObjectType> {
@@ -207,7 +210,7 @@ public class ObjectDependency implements Runnable { // ObjectReferencer
     }
   }
 
-  //TODO: Should this be recursive?
+  //TODO: Overload this thing to scan the whole library or specific programs
   private void getObjects(String library) throws SQLException {
     StringBuilder whereClause = new StringBuilder("");
     // Build whereClause similar to your code, but use shared enums
