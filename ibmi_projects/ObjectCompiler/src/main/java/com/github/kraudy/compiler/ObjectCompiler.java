@@ -20,6 +20,10 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import com.github.kraudy.compiler.ObjectCompiler.CompCmd;
+import com.github.kraudy.compiler.ObjectCompiler.DftSrc;
+import com.github.kraudy.compiler.ObjectCompiler.ObjectType;
+import com.github.kraudy.compiler.ObjectCompiler.SourceType;
 import com.ibm.as400.access.AS400;
 import com.ibm.as400.access.AS400SecurityException;
 import com.ibm.as400.access.ErrorCompletingRequestException;
@@ -52,14 +56,14 @@ public class ObjectCompiler implements Runnable{
   enum CompCmd { CRTRPGMOD, CRTSQLRPGI, CRTBNDRPG, CRTRPGPGM, CRTCLMOD, CRTBNDCL, CRTCLPGM, RUNSQLSTM, CRTSRVPGM, CRTDSPF, CRTLF,
                CRTPRTF, CRTMNU, CRTQMQRY}
 
-  enum ParamCmd { PGM, OBJ, OBJTYPE, OUTPUT, OUTMBR, MODULE, BNDSRVPGM, LIBL, SRCFILE, 
+  enum ParamCmd { PGM, OBJ, OBJTYPE, OUTPUT, OUTMBR, MODULE, BNDSRVPGM, LIBL, SRCFILE, SRCMBR,
     ACTGRP, DFTACTGRP, BNDDIR, COMMIT, TEXT, TGTCCSID, CRTFRMSTMF } 
 
   enum ValCmd { FIRST, REPLACE, OUTFILE, LIBL, FILE, DTAARA, PGM, SRVPGM, CURLIB } // add * to these 
 
   enum PostCmpCmd { CHGOBJD } 
 
-  enum DftSrc { QRPGLESRC, QRPGSRC } // TODO: Add more
+  enum DftSrc { QRPGLESRC, QRPGSRC, QCLSRC, QSQLSRC } // TODO: Expand
 
   static class LibraryConverter implements CommandLine.ITypeConverter<String> {
     @Override
@@ -115,7 +119,7 @@ public class ObjectCompiler implements Runnable{
     }
   }
 
-  @Option(names = { "-l", "--lib" }, required = true,  description = "Library to build", converter = LibraryConverter.class) //TODO: Change to library list
+  @Option(names = { "-l", "--lib" }, required = true, description = "Target library for object", converter = LibraryConverter.class)
   private String library;
 
   @Option(names = "--obj", required = true, description = "Object name", converter = ObjectNameConverter.class)
@@ -124,14 +128,20 @@ public class ObjectCompiler implements Runnable{
   @Option(names = {"-t","--type"}, required = true, description = "Object type (e.g., PGM, SRVPGM)", converter = ObjectTypeConverter.class)
   private ObjectType objectType;
 
-  @Option(names = { "-sf", "--source-file" },  description = "Source Phisical File")
+  @Option(names = { "-sl", "--source-lib" }, description = "Source library (defaults to *LIBL)", converter = LibraryConverter.class)
+  private String sourceLib = "*LIBL";
+
+  @Option(names = { "-sf", "--source-file" }, description = "Source physical file (defaults based on source type)")
   private String sourceFile;
 
-  @Option(names = { "-sn", "--source-name" },  description = "Source member name")
+  @Option(names = { "-sn", "--source-name" }, description = "Source member name (defaults to object name or command-specific *SPECIAL)")
   private String sourceName;
 
   @Option(names = {"-st","--source-type"}, required = true, description = "Source type (e.g., RPGLE, CLLE)", converter = SourceTypeConverter.class)
   private SourceType sourceType;
+
+  @Option(names = { "--text" }, description = "Object text description (optional)")
+  private String text;
 
   /* Maps source type to its compilation command */
   private static final Map<SourceType, Map<ObjectType, CompCmd>> typeToCmdMap = new EnumMap<>(SourceType.class);  
@@ -146,7 +156,20 @@ public class ObjectCompiler implements Runnable{
   /* Maps source type to its default source pf */
   public static final Map<SourceType, DftSrc> typeToDftSrc = new EnumMap<>(SourceType.class);  
 
+  /* Maps source type to module creation command (for multi-step) */
+  private static final Map<SourceType, CompCmd> typeToModuleCmdMap = new EnumMap<>(SourceType.class);
+
+
   static {
+        
+    // Populate typeToDftSrc
+    typeToDftSrc.put(SourceType.RPG, DftSrc.QRPGSRC);
+    typeToDftSrc.put(SourceType.RPGLE, DftSrc.QRPGLESRC);
+    typeToDftSrc.put(SourceType.SQLRPGLE, DftSrc.QRPGLESRC); // Often same as RPGLE
+    typeToDftSrc.put(SourceType.CLP, DftSrc.QCLSRC);
+    typeToDftSrc.put(SourceType.CLLE, DftSrc.QCLSRC);
+    typeToDftSrc.put(SourceType.SQL, DftSrc.QSQLSRC);
+
     /*
      * Populate mapping from (SourceType, ObjectType) to CompCmd
      */
@@ -186,6 +209,11 @@ public class ObjectCompiler implements Runnable{
     sqlMap.put(ObjectType.PROCEDURE, CompCmd.RUNSQLSTM);
     sqlMap.put(ObjectType.FUNCTION, CompCmd.RUNSQLSTM);
     typeToCmdMap.put(SourceType.SQL, sqlMap);
+
+    // Populate typeToModuleCmdMap (for SRVPGM pre-step)
+    typeToModuleCmdMap.put(SourceType.RPGLE, CompCmd.CRTRPGMOD);
+    typeToModuleCmdMap.put(SourceType.SQLRPGLE, CompCmd.CRTSQLRPGI);
+    typeToModuleCmdMap.put(SourceType.CLLE, CompCmd.CRTCLMOD);
 
     // Populate required params for each CompCmd
     requiredParamsMap.put(CompCmd.CRTRPGMOD, Arrays.asList(ParamCmd.MODULE));
@@ -237,9 +265,7 @@ public class ObjectCompiler implements Runnable{
     //TODO: These suppliers could be instances and not static to add param validation
     //TODO: If there is not a supplier, then an input param is needed
     //TODO: I can also return the lambda function... that would be nice and would allow a higher abstraction function to get it
-    
-    typeToDftSrc.put(SourceType.RPG, DftSrc.QRPGSRC);
-    typeToDftSrc.put(SourceType.RPGLE, DftSrc.QRPGLESRC);
+
 
   }
 
