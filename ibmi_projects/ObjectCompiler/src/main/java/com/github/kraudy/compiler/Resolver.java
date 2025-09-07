@@ -39,7 +39,7 @@ public class Resolver {
     valueSuppliers.put(ParamCmd.PGM, () -> (library == null ? "*" + ObjectCompiler.valueParamsMap.get(ParamCmd.PGM).get(0) : library) + "/" + objectName);
 
     //TODO: Add "QRPGLESRC" to its own enum with key being type: RPG, RPGLE, etc
-    valueSuppliers.put(ParamCmd.SRCFILE, () -> (sourceFile == null ? "QRPGLESRC" : sourceFile) + "/" + (sourceName == null ? objectName : sourceName));
+    valueSuppliers.put(ParamCmd.SRCFILE, () -> (sourceFile == null ? ObjectCompiler.typeToDftSrc.get(sourceType).name() : sourceFile) + "/" + (sourceName == null ? objectName : sourceName));
     //valueSuppliers.put(ParamCmd.SRCFILE, () -> ParamCmd.SRCFILE.name() + (sourceFile == null ? "QRPGLESRC" : sourceFile) + "/" + objectName);
     //valueSuppliers.put(ParamCmd.PGM, () -> ParamCmd.PGM.name() + " (*" + ObjectCompiler.valueParamsMap.get(ParamCmd.PGM).get(0) + "/" + objectName + ")");
 

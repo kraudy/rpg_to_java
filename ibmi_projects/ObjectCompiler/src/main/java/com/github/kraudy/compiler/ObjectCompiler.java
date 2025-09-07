@@ -59,6 +59,24 @@ public class ObjectCompiler implements Runnable{
 
   enum PostCmpCmd { CHGOBJD } 
 
+  enum DftSrc { QRPGLESRC, QRPGSRC } // TODO: Add more
+
+  static class LibraryConverter implements CommandLine.ITypeConverter<String> {
+    @Override
+    public String convert(String value) throws Exception {
+      try{
+        value = value.trim().toUpperCase();
+        if (value.length() > 10 || value.isEmpty()) {
+          throw new Exception("Invalid library name: must be 1-10 characters");
+        }
+        return value;
+
+      } catch (IllegalArgumentException e) {
+        throw new Exception("Invalid library name: " + value);
+      }
+    }
+  }  
+
   static class ObjectNameConverter implements CommandLine.ITypeConverter<String> {
     @Override
     public String convert(String value) throws Exception {
@@ -97,7 +115,7 @@ public class ObjectCompiler implements Runnable{
     }
   }
 
-  @Option(names = { "-l", "--lib" }, required = true,  description = "Library to build") //TODO: Change to library list
+  @Option(names = { "-l", "--lib" }, required = true,  description = "Library to build", converter = LibraryConverter.class) //TODO: Change to library list
   private String library;
 
   @Option(names = "--obj", required = true, description = "Object name", converter = ObjectNameConverter.class)
@@ -124,6 +142,9 @@ public class ObjectCompiler implements Runnable{
 
   /* Maps params to values */
   public static final Map<ParamCmd, List<ValCmd>> valueParamsMap = new EnumMap<>(ParamCmd.class); 
+
+  /* Maps source type to its default source pf */
+  public static final Map<SourceType, DftSrc> typeToDftSrc = new EnumMap<>(SourceType.class);  
 
   static {
     /*
@@ -217,6 +238,8 @@ public class ObjectCompiler implements Runnable{
     //TODO: If there is not a supplier, then an input param is needed
     //TODO: I can also return the lambda function... that would be nice and would allow a higher abstraction function to get it
     
+    typeToDftSrc.put(SourceType.RPG, DftSrc.QRPGSRC);
+    typeToDftSrc.put(SourceType.RPGLE, DftSrc.QRPGLESRC);
 
   }
 
