@@ -25,6 +25,7 @@ import com.github.kraudy.compiler.ObjectCompiler.DftSrc;
 import com.github.kraudy.compiler.ObjectCompiler.ObjectType;
 import com.github.kraudy.compiler.ObjectCompiler.SourceType;
 import com.ibm.as400.access.AS400;
+import com.ibm.as400.access.AS400Message;
 import com.ibm.as400.access.AS400SecurityException;
 import com.ibm.as400.access.ErrorCompletingRequestException;
 import com.ibm.as400.access.AS400JDBCDataSource;
@@ -146,10 +147,6 @@ public class ObjectCompiler implements Runnable{
   /* Maps source type to its compilation command */
   private static final Map<SourceType, Map<ObjectType, CompCmd>> typeToCmdMap = new EnumMap<>(SourceType.class);  
 
-  /* Maps compilation commands to required and optional params */
-  private static final Map<CompCmd, List<ParamCmd>> requiredParamsMap = new EnumMap<>(CompCmd.class);  
-  private static final Map<CompCmd, Set<ParamCmd>> optionalParamsMap = new EnumMap<>(CompCmd.class);
-
   /* Maps params to values */
   public static final Map<ParamCmd, List<ValCmd>> valueParamsMap = new EnumMap<>(ParamCmd.class); 
 
@@ -215,38 +212,6 @@ public class ObjectCompiler implements Runnable{
     typeToModuleCmdMap.put(SourceType.SQLRPGLE, CompCmd.CRTSQLRPGI);
     typeToModuleCmdMap.put(SourceType.CLLE, CompCmd.CRTCLMOD);
 
-    // Populate required params for each CompCmd
-    requiredParamsMap.put(CompCmd.CRTRPGMOD, Arrays.asList(ParamCmd.MODULE));
-    requiredParamsMap.put(CompCmd.CRTSQLRPGI, Arrays.asList(ParamCmd.OBJ, ParamCmd.OBJTYPE));
-    requiredParamsMap.put(CompCmd.CRTBNDRPG, Arrays.asList(ParamCmd.PGM, ParamCmd.SRCFILE));
-    requiredParamsMap.put(CompCmd.CRTRPGPGM, Arrays.asList(ParamCmd.PGM));
-    requiredParamsMap.put(CompCmd.CRTCLMOD, Arrays.asList(ParamCmd.MODULE));
-    requiredParamsMap.put(CompCmd.CRTBNDCL, Arrays.asList(ParamCmd.PGM));
-    requiredParamsMap.put(CompCmd.CRTCLPGM, Arrays.asList(ParamCmd.PGM));
-    requiredParamsMap.put(CompCmd.RUNSQLSTM, Arrays.asList(ParamCmd.SRCFILE));
-    requiredParamsMap.put(CompCmd.CRTSRVPGM, Arrays.asList(ParamCmd.OBJ, ParamCmd.MODULE, ParamCmd.BNDSRVPGM));
-    requiredParamsMap.put(CompCmd.CRTDSPF, Arrays.asList(ParamCmd.OBJ));
-    requiredParamsMap.put(CompCmd.CRTLF, Arrays.asList(ParamCmd.OBJ));
-    requiredParamsMap.put(CompCmd.CRTPRTF, Arrays.asList(ParamCmd.OBJ));
-    requiredParamsMap.put(CompCmd.CRTMNU, Arrays.asList(ParamCmd.OBJ));
-    requiredParamsMap.put(CompCmd.CRTQMQRY, Arrays.asList(ParamCmd.OBJ));
-
-    // Populate optional params for each CompCmd
-    optionalParamsMap.put(CompCmd.CRTRPGMOD, EnumSet.of(ParamCmd.TEXT, ParamCmd.TGTCCSID, ParamCmd.BNDDIR, ParamCmd.DFTACTGRP));
-    optionalParamsMap.put(CompCmd.CRTSQLRPGI, EnumSet.of(ParamCmd.COMMIT, ParamCmd.TEXT, ParamCmd.ACTGRP, ParamCmd.BNDDIR));
-    optionalParamsMap.put(CompCmd.CRTBNDRPG, EnumSet.of(ParamCmd.ACTGRP, ParamCmd.DFTACTGRP, ParamCmd.BNDDIR, ParamCmd.TEXT));
-    optionalParamsMap.put(CompCmd.CRTRPGPGM, EnumSet.of(ParamCmd.TEXT, ParamCmd.TGTCCSID));
-    optionalParamsMap.put(CompCmd.CRTCLMOD, EnumSet.of(ParamCmd.TEXT, ParamCmd.TGTCCSID, ParamCmd.ACTGRP));
-    optionalParamsMap.put(CompCmd.CRTBNDCL, EnumSet.of(ParamCmd.ACTGRP, ParamCmd.DFTACTGRP, ParamCmd.BNDDIR, ParamCmd.TEXT));
-    optionalParamsMap.put(CompCmd.CRTCLPGM, EnumSet.of(ParamCmd.TEXT, ParamCmd.TGTCCSID));
-    optionalParamsMap.put(CompCmd.RUNSQLSTM, EnumSet.of(ParamCmd.COMMIT, ParamCmd.TEXT));
-    optionalParamsMap.put(CompCmd.CRTSRVPGM, EnumSet.of(ParamCmd.ACTGRP, ParamCmd.BNDDIR, ParamCmd.TEXT, ParamCmd.DFTACTGRP));
-    optionalParamsMap.put(CompCmd.CRTDSPF, EnumSet.of(ParamCmd.TEXT, ParamCmd.TGTCCSID));
-    optionalParamsMap.put(CompCmd.CRTLF, EnumSet.of(ParamCmd.TEXT, ParamCmd.TGTCCSID));
-    optionalParamsMap.put(CompCmd.CRTPRTF, EnumSet.of(ParamCmd.TEXT, ParamCmd.TGTCCSID));
-    optionalParamsMap.put(CompCmd.CRTMNU, EnumSet.of(ParamCmd.TEXT));
-    optionalParamsMap.put(CompCmd.CRTQMQRY, EnumSet.of(ParamCmd.TEXT));
-
     // Populate valueParamsMap with special values for each parameter (add * when using in commands)
     valueParamsMap.put(ParamCmd.OUTPUT, Arrays.asList(ValCmd.OUTFILE));
     valueParamsMap.put(ParamCmd.OUTMBR, Arrays.asList(ValCmd.FIRST, ValCmd.REPLACE)); // FIRST is now reliably first
@@ -276,43 +241,112 @@ public class ObjectCompiler implements Runnable{
       System.err.println("No mapping for source type: " + sourceType);
       return;
     }
-    CompCmd CompCmd = objectMap.get(objectType);
-    if (CompCmd == null) {
+    CompCmd mainCmd = objectMap.get(objectType);
+    if (mainCmd == null) {
       System.err.println("No compilation command for source type " + sourceType + " and object type " + objectType);
       return;
     }
-    List<ParamCmd> reqParams = requiredParamsMap.getOrDefault(CompCmd, Collections.emptyList());
-    Set<ParamCmd> optParams = optionalParamsMap.getOrDefault(CompCmd, EnumSet.noneOf(ParamCmd.class));
 
-    System.out.println("Compilation command: " + CompCmd.name());
-    System.out.println("Required parameters: " + reqParams.stream().map(Enum::name).collect(Collectors.joining(", ")));
-    System.out.println("Optional parameters: " + optParams.stream().map(Enum::name).collect(Collectors.joining(", ")));
+    System.out.println("Compilation command: " + mainCmd.name());
 
-    System.out.println("Compilation command: " + CompCmd.name());
+    List<String> commandStrs = new ArrayList<>();
 
-    //TODO: This could be done cleaner
-    //TODO: Add valueParamsMap validation for empty values or non existing default values
-    //String commandStr = CompCmd.name() + " " + reqParams.stream().map(Enum::name).map(p -> p + " (*" + valueParamsMap.get(p) + ")").collect(Collectors.joining(" "));
+    boolean isMultiStep = (objectType == ObjectType.SRVPGM);
+    CompCmd moduleCmd = null;
+    if (isMultiStep) {
+      moduleCmd = typeToModuleCmdMap.get(sourceType);
+      if (moduleCmd != null) {
+        commandStrs.add(buildCommand(moduleCmd, true)); // true = isModuleCreation
+      }
+    }
+
+    commandStrs.add(buildCommand(mainCmd, false));
     
-    Resolver resolver = new Resolver(library, objectName, sourceFile, sourceName, objectType, sourceType);
-    
-    String commandStr = CompCmd.name() + " " + reqParams.stream()
-      .map(param -> resolver.resolve(param))
-      .collect(Collectors.joining(" "));
+    System.out.println("Full command: " + commandStrs);
 
     //TODO: Try to compile everthing from the IFS, is the source is inside a member
     // try to migrate it and compile it in the IFS. For OPM objects, create a temporary source member
 
-    //String commandStr = CompCmd.name() + " " + reqParams.stream()
-    //  .map(param -> valueSuppliers.get(param).get())
-    //  .collect(Collectors.joining(" "));
+    compile(commandStrs);
+  }
 
-    //String commandStr = CompCmd.name() + " " + reqParams.stream().map(Enum::name).map(p -> p + " (" + valueSuppliers.get(p).get() + ")").collect(Collectors.joining(" "));
-    // Later: build command string, execute via CALL QCMD, etc.  
+  private String buildCommand(CompCmd cmd, boolean isModuleCreation) {
+    StringBuilder sb = new StringBuilder(cmd.name());
 
-    System.out.println("Full command: " + commandStr);
+    String target = library + "/" + objectName;
+    String srcFile = getSourceFile();
+    String srcMbr = getSourceMember(cmd);
 
-    compile();
+    switch (cmd) {
+      case CRTRPGMOD:
+      case CRTCLMOD:
+        sb.append(" MODULE(").append(target).append(")");
+        sb.append(" SRCFILE(").append(srcFile).append(")");
+        sb.append(" SRCMBR(").append(srcMbr).append(")");
+        break;
+      case CRTBNDRPG:
+      case CRTBNDCL:
+      case CRTRPGPGM:
+      case CRTCLPGM:
+        sb.append(" PGM(").append(target).append(")");
+        sb.append(" SRCFILE(").append(srcFile).append(")");
+        sb.append(" SRCMBR(").append(srcMbr).append(")");
+        break;
+      case CRTSQLRPGI:
+        sb.append(" OBJ(").append(target).append(")");
+        sb.append(" OBJTYPE(*").append(isModuleCreation ? "MODULE" : "PGM").append(")");
+        sb.append(" SRCFILE(").append(srcFile).append(")");
+        sb.append(" SRCMBR(").append(srcMbr).append(")");
+        break;
+      case CRTSRVPGM:
+        sb.append(" SRVPGM(").append(target).append(")");
+        sb.append(" MODULE(").append(target).append(")"); // Assume single module with same name
+        sb.append(" BNDSRVPGM(*NONE)");
+        break;
+      case RUNSQLSTM:
+        sb.append(" SRCFILE(").append(srcFile).append(")");
+        sb.append(" SRCMBR(").append(srcMbr).append(")");
+        sb.append(" COMMIT(*NONE)"); // Default; add option if needed
+        break;
+      // TODO: Add cases for CRTDSPF, CRTLF, etc., similar to above
+      default:
+        throw new IllegalArgumentException("Unsupported command: " + cmd);
+    }
+
+    // Add common optional params if provided/supported
+    if (text != null) {
+      sb.append(" TEXT('").append(text).append("')");
+    }
+    // TODO: Add more like ACTGRP(*CALLER), BNDDIR, etc., with options and defaults
+
+    System.out.println("Built command: " + sb);
+    return sb.toString();
+  }
+
+  private String getSourceFile() {
+    String file = (sourceFile != null) ? sourceFile : typeToDftSrc.getOrDefault(sourceType, DftSrc.QRPGLESRC).name();
+    return sourceLib + "/" + file;
+  }
+
+  private String getSourceMember(CompCmd cmd) {
+    if (sourceName != null) {
+      return sourceName;
+    }
+    // Command-specific default special value
+    switch (cmd) {
+      case CRTBNDRPG:
+      case CRTBNDCL:
+      case CRTRPGPGM:
+      case CRTCLPGM:
+        return "*PGM";
+      case CRTRPGMOD:
+      case CRTCLMOD:
+        return "*MODULE";
+      case CRTSQLRPGI:
+        return "*OBJ";
+      default:
+        return objectName; // Fallback for SQL, etc.
+    }
   }
 
   public ObjectCompiler(AS400 system) throws Exception {
@@ -331,14 +365,26 @@ public class ObjectCompiler implements Runnable{
     this.currentUser.loadUserInformation();
   }
 
-  private void compile(){
-    try {
-      System.out.println("Compilation... ");
-    } catch (Exception e) {
-      e.printStackTrace();
-    } finally{
-      cleanup();
+  private void compile(List<String> commandStrs) {
+    CommandCall cc = new CommandCall(system);
+    for (String commandStr : commandStrs) {
+      try {
+        System.out.println("Executing: " + commandStr);
+        boolean success = cc.run(commandStr);
+        AS400Message[] messages = cc.getMessageList();
+        if (success) {
+          System.out.println("Compilation successful.");
+        } else {
+          System.out.println("Compilation failed.");
+        }
+        for (AS400Message msg : messages) {
+          System.out.println(msg.getID() + ": " + msg.getText());
+        }
+      } catch (AS400SecurityException | ErrorCompletingRequestException | IOException | InterruptedException | PropertyVetoException e) {
+        e.printStackTrace();
+      }
     }
+    cleanup();
   }
 
   private void cleanup(){
