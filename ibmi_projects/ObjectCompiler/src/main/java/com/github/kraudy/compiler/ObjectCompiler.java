@@ -143,8 +143,15 @@ public class ObjectCompiler implements Runnable{
   @Option(names = { "--text" }, description = "Object text description (defaults to retrieved from object if possible)")
   private String text;
 
+  //TODO: Is this needed?
   @Option(names = { "--actgrp" }, description = "Activation group (defaults to retrieved from object if possible)")
   private String actGrp;
+
+  @Option(names = "-x", description = "Debug")
+  private boolean debug = false;
+
+  @Option(names = "-v", description = "Verbose output")
+  private boolean verbose = false;
 
   /* Maps source type to its compilation command */
   private static final Map<SourceType, Map<ObjectType, CompCmd>> typeToCmdMap = new EnumMap<>(SourceType.class);  
@@ -256,8 +263,10 @@ public class ObjectCompiler implements Runnable{
 
      // Fill in missing params from object info
     if (objInfo != null) {
+      if (debug) System.out.println("Found object info");
       if (sourceType == null) {
         String attr = (String) objInfo.get("attribute");
+        if (debug) System.out.println("attr: " + attr);
         if (attr != null && !attr.isEmpty()) {
           sourceType = attrToSourceType.get(attr);
           if (sourceType == null) {
@@ -268,30 +277,35 @@ public class ObjectCompiler implements Runnable{
       }
       if (sourceLib.equals("*LIBL")) {
         String retrievedLib = (String) objInfo.get("sourceLibrary");
+        if (debug) System.out.println("retrievedLib: " + retrievedLib);
         if (retrievedLib != null && !retrievedLib.isEmpty()) {
           sourceLib = retrievedLib;
         }
       }
       if (sourceFile == null) {
         String retrievedFile = (String) objInfo.get("sourceFile");
+        if (debug) System.out.println("retrievedFile: " + retrievedFile);
         if (retrievedFile != null && !retrievedFile.isEmpty()) {
           sourceFile = retrievedFile;
         }
       }
       if (sourceName == null) {
         String retrievedMbr = (String) objInfo.get("sourceMember");
+        if (debug) System.out.println("retrievedMbr: " + retrievedMbr);
         if (retrievedMbr != null && !retrievedMbr.isEmpty()) {
           sourceName = retrievedMbr;
         }
       }
       if (text == null) {
         String retrievedText = (String) objInfo.get("textDescription");
+        if (debug) System.out.println("retrievedText: " + retrievedText);
         if (retrievedText != null && !retrievedText.isEmpty()) {
           text = retrievedText;
         }
       }
       if (actGrp == null && objInfo.containsKey("activationGroupAttribute")) {
         String retrievedActGrp = ((String) objInfo.get("activationGroupAttribute")).trim();
+        if (debug) System.out.println("retrievedActGrp: " + retrievedActGrp);
         if (!retrievedActGrp.isEmpty()) {
           actGrp = retrievedActGrp;
         }
@@ -466,9 +480,11 @@ public class ObjectCompiler implements Runnable{
     if (text != null) {
       sb.append(" TEXT('").append(text).append("')");
     }
+    /* TODO: Validate when to add this
     if (actGrp != null && (cmd == CompCmd.CRTBNDRPG || cmd == CompCmd.CRTBNDCL || cmd == CompCmd.CRTSQLRPGI || cmd == CompCmd.CRTSRVPGM)) {
       sb.append(" ACTGRP(").append(actGrp).append(")");
     }
+      */
     // TODO: Add more like DFTACTGRP(*NO), BNDDIR, USRPRF, etc., with options and defaults/retrieved values
 
 
@@ -478,6 +494,7 @@ public class ObjectCompiler implements Runnable{
 
   private String getSourceFile() {
     String file = (sourceFile != null) ? sourceFile : typeToDftSrc.getOrDefault(sourceType, DftSrc.QRPGLESRC).name();
+    //TODO: Validate if it should use library when library = null o *LIBL
     return sourceLib + "/" + file;
   }
 
