@@ -20,17 +20,16 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import com.github.kraudy.compiler.ObjectCompiler.CompCmd;
-import com.github.kraudy.compiler.ObjectCompiler.DftSrc;
-import com.github.kraudy.compiler.ObjectCompiler.ObjectType;
-import com.github.kraudy.compiler.ObjectCompiler.SourceType;
 import com.ibm.as400.access.AS400;
 import com.ibm.as400.access.AS400Message;
+import com.ibm.as400.access.AS400Bin4;
+import com.ibm.as400.access.AS400Text;
 import com.ibm.as400.access.AS400SecurityException;
 import com.ibm.as400.access.ErrorCompletingRequestException;
 import com.ibm.as400.access.AS400JDBCDataSource;
 import com.ibm.as400.access.CommandCall;
-import com.ibm.as400.access.ErrorCompletingRequestException;
+import com.ibm.as400.access.ProgramCall;
+import com.ibm.as400.access.ProgramParameter;
 import com.ibm.as400.access.User;
 
 import io.github.theprez.dotenv_ibmi.IBMiDotEnv;
@@ -129,20 +128,23 @@ public class ObjectCompiler implements Runnable{
   @Option(names = {"-t","--type"}, required = true, description = "Object type (e.g., PGM, SRVPGM)", converter = ObjectTypeConverter.class)
   private ObjectType objectType;
 
-  @Option(names = { "-sl", "--source-lib" }, description = "Source library (defaults to *LIBL)", converter = LibraryConverter.class)
+  @Option(names = { "-sl", "--source-lib" }, description = "Source library (defaults to *LIBL or retrieved from object)", converter = LibraryConverter.class)
   private String sourceLib = "*LIBL";
 
-  @Option(names = { "-sf", "--source-file" }, description = "Source physical file (defaults based on source type)")
+  @Option(names = { "-sf", "--source-file" }, description = "Source physical file (defaults based on source type or retrieved from object)")
   private String sourceFile;
 
-  @Option(names = { "-sn", "--source-name" }, description = "Source member name (defaults to object name or command-specific *SPECIAL)")
+  @Option(names = { "-sn", "--source-name" }, description = "Source member name (defaults to object name, command-specific *SPECIAL, or retrieved from object)")
   private String sourceName;
 
-  @Option(names = {"-st","--source-type"}, required = true, description = "Source type (e.g., RPGLE, CLLE)", converter = SourceTypeConverter.class)
+  @Option(names = {"-st","--source-type"}, description = "Source type (e.g., RPGLE, CLLE) (defaults to retrieved from object if possible)", converter = SourceTypeConverter.class)
   private SourceType sourceType;
 
-  @Option(names = { "--text" }, description = "Object text description (optional)")
+  @Option(names = { "--text" }, description = "Object text description (defaults to retrieved from object if possible)")
   private String text;
+
+  @Option(names = { "--actgrp" }, description = "Activation group (defaults to retrieved from object if possible)")
+  private String actGrp;
 
   /* Maps source type to its compilation command */
   private static final Map<SourceType, Map<ObjectType, CompCmd>> typeToCmdMap = new EnumMap<>(SourceType.class);  
@@ -155,6 +157,9 @@ public class ObjectCompiler implements Runnable{
 
   /* Maps source type to module creation command (for multi-step) */
   private static final Map<SourceType, CompCmd> typeToModuleCmdMap = new EnumMap<>(SourceType.class);
+
+  /* Maps object attribute to source type (for inference) */
+  private static final Map<String, SourceType> attrToSourceType = new HashMap<>();
 
 
   static {
@@ -212,6 +217,13 @@ public class ObjectCompiler implements Runnable{
     typeToModuleCmdMap.put(SourceType.SQLRPGLE, CompCmd.CRTSQLRPGI);
     typeToModuleCmdMap.put(SourceType.CLLE, CompCmd.CRTCLMOD);
 
+    // Populate attrToSourceType (basic mapping, expand as needed)
+    attrToSourceType.put("RPG", SourceType.RPG);
+    attrToSourceType.put("RPGLE", SourceType.RPGLE);
+    attrToSourceType.put("SQLRPGLE", SourceType.SQLRPGLE);
+    attrToSourceType.put("CLP", SourceType.CLP);
+    attrToSourceType.put("CLLE", SourceType.CLLE);
+
     // Populate valueParamsMap with special values for each parameter (add * when using in commands)
     valueParamsMap.put(ParamCmd.OUTPUT, Arrays.asList(ValCmd.OUTFILE));
     valueParamsMap.put(ParamCmd.OUTMBR, Arrays.asList(ValCmd.FIRST, ValCmd.REPLACE)); // FIRST is now reliably first
@@ -231,11 +243,69 @@ public class ObjectCompiler implements Runnable{
     //TODO: If there is not a supplier, then an input param is needed
     //TODO: I can also return the lambda function... that would be nice and would allow a higher abstraction function to get it
 
-
   }
 
   public void run() {
-    // For now, demonstrate the mappings
+    // Retrieve object info if exists to fill in defaults
+    Map<String, Object> objInfo = null;
+    try {
+      objInfo = retrieveObjectInfo();
+    } catch (Exception e) {
+      System.err.println("Warning: Could not retrieve compilation params from object: " + e.getMessage() + ". Using defaults.");
+    }
+
+     // Fill in missing params from object info
+    if (objInfo != null) {
+      if (sourceType == null) {
+        String attr = (String) objInfo.get("attribute");
+        if (attr != null && !attr.isEmpty()) {
+          sourceType = attrToSourceType.get(attr);
+          if (sourceType == null) {
+            System.err.println("Could not infer source type from object attribute '" + attr + "'. Source type is required.");
+            return;
+          }
+        }
+      }
+      if (sourceLib.equals("*LIBL")) {
+        String retrievedLib = (String) objInfo.get("sourceLibrary");
+        if (retrievedLib != null && !retrievedLib.isEmpty()) {
+          sourceLib = retrievedLib;
+        }
+      }
+      if (sourceFile == null) {
+        String retrievedFile = (String) objInfo.get("sourceFile");
+        if (retrievedFile != null && !retrievedFile.isEmpty()) {
+          sourceFile = retrievedFile;
+        }
+      }
+      if (sourceName == null) {
+        String retrievedMbr = (String) objInfo.get("sourceMember");
+        if (retrievedMbr != null && !retrievedMbr.isEmpty()) {
+          sourceName = retrievedMbr;
+        }
+      }
+      if (text == null) {
+        String retrievedText = (String) objInfo.get("textDescription");
+        if (retrievedText != null && !retrievedText.isEmpty()) {
+          text = retrievedText;
+        }
+      }
+      if (actGrp == null && objInfo.containsKey("activationGroupAttribute")) {
+        String retrievedActGrp = ((String) objInfo.get("activationGroupAttribute")).trim();
+        if (!retrievedActGrp.isEmpty()) {
+          actGrp = retrievedActGrp;
+        }
+      }
+      
+      // TODO: Add more params like --usrprf, --useadpaut, etc., and map from objInfo
+    }
+
+    if (sourceType == null) {
+      System.err.println("Source type is required if not retrievable from object.");
+      return;
+    }
+
+    // Mappings
     Map<ObjectType, CompCmd> objectMap = typeToCmdMap.get(sourceType);
     if (objectMap == null) {
       System.err.println("No mapping for source type: " + sourceType);
@@ -268,6 +338,85 @@ public class ObjectCompiler implements Runnable{
     // try to migrate it and compile it in the IFS. For OPM objects, create a temporary source member
 
     compile(commandStrs);
+  }
+
+  private Map<String, Object> retrieveObjectInfo() throws Exception {
+    String apiPgm;
+    String format = "PGMI0100"; // Default for PGM
+    if (objectType == ObjectType.PGM) {
+      apiPgm = "QCLRPGMI";
+    } else if (objectType == ObjectType.SRVPGM) {
+      apiPgm = "QBNRSPGM";
+      format = "SPGI0100";
+    } else if (objectType == ObjectType.MODULE) {
+      apiPgm = "QBNRMODI";
+      format = "MODI0100";
+    } else {
+      throw new Exception("Object type " + objectType + " not supported for retrieving compilation params.");
+    }
+
+    ProgramCall pc = new ProgramCall(system);
+    pc.setProgram("/QSYS.LIB/" + apiPgm + ".PGM");
+
+    int recvLen = 2048; // Sufficient for PGMI0100/SPGI0100/MODI0100
+    ProgramParameter[] parms = new ProgramParameter[5];
+    parms[0] = new ProgramParameter(recvLen); // Receiver
+    parms[1] = new ProgramParameter(new AS400Bin4().toBytes(recvLen)); // Length of receiver
+    parms[2] = new ProgramParameter(new AS400Text(8, system).toBytes(format)); // Format
+    String qualName = String.format("%-10s%-10s", objectName, library);
+    parms[3] = new ProgramParameter(new AS400Text(20, system).toBytes(qualName)); // Qualified object name
+    byte[] errorCode = new byte[16];
+    new AS400Bin4().toBytes(0, errorCode, 0); // Bytes provided = 0 to throw exceptions
+    parms[4] = new ProgramParameter(errorCode); // Error code
+
+    pc.setParameterList(parms);
+
+    if (!pc.run()) {
+      AS400Message[] msgs = pc.getMessageList();
+      throw new Exception("API call failed: " + (msgs.length > 0 ? msgs[0].getText() : "Unknown error"));
+    }
+
+    byte[] data = parms[0].getOutputData();
+    Map<String, Object> info = new HashMap<>();
+    AS400Bin4 bin4 = new AS400Bin4();
+    AS400Text text10 = new AS400Text(10, system);
+    AS400Text text13 = new AS400Text(13, system);
+    AS400Text text1 = new AS400Text(1, system);
+    AS400Text text50 = new AS400Text(50, system);
+    AS400Text text30 = new AS400Text(30, system);
+
+    int offset = 0;
+    info.put("bytesReturned", bin4.toInt(data, offset)); offset += 4;
+    info.put("bytesAvailable", bin4.toInt(data, offset)); offset += 4;
+    info.put("programName", text10.toObject(data, offset).toString().trim()); offset += 10;
+    info.put("programLibrary", text10.toObject(data, offset).toString().trim()); offset += 10;
+    info.put("owner", text10.toObject(data, offset).toString().trim()); offset += 10;
+    info.put("attribute", text10.toObject(data, offset).toString().trim()); offset += 10;
+    info.put("creationDateTime", text13.toObject(data, offset).toString().trim()); offset += 13;
+    info.put("sourceFile", text10.toObject(data, offset).toString().trim()); offset += 10;
+    info.put("sourceLibrary", text10.toObject(data, offset).toString().trim()); offset += 10;
+    info.put("sourceMember", text10.toObject(data, offset).toString().trim()); offset += 10;
+    info.put("sourceUpdatedDateTime", text13.toObject(data, offset).toString().trim()); offset += 13;
+    info.put("observable", text1.toObject(data, offset).toString().trim()); offset += 1;
+    info.put("userProfileOption", text1.toObject(data, offset).toString().trim()); offset += 1;
+    info.put("useAdoptedAuthority", text1.toObject(data, offset).toString().trim()); offset += 1;
+    info.put("logCommands", text1.toObject(data, offset).toString().trim()); offset += 1;
+    info.put("allowRTVCLSRC", text1.toObject(data, offset).toString().trim()); offset += 1;
+    info.put("fixDecimalData", text1.toObject(data, offset).toString().trim()); offset += 1;
+    info.put("textDescription", text50.toObject(data, offset).toString().trim()); offset += 50;
+    info.put("typeOfProgram", text1.toObject(data, offset).toString().trim()); offset += 1;
+    info.put("teraspaceEnabled", text1.toObject(data, offset).toString().trim()); offset += 1;
+    offset += 58; // Reserved
+    info.put("minParameters", bin4.toInt(data, offset)); offset += 4;
+    info.put("maxParameters", bin4.toInt(data, offset)); offset += 4;
+    // Skip other fields for brevity; add as needed (e.g., optimization at ~325 if char1)
+    offset = 368; // Jump to activation group (adjust if needed for SPGI/MODI differences)
+    if (objectType != ObjectType.MODULE) { // Modules don't have ACTGRP
+      info.put("activationGroupAttribute", text30.toObject(data, offset).toString().trim());
+    }
+    // TODO: For more params, parse additional fields or use other formats like PGMI0200 + QBNRMODI for module-specific (e.g., OPTLEVEL binary at module offset 164)
+
+    return info;
   }
 
   private String buildCommand(CompCmd cmd, boolean isModuleCreation) {
@@ -317,7 +466,11 @@ public class ObjectCompiler implements Runnable{
     if (text != null) {
       sb.append(" TEXT('").append(text).append("')");
     }
-    // TODO: Add more like ACTGRP(*CALLER), BNDDIR, etc., with options and defaults
+    if (actGrp != null && (cmd == CompCmd.CRTBNDRPG || cmd == CompCmd.CRTBNDCL || cmd == CompCmd.CRTSQLRPGI || cmd == CompCmd.CRTSRVPGM)) {
+      sb.append(" ACTGRP(").append(actGrp).append(")");
+    }
+    // TODO: Add more like DFTACTGRP(*NO), BNDDIR, USRPRF, etc., with options and defaults/retrieved values
+
 
     System.out.println("Built command: " + sb);
     return sb.toString();
