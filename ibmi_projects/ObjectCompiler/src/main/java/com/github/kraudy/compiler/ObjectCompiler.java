@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -540,12 +541,24 @@ public class ObjectCompiler implements Runnable{
     for (String commandStr : commandStrs) {
       try {
         System.out.println("Executing: " + commandStr);
+        //TODO: Get current_timestamp, maybe use only java
+        Timestamp compilationTime;
+        try(Statement stmt = connection.createStatement();
+          ResultSet rsTime = stmt.executeQuery(
+            "Select CURRENT_TIMESTAMP As Compilation_Time FROM sysibm.sysdummy1" 
+          )){
+            while (rsTime.next()) {
+              compilationTime = rsTime.getTimestamp("Compilation_Time");
+            }
+        }
         boolean success = cc.run(commandStr);
         AS400Message[] messages = cc.getMessageList();
         if (success) {
           System.out.println("Compilation successful.");
         } else {
           System.out.println("Compilation failed.");
+          //TODO: Show spool data
+          showComilationSpool(compilationTime);
         }
         for (AS400Message msg : messages) {
           System.out.println(msg.getID() + ": " + msg.getText());
@@ -555,6 +568,11 @@ public class ObjectCompiler implements Runnable{
       }
     }
     cleanup();
+  }
+
+  /*  https://gist.github.com/BirgittaHauser/f28e3527f1cc4c422a05eea865b455bb */
+  private void showComilationSpool(Timestamp compilationTime){
+
   }
 
   private void cleanup(){
