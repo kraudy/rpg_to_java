@@ -542,7 +542,7 @@ public class ObjectCompiler implements Runnable{
       try {
         System.out.println("Executing: " + commandStr);
         //TODO: Get current_timestamp, maybe use only java
-        Timestamp compilationTime;
+        Timestamp compilationTime = null;
         try(Statement stmt = connection.createStatement();
           ResultSet rsTime = stmt.executeQuery(
             "Select CURRENT_TIMESTAMP As Compilation_Time FROM sysibm.sysdummy1" 
@@ -558,12 +558,12 @@ public class ObjectCompiler implements Runnable{
         } else {
           System.out.println("Compilation failed.");
           //TODO: Show spool data
-          showComilationSpool(compilationTime);
+          showComilationSpool(compilationTime, system.getUserId().trim().toUpperCase());
         }
         for (AS400Message msg : messages) {
           System.out.println(msg.getID() + ": " + msg.getText());
         }
-      } catch (AS400SecurityException | ErrorCompletingRequestException | IOException | InterruptedException | PropertyVetoException e) {
+      } catch (AS400SecurityException | ErrorCompletingRequestException | IOException | InterruptedException | PropertyVetoException | SQLException e) {
         e.printStackTrace();
       }
     }
@@ -571,8 +571,28 @@ public class ObjectCompiler implements Runnable{
   }
 
   /*  https://gist.github.com/BirgittaHauser/f28e3527f1cc4c422a05eea865b455bb */
-  private void showComilationSpool(Timestamp compilationTime){
-
+  private void showComilationSpool(Timestamp compilationTime, String user) throws SQLException{
+    System.out.println("Compilation time: " + compilationTime);
+    
+    try(Statement stmt = connection.createStatement();
+      ResultSet rsCompilationSpool = stmt.executeQuery(
+        "Select Cast(Spooled_Data As Varchar(100) CCSID " + INVARIANT_CCSID + ") As  Spooled_Data " + 
+        "from  qsys2.OutPut_Queue_Entries a Cross Join " +
+            "Lateral(Select * " +
+                      "From Table(SysTools.Spooled_File_Data( " +
+                                              "Job_Name            => a.Job_Name, " +
+                                              "Spooled_File_Name   => a.Spooled_File_Name, " +
+                                              "Spooled_File_Number => File_Number))) b " +
+        "Where     Output_Queue_Name = '" + user + "' " +
+              "and USER_NAME = '" + user + "' " + 
+              "and SPOOLED_FILE_NAME = '" + objectName + "' " +
+              "and OUTPUT_QUEUE_LIBRARY_NAME = 'QGPL'" +
+              "and CREATE_TIMESTAMP > '" + compilationTime + "'"
+      )){
+        while (rsCompilationSpool.next()) {
+          System.out.println(rsCompilationSpool.getTimestamp("Spooled_Data"));
+        }
+    }
   }
 
   private void cleanup(){
