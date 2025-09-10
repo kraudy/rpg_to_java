@@ -369,6 +369,7 @@ public class ObjectCompiler implements Runnable{
 
   public void run() {
     CompilationSpec spec = buildSpecFromCli();
+    applyDefaultsToSpec(spec);
     spec.validate();
 
     // Retrieve and fill in defaults from existing object if possible
@@ -433,6 +434,19 @@ public class ObjectCompiler implements Runnable{
     );
   }
 
+  private void applyDefaultsToSpec(CompilationSpec spec) {
+    if (spec.sourceFile == null) {
+      spec.sourceFile = paramSuppliers.get(ParamCmd.SRCFILE).get();
+    }
+    if (spec.sourceMember == null) {
+      spec.sourceMember = paramSuppliers.get(ParamCmd.SRCMBR).get();
+    }
+    if (spec.sourceLibrary == null || spec.sourceLibrary.isEmpty()) {
+      spec.sourceLibrary = paramSuppliers.get(ParamCmd.LIBL).get();
+    }
+    // Add more defaults as needed
+  }
+
   private void fillSpecFromObjInfo(CompilationSpec spec, Map<String, Object> objInfo) {
     if (objInfo == null) return;
 
@@ -441,45 +455,40 @@ public class ObjectCompiler implements Runnable{
     if (spec.getSourceType() == null) {
       String attr = (String) objInfo.get("attribute");
       if (debug) System.out.println("attr: " + attr);
-      if (attr != null && !attr.isEmpty()) {
-        spec.sourceType = attrToSourceType.get(attr);
+      if (attr != null && !attr.trim().isEmpty()) {
+        spec.sourceType = attrToSourceType.get(attr.trim().toUpperCase());
         if (spec.getSourceType() == null) {
-          //System.err.println("Could not infer source type from object attribute '" + attr + "'. Source type is required.");
           throw new IllegalArgumentException("Could not infer source type from object attribute '" + attr + "'. Source type is required.");
         } 
       }
     }
 
-    if (spec.getSourceLibrary().equals("*LIBL")) {
-      String retrievedLib = (String) objInfo.get("sourceLibrary");
-      if (debug) System.out.println("retrievedLib: " + retrievedLib);
-      if (retrievedLib != null && !retrievedLib.isEmpty()) {
-        spec.sourceLibrary = retrievedLib;
-      }
+    String retrievedLib = (String) objInfo.get("sourceLibrary");
+    if (debug) System.out.println("retrievedLib: " + retrievedLib);
+    if (retrievedLib != null && !retrievedLib.trim().isEmpty()) {
+      spec.sourceLibrary = retrievedLib.trim().toUpperCase();
     }
 
-    if (spec.getSourceFile() == null) {
-      String retrievedFile = (String) objInfo.get("sourceFile");
-      if (debug) System.out.println("retrievedFile: " + retrievedFile);
-      if (retrievedFile != null && !retrievedFile.isEmpty()) {
-        spec.sourceFile = retrievedFile;
-      }
+    String retrievedFile = (String) objInfo.get("sourceFile");
+    if (debug) System.out.println("retrievedFile: " + retrievedFile);
+    if (retrievedFile != null && !retrievedFile.trim().isEmpty()) {
+      spec.sourceFile = retrievedFile.trim().toUpperCase();
+    } else if (spec.sourceFile == null) {
+      spec.sourceFile = paramSuppliers.get(ParamCmd.SRCFILE).get();
     }
 
-    if (spec.getSourceMember() == null) { //TODO: Change to source name instead of member
-      String retrievedMbr = (String) objInfo.get("sourceMember");
-      if (debug) System.out.println("retrievedMbr: " + retrievedMbr);
-      if (retrievedMbr != null && !retrievedMbr.isEmpty()) {
-        spec.sourceMember = retrievedMbr;
-      }
+    String retrievedMbr = (String) objInfo.get("sourceMember");
+    if (debug) System.out.println("retrievedMbr: " + retrievedMbr);
+    if (retrievedMbr != null && !retrievedMbr.trim().isEmpty()) {
+      spec.sourceMember = retrievedMbr.trim().toUpperCase();
+    } else if (spec.sourceMember == null) {
+      spec.sourceMember = paramSuppliers.get(ParamCmd.SRCMBR).get();
     }
 
-    if (spec.getText() == null) {
-      String retrievedText = (String) objInfo.get("textDescription");
-      if (debug) System.out.println("retrievedText: " + retrievedText);
-      if (retrievedText != null && !retrievedText.isEmpty()) {
-        spec.text = retrievedText;
-      }
+    String retrievedText = (String) objInfo.get("textDescription");
+    if (debug) System.out.println("retrievedText: " + retrievedText);
+    if (retrievedText != null && !retrievedText.trim().isEmpty()) {
+      spec.text = retrievedText.trim();
     }
 
     if (spec.getActGrp() == null && objInfo.containsKey("activationGroupAttribute")) {
@@ -577,7 +586,9 @@ public class ObjectCompiler implements Runnable{
     Function<CompilationSpec, String> builder = cmdBuilders.getOrDefault(cmd, s -> {
       throw new IllegalArgumentException("Unsupported command: " + cmd);
     });
-    return builder.apply(spec);
+    String params = builder.apply(spec);
+    // Prepend the command name
+    return cmd.name() + params;
   }
 
   // Example builder function for module commands
@@ -585,7 +596,7 @@ public class ObjectCompiler implements Runnable{
     StringBuilder sb = new StringBuilder();
     sb.append(" MODULE(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
     sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(spec.getSourceMember()).append(")");
+    sb.append(" SRCMBR(").append(getSourceMember(spec, CompCmd.CRTRPGMOD)).append(")");
     appendCommonParams(sb, spec);
     return sb.toString();
   }
@@ -595,7 +606,7 @@ public class ObjectCompiler implements Runnable{
     StringBuilder sb = new StringBuilder();
     sb.append(" PGM(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
     sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(spec.getSourceMember()).append(")");
+    sb.append(" SRCMBR(").append(getSourceMember(spec, CompCmd.CRTBNDRPG)).append(")");
     appendCommonParams(sb, spec);
     return sb.toString();
   }
@@ -606,7 +617,7 @@ public class ObjectCompiler implements Runnable{
     sb.append(" OBJ(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
     sb.append(" OBJTYPE(*").append(spec.getObjectType().name()).append(")");
     sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(spec.getSourceMember()).append(")");
+    sb.append(" SRCMBR(").append(getSourceMember(spec, CompCmd.CRTSQLRPGI)).append(")");
     appendCommonParams(sb, spec);
     return sb.toString();
   }
@@ -625,7 +636,7 @@ public class ObjectCompiler implements Runnable{
   private String buildSqlCmd(CompilationSpec spec) {
     StringBuilder sb = new StringBuilder();
     sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(spec.getSourceMember()).append(")");
+    sb.append(" SRCMBR(").append(getSourceMember(spec, CompCmd.RUNSQLSTM)).append(")");
     sb.append(" COMMIT(*NONE)");
     appendCommonParams(sb, spec);
     return sb.toString();
@@ -649,9 +660,9 @@ public class ObjectCompiler implements Runnable{
     return sourceLib + "/" + file;
   }
 
-  private String getSourceMember(CompCmd cmd) {
-    if (sourceName != null) {
-      return sourceName;
+  private String getSourceMember(CompilationSpec spec, CompCmd cmd) {
+    if (spec.sourceMember != null && !spec.sourceMember.isEmpty()) {
+      return spec.sourceMember;
     }
     // Command-specific default special value
     switch (cmd) {
@@ -666,7 +677,7 @@ public class ObjectCompiler implements Runnable{
       case CRTSQLRPGI:
         return "*OBJ";
       default:
-        return objectName; // Fallback for SQL, etc.
+        return spec.objectName; // Fallback for SQL, etc.
     }
   }
 
