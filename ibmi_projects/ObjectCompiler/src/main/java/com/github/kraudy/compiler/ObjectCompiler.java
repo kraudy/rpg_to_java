@@ -40,6 +40,13 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Option;
 
+/*
+ *import com.fasterxml.jackson.databind.JsonNode;
+ *import com.fasterxml.jackson.databind.ObjectMapper;
+*/
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 @Command (name = "compiler", description = "OPM/ILE Object Compiler", mixinStandardHelpOptions = true, version = "ObjectCompiler 0.0.1")
 public class ObjectCompiler implements Runnable{
   private static final String UTF8_CCSID = "1208"; // UTF-8 for stream files
@@ -48,23 +55,84 @@ public class ObjectCompiler implements Runnable{
   private final Connection connection;
   private final User currentUser;
 
-  enum SysCmd { CHGLIBL, DSPPGMREF, DSPOBJD, DSPDBR } 
+  public enum SysCmd { CHGLIBL, DSPPGMREF, DSPOBJD, DSPDBR }
 
-  enum SourceType { RPG, RPGLE, SQLRPGLE, CLP, CLLE, SQL}
+  public enum SourceType { RPG, RPGLE, SQLRPGLE, CLP, CLLE, SQL }
 
-  enum ObjectType { PGM, SRVPGM, MODULE, TABLE, LF, VIEW, ALIAS, PROCEDURE, FUNCTION } // Add more as needed
-  
-  enum CompCmd { CRTRPGMOD, CRTSQLRPGI, CRTBNDRPG, CRTRPGPGM, CRTCLMOD, CRTBNDCL, CRTCLPGM, RUNSQLSTM, CRTSRVPGM, CRTDSPF, CRTLF,
-               CRTPRTF, CRTMNU, CRTQMQRY}
+  public enum ObjectType { PGM, SRVPGM, MODULE, TABLE, LF, VIEW, ALIAS, PROCEDURE, FUNCTION } // Add more as needed
 
-  enum ParamCmd { PGM, OBJ, OBJTYPE, OUTPUT, OUTMBR, MODULE, BNDSRVPGM, LIBL, SRCFILE, SRCMBR,
-    ACTGRP, DFTACTGRP, BNDDIR, COMMIT, TEXT, TGTCCSID, CRTFRMSTMF } 
+  public enum CompCmd { CRTRPGMOD, CRTSQLRPGI, CRTBNDRPG, CRTRPGPGM, CRTCLMOD, CRTBNDCL, CRTCLPGM, RUNSQLSTM, CRTSRVPGM, CRTDSPF, CRTLF, CRTPRTF, CRTMNU, CRTQMQRY }
 
-  enum ValCmd { FIRST, REPLACE, OUTFILE, LIBL, FILE, DTAARA, PGM, SRVPGM, CURLIB } // add * to these 
+  public enum ParamCmd { PGM, OBJ, OBJTYPE, OUTPUT, OUTMBR, MODULE, BNDSRVPGM, LIBL, SRCFILE, SRCMBR, ACTGRP, DFTACTGRP, BNDDIR, COMMIT, TEXT, TGTCCSID, CRTFRMSTMF }
 
-  enum PostCmpCmd { CHGOBJD } 
+  public enum ValCmd { FIRST, REPLACE, OUTFILE, LIBL, FILE, DTAARA, PGM, SRVPGM, CURLIB } // add * to these
 
-  enum DftSrc { QRPGLESRC, QRPGSRC, QCLSRC, QSQLSRC } // TODO: Expand
+  public enum PostCmpCmd { CHGOBJD }
+
+  public enum DftSrc { QRPGLESRC, QRPGSRC, QCLSRC, QSQLSRC } // TODO: Expand
+
+  // Core struct for capturing compilation specs (JSON-friendly via Jackson)
+  public static class CompilationSpec {
+    private final String targetLibrary;
+    private final String objectName;
+    private final ObjectType objectType;
+    private final String sourceLibrary;
+    private final String sourceFile;
+    private final String sourceMember;
+    private final SourceType sourceType;
+    private final String text;
+    private final String actGrp;
+
+    // Constructor for Jackson deserialization
+    @JsonCreator
+    public CompilationSpec(
+            @JsonProperty("targetLibrary") String targetLibrary,
+            @JsonProperty("objectName") String objectName,
+            @JsonProperty("objectType") ObjectType objectType,
+            @JsonProperty("sourceLibrary") String sourceLibrary,
+            @JsonProperty("sourceFile") String sourceFile,
+            @JsonProperty("sourceMember") String sourceMember,
+            @JsonProperty("sourceType") SourceType sourceType,
+            @JsonProperty("text") String text,
+            @JsonProperty("actGrp") String actGrp) {
+        this.targetLibrary = targetLibrary.toUpperCase().trim();
+        this.objectName = objectName.toUpperCase().trim();
+        this.objectType = objectType;
+        this.sourceLibrary = sourceLibrary.toUpperCase().trim();
+        this.sourceFile = sourceFile.toUpperCase().trim();
+        this.sourceMember = sourceMember.toUpperCase().trim();
+        this.sourceType = sourceType;
+        this.text = text;
+        this.actGrp = actGrp;
+    }
+
+    // Getters for Jackson serialization
+    public String getTargetLibrary() { return targetLibrary; }
+    public String getObjectName() { return objectName; }
+    public ObjectType getObjectType() { return objectType; }
+    public String getSourceLibrary() { return sourceLibrary; }
+    public String getSourceFile() { return sourceFile; }
+    public String getSourceMember() { return sourceMember; }
+    public SourceType getSourceType() { return sourceType; }
+    public String getText() { return text; }
+    public String getActGrp() { return actGrp; }
+
+    // Key method for use in graphs (matches ObjectDependency format)
+    public String toGraphKey() {
+      return targetLibrary + "/" + objectName + "/" + objectType.name();
+    }
+
+    // Validation logic (can be expanded)
+    public void validate() {
+      if (targetLibrary.length() > 10 || targetLibrary.isEmpty()) {
+        throw new IllegalArgumentException("Invalid target library: " + targetLibrary);
+      }
+      if (objectName.length() > 10 || objectName.isEmpty()) {
+        throw new IllegalArgumentException("Invalid object name: " + objectName);
+      }
+      // Add more validations as needed
+    }
+  }
 
   static class LibraryConverter implements CommandLine.ITypeConverter<String> {
     @Override
