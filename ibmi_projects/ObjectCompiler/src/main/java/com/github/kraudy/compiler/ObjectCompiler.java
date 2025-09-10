@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -73,37 +74,38 @@ public class ObjectCompiler implements Runnable{
 
   // Core struct for capturing compilation specs (JSON-friendly via Jackson)
   public static class CompilationSpec {
-    private final String targetLibrary;
-    private final String objectName;
-    private final ObjectType objectType;
-    private final String sourceLibrary;
-    private final String sourceFile;
-    private final String sourceMember;
-    private final SourceType sourceType;
-    private final String text;
-    private final String actGrp;
+    //TODO: Make this private, add set method and move to another file
+    public String targetLibrary;
+    public String objectName;
+    public ObjectType objectType;
+    public String sourceLibrary;
+    public String sourceFile;
+    public String sourceMember;
+    public SourceType sourceType;
+    public String text;
+    public String actGrp;//TODO: Remove this
 
     // Constructor for Jackson deserialization
     @JsonCreator
     public CompilationSpec(
-            @JsonProperty("targetLibrary") String targetLibrary,
-            @JsonProperty("objectName") String objectName,
-            @JsonProperty("objectType") ObjectType objectType,
-            @JsonProperty("sourceLibrary") String sourceLibrary,
-            @JsonProperty("sourceFile") String sourceFile,
-            @JsonProperty("sourceMember") String sourceMember,
-            @JsonProperty("sourceType") SourceType sourceType,
-            @JsonProperty("text") String text,
-            @JsonProperty("actGrp") String actGrp) {
-        this.targetLibrary = targetLibrary.toUpperCase().trim();
-        this.objectName = objectName.toUpperCase().trim();
-        this.objectType = objectType;
-        this.sourceLibrary = sourceLibrary.toUpperCase().trim();
-        this.sourceFile = sourceFile.toUpperCase().trim();
-        this.sourceMember = sourceMember.toUpperCase().trim();
-        this.sourceType = sourceType;
-        this.text = text;
-        this.actGrp = actGrp;
+          @JsonProperty("targetLibrary") String targetLibrary,
+          @JsonProperty("objectName") String objectName,
+          @JsonProperty("objectType") ObjectType objectType,
+          @JsonProperty("sourceLibrary") String sourceLibrary,
+          @JsonProperty("sourceFile") String sourceFile,
+          @JsonProperty("sourceMember") String sourceMember,
+          @JsonProperty("sourceType") SourceType sourceType,
+          @JsonProperty("text") String text,
+          @JsonProperty("actGrp") String actGrp) {
+      this.targetLibrary = (targetLibrary != null) ? targetLibrary.toUpperCase().trim() : null;
+      this.objectName = (objectName != null) ? objectName.toUpperCase().trim() : null;
+      this.objectType = objectType;
+      this.sourceLibrary = (sourceLibrary != null) ? sourceLibrary.toUpperCase().trim() : "*LIBL";
+      this.sourceFile = (sourceFile != null) ? sourceFile.toUpperCase().trim() : null;
+      this.sourceMember = (sourceMember != null) ? sourceMember.toUpperCase().trim() : null;
+      this.sourceType = sourceType;
+      this.text = (text != null) ? text.trim() : "";
+      this.actGrp = actGrp;
     }
 
     // Getters for Jackson serialization
@@ -223,19 +225,25 @@ public class ObjectCompiler implements Runnable{
   private boolean verbose = false;
 
   /* Maps source type to its compilation command */
-  private static final Map<SourceType, Map<ObjectType, CompCmd>> typeToCmdMap = new EnumMap<>(SourceType.class);  
+  private static final Map<SourceType, Map<ObjectType, CompCmd>> typeToCmdMap = new EnumMap<>(SourceType.class);
 
   /* Maps params to values */
-  public static final Map<ParamCmd, List<ValCmd>> valueParamsMap = new EnumMap<>(ParamCmd.class); 
+  public static final Map<ParamCmd, List<ValCmd>> valueParamsMap = new EnumMap<>(ParamCmd.class);
 
   /* Maps source type to its default source pf */
-  public static final Map<SourceType, DftSrc> typeToDftSrc = new EnumMap<>(SourceType.class);  
+  public static final Map<SourceType, DftSrc> typeToDftSrc = new EnumMap<>(SourceType.class);
 
   /* Maps source type to module creation command (for multi-step) */
   private static final Map<SourceType, CompCmd> typeToModuleCmdMap = new EnumMap<>(SourceType.class);
 
   /* Maps object attribute to source type (for inference) */
   private static final Map<String, SourceType> attrToSourceType = new HashMap<>();
+
+  // Resolver map for parameter suppliers (cleaner abstraction for defaults and validations)
+  private final Map<ParamCmd, Supplier<String>> paramSuppliers = new EnumMap<>(ParamCmd.class);
+
+  // Resolver map for command builders (functions that build command strings based on spec)
+  private final Map<CompCmd, Function<CompilationSpec, String>> cmdBuilders = new EnumMap<>(CompCmd.class);
 
 
   static {
@@ -321,121 +329,185 @@ public class ObjectCompiler implements Runnable{
 
   }
 
+  public ObjectCompiler(AS400 system) throws Exception {
+    this(system, new AS400JDBCDataSource(system).getConnection());
+  }
+
+  public ObjectCompiler(AS400 system, Connection connection) throws Exception {
+    this.system = system;
+
+    // Database
+    this.connection = connection;
+    this.connection.setAutoCommit(true);
+
+    // User
+    this.currentUser = new User(system, system.getUserId());
+    this.currentUser.loadUserInformation();
+
+    initResolvers();
+  }
+
+  private void initResolvers() {
+    // Suppliers for default parameter values (can be overridden by CLI or object info)
+    paramSuppliers.put(ParamCmd.SRCMBR, () -> objectName); // Default to object name
+    paramSuppliers.put(ParamCmd.SRCFILE, () -> typeToDftSrc.getOrDefault(sourceType, DftSrc.QRPGLESRC).name());
+    paramSuppliers.put(ParamCmd.LIBL, () -> "*LIBL");
+    // Add more as needed
+
+    // Command builders as functions (pattern matching via enums)
+    cmdBuilders.put(CompCmd.CRTRPGMOD, this::buildModuleCmd);
+    cmdBuilders.put(CompCmd.CRTCLMOD, this::buildModuleCmd);
+    cmdBuilders.put(CompCmd.CRTBNDRPG, this::buildBoundCmd);
+    cmdBuilders.put(CompCmd.CRTBNDCL, this::buildBoundCmd);
+    cmdBuilders.put(CompCmd.CRTRPGPGM, this::buildBoundCmd);
+    cmdBuilders.put(CompCmd.CRTCLPGM, this::buildBoundCmd);
+    cmdBuilders.put(CompCmd.CRTSQLRPGI, this::buildSqlRpgCmd);
+    cmdBuilders.put(CompCmd.CRTSRVPGM, this::buildSrvPgmCmd);
+    cmdBuilders.put(CompCmd.RUNSQLSTM, this::buildSqlCmd);
+    // Add more builders for other commands
+  }
+
   public void run() {
-    // Retrieve object info if exists to fill in defaults
+    CompilationSpec spec = buildSpecFromCli();
+    spec.validate();
+
+    // Retrieve and fill in defaults from existing object if possible
     Map<String, Object> objInfo = null;
     try {
-      objInfo = retrieveObjectInfo();
+      objInfo = retrieveObjectInfo(spec);
+      fillSpecFromObjInfo(spec, objInfo);
     } catch (Exception e) {
-      System.err.println("Warning: Could not retrieve compilation params from object: " + e.getMessage() + ". Using defaults.");
+      if (verbose) System.err.println("Warning: Could not retrieve compilation params from object: " + e.getMessage() + ". Using defaults.");
     }
 
-     // Fill in missing params from object info
-    if (objInfo != null) {
-      if (debug) System.out.println("Found object info");
-      if (sourceType == null) {
-        String attr = (String) objInfo.get("attribute");
-        if (debug) System.out.println("attr: " + attr);
-        if (attr != null && !attr.isEmpty()) {
-          sourceType = attrToSourceType.get(attr);
-          if (sourceType == null) {
-            System.err.println("Could not infer source type from object attribute '" + attr + "'. Source type is required.");
-            return;
-          }
-        }
-      }
-      if (sourceLib.equals("*LIBL")) {
-        String retrievedLib = (String) objInfo.get("sourceLibrary");
-        if (debug) System.out.println("retrievedLib: " + retrievedLib);
-        if (retrievedLib != null && !retrievedLib.isEmpty()) {
-          sourceLib = retrievedLib;
-        }
-      }
-      if (sourceFile == null) {
-        String retrievedFile = (String) objInfo.get("sourceFile");
-        if (debug) System.out.println("retrievedFile: " + retrievedFile);
-        if (retrievedFile != null && !retrievedFile.isEmpty()) {
-          sourceFile = retrievedFile;
-        }
-      }
-      if (sourceName == null) {
-        String retrievedMbr = (String) objInfo.get("sourceMember");
-        if (debug) System.out.println("retrievedMbr: " + retrievedMbr);
-        if (retrievedMbr != null && !retrievedMbr.isEmpty()) {
-          sourceName = retrievedMbr;
-        }
-      }
-      if (text == null) {
-        String retrievedText = (String) objInfo.get("textDescription");
-        if (debug) System.out.println("retrievedText: " + retrievedText);
-        if (retrievedText != null && !retrievedText.isEmpty()) {
-          text = retrievedText;
-        }
-      }
-      if (actGrp == null && objInfo.containsKey("activationGroupAttribute")) {
-        String retrievedActGrp = ((String) objInfo.get("activationGroupAttribute")).trim();
-        if (debug) System.out.println("retrievedActGrp: " + retrievedActGrp);
-        if (!retrievedActGrp.isEmpty()) {
-          actGrp = retrievedActGrp;
-        }
-      }
-      
-      // TODO: Add more params like --usrprf, --useadpaut, etc., and map from objInfo
-    }
-
-    if (sourceType == null) {
+    if (spec.getSourceType() == null) {
       System.err.println("Source type is required if not retrievable from object.");
       return;
     }
 
-    // Mappings
-    Map<ObjectType, CompCmd> objectMap = typeToCmdMap.get(sourceType);
+    Map<ObjectType, CompCmd> objectMap = typeToCmdMap.get(spec.getSourceType());
     if (objectMap == null) {
-      System.err.println("No mapping for source type: " + sourceType);
+      System.err.println("No mapping for source type: " + spec.getSourceType());
       return;
     }
-    CompCmd mainCmd = objectMap.get(objectType);
+    CompCmd mainCmd = objectMap.get(spec.getObjectType());
     if (mainCmd == null) {
-      System.err.println("No compilation command for source type " + sourceType + " and object type " + objectType);
+      System.err.println("No compilation command for source type " + spec.getSourceType() + " and object type " + spec.getObjectType());
       return;
     }
 
-    System.out.println("Compilation command: " + mainCmd.name());
+    if (debug) System.out.println("Compilation command: " + mainCmd.name());
 
     List<String> commandStrs = new ArrayList<>();
 
-    boolean isMultiStep = (objectType == ObjectType.SRVPGM);
+    boolean isMultiStep = (spec.getObjectType() == ObjectType.SRVPGM);
     CompCmd moduleCmd = null;
     if (isMultiStep) {
-      moduleCmd = typeToModuleCmdMap.get(sourceType);
+      moduleCmd = typeToModuleCmdMap.get(spec.getSourceType());
       if (moduleCmd != null) {
-        commandStrs.add(buildCommand(moduleCmd, true)); // true = isModuleCreation
+        commandStrs.add(buildCommand(spec, moduleCmd, true)); // true = isModuleCreation
       }
     }
 
-    commandStrs.add(buildCommand(mainCmd, false));
-    
-    System.out.println("Full command: " + commandStrs);
+    commandStrs.add(buildCommand(spec, mainCmd, false));
 
-    //TODO: Try to compile everthing from the IFS, is the source is inside a member
-    // try to migrate it and compile it in the IFS. For OPM objects, create a temporary source member
+    if (debug) System.out.println("Full command: " + commandStrs);
+
+    // TODO: Integrate with SourceMigrator if source is in member; migrate to IFS and compile from there
+    // For OPM, create temp member if needed
 
     compile(commandStrs);
   }
 
-  private Map<String, Object> retrieveObjectInfo() throws Exception {
+  private CompilationSpec buildSpecFromCli() {
+    return new CompilationSpec(
+          library,
+          objectName,
+          objectType,
+          sourceLib,
+          sourceFile,
+          sourceName,
+          sourceType,
+          text,
+          actGrp
+    );
+  }
+
+  private void fillSpecFromObjInfo(CompilationSpec spec, Map<String, Object> objInfo) {
+    if (objInfo == null) return;
+
+    if (debug) System.out.println("Found object info");
+
+    if (spec.getSourceType() == null) {
+      String attr = (String) objInfo.get("attribute");
+      if (debug) System.out.println("attr: " + attr);
+      if (attr != null && !attr.isEmpty()) {
+        spec.sourceType = attrToSourceType.get(attr);
+        if (spec.getSourceType() == null) {
+          //System.err.println("Could not infer source type from object attribute '" + attr + "'. Source type is required.");
+          throw new IllegalArgumentException("Could not infer source type from object attribute '" + attr + "'. Source type is required.");
+        } 
+      }
+    }
+
+    if (spec.getSourceLibrary().equals("*LIBL")) {
+      String retrievedLib = (String) objInfo.get("sourceLibrary");
+      if (debug) System.out.println("retrievedLib: " + retrievedLib);
+      if (retrievedLib != null && !retrievedLib.isEmpty()) {
+        spec.sourceLibrary = retrievedLib;
+      }
+    }
+
+    if (spec.getSourceFile() == null) {
+      String retrievedFile = (String) objInfo.get("sourceFile");
+      if (debug) System.out.println("retrievedFile: " + retrievedFile);
+      if (retrievedFile != null && !retrievedFile.isEmpty()) {
+        spec.sourceFile = retrievedFile;
+      }
+    }
+
+    if (spec.getSourceMember() == null) { //TODO: Change to source name instead of member
+      String retrievedMbr = (String) objInfo.get("sourceMember");
+      if (debug) System.out.println("retrievedMbr: " + retrievedMbr);
+      if (retrievedMbr != null && !retrievedMbr.isEmpty()) {
+        spec.sourceMember = retrievedMbr;
+      }
+    }
+
+    if (spec.getText() == null) {
+      String retrievedText = (String) objInfo.get("textDescription");
+      if (debug) System.out.println("retrievedText: " + retrievedText);
+      if (retrievedText != null && !retrievedText.isEmpty()) {
+        spec.text = retrievedText;
+      }
+    }
+
+    if (spec.getActGrp() == null && objInfo.containsKey("activationGroupAttribute")) {
+      String retrievedActGrp = ((String) objInfo.get("activationGroupAttribute")).trim();
+      if (debug) System.out.println("retrievedActGrp: " + retrievedActGrp);
+      if (!retrievedActGrp.isEmpty()) {
+        spec.actGrp = retrievedActGrp;
+      }
+    }
+      
+      // TODO: Add more params like --usrprf, --useadpaut, etc., and map from objInfo
+    // Similarly fill other fields (sourceLib, sourceFile, etc.)
+    // To make spec mutable or use a builder for this.
+  }
+
+  private Map<String, Object> retrieveObjectInfo(CompilationSpec spec) throws Exception {
     String apiPgm;
     String format = "PGMI0100"; // Default for PGM
-    if (objectType == ObjectType.PGM) {
+    if (spec.getObjectType() == ObjectType.PGM) {
       apiPgm = "QCLRPGMI";
-    } else if (objectType == ObjectType.SRVPGM) {
+    } else if (spec.getObjectType() == ObjectType.SRVPGM) {
       apiPgm = "QBNRSPGM";
       format = "SPGI0100";
-    } else if (objectType == ObjectType.MODULE) {
+    } else if (spec.getObjectType() == ObjectType.MODULE) {
       apiPgm = "QBNRMODI";
       format = "MODI0100";
     } else {
-      throw new Exception("Object type " + objectType + " not supported for retrieving compilation params.");
+      throw new Exception("Object type " + spec.getObjectType() + " not supported for retrieving compilation params.");
     }
 
     ProgramCall pc = new ProgramCall(system);
@@ -446,7 +518,7 @@ public class ObjectCompiler implements Runnable{
     parms[0] = new ProgramParameter(recvLen); // Receiver
     parms[1] = new ProgramParameter(new AS400Bin4().toBytes(recvLen)); // Length of receiver
     parms[2] = new ProgramParameter(new AS400Text(8, system).toBytes(format)); // Format
-    String qualName = String.format("%-10s%-10s", objectName, library);
+    String qualName = String.format("%-10s%-10s", spec.getObjectName(), spec.getTargetLibrary());
     parms[3] = new ProgramParameter(new AS400Text(20, system).toBytes(qualName)); // Qualified object name
     byte[] errorCode = new byte[16];
     new AS400Bin4().toBytes(0, errorCode, 0); // Bytes provided = 0 to throw exceptions
@@ -492,74 +564,84 @@ public class ObjectCompiler implements Runnable{
     offset += 58; // Reserved
     info.put("minParameters", bin4.toInt(data, offset)); offset += 4;
     info.put("maxParameters", bin4.toInt(data, offset)); offset += 4;
-    // Skip other fields for brevity; add as needed (e.g., optimization at ~325 if char1)
     offset = 368; // Jump to activation group (adjust if needed for SPGI/MODI differences)
-    if (objectType != ObjectType.MODULE) { // Modules don't have ACTGRP
+    if (spec.getObjectType() != ObjectType.MODULE) { // Modules don't have ACTGRP
       info.put("activationGroupAttribute", text30.toObject(data, offset).toString().trim());
     }
-    // TODO: For more params, parse additional fields or use other formats like PGMI0200 + QBNRMODI for module-specific (e.g., OPTLEVEL binary at module offset 164)
+    // TODO: Parse additional fields as needed
 
     return info;
   }
 
-  private String buildCommand(CompCmd cmd, boolean isModuleCreation) {
-    StringBuilder sb = new StringBuilder(cmd.name());
+  private String buildCommand(CompilationSpec spec, CompCmd cmd, boolean isModuleCreation) {
+    Function<CompilationSpec, String> builder = cmdBuilders.getOrDefault(cmd, s -> {
+      throw new IllegalArgumentException("Unsupported command: " + cmd);
+    });
+    return builder.apply(spec);
+  }
 
-    String target = library + "/" + objectName;
-    String srcFile = getSourceFile();
-    String srcMbr = getSourceMember(cmd);
-
-    switch (cmd) {
-      case CRTRPGMOD:
-      case CRTCLMOD:
-        sb.append(" MODULE(").append(target).append(")");
-        sb.append(" SRCFILE(").append(srcFile).append(")");
-        sb.append(" SRCMBR(").append(srcMbr).append(")");
-        break;
-      case CRTBNDRPG:
-      case CRTBNDCL:
-      case CRTRPGPGM:
-      case CRTCLPGM:
-        sb.append(" PGM(").append(target).append(")");
-        sb.append(" SRCFILE(").append(srcFile).append(")");
-        sb.append(" SRCMBR(").append(srcMbr).append(")");
-        break;
-      case CRTSQLRPGI:
-        sb.append(" OBJ(").append(target).append(")");
-        sb.append(" OBJTYPE(*").append(isModuleCreation ? "MODULE" : "PGM").append(")");
-        sb.append(" SRCFILE(").append(srcFile).append(")");
-        sb.append(" SRCMBR(").append(srcMbr).append(")");
-        break;
-      case CRTSRVPGM:
-        sb.append(" SRVPGM(").append(target).append(")");
-        sb.append(" MODULE(").append(target).append(")"); // Assume single module with same name
-        sb.append(" BNDSRVPGM(*NONE)");
-        break;
-      case RUNSQLSTM:
-        sb.append(" SRCFILE(").append(srcFile).append(")");
-        sb.append(" SRCMBR(").append(srcMbr).append(")");
-        sb.append(" COMMIT(*NONE)"); // Default; add option if needed
-        break;
-      // TODO: Add cases for CRTDSPF, CRTLF, etc., similar to above
-      default:
-        throw new IllegalArgumentException("Unsupported command: " + cmd);
-    }
-
-    // Add common optional params if provided/supported
-    if (text != null) {
-      sb.append(" TEXT('").append(text).append("')");
-    }
-    /* TODO: Validate when to add this
-    if (actGrp != null && (cmd == CompCmd.CRTBNDRPG || cmd == CompCmd.CRTBNDCL || cmd == CompCmd.CRTSQLRPGI || cmd == CompCmd.CRTSRVPGM)) {
-      sb.append(" ACTGRP(").append(actGrp).append(")");
-    }
-      */
-    // TODO: Add more like DFTACTGRP(*NO), BNDDIR, USRPRF, etc., with options and defaults/retrieved values
-
-
-    System.out.println("Built command: " + sb);
+  // Example builder function for module commands
+  private String buildModuleCmd(CompilationSpec spec) {
+    StringBuilder sb = new StringBuilder();
+    sb.append(" MODULE(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
+    sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
+    sb.append(" SRCMBR(").append(spec.getSourceMember()).append(")");
+    appendCommonParams(sb, spec);
     return sb.toString();
   }
+
+  // Similar for bound commands
+  private String buildBoundCmd(CompilationSpec spec) {
+    StringBuilder sb = new StringBuilder();
+    sb.append(" PGM(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
+    sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
+    sb.append(" SRCMBR(").append(spec.getSourceMember()).append(")");
+    appendCommonParams(sb, spec);
+    return sb.toString();
+  }
+
+  // For CRTSQLRPGI
+  private String buildSqlRpgCmd(CompilationSpec spec) {
+    StringBuilder sb = new StringBuilder();
+    sb.append(" OBJ(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
+    sb.append(" OBJTYPE(*").append(spec.getObjectType().name()).append(")");
+    sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
+    sb.append(" SRCMBR(").append(spec.getSourceMember()).append(")");
+    appendCommonParams(sb, spec);
+    return sb.toString();
+  }
+
+  // For CRTSRVPGM
+  private String buildSrvPgmCmd(CompilationSpec spec) {
+    StringBuilder sb = new StringBuilder();
+    sb.append(" SRVPGM(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
+    sb.append(" MODULE(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")"); // Assume single module
+    sb.append(" BNDSRVPGM(*NONE)");
+    appendCommonParams(sb, spec);
+    return sb.toString();
+  }
+
+  // For RUNSQLSTM
+  private String buildSqlCmd(CompilationSpec spec) {
+    StringBuilder sb = new StringBuilder();
+    sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
+    sb.append(" SRCMBR(").append(spec.getSourceMember()).append(")");
+    sb.append(" COMMIT(*NONE)");
+    appendCommonParams(sb, spec);
+    return sb.toString();
+  }
+
+  private void appendCommonParams(StringBuilder sb, CompilationSpec spec) {
+    if (spec.getText() != null) {
+      sb.append(" TEXT('").append(spec.getText()).append("')");
+    }
+    // if (spec.getActGrp() != null) {
+    //   sb.append(" ACTGRP(").append(spec.getActGrp()).append(")");
+    // }
+    // Add more common params (e.g., DFTACTGRP(*NO), BNDDIR, etc.)
+  }
+
+
 
   private String getSourceFile() {
     String file = (sourceFile != null) ? sourceFile : typeToDftSrc.getOrDefault(sourceType, DftSrc.QRPGLESRC).name();
@@ -588,36 +670,17 @@ public class ObjectCompiler implements Runnable{
     }
   }
 
-  public ObjectCompiler(AS400 system) throws Exception {
-    this(system, new AS400JDBCDataSource(system).getConnection());
-  }
-
-  public ObjectCompiler(AS400 system, Connection connection) throws Exception {
-    this.system = system;
-
-    // Database
-    this.connection = connection;
-    this.connection.setAutoCommit(true);
-
-    // User
-    this.currentUser = new User(system, system.getUserId());
-    this.currentUser.loadUserInformation();
-  }
-
   private void compile(List<String> commandStrs) {
     CommandCall cc = new CommandCall(system);
     for (String commandStr : commandStrs) {
       try {
-        System.out.println("Executing: " + commandStr);
-        //TODO: Get current_timestamp, maybe use only java
+        if (debug) System.out.println("Executing: " + commandStr);
         Timestamp compilationTime = null;
-        try(Statement stmt = connection.createStatement();
-          ResultSet rsTime = stmt.executeQuery(
-            "Select CURRENT_TIMESTAMP As Compilation_Time FROM sysibm.sysdummy1" 
-          )){
-            while (rsTime.next()) {
-              compilationTime = rsTime.getTimestamp("Compilation_Time");
-            }
+        try (Statement stmt = connection.createStatement();
+            ResultSet rsTime = stmt.executeQuery("SELECT CURRENT_TIMESTAMP AS Compilation_Time FROM sysibm.sysdummy1")) {
+          if (rsTime.next()) {
+            compilationTime = rsTime.getTimestamp("Compilation_Time");
+          }
         }
         boolean success = cc.run(commandStr);
         AS400Message[] messages = cc.getMessageList();
@@ -625,8 +688,7 @@ public class ObjectCompiler implements Runnable{
           System.out.println("Compilation successful.");
         } else {
           System.out.println("Compilation failed.");
-          //TODO: Show spool data
-          showComilationSpool(compilationTime, system.getUserId().trim().toUpperCase(), objectName);
+          showCompilationSpool(compilationTime, system.getUserId().trim().toUpperCase(), objectName);
         }
         for (AS400Message msg : messages) {
           System.out.println(msg.getID() + ": " + msg.getText());
@@ -636,10 +698,10 @@ public class ObjectCompiler implements Runnable{
       }
     }
     cleanup();
-  }
+    }
 
   /*  https://gist.github.com/BirgittaHauser/f28e3527f1cc4c422a05eea865b455bb */
-  private void showComilationSpool(Timestamp compilationTime, String user, String objectName) throws SQLException{
+  private void showCompilationSpool(Timestamp compilationTime, String user, String objectName) throws SQLException{
 
     System.out.println("Compiler error messages: \n");
 
