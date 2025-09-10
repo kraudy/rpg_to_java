@@ -385,6 +385,7 @@ public class ObjectCompiler implements Runnable{
       System.err.println("Source type is required if not retrievable from object.");
       return;
     }
+    if (debug) System.err.println("Source type: " + spec.getSourceType());
 
     Map<ObjectType, CompCmd> objectMap = typeToCmdMap.get(spec.getSourceType());
     if (objectMap == null) {
@@ -396,7 +397,6 @@ public class ObjectCompiler implements Runnable{
       System.err.println("No compilation command for source type " + spec.getSourceType() + " and object type " + spec.getObjectType());
       return;
     }
-
     if (debug) System.out.println("Compilation command: " + mainCmd.name());
 
     List<String> commandStrs = new ArrayList<>();
