@@ -252,7 +252,7 @@ public class ObjectCompiler implements Runnable{
      * Populate mapping from (SourceType, ObjectType) to CompCmd
      */
     // TODO: There has to be a cleaner way of doing this, maybe using :: or lambda to auto define them
-    // Map RPG commands and add bind them to the type
+    /* Maps sources and object type to compilation command */
     Map<ObjectType, CompCmd> rpgMap = new EnumMap<>(ObjectType.class);
     rpgMap.put(ObjectType.PGM, CompCmd.CRTRPGPGM);
     typeToCmdMap.put(SourceType.RPG, rpgMap);
@@ -382,25 +382,14 @@ public class ObjectCompiler implements Runnable{
     }
     if (debug) System.out.println("Compilation command: " + mainCmd.name());
 
-    List<String> commandStrs = new ArrayList<>();
-
-    boolean isMultiStep = (spec.getObjectType() == ObjectType.SRVPGM);
-    CompCmd moduleCmd = null;
-    if (isMultiStep) {
-      moduleCmd = typeToModuleCmdMap.get(spec.getSourceType());
-      if (moduleCmd != null) {
-        commandStrs.add(buildCommand(spec, moduleCmd, true)); // true = isModuleCreation
-      }
-    }
-
-    commandStrs.add(buildCommand(spec, mainCmd, false));
-
-    if (debug) System.out.println("Full command: " + commandStrs);
+    String commandStr = buildCommand(spec, mainCmd);
+    
+    if (debug) System.out.println("Full command: " + commandStr);
 
     // TODO: Integrate with SourceMigrator if source is in member; migrate to IFS and compile from there
     // For OPM, create temp member if needed
 
-    compile(commandStrs);
+    compile(commandStr);
   }
 
   private CompilationSpec buildSpecFromCli() {
@@ -549,7 +538,7 @@ public class ObjectCompiler implements Runnable{
     return info;
   }
 
-  private String buildCommand(CompilationSpec spec, CompCmd cmd, boolean isModuleCreation) {
+  private String buildCommand(CompilationSpec spec, CompCmd cmd) {
     Function<CompilationSpec, String> builder = cmdBuilders.getOrDefault(cmd, s -> {
       throw new IllegalArgumentException("Unsupported command: " + cmd);
     });
@@ -648,32 +637,30 @@ public class ObjectCompiler implements Runnable{
     }
   }
 
-  private void compile(List<String> commandStrs) {
+  private void compile(String commandStr) {
     CommandCall cc = new CommandCall(system);
-    for (String commandStr : commandStrs) {
-      try {
-        if (debug) System.out.println("Executing: " + commandStr);
-        Timestamp compilationTime = null;
-        try (Statement stmt = connection.createStatement();
-            ResultSet rsTime = stmt.executeQuery("SELECT CURRENT_TIMESTAMP AS Compilation_Time FROM sysibm.sysdummy1")) {
-          if (rsTime.next()) {
-            compilationTime = rsTime.getTimestamp("Compilation_Time");
-          }
+    try {
+      if (debug) System.out.println("Executing: " + commandStr);
+      Timestamp compilationTime = null;
+      try (Statement stmt = connection.createStatement();
+          ResultSet rsTime = stmt.executeQuery("SELECT CURRENT_TIMESTAMP AS Compilation_Time FROM sysibm.sysdummy1")) {
+        if (rsTime.next()) {
+          compilationTime = rsTime.getTimestamp("Compilation_Time");
         }
-        boolean success = cc.run(commandStr);
-        AS400Message[] messages = cc.getMessageList();
-        if (success) {
-          System.out.println("Compilation successful.");
-        } else {
-          System.out.println("Compilation failed.");
-          showCompilationSpool(compilationTime, system.getUserId().trim().toUpperCase(), objectName);
-        }
-        for (AS400Message msg : messages) {
-          System.out.println(msg.getID() + ": " + msg.getText());
-        }
-      } catch (AS400SecurityException | ErrorCompletingRequestException | IOException | InterruptedException | PropertyVetoException | SQLException e) {
-        e.printStackTrace();
       }
+      boolean success = cc.run(commandStr);
+      AS400Message[] messages = cc.getMessageList();
+      if (success) {
+        System.out.println("Compilation successful.");
+      } else {
+        System.out.println("Compilation failed.");
+        showCompilationSpool(compilationTime, system.getUserId().trim().toUpperCase(), objectName);
+      }
+      for (AS400Message msg : messages) {
+        System.out.println(msg.getID() + ": " + msg.getText());
+      }
+    } catch (AS400SecurityException | ErrorCompletingRequestException | IOException | InterruptedException | PropertyVetoException | SQLException e) {
+      e.printStackTrace();
     }
     cleanup();
     }
