@@ -374,12 +374,8 @@ public class ObjectCompiler implements Runnable{
     }
     if (debug) System.err.println("Source type: " + spec.getSourceType());
 
-    Map<ObjectType, CompCmd> objectMap = typeToCmdMap.get(spec.getSourceType());
-    if (objectMap == null) {
-      System.err.println("No mapping for source type: " + spec.getSourceType());
-      return;
-    }
-    CompCmd mainCmd = objectMap.get(spec.getObjectType());
+    // TODO: This could be encapsulated on the Iobject class
+    CompCmd mainCmd = typeToCmdMap.get(spec.getSourceType()).get(spec.getObjectType());
     if (mainCmd == null) {
       System.err.println("No compilation command for source type " + spec.getSourceType() + " and object type " + spec.getObjectType());
       return;
