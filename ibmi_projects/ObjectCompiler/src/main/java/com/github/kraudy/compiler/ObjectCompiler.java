@@ -35,7 +35,11 @@ import com.ibm.as400.access.ProgramParameter;
 import com.ibm.as400.access.User;
 
 import io.github.theprez.dotenv_ibmi.IBMiDotEnv;
-
+/*
+import main.java.com.github.kraudy.compiler.ObjectDescription;
+import main.java.com.github.kraudy.compiler.ObjectDescription.CompCmd;
+import main.java.com.github.kraudy.compiler.ObjectDescription.DftSrc;
+*/
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
@@ -55,81 +59,11 @@ public class ObjectCompiler implements Runnable{
   private final AS400 system;
   private final Connection connection;
   private final User currentUser;
+  private ObjectDescription spec;
 
-  public enum SysCmd { CHGLIBL, DSPPGMREF, DSPOBJD, DSPDBR }
+  // Resolver map for command builders (functions that build command strings based on spec)
+  private Map<ObjectDescription.CompCmd, Function<ObjectDescription, String>> cmdBuilders = new EnumMap<>(ObjectDescription.CompCmd.class);
 
-  public enum SourceType { RPG, RPGLE, SQLRPGLE, CLP, CLLE, SQL }
-
-  public enum ObjectType { PGM, SRVPGM, MODULE, TABLE, LF, VIEW, ALIAS, PROCEDURE, FUNCTION } // Add more as needed
-
-  public enum CompCmd { CRTRPGMOD, CRTSQLRPGI, CRTBNDRPG, CRTRPGPGM, CRTCLMOD, CRTBNDCL, CRTCLPGM, RUNSQLSTM, CRTSRVPGM, CRTDSPF, CRTLF, CRTPRTF, CRTMNU, CRTQMQRY }
-
-  public enum ParamCmd { PGM, OBJ, OBJTYPE, OUTPUT, OUTMBR, MODULE, BNDSRVPGM, LIBL, SRCFILE, SRCMBR, ACTGRP, DFTACTGRP, BNDDIR, COMMIT, TEXT, TGTCCSID, CRTFRMSTMF }
-
-  //TODO: Maybe is more practical to make these strings
-  public enum ValCmd { FIRST, REPLACE, OUTFILE, LIBL, FILE, DTAARA, PGM, SRVPGM, CURLIB } // add * to these
-
-  public enum PostCmpCmd { CHGOBJD }
-
-  public enum DftSrc { QRPGLESRC, QRPGSRC, QCLSRC, QSQLSRC } // TODO: Expand
-
-  // Core struct for capturing compilation specs (JSON-friendly via Jackson)
-  public static class CompilationSpec {
-    //TODO: Make this private, add set method and move to another file
-    public String targetLibrary;
-    public String objectName;
-    public ObjectType objectType;
-    public String sourceLibrary;
-    public String sourceFile;
-    public String sourceMember;
-    public SourceType sourceType;
-    public String text;
-    public String actGrp;//TODO: Remove this
-
-    //TODO: Move this class to its own file and remove static
-    //TODO: Change this name to IbmObject, to be more broader
-    // Constructor for Jackson deserialization
-    @JsonCreator
-    public CompilationSpec(
-          @JsonProperty("targetLibrary") String targetLibrary,
-          @JsonProperty("objectName") String objectName,
-          @JsonProperty("objectType") ObjectType objectType,
-          @JsonProperty("sourceLibrary") String sourceLibrary,
-          @JsonProperty("sourceFile") String sourceFile,
-          @JsonProperty("sourceMember") String sourceMember,
-          @JsonProperty("sourceType") SourceType sourceType,
-          @JsonProperty("text") String text,
-          @JsonProperty("actGrp") String actGrp) {
-      //TODO: If validtion like toUpperCase().trim() is needed, add it when passing the params to keep this clean
-      this.targetLibrary = targetLibrary;
-      this.objectName = objectName;
-      this.objectType = objectType;
-      this.sourceLibrary = sourceLibrary;
-      this.sourceFile = sourceFile;
-      this.sourceMember = sourceMember;
-      this.sourceType = sourceType;
-      this.text = text;
-      this.actGrp = actGrp; //TODO: Remove this, maybe add it to another struct with the compilation command params
-    }
-
-    // Getters for Jackson serialization
-    public String getTargetLibrary() { return targetLibrary; }
-    public String getObjectName() { return objectName; }
-    public ObjectType getObjectType() { return objectType; }
-    public String getSourceLibrary() { return sourceLibrary; }
-    public String getSourceFile() { return sourceFile; }
-    public String getSourceMember() { return sourceMember; }
-    public SourceType getSourceType() { return sourceType; }
-    public String getText() { return text; }
-    public String getActGrp() { return actGrp; }
-
-    // TODO: This logic encapsulation is nice. It will be helpfull in the future
-    // Key method for use in graphs (matches ObjectDependency format)
-    public String toGraphKey() {
-      return targetLibrary + "/" + objectName + "/" + objectType.name();
-    }
-
-  }
 
   static class LibraryConverter implements CommandLine.ITypeConverter<String> {
     @Override
@@ -163,22 +97,22 @@ public class ObjectCompiler implements Runnable{
     }
   }  
 
-  static class ObjectTypeConverter implements CommandLine.ITypeConverter<ObjectType> {
+  static class ObjectTypeConverter implements CommandLine.ITypeConverter<ObjectDescription.ObjectType> {
     @Override
-    public ObjectType convert(String value) throws Exception {
+    public ObjectDescription.ObjectType convert(String value) throws Exception {
       try {
-        return ObjectType.valueOf(value.trim().toUpperCase());
+        return ObjectDescription.ObjectType.valueOf(value.trim().toUpperCase());
       } catch (IllegalArgumentException e) {
         throw new Exception("Invalid object type: " + value);
       }
     }
   }  
 
-  static class SourceTypeConverter implements CommandLine.ITypeConverter<SourceType> {
+  static class SourceTypeConverter implements CommandLine.ITypeConverter<ObjectDescription.SourceType> {
     @Override
-    public SourceType convert(String value) throws Exception {
+    public ObjectDescription.SourceType convert(String value) throws Exception {
       try {
-        return SourceType.valueOf(value.trim().toUpperCase());
+        return ObjectDescription.SourceType.valueOf(value.trim().toUpperCase());
       } catch (IllegalArgumentException e) {
         throw new Exception("Invalid source type: " + value);
       }
@@ -192,7 +126,7 @@ public class ObjectCompiler implements Runnable{
   private String objectName;
 
   @Option(names = {"-t","--type"}, required = true, description = "Object type (e.g., PGM, SRVPGM)", converter = ObjectTypeConverter.class)
-  private ObjectType objectType;
+  private ObjectDescription.ObjectType objectType;
 
   @Option(names = { "-sl", "--source-lib" }, description = "Source library (defaults to *LIBL or retrieved from object)", converter = LibraryConverter.class)
   private String sourceLib = "*LIBL";
@@ -204,7 +138,7 @@ public class ObjectCompiler implements Runnable{
   private String sourceName = "";
 
   @Option(names = {"-st","--source-type"}, description = "Source type (e.g., RPGLE, CLLE) (defaults to retrieved from object if possible)", converter = SourceTypeConverter.class)
-  private SourceType sourceType;
+  private ObjectDescription.SourceType sourceType;
 
   @Option(names = { "--text" }, description = "Object text description (defaults to retrieved from object if possible)")
   private String text = "";
@@ -219,100 +153,6 @@ public class ObjectCompiler implements Runnable{
   @Option(names = "-v", description = "Verbose output")
   private boolean verbose = false;
 
-  /* Maps source type to its compilation command */
-  private static final Map<SourceType, Map<ObjectType, CompCmd>> typeToCmdMap = new EnumMap<>(SourceType.class);
-
-  /* Maps params to values */
-  public static final Map<ParamCmd, List<ValCmd>> valueParamsMap = new EnumMap<>(ParamCmd.class);
-
-  /* Maps source type to its default source pf */
-  public static final Map<SourceType, DftSrc> typeToDftSrc = new EnumMap<>(SourceType.class);
-
-  /* Maps object attribute to source type (for inference) */
-  private static final Map<String, SourceType> attrToSourceType = new HashMap<>();
-
-  // Resolver map for command builders (functions that build command strings based on spec)
-  private final Map<CompCmd, Function<CompilationSpec, String>> cmdBuilders = new EnumMap<>(CompCmd.class);
-
-
-  static {
-        
-    /* From source member type to default source file default name */
-    typeToDftSrc.put(SourceType.RPG, DftSrc.QRPGSRC);
-    typeToDftSrc.put(SourceType.RPGLE, DftSrc.QRPGLESRC);
-    typeToDftSrc.put(SourceType.SQLRPGLE, DftSrc.QRPGLESRC); // Often same as RPGLE
-    typeToDftSrc.put(SourceType.CLP, DftSrc.QCLSRC);
-    typeToDftSrc.put(SourceType.CLLE, DftSrc.QCLSRC);
-    typeToDftSrc.put(SourceType.SQL, DftSrc.QSQLSRC);
-
-    /*
-     * Populate mapping from (SourceType, ObjectType) to CompCmd
-     */
-    // TODO: There has to be a cleaner way of doing this, maybe using :: or lambda to auto define them
-    /* Maps sources and object type to compilation command */
-    Map<ObjectType, CompCmd> rpgMap = new EnumMap<>(ObjectType.class);
-    rpgMap.put(ObjectType.PGM, CompCmd.CRTRPGPGM);
-    typeToCmdMap.put(SourceType.RPG, rpgMap);
-
-    Map<ObjectType, CompCmd> rpgLeMap = new EnumMap<>(ObjectType.class);
-    rpgLeMap.put(ObjectType.MODULE, CompCmd.CRTRPGMOD);
-    rpgLeMap.put(ObjectType.PGM, CompCmd.CRTBNDRPG);
-    rpgLeMap.put(ObjectType.SRVPGM, CompCmd.CRTSRVPGM); // Assuming compilation involves module creation first, but mapping to final command
-    typeToCmdMap.put(SourceType.RPGLE, rpgLeMap);
-
-    Map<ObjectType, CompCmd> sqlRpgLeMap = new EnumMap<>(ObjectType.class);
-    sqlRpgLeMap.put(ObjectType.MODULE, CompCmd.CRTSQLRPGI);
-    sqlRpgLeMap.put(ObjectType.PGM, CompCmd.CRTSQLRPGI);
-    sqlRpgLeMap.put(ObjectType.SRVPGM, CompCmd.CRTSRVPGM);
-    typeToCmdMap.put(SourceType.SQLRPGLE, sqlRpgLeMap);
-
-    Map<ObjectType, CompCmd> clpMap = new EnumMap<>(ObjectType.class);
-    clpMap.put(ObjectType.PGM, CompCmd.CRTCLPGM);
-    typeToCmdMap.put(SourceType.CLP, clpMap);
-
-    Map<ObjectType, CompCmd> clleMap = new EnumMap<>(ObjectType.class);
-    clleMap.put(ObjectType.MODULE, CompCmd.CRTCLMOD);
-    clleMap.put(ObjectType.PGM, CompCmd.CRTBNDCL);
-    clleMap.put(ObjectType.SRVPGM, CompCmd.CRTSRVPGM);
-    typeToCmdMap.put(SourceType.CLLE, clleMap);
-
-    Map<ObjectType, CompCmd> sqlMap = new EnumMap<>(ObjectType.class);
-    sqlMap.put(ObjectType.TABLE, CompCmd.RUNSQLSTM);
-    sqlMap.put(ObjectType.LF, CompCmd.RUNSQLSTM);
-    sqlMap.put(ObjectType.VIEW, CompCmd.RUNSQLSTM);
-    sqlMap.put(ObjectType.ALIAS, CompCmd.RUNSQLSTM);
-    sqlMap.put(ObjectType.PROCEDURE, CompCmd.RUNSQLSTM);
-    sqlMap.put(ObjectType.FUNCTION, CompCmd.RUNSQLSTM);
-    typeToCmdMap.put(SourceType.SQL, sqlMap);
-
-    // Populate attrToSourceType (basic mapping, expand as needed)
-    attrToSourceType.put("RPG", SourceType.RPG);
-    attrToSourceType.put("RPGLE", SourceType.RPGLE);
-    attrToSourceType.put("SQLRPGLE", SourceType.SQLRPGLE);
-    attrToSourceType.put("CLP", SourceType.CLP);
-    attrToSourceType.put("CLLE", SourceType.CLLE);
-
-    //TODO: Make these strings
-    // Populate valueParamsMap with special values for each parameter (add * when using in commands)
-    valueParamsMap.put(ParamCmd.OUTPUT, Arrays.asList(ValCmd.OUTFILE));
-    valueParamsMap.put(ParamCmd.OUTMBR, Arrays.asList(ValCmd.FIRST, ValCmd.REPLACE)); // FIRST is now reliably first
-    valueParamsMap.put(ParamCmd.OBJTYPE, Arrays.asList(ValCmd.PGM, ValCmd.SRVPGM));
-    valueParamsMap.put(ParamCmd.MODULE, Arrays.asList(ValCmd.PGM));
-    valueParamsMap.put(ParamCmd.BNDSRVPGM, Arrays.asList(ValCmd.SRVPGM));
-    valueParamsMap.put(ParamCmd.LIBL, Arrays.asList(ValCmd.LIBL));
-    valueParamsMap.put(ParamCmd.SRCFILE, Arrays.asList(ValCmd.FILE, ValCmd.LIBL));
-    valueParamsMap.put(ParamCmd.PGM, Arrays.asList(ValCmd.CURLIB, ValCmd.LIBL)); // CURLIB is now first; swap if you want LIBL first
-    valueParamsMap.put(ParamCmd.OBJ, Arrays.asList(ValCmd.LIBL, ValCmd.FILE, ValCmd.DTAARA));
-    // TODO: for parms with no defined value: EnumSet.noneOf(ValCmd.class)
-
-    // TODO: I think this Supliers is what i really need
-    // Maybe i can send enums as parameters too
-
-    //TODO: These suppliers could be instances and not static to add param validation
-    //TODO: If there is not a supplier, then an input param is needed
-    //TODO: I can also return the lambda function... that would be nice and would allow a higher abstraction function to get it
-
-  }
 
   public ObjectCompiler(AS400 system) throws Exception {
     this(system, new AS400JDBCDataSource(system).getConnection());
@@ -329,27 +169,27 @@ public class ObjectCompiler implements Runnable{
     this.currentUser = new User(system, system.getUserId());
     this.currentUser.loadUserInformation();
 
-    initResolvers();
+    initSuppliers();
   }
 
-  private void initResolvers() {
-
+  public void initSuppliers () {
+    // TODO: These could be build base on object type and source.
     // TODO: Move this to the constructor or the iObject class?
     // Command builders as functions (pattern matching via enums)
-    cmdBuilders.put(CompCmd.CRTRPGMOD, this::buildModuleCmd);
-    cmdBuilders.put(CompCmd.CRTCLMOD, this::buildModuleCmd);
-    cmdBuilders.put(CompCmd.CRTBNDRPG, this::buildBoundCmd);
-    cmdBuilders.put(CompCmd.CRTBNDCL, this::buildBoundCmd);
-    cmdBuilders.put(CompCmd.CRTRPGPGM, this::buildBoundCmd);
-    cmdBuilders.put(CompCmd.CRTCLPGM, this::buildBoundCmd);
-    cmdBuilders.put(CompCmd.CRTSQLRPGI, this::buildSqlRpgCmd);
-    cmdBuilders.put(CompCmd.CRTSRVPGM, this::buildSrvPgmCmd);
-    cmdBuilders.put(CompCmd.RUNSQLSTM, this::buildSqlCmd);
+    cmdBuilders.put(ObjectDescription.CompCmd.CRTRPGMOD, this::buildModuleCmd);
+    cmdBuilders.put(ObjectDescription.CompCmd.CRTCLMOD, this::buildModuleCmd);
+    cmdBuilders.put(ObjectDescription.CompCmd.CRTBNDRPG, this::buildBoundCmd);
+    cmdBuilders.put(ObjectDescription.CompCmd.CRTBNDCL, this::buildBoundCmd);
+    cmdBuilders.put(ObjectDescription.CompCmd.CRTRPGPGM, this::buildBoundCmd);
+    cmdBuilders.put(ObjectDescription.CompCmd.CRTCLPGM, this::buildBoundCmd);
+    cmdBuilders.put(ObjectDescription.CompCmd.CRTSQLRPGI, this::buildSqlRpgCmd);
+    cmdBuilders.put(ObjectDescription.CompCmd.CRTSRVPGM, this::buildSrvPgmCmd);
+    cmdBuilders.put(ObjectDescription.CompCmd.RUNSQLSTM, this::buildSqlCmd);
     // Add more builders for other commands
   }
 
   public void run() {
-    CompilationSpec spec = buildSpecFromCli();
+    this.spec = buildSpec();
 
     // Retrieve and fill in defaults from existing object if possible
     Map<String, Object> objInfo = null;
@@ -367,7 +207,7 @@ public class ObjectCompiler implements Runnable{
     if (debug) System.err.println("Source type: " + spec.getSourceType());
 
     // TODO: This could be encapsulated on the Iobject class
-    CompCmd mainCmd = typeToCmdMap.get(spec.getSourceType()).get(spec.getObjectType());
+    ObjectDescription.CompCmd mainCmd = ObjectDescription.typeToCmdMap.get(spec.getSourceType()).get(spec.getObjectType());
     if (mainCmd == null) {
       System.err.println("No compilation command for source type " + spec.getSourceType() + " and object type " + spec.getObjectType());
       return;
@@ -384,14 +224,16 @@ public class ObjectCompiler implements Runnable{
     compile(commandStr);
   }
 
-  private CompilationSpec buildSpecFromCli() {
+  /* This methos is very important for the tool to be called from CLI or API */
+  // TODO: This should be done when initializing the ObjectDescription
+  private ObjectDescription buildSpec() {
     // TODO: If any validation of the specs is needed, do it here.
-    return new CompilationSpec(
+    return new ObjectDescription(
           library,
           objectName,
           objectType,
           sourceLib, // Default to *LIBL
-          (sourceFile.isEmpty()) ? typeToDftSrc.get(sourceType).name() : sourceFile,
+          (sourceFile.isEmpty()) ? ObjectDescription.typeToDftSrc.get(sourceType).name() : sourceFile,
           (sourceName.isEmpty() ? objectName : sourceName),
           sourceType, // Specified or inferred
           text,
@@ -399,7 +241,7 @@ public class ObjectCompiler implements Runnable{
     );
   }
 
-  private void fillSpecFromObjInfo(CompilationSpec spec, Map<String, Object> objInfo) {
+  private void fillSpecFromObjInfo(ObjectDescription spec, Map<String, Object> objInfo) {
     if (objInfo == null) return;
 
     if (debug) System.out.println("Found object info");
@@ -408,7 +250,7 @@ public class ObjectCompiler implements Runnable{
       String attr = (String) objInfo.get("attribute");
       if (debug) System.out.println("attr: " + attr);
       if (attr != null && !attr.trim().isEmpty()) {
-        spec.sourceType = attrToSourceType.get(attr.trim().toUpperCase());
+        spec.sourceType = ObjectDescription.attrToSourceType.get(attr.trim().toUpperCase());
         if (spec.getSourceType() == null) {
           throw new IllegalArgumentException("Could not infer source type from object attribute '" + attr + "'. Source type is required.");
         } 
@@ -452,15 +294,15 @@ public class ObjectCompiler implements Runnable{
     // To make spec mutable or use a builder for this.
   }
 
-  private Map<String, Object> retrieveObjectInfo(CompilationSpec spec) throws Exception {
+  private Map<String, Object> retrieveObjectInfo(ObjectDescription spec) throws Exception {
     String apiPgm;
     String format = "PGMI0100"; // Default for PGM
-    if (spec.getObjectType() == ObjectType.PGM) {
+    if (spec.getObjectType() == ObjectDescription.ObjectType.PGM) {
       apiPgm = "QCLRPGMI";
-    } else if (spec.getObjectType() == ObjectType.SRVPGM) {
+    } else if (spec.getObjectType() == ObjectDescription.ObjectType.SRVPGM) {
       apiPgm = "QBNRSPGM";
       format = "SPGI0100";
-    } else if (spec.getObjectType() == ObjectType.MODULE) {
+    } else if (spec.getObjectType() == ObjectDescription.ObjectType.MODULE) {
       apiPgm = "QBNRMODI";
       format = "MODI0100";
     } else {
@@ -522,7 +364,7 @@ public class ObjectCompiler implements Runnable{
     info.put("minParameters", bin4.toInt(data, offset)); offset += 4;
     info.put("maxParameters", bin4.toInt(data, offset)); offset += 4;
     offset = 368; // Jump to activation group (adjust if needed for SPGI/MODI differences)
-    if (spec.getObjectType() != ObjectType.MODULE) { // Modules don't have ACTGRP
+    if (spec.getObjectType() != ObjectDescription.ObjectType.MODULE) { // Modules don't have ACTGRP
       info.put("activationGroupAttribute", text30.toObject(data, offset).toString().trim());
     }
     // TODO: Parse additional fields as needed
@@ -530,8 +372,8 @@ public class ObjectCompiler implements Runnable{
     return info;
   }
 
-  private String buildCommand(CompilationSpec spec, CompCmd cmd) {
-    Function<CompilationSpec, String> builder = cmdBuilders.getOrDefault(cmd, s -> {
+  private String buildCommand(ObjectDescription spec, ObjectDescription.CompCmd cmd) {
+    Function<ObjectDescription, String> builder = cmdBuilders.getOrDefault(cmd, s -> {
       throw new IllegalArgumentException("Unsupported command: " + cmd);
     });
     String params = builder.apply(spec);
@@ -540,38 +382,38 @@ public class ObjectCompiler implements Runnable{
   }
 
   // Example builder function for module commands
-  private String buildModuleCmd(CompilationSpec spec) {
+  private String buildModuleCmd(ObjectDescription spec) {
     StringBuilder sb = new StringBuilder();
     sb.append(" MODULE(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
     sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(getSourceMember(spec, CompCmd.CRTRPGMOD)).append(")");
+    sb.append(" SRCMBR(").append(getSourceMember(spec, ObjectDescription.CompCmd.CRTRPGMOD)).append(")");
     appendCommonParams(sb, spec);
     return sb.toString();
   }
 
   // Similar for bound commands
-  private String buildBoundCmd(CompilationSpec spec) {
+  private String buildBoundCmd(ObjectDescription spec) {
     StringBuilder sb = new StringBuilder();
     sb.append(" PGM(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
     sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(getSourceMember(spec, CompCmd.CRTBNDRPG)).append(")");
+    sb.append(" SRCMBR(").append(getSourceMember(spec, ObjectDescription.CompCmd.CRTBNDRPG)).append(")");
     appendCommonParams(sb, spec);
     return sb.toString();
   }
 
   // For CRTSQLRPGI
-  private String buildSqlRpgCmd(CompilationSpec spec) {
+  private String buildSqlRpgCmd(ObjectDescription spec) {
     StringBuilder sb = new StringBuilder();
     sb.append(" OBJ(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
     sb.append(" OBJTYPE(*").append(spec.getObjectType().name()).append(")");
     sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(getSourceMember(spec, CompCmd.CRTSQLRPGI)).append(")");
+    sb.append(" SRCMBR(").append(getSourceMember(spec, ObjectDescription.CompCmd.CRTSQLRPGI)).append(")");
     appendCommonParams(sb, spec);
     return sb.toString();
   }
 
   // For CRTSRVPGM
-  private String buildSrvPgmCmd(CompilationSpec spec) {
+  private String buildSrvPgmCmd(ObjectDescription spec) {
     StringBuilder sb = new StringBuilder();
     sb.append(" SRVPGM(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
     sb.append(" MODULE(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")"); // Assume single module
@@ -581,16 +423,16 @@ public class ObjectCompiler implements Runnable{
   }
 
   // For RUNSQLSTM
-  private String buildSqlCmd(CompilationSpec spec) {
+  private String buildSqlCmd(ObjectDescription spec) {
     StringBuilder sb = new StringBuilder();
     sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(getSourceMember(spec, CompCmd.RUNSQLSTM)).append(")");
+    sb.append(" SRCMBR(").append(getSourceMember(spec, ObjectDescription.CompCmd.RUNSQLSTM)).append(")");
     sb.append(" COMMIT(*NONE)");
     appendCommonParams(sb, spec);
     return sb.toString();
   }
 
-  private void appendCommonParams(StringBuilder sb, CompilationSpec spec) {
+  private void appendCommonParams(StringBuilder sb, ObjectDescription spec) {
     if (spec.getText() != null && !spec.getText().isEmpty()) {
       sb.append(" TEXT('").append(spec.getText()).append("')");
     }
@@ -603,12 +445,12 @@ public class ObjectCompiler implements Runnable{
 
 
   private String getSourceFile() {
-    String file = (sourceFile != null) ? sourceFile : typeToDftSrc.getOrDefault(sourceType, DftSrc.QRPGLESRC).name();
+    String file = (sourceFile != null) ? sourceFile : ObjectDescription.typeToDftSrc.getOrDefault(sourceType, ObjectDescription.DftSrc.QRPGLESRC).name();
     //TODO: Validate if it should use library when library = null o *LIBL
     return sourceLib + "/" + file;
   }
 
-  private String getSourceMember(CompilationSpec spec, CompCmd cmd) {
+  private String getSourceMember(ObjectDescription spec, ObjectDescription.CompCmd cmd) {
     if (spec.sourceMember != null && !spec.sourceMember.isEmpty()) {
       return spec.sourceMember;
     }
