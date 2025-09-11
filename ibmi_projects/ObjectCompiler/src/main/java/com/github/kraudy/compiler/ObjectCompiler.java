@@ -228,9 +228,6 @@ public class ObjectCompiler implements Runnable{
   /* Maps source type to its default source pf */
   public static final Map<SourceType, DftSrc> typeToDftSrc = new EnumMap<>(SourceType.class);
 
-  /* Maps source type to module creation command (for multi-step) */
-  private static final Map<SourceType, CompCmd> typeToModuleCmdMap = new EnumMap<>(SourceType.class);
-
   /* Maps object attribute to source type (for inference) */
   private static final Map<String, SourceType> attrToSourceType = new HashMap<>();
 
@@ -287,11 +284,6 @@ public class ObjectCompiler implements Runnable{
     sqlMap.put(ObjectType.PROCEDURE, CompCmd.RUNSQLSTM);
     sqlMap.put(ObjectType.FUNCTION, CompCmd.RUNSQLSTM);
     typeToCmdMap.put(SourceType.SQL, sqlMap);
-
-    // Populate typeToModuleCmdMap (for SRVPGM pre-step)
-    typeToModuleCmdMap.put(SourceType.RPGLE, CompCmd.CRTRPGMOD);
-    typeToModuleCmdMap.put(SourceType.SQLRPGLE, CompCmd.CRTSQLRPGI);
-    typeToModuleCmdMap.put(SourceType.CLLE, CompCmd.CRTCLMOD);
 
     // Populate attrToSourceType (basic mapping, expand as needed)
     attrToSourceType.put("RPG", SourceType.RPG);
