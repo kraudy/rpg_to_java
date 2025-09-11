@@ -66,6 +66,7 @@ public class ObjectCompiler implements Runnable{
 
   public enum ParamCmd { PGM, OBJ, OBJTYPE, OUTPUT, OUTMBR, MODULE, BNDSRVPGM, LIBL, SRCFILE, SRCMBR, ACTGRP, DFTACTGRP, BNDDIR, COMMIT, TEXT, TGTCCSID, CRTFRMSTMF }
 
+  //TODO: Maybe is more practical to make these strings
   public enum ValCmd { FIRST, REPLACE, OUTFILE, LIBL, FILE, DTAARA, PGM, SRVPGM, CURLIB } // add * to these
 
   public enum PostCmpCmd { CHGOBJD }
@@ -85,6 +86,8 @@ public class ObjectCompiler implements Runnable{
     public String text;
     public String actGrp;//TODO: Remove this
 
+    //TODO: Move this class to its own file and remove static
+    //TODO: Change this name to IbmObject, to be more broader
     // Constructor for Jackson deserialization
     @JsonCreator
     public CompilationSpec(
@@ -97,15 +100,16 @@ public class ObjectCompiler implements Runnable{
           @JsonProperty("sourceType") SourceType sourceType,
           @JsonProperty("text") String text,
           @JsonProperty("actGrp") String actGrp) {
-      this.targetLibrary = (targetLibrary != null) ? targetLibrary.toUpperCase().trim() : null;
-      this.objectName = (objectName != null) ? objectName.toUpperCase().trim() : null;
+      //TODO: If validtion like toUpperCase().trim() is needed, add it when passing the params to keep this clean
+      this.targetLibrary = targetLibrary;
+      this.objectName = objectName;
       this.objectType = objectType;
-      this.sourceLibrary = (sourceLibrary != null) ? sourceLibrary.toUpperCase().trim() : "*LIBL";
-      this.sourceFile = (sourceFile != null) ? sourceFile.toUpperCase().trim() : null;
-      this.sourceMember = (sourceMember != null) ? sourceMember.toUpperCase().trim() : null;
+      this.sourceLibrary = sourceLibrary;
+      this.sourceFile = sourceFile;
+      this.sourceMember = sourceMember;
       this.sourceType = sourceType;
-      this.text = (text != null) ? text.trim() : "";
-      this.actGrp = actGrp;
+      this.text = text;
+      this.actGrp = actGrp; //TODO: Remove this, maybe add it to another struct with the compilation command params
     }
 
     // Getters for Jackson serialization
@@ -119,21 +123,12 @@ public class ObjectCompiler implements Runnable{
     public String getText() { return text; }
     public String getActGrp() { return actGrp; }
 
+    // TODO: This logic encapsulation is nice. It will be helpfull in the future
     // Key method for use in graphs (matches ObjectDependency format)
     public String toGraphKey() {
       return targetLibrary + "/" + objectName + "/" + objectType.name();
     }
 
-    // Validation logic (can be expanded)
-    public void validate() {
-      if (targetLibrary.length() > 10 || targetLibrary.isEmpty()) {
-        throw new IllegalArgumentException("Invalid target library: " + targetLibrary);
-      }
-      if (objectName.length() > 10 || objectName.isEmpty()) {
-        throw new IllegalArgumentException("Invalid object name: " + objectName);
-      }
-      // Add more validations as needed
-    }
   }
 
   static class LibraryConverter implements CommandLine.ITypeConverter<String> {
@@ -203,16 +198,16 @@ public class ObjectCompiler implements Runnable{
   private String sourceLib = "*LIBL";
 
   @Option(names = { "-sf", "--source-file" }, description = "Source physical file (defaults based on source type or retrieved from object)")
-  private String sourceFile;
+  private String sourceFile = "";
 
   @Option(names = { "-sn", "--source-name" }, description = "Source member name (defaults to object name, command-specific *SPECIAL, or retrieved from object)")
-  private String sourceName;
+  private String sourceName = "";
 
   @Option(names = {"-st","--source-type"}, description = "Source type (e.g., RPGLE, CLLE) (defaults to retrieved from object if possible)", converter = SourceTypeConverter.class)
   private SourceType sourceType;
 
   @Option(names = { "--text" }, description = "Object text description (defaults to retrieved from object if possible)")
-  private String text;
+  private String text = "";
 
   //TODO: Is this needed?
   @Option(names = { "--actgrp" }, description = "Activation group (defaults to retrieved from object if possible)")
@@ -308,6 +303,7 @@ public class ObjectCompiler implements Runnable{
     attrToSourceType.put("CLP", SourceType.CLP);
     attrToSourceType.put("CLLE", SourceType.CLLE);
 
+    //TODO: Make these strings
     // Populate valueParamsMap with special values for each parameter (add * when using in commands)
     valueParamsMap.put(ParamCmd.OUTPUT, Arrays.asList(ValCmd.OUTFILE));
     valueParamsMap.put(ParamCmd.OUTMBR, Arrays.asList(ValCmd.FIRST, ValCmd.REPLACE)); // FIRST is now reliably first
@@ -348,6 +344,7 @@ public class ObjectCompiler implements Runnable{
   }
 
   private void initResolvers() {
+    //TODO: This can be better
     // Suppliers for default parameter values (can be overridden by CLI or object info)
     paramSuppliers.put(ParamCmd.SRCMBR, () -> objectName); // Default to object name
     paramSuppliers.put(ParamCmd.SRCFILE, () -> typeToDftSrc.getOrDefault(sourceType, DftSrc.QRPGLESRC).name());
@@ -369,8 +366,6 @@ public class ObjectCompiler implements Runnable{
 
   public void run() {
     CompilationSpec spec = buildSpecFromCli();
-    applyDefaultsToSpec(spec);
-    spec.validate();
 
     // Retrieve and fill in defaults from existing object if possible
     Map<String, Object> objInfo = null;
@@ -421,30 +416,18 @@ public class ObjectCompiler implements Runnable{
   }
 
   private CompilationSpec buildSpecFromCli() {
+    // TODO: If any validation of the specs is needed, do it here.
     return new CompilationSpec(
           library,
           objectName,
           objectType,
-          sourceLib,
-          sourceFile,
-          sourceName,
-          sourceType,
+          sourceLib, // Default to *LIBL
+          (sourceFile.isEmpty()) ? typeToDftSrc.get(sourceType).name() : sourceFile,
+          (sourceName.isEmpty() ? objectName : sourceName),
+          sourceType, // Specified or inferred
           text,
           actGrp
     );
-  }
-
-  private void applyDefaultsToSpec(CompilationSpec spec) {
-    if (spec.sourceFile == null) {
-      spec.sourceFile = paramSuppliers.get(ParamCmd.SRCFILE).get();
-    }
-    if (spec.sourceMember == null) {
-      spec.sourceMember = paramSuppliers.get(ParamCmd.SRCMBR).get();
-    }
-    if (spec.sourceLibrary == null || spec.sourceLibrary.isEmpty()) {
-      spec.sourceLibrary = paramSuppliers.get(ParamCmd.LIBL).get();
-    }
-    // Add more defaults as needed
   }
 
   private void fillSpecFromObjInfo(CompilationSpec spec, Map<String, Object> objInfo) {
@@ -643,10 +626,10 @@ public class ObjectCompiler implements Runnable{
   }
 
   private void appendCommonParams(StringBuilder sb, CompilationSpec spec) {
-    if (spec.getText() != null) {
+    if (spec.getText() != null && !spec.getText().isEmpty()) {
       sb.append(" TEXT('").append(spec.getText()).append("')");
     }
-    // if (spec.getActGrp() != null) {
+    // if (spec.getActGrp() != null) && !spec.getActGrp().isEmpty(){
     //   sb.append(" ACTGRP(").append(spec.getActGrp()).append(")");
     // }
     // Add more common params (e.g., DFTACTGRP(*NO), BNDDIR, etc.)
@@ -711,6 +694,7 @@ public class ObjectCompiler implements Runnable{
     cleanup();
     }
 
+  //TODO: This is kinda slow.
   /*  https://gist.github.com/BirgittaHauser/f28e3527f1cc4c422a05eea865b455bb */
   private void showCompilationSpool(Timestamp compilationTime, String user, String objectName) throws SQLException{
 
