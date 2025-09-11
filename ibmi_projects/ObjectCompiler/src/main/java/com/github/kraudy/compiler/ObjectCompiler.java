@@ -234,16 +234,13 @@ public class ObjectCompiler implements Runnable{
   /* Maps object attribute to source type (for inference) */
   private static final Map<String, SourceType> attrToSourceType = new HashMap<>();
 
-  // Resolver map for parameter suppliers (cleaner abstraction for defaults and validations)
-  private final Map<ParamCmd, Supplier<String>> paramSuppliers = new EnumMap<>(ParamCmd.class);
-
   // Resolver map for command builders (functions that build command strings based on spec)
   private final Map<CompCmd, Function<CompilationSpec, String>> cmdBuilders = new EnumMap<>(CompCmd.class);
 
 
   static {
         
-    // Populate typeToDftSrc
+    /* From source member type to default source file default name */
     typeToDftSrc.put(SourceType.RPG, DftSrc.QRPGSRC);
     typeToDftSrc.put(SourceType.RPGLE, DftSrc.QRPGLESRC);
     typeToDftSrc.put(SourceType.SQLRPGLE, DftSrc.QRPGLESRC); // Often same as RPGLE
@@ -344,13 +341,8 @@ public class ObjectCompiler implements Runnable{
   }
 
   private void initResolvers() {
-    //TODO: This can be better
-    // Suppliers for default parameter values (can be overridden by CLI or object info)
-    paramSuppliers.put(ParamCmd.SRCMBR, () -> objectName); // Default to object name
-    paramSuppliers.put(ParamCmd.SRCFILE, () -> typeToDftSrc.getOrDefault(sourceType, DftSrc.QRPGLESRC).name());
-    paramSuppliers.put(ParamCmd.LIBL, () -> "*LIBL");
-    // Add more as needed
 
+    // TODO: Move this to the constructor or the iObject class?
     // Command builders as functions (pattern matching via enums)
     cmdBuilders.put(CompCmd.CRTRPGMOD, this::buildModuleCmd);
     cmdBuilders.put(CompCmd.CRTCLMOD, this::buildModuleCmd);
@@ -456,16 +448,12 @@ public class ObjectCompiler implements Runnable{
     if (debug) System.out.println("retrievedFile: " + retrievedFile);
     if (retrievedFile != null && !retrievedFile.trim().isEmpty()) {
       spec.sourceFile = retrievedFile.trim().toUpperCase();
-    } else if (spec.sourceFile == null) {
-      spec.sourceFile = paramSuppliers.get(ParamCmd.SRCFILE).get();
-    }
+    } 
 
     String retrievedMbr = (String) objInfo.get("sourceMember");
     if (debug) System.out.println("retrievedMbr: " + retrievedMbr);
     if (retrievedMbr != null && !retrievedMbr.trim().isEmpty()) {
       spec.sourceMember = retrievedMbr.trim().toUpperCase();
-    } else if (spec.sourceMember == null) {
-      spec.sourceMember = paramSuppliers.get(ParamCmd.SRCMBR).get();
     }
 
     String retrievedText = (String) objInfo.get("textDescription");
