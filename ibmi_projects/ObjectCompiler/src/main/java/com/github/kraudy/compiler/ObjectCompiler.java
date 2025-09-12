@@ -291,10 +291,11 @@ public class ObjectCompiler implements Runnable{
 
   private Map<String, Object> retrieveObjectInfo(String targetLibrary, String objectName, ObjectDescription.ObjectType objectType) throws Exception {
     String apiPgm;
-    String format = "PGMI0100"; // Default for PGM
+    String format;
     switch (objectType) {
       case PGM:
         apiPgm = "QCLRPGMI";
+        format = "PGMI0100";
         break;
       case SRVPGM:
         apiPgm = "QBNRSPGM";

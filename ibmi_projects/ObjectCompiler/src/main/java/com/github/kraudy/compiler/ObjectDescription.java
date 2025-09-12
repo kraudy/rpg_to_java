@@ -2,6 +2,7 @@ package com.github.kraudy.compiler;
 
 import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +35,12 @@ public class ObjectDescription {
   public enum ParamCmd { PGM, OBJ, OBJTYPE, OUTPUT, OUTMBR, MODULE, BNDSRVPGM, LIBL, SRCFILE, SRCMBR, ACTGRP, DFTACTGRP, BNDDIR, COMMIT, TEXT, TGTCCSID, CRTFRMSTMF }
 
   //TODO: Maybe is more practical to make these strings
-  public enum ValCmd { FIRST, REPLACE, OUTFILE, LIBL, FILE, DTAARA, PGM, SRVPGM, CURLIB } // add * to these
+  public enum ValCmd { FIRST, REPLACE, OUTFILE, LIBL, FILE, DTAARA, PGM, SRVPGM, CURLIB; 
+    @Override
+    public String toString() {
+        return "*" + name();
+    }  
+  } // add * to these
 
   public enum PostCmpCmd { CHGOBJD }
 
@@ -44,7 +50,7 @@ public class ObjectDescription {
   public static final Map<SourceType, Map<ObjectType, CompCmd>> typeToCmdMap = new EnumMap<>(SourceType.class);
 
   /* Maps params to values */
-  public static final Map<ParamCmd, List<ValCmd>> valueParamsMap = new EnumMap<>(ParamCmd.class);
+  public static final Map<ParamCmd, EnumSet<ValCmd>> valueParamsMap = new EnumMap<>(ParamCmd.class);
 
   /* Maps source type to its default source pf */
   public static final Map<SourceType, DftSrc> typeToDftSrc = new EnumMap<>(SourceType.class);
@@ -108,17 +114,25 @@ public class ObjectDescription {
     attrToSourceType.put("CLP", SourceType.CLP);
     attrToSourceType.put("CLLE", SourceType.CLLE);
 
-    //TODO: Make these strings
+    // TODO: Make the Arrays as Set and use them to check if the parameter value is valid
+    // The corresponding order should be defined just be sequence of if validaitons on the command constructor
+    // for this, a mapping from string to ParamCmd is needed like '*OUTPUT' => ParamCmd.OUTPUT  Map<String, ParamCmd>
+    // and other for Map<String, ValCmd>. These two are neede to make the conversion between parmas/value strinc to Enums
+    // this will ease the validation using the switch and also validate if they exist
+    // valueParamsMap would be change to Map<ParamCmd, Set<ValCmd>>
+    // i'm thinking of a switch without break for optionla params where the command follow the requiered compilation order by the OS
+    // TODO: Make these strings
+    // TODO: Maybe create a new class: CompilationPattern
     // Populate valueParamsMap with special values for each parameter (add * when using in commands)
-    valueParamsMap.put(ParamCmd.OUTPUT, Arrays.asList(ValCmd.OUTFILE));
-    valueParamsMap.put(ParamCmd.OUTMBR, Arrays.asList(ValCmd.FIRST, ValCmd.REPLACE)); // FIRST is now reliably first
-    valueParamsMap.put(ParamCmd.OBJTYPE, Arrays.asList(ValCmd.PGM, ValCmd.SRVPGM));
-    valueParamsMap.put(ParamCmd.MODULE, Arrays.asList(ValCmd.PGM));
-    valueParamsMap.put(ParamCmd.BNDSRVPGM, Arrays.asList(ValCmd.SRVPGM));
-    valueParamsMap.put(ParamCmd.LIBL, Arrays.asList(ValCmd.LIBL));
-    valueParamsMap.put(ParamCmd.SRCFILE, Arrays.asList(ValCmd.FILE, ValCmd.LIBL));
-    valueParamsMap.put(ParamCmd.PGM, Arrays.asList(ValCmd.CURLIB, ValCmd.LIBL)); // CURLIB is now first; swap if you want LIBL first
-    valueParamsMap.put(ParamCmd.OBJ, Arrays.asList(ValCmd.LIBL, ValCmd.FILE, ValCmd.DTAARA));
+    valueParamsMap.put(ParamCmd.OUTPUT, EnumSet.of(ValCmd.OUTFILE));
+    valueParamsMap.put(ParamCmd.OUTMBR, EnumSet.of(ValCmd.FIRST, ValCmd.REPLACE)); // FIRST is now reliably first
+    valueParamsMap.put(ParamCmd.OBJTYPE, EnumSet.of(ValCmd.PGM, ValCmd.SRVPGM));
+    valueParamsMap.put(ParamCmd.MODULE, EnumSet.of(ValCmd.PGM));
+    valueParamsMap.put(ParamCmd.BNDSRVPGM, EnumSet.of(ValCmd.SRVPGM));
+    valueParamsMap.put(ParamCmd.LIBL, EnumSet.of(ValCmd.LIBL));
+    valueParamsMap.put(ParamCmd.SRCFILE, EnumSet.of(ValCmd.FILE, ValCmd.LIBL));
+    valueParamsMap.put(ParamCmd.PGM, EnumSet.of(ValCmd.CURLIB, ValCmd.LIBL)); // CURLIB is now first; swap if you want LIBL first
+    valueParamsMap.put(ParamCmd.OBJ, EnumSet.of(ValCmd.LIBL, ValCmd.FILE, ValCmd.DTAARA));
     // TODO: for parms with no defined value: EnumSet.noneOf(ValCmd.class)
 
     // TODO: I think this Supliers is what i really need
