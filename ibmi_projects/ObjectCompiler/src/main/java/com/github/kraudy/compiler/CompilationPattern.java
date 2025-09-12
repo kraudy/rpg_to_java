@@ -3,8 +3,12 @@ package com.github.kraudy.compiler;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.Map;
+import java.util.function.Function;
 
 public class CompilationPattern {
+    // Resolver map for command builders (functions that build command strings based on spec)
+  private Map<CompCmd, Function<ObjectDescription, String>> cmdBuilders = new EnumMap<>(CompCmd.class);
+
   public enum CompCmd { CRTRPGMOD, CRTSQLRPGI, CRTBNDRPG, CRTRPGPGM, CRTCLMOD, CRTBNDCL, CRTCLPGM, RUNSQLSTM, CRTSRVPGM, CRTDSPF, CRTLF, CRTPRTF, CRTMNU, CRTQMQRY }
 
   public enum ParamCmd { PGM, OBJ, OBJTYPE, OUTPUT, OUTMBR, MODULE, BNDSRVPGM, LIBL, SRCFILE, SRCMBR, ACTGRP, DFTACTGRP, BNDDIR, COMMIT, TEXT, TGTCCSID, CRTFRMSTMF }
@@ -94,13 +98,126 @@ public class CompilationPattern {
   }  
 
   public CompilationPattern(){
-
+    // TODO: These could be build base on object type and source.
+    // TODO: Move this to the constructor or the iObject class?
+    // Command builders as functions (pattern matching via enums)
+    cmdBuilders.put(CompCmd.CRTRPGMOD, this::buildModuleCmd);
+    cmdBuilders.put(CompCmd.CRTCLMOD, this::buildModuleCmd);
+    cmdBuilders.put(CompCmd.CRTBNDRPG, this::buildBoundCmd);
+    cmdBuilders.put(CompCmd.CRTBNDCL, this::buildBoundCmd);
+    cmdBuilders.put(CompCmd.CRTRPGPGM, this::buildBoundCmd);
+    cmdBuilders.put(CompCmd.CRTCLPGM, this::buildBoundCmd);
+    cmdBuilders.put(CompCmd.CRTSQLRPGI, this::buildSqlRpgCmd);
+    cmdBuilders.put(CompCmd.CRTSRVPGM, this::buildSrvPgmCmd);
+    cmdBuilders.put(CompCmd.RUNSQLSTM, this::buildSqlCmd);
+    // Add more builders for other commands
   }
 
   public CompCmd getCompilationCommand(ObjectDescription.SourceType sourceType, ObjectDescription.ObjectType objectType){
-      return typeToCmdMap.get(sourceType).get(objectType);
+    return typeToCmdMap.get(sourceType).get(objectType);
   }
 
-  //TODO: Add buildCommand() here
+  public String buildCommand(ObjectDescription spec, CompCmd cmd) {
+    Function<ObjectDescription, String> builder = cmdBuilders.getOrDefault(cmd, s -> {
+      throw new IllegalArgumentException("Unsupported command: " + cmd);
+    });
+    String params = builder.apply(spec);
+    // Prepend the command name
+    return cmd.name() + params;
+  }
+
+  // Example builder function for module commands
+  public String buildModuleCmd(ObjectDescription spec) {
+    StringBuilder sb = new StringBuilder();
+    sb.append(" MODULE(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
+    sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
+    sb.append(" SRCMBR(").append(getSourceMember(spec, CompCmd.CRTRPGMOD)).append(")");
+    appendCommonParams(sb, spec);
+    return sb.toString();
+  }
+
+  // Similar for bound commands
+  public String buildBoundCmd(ObjectDescription spec) {
+    StringBuilder sb = new StringBuilder();
+    sb.append(" PGM(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
+    sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
+    sb.append(" SRCMBR(").append(getSourceMember(spec, CompCmd.CRTBNDRPG)).append(")");
+    appendCommonParams(sb, spec);
+    return sb.toString();
+  }
+
+  // For CRTSQLRPGI
+  public String buildSqlRpgCmd(ObjectDescription spec) {
+    StringBuilder sb = new StringBuilder();
+    sb.append(" OBJ(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
+    sb.append(" OBJTYPE(*").append(spec.getObjectType().name()).append(")");
+    sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
+    sb.append(" SRCMBR(").append(getSourceMember(spec, CompCmd.CRTSQLRPGI)).append(")");
+    appendCommonParams(sb, spec);
+    return sb.toString();
+  }
+
+  // For CRTSRVPGM
+  public String buildSrvPgmCmd(ObjectDescription spec) {
+    StringBuilder sb = new StringBuilder();
+    sb.append(" SRVPGM(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
+    sb.append(" MODULE(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")"); // Assume single module
+    sb.append(" BNDSRVPGM(*NONE)");
+    appendCommonParams(sb, spec);
+    return sb.toString();
+  }
+
+  // For RUNSQLSTM
+  public String buildSqlCmd(ObjectDescription spec) {
+    StringBuilder sb = new StringBuilder();
+    sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
+    sb.append(" SRCMBR(").append(getSourceMember(spec, CompCmd.RUNSQLSTM)).append(")");
+    sb.append(" COMMIT(*NONE)");
+    appendCommonParams(sb, spec);
+    return sb.toString();
+  }
+
+  public void appendCommonParams(StringBuilder sb, ObjectDescription spec) {
+    if (spec.getText() != null && !spec.getText().isEmpty()) {
+      sb.append(" TEXT('").append(spec.getText()).append("')");
+    }
+    // if (spec.getActGrp() != null) && !spec.getActGrp().isEmpty(){
+    //   sb.append(" ACTGRP(").append(spec.getActGrp()).append(")");
+    // }
+    // Add more common params (e.g., DFTACTGRP(*NO), BNDDIR, etc.)
+  }
+
+  // TODO: Move these two to ObjectDescription? / getDefaultSourceFile
+  //public String getSourceFile(String sourceFile, ObjectDescription.SourceType sourceType) {
+  public String getSourceFile(ObjectDescription spec) {
+    String sourceFile = spec.getSourceFile();
+    String sourceLib = spec.getSourceLibrary();
+    //String file = (sourceFile != null) ? sourceFile : ObjectDescription.typeToDftSrc.getOrDefault(sourceType, ObjectDescription.DftSrc.QRPGLESRC).name();
+    String file = (sourceFile != null) ? sourceFile : ObjectDescription.typeToDftSrc.get(spec.getSourceType()).name();
+    //TODO: Validate if it should use library when library = null o *LIBL
+    return sourceLib + "/" + file;
+  }
+
+  // TODO: Move this to ObjectDescription and add '*' if needed to the String method
+  public String getSourceMember(ObjectDescription spec, CompCmd cmd) {
+    if (spec.sourceMember != null && !spec.sourceMember.isEmpty()) {
+      return spec.sourceMember;
+    }
+    // Command-specific default special value
+    switch (cmd) {
+      case CRTBNDRPG:
+      case CRTBNDCL:
+      case CRTRPGPGM:
+      case CRTCLPGM:
+        return "*PGM";
+      case CRTRPGMOD:
+      case CRTCLMOD:
+        return "*MODULE";
+      case CRTSQLRPGI:
+        return "*OBJ";
+      default:
+        return spec.objectName; // Fallback for SQL, etc.
+    }
+  }
 
 }

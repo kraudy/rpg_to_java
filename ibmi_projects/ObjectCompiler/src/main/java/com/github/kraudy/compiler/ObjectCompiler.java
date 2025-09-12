@@ -54,9 +54,6 @@ public class ObjectCompiler implements Runnable{
   private ObjectDescription spec;
   private CompilationPattern cpat;
 
-  // Resolver map for command builders (functions that build command strings based on spec)
-  private Map<CompilationPattern.CompCmd, Function<ObjectDescription, String>> cmdBuilders = new EnumMap<>(CompilationPattern.CompCmd.class);
-
 
   static class LibraryConverter implements CommandLine.ITypeConverter<String> {
     @Override
@@ -162,23 +159,6 @@ public class ObjectCompiler implements Runnable{
     this.currentUser = new User(system, system.getUserId());
     this.currentUser.loadUserInformation();
 
-    initSuppliers();
-  }
-
-  public void initSuppliers () {
-    // TODO: These could be build base on object type and source.
-    // TODO: Move this to the constructor or the iObject class?
-    // Command builders as functions (pattern matching via enums)
-    cmdBuilders.put(CompilationPattern.CompCmd.CRTRPGMOD, this::buildModuleCmd);
-    cmdBuilders.put(CompilationPattern.CompCmd.CRTCLMOD, this::buildModuleCmd);
-    cmdBuilders.put(CompilationPattern.CompCmd.CRTBNDRPG, this::buildBoundCmd);
-    cmdBuilders.put(CompilationPattern.CompCmd.CRTBNDCL, this::buildBoundCmd);
-    cmdBuilders.put(CompilationPattern.CompCmd.CRTRPGPGM, this::buildBoundCmd);
-    cmdBuilders.put(CompilationPattern.CompCmd.CRTCLPGM, this::buildBoundCmd);
-    cmdBuilders.put(CompilationPattern.CompCmd.CRTSQLRPGI, this::buildSqlRpgCmd);
-    cmdBuilders.put(CompilationPattern.CompCmd.CRTSRVPGM, this::buildSrvPgmCmd);
-    cmdBuilders.put(CompilationPattern.CompCmd.RUNSQLSTM, this::buildSqlCmd);
-    // Add more builders for other commands
   }
 
   public void run() {
@@ -221,7 +201,7 @@ public class ObjectCompiler implements Runnable{
     }
     if (debug) System.out.println("Compilation command: " + mainCmd.name());
 
-    String commandStr = buildCommand(spec, mainCmd);
+    String commandStr = cpat.buildCommand(spec, mainCmd);
     
     if (debug) System.out.println("Full command: " + commandStr);
 
@@ -369,104 +349,6 @@ public class ObjectCompiler implements Runnable{
     return info;
   }
 
-  private String buildCommand(ObjectDescription spec, CompilationPattern.CompCmd cmd) {
-    Function<ObjectDescription, String> builder = cmdBuilders.getOrDefault(cmd, s -> {
-      throw new IllegalArgumentException("Unsupported command: " + cmd);
-    });
-    String params = builder.apply(spec);
-    // Prepend the command name
-    return cmd.name() + params;
-  }
-
-  // Example builder function for module commands
-  private String buildModuleCmd(ObjectDescription spec) {
-    StringBuilder sb = new StringBuilder();
-    sb.append(" MODULE(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
-    sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(getSourceMember(spec, CompilationPattern.CompCmd.CRTRPGMOD)).append(")");
-    appendCommonParams(sb, spec);
-    return sb.toString();
-  }
-
-  // Similar for bound commands
-  private String buildBoundCmd(ObjectDescription spec) {
-    StringBuilder sb = new StringBuilder();
-    sb.append(" PGM(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
-    sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(getSourceMember(spec, CompilationPattern.CompCmd.CRTBNDRPG)).append(")");
-    appendCommonParams(sb, spec);
-    return sb.toString();
-  }
-
-  // For CRTSQLRPGI
-  private String buildSqlRpgCmd(ObjectDescription spec) {
-    StringBuilder sb = new StringBuilder();
-    sb.append(" OBJ(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
-    sb.append(" OBJTYPE(*").append(spec.getObjectType().name()).append(")");
-    sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(getSourceMember(spec, CompilationPattern.CompCmd.CRTSQLRPGI)).append(")");
-    appendCommonParams(sb, spec);
-    return sb.toString();
-  }
-
-  // For CRTSRVPGM
-  private String buildSrvPgmCmd(ObjectDescription spec) {
-    StringBuilder sb = new StringBuilder();
-    sb.append(" SRVPGM(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
-    sb.append(" MODULE(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")"); // Assume single module
-    sb.append(" BNDSRVPGM(*NONE)");
-    appendCommonParams(sb, spec);
-    return sb.toString();
-  }
-
-  // For RUNSQLSTM
-  private String buildSqlCmd(ObjectDescription spec) {
-    StringBuilder sb = new StringBuilder();
-    sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(getSourceMember(spec, CompilationPattern.CompCmd.RUNSQLSTM)).append(")");
-    sb.append(" COMMIT(*NONE)");
-    appendCommonParams(sb, spec);
-    return sb.toString();
-  }
-
-  private void appendCommonParams(StringBuilder sb, ObjectDescription spec) {
-    if (spec.getText() != null && !spec.getText().isEmpty()) {
-      sb.append(" TEXT('").append(spec.getText()).append("')");
-    }
-    // if (spec.getActGrp() != null) && !spec.getActGrp().isEmpty(){
-    //   sb.append(" ACTGRP(").append(spec.getActGrp()).append(")");
-    // }
-    // Add more common params (e.g., DFTACTGRP(*NO), BNDDIR, etc.)
-  }
-
-
-
-  private String getSourceFile() {
-    String file = (sourceFile != null) ? sourceFile : ObjectDescription.typeToDftSrc.getOrDefault(sourceType, ObjectDescription.DftSrc.QRPGLESRC).name();
-    //TODO: Validate if it should use library when library = null o *LIBL
-    return sourceLib + "/" + file;
-  }
-
-  private String getSourceMember(ObjectDescription spec, CompilationPattern.CompCmd cmd) {
-    if (spec.sourceMember != null && !spec.sourceMember.isEmpty()) {
-      return spec.sourceMember;
-    }
-    // Command-specific default special value
-    switch (cmd) {
-      case CRTBNDRPG:
-      case CRTBNDCL:
-      case CRTRPGPGM:
-      case CRTCLPGM:
-        return "*PGM";
-      case CRTRPGMOD:
-      case CRTCLMOD:
-        return "*MODULE";
-      case CRTSQLRPGI:
-        return "*OBJ";
-      default:
-        return spec.objectName; // Fallback for SQL, etc.
-    }
-  }
 
   private void compile(String commandStr) {
     CommandCall cc = new CommandCall(system);
@@ -497,6 +379,7 @@ public class ObjectCompiler implements Runnable{
     }
 
   //TODO: This is kinda slow.
+  // Try to use CPYSPLF to a stream file or db2 table
   /*  https://gist.github.com/BirgittaHauser/f28e3527f1cc4c422a05eea865b455bb */
   private void showCompilationSpool(Timestamp compilationTime, String user, String objectName) throws SQLException{
 
