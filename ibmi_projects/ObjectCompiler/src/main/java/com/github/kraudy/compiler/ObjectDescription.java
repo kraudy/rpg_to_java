@@ -148,8 +148,8 @@ public class ObjectDescription {
     this.objectName = objectName;
     this.objectType = objectType;
     this.sourceLibrary = sourceLibrary;
-    this.sourceFile = sourceFile;
-    this.sourceMember = sourceMember;
+    this.sourceFile = (sourceFile.isEmpty()) ? typeToDftSrc.get(sourceType).name() : sourceFile;
+    this.sourceMember = (sourceMember.isEmpty() ? objectName : sourceMember); //TODO: Add logic for stream files
     this.sourceType = sourceType;
     this.text = text;
     this.actGrp = actGrp; //TODO: Remove this, maybe add it to another struct with the compilation command params

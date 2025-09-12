@@ -233,8 +233,8 @@ public class ObjectCompiler implements Runnable{
           objectName,
           objectType,
           sourceLib, // Default to *LIBL
-          (sourceFile.isEmpty()) ? ObjectDescription.typeToDftSrc.get(sourceType).name() : sourceFile,
-          (sourceName.isEmpty() ? objectName : sourceName),
+          sourceFile,
+          sourceName,
           sourceType, // Specified or inferred
           text,
           actGrp
