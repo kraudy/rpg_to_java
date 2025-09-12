@@ -52,6 +52,7 @@ public class ObjectCompiler implements Runnable{
   private final Connection connection;
   private final User currentUser;
   private ObjectDescription spec;
+  private CompilationPattern cpat;
 
   // Resolver map for command builders (functions that build command strings based on spec)
   private Map<CompilationPattern.CompCmd, Function<ObjectDescription, String>> cmdBuilders = new EnumMap<>(CompilationPattern.CompCmd.class);
@@ -209,10 +210,11 @@ public class ObjectCompiler implements Runnable{
     if (debug) System.err.println("Source type: " + spec.getSourceType());
 
     // cspec
-    // TODO: Here create cpat = new CompilationPattern() etc
+    cpat = new CompilationPattern();
+
 
     // TODO: This could be encapsulated on the Iobject class
-    CompilationPattern.CompCmd mainCmd = CompilationPattern.typeToCmdMap.get(spec.getSourceType()).get(spec.getObjectType());
+    CompilationPattern.CompCmd mainCmd = cpat.getCompilationCommand(spec.getSourceType(), spec.getObjectType());
     if (mainCmd == null) {
       System.err.println("No compilation command for source type " + spec.getSourceType() + " and object type " + spec.getObjectType());
       return;

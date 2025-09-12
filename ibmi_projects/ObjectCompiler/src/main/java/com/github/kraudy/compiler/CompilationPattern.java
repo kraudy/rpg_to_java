@@ -93,6 +93,14 @@ public class CompilationPattern {
     //TODO: I can also return the lambda function... that would be nice and would allow a higher abstraction function to get it
   }  
 
-  // TODO: getCompilationCommand(ObjectDescription.SourceType sourceType, ObjectDescription.ObjectType objectType)
+  public CompilationPattern(){
+
+  }
+
+  public CompCmd getCompilationCommand(ObjectDescription.SourceType sourceType, ObjectDescription.ObjectType objectType){
+      return typeToCmdMap.get(sourceType).get(objectType);
+  }
+
+  //TODO: Add buildCommand() here
 
 }
