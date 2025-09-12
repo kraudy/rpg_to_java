@@ -35,23 +35,14 @@ import com.ibm.as400.access.ProgramParameter;
 import com.ibm.as400.access.User;
 
 import io.github.theprez.dotenv_ibmi.IBMiDotEnv;
-/*
-import main.java.com.github.kraudy.compiler.ObjectDescription;
-import main.java.com.github.kraudy.compiler.ObjectDescription.CompCmd;
-import main.java.com.github.kraudy.compiler.ObjectDescription.DftSrc;
-*/
+
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Option;
 
-/*
- *import com.fasterxml.jackson.databind.JsonNode;
- *import com.fasterxml.jackson.databind.ObjectMapper;
-*/
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.kraudy.compiler.ObjectDescription.ObjectType;
 
 @Command (name = "compiler", description = "OPM/ILE Object Compiler", mixinStandardHelpOptions = true, version = "ObjectCompiler 0.0.1")
 public class ObjectCompiler implements Runnable{
@@ -63,7 +54,7 @@ public class ObjectCompiler implements Runnable{
   private ObjectDescription spec;
 
   // Resolver map for command builders (functions that build command strings based on spec)
-  private Map<ObjectDescription.CompCmd, Function<ObjectDescription, String>> cmdBuilders = new EnumMap<>(ObjectDescription.CompCmd.class);
+  private Map<CompilationPattern.CompCmd, Function<ObjectDescription, String>> cmdBuilders = new EnumMap<>(CompilationPattern.CompCmd.class);
 
 
   static class LibraryConverter implements CommandLine.ITypeConverter<String> {
@@ -177,15 +168,15 @@ public class ObjectCompiler implements Runnable{
     // TODO: These could be build base on object type and source.
     // TODO: Move this to the constructor or the iObject class?
     // Command builders as functions (pattern matching via enums)
-    cmdBuilders.put(ObjectDescription.CompCmd.CRTRPGMOD, this::buildModuleCmd);
-    cmdBuilders.put(ObjectDescription.CompCmd.CRTCLMOD, this::buildModuleCmd);
-    cmdBuilders.put(ObjectDescription.CompCmd.CRTBNDRPG, this::buildBoundCmd);
-    cmdBuilders.put(ObjectDescription.CompCmd.CRTBNDCL, this::buildBoundCmd);
-    cmdBuilders.put(ObjectDescription.CompCmd.CRTRPGPGM, this::buildBoundCmd);
-    cmdBuilders.put(ObjectDescription.CompCmd.CRTCLPGM, this::buildBoundCmd);
-    cmdBuilders.put(ObjectDescription.CompCmd.CRTSQLRPGI, this::buildSqlRpgCmd);
-    cmdBuilders.put(ObjectDescription.CompCmd.CRTSRVPGM, this::buildSrvPgmCmd);
-    cmdBuilders.put(ObjectDescription.CompCmd.RUNSQLSTM, this::buildSqlCmd);
+    cmdBuilders.put(CompilationPattern.CompCmd.CRTRPGMOD, this::buildModuleCmd);
+    cmdBuilders.put(CompilationPattern.CompCmd.CRTCLMOD, this::buildModuleCmd);
+    cmdBuilders.put(CompilationPattern.CompCmd.CRTBNDRPG, this::buildBoundCmd);
+    cmdBuilders.put(CompilationPattern.CompCmd.CRTBNDCL, this::buildBoundCmd);
+    cmdBuilders.put(CompilationPattern.CompCmd.CRTRPGPGM, this::buildBoundCmd);
+    cmdBuilders.put(CompilationPattern.CompCmd.CRTCLPGM, this::buildBoundCmd);
+    cmdBuilders.put(CompilationPattern.CompCmd.CRTSQLRPGI, this::buildSqlRpgCmd);
+    cmdBuilders.put(CompilationPattern.CompCmd.CRTSRVPGM, this::buildSrvPgmCmd);
+    cmdBuilders.put(CompilationPattern.CompCmd.RUNSQLSTM, this::buildSqlCmd);
     // Add more builders for other commands
   }
 
@@ -217,8 +208,11 @@ public class ObjectCompiler implements Runnable{
     }
     if (debug) System.err.println("Source type: " + spec.getSourceType());
 
+    // cspec
+    // TODO: Here create cpat = new CompilationPattern() etc
+
     // TODO: This could be encapsulated on the Iobject class
-    ObjectDescription.CompCmd mainCmd = ObjectDescription.typeToCmdMap.get(spec.getSourceType()).get(spec.getObjectType());
+    CompilationPattern.CompCmd mainCmd = CompilationPattern.typeToCmdMap.get(spec.getSourceType()).get(spec.getObjectType());
     if (mainCmd == null) {
       System.err.println("No compilation command for source type " + spec.getSourceType() + " and object type " + spec.getObjectType());
       return;
@@ -373,7 +367,7 @@ public class ObjectCompiler implements Runnable{
     return info;
   }
 
-  private String buildCommand(ObjectDescription spec, ObjectDescription.CompCmd cmd) {
+  private String buildCommand(ObjectDescription spec, CompilationPattern.CompCmd cmd) {
     Function<ObjectDescription, String> builder = cmdBuilders.getOrDefault(cmd, s -> {
       throw new IllegalArgumentException("Unsupported command: " + cmd);
     });
@@ -387,7 +381,7 @@ public class ObjectCompiler implements Runnable{
     StringBuilder sb = new StringBuilder();
     sb.append(" MODULE(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
     sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(getSourceMember(spec, ObjectDescription.CompCmd.CRTRPGMOD)).append(")");
+    sb.append(" SRCMBR(").append(getSourceMember(spec, CompilationPattern.CompCmd.CRTRPGMOD)).append(")");
     appendCommonParams(sb, spec);
     return sb.toString();
   }
@@ -397,7 +391,7 @@ public class ObjectCompiler implements Runnable{
     StringBuilder sb = new StringBuilder();
     sb.append(" PGM(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
     sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(getSourceMember(spec, ObjectDescription.CompCmd.CRTBNDRPG)).append(")");
+    sb.append(" SRCMBR(").append(getSourceMember(spec, CompilationPattern.CompCmd.CRTBNDRPG)).append(")");
     appendCommonParams(sb, spec);
     return sb.toString();
   }
@@ -408,7 +402,7 @@ public class ObjectCompiler implements Runnable{
     sb.append(" OBJ(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
     sb.append(" OBJTYPE(*").append(spec.getObjectType().name()).append(")");
     sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(getSourceMember(spec, ObjectDescription.CompCmd.CRTSQLRPGI)).append(")");
+    sb.append(" SRCMBR(").append(getSourceMember(spec, CompilationPattern.CompCmd.CRTSQLRPGI)).append(")");
     appendCommonParams(sb, spec);
     return sb.toString();
   }
@@ -427,7 +421,7 @@ public class ObjectCompiler implements Runnable{
   private String buildSqlCmd(ObjectDescription spec) {
     StringBuilder sb = new StringBuilder();
     sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(getSourceMember(spec, ObjectDescription.CompCmd.RUNSQLSTM)).append(")");
+    sb.append(" SRCMBR(").append(getSourceMember(spec, CompilationPattern.CompCmd.RUNSQLSTM)).append(")");
     sb.append(" COMMIT(*NONE)");
     appendCommonParams(sb, spec);
     return sb.toString();
@@ -451,7 +445,7 @@ public class ObjectCompiler implements Runnable{
     return sourceLib + "/" + file;
   }
 
-  private String getSourceMember(ObjectDescription spec, ObjectDescription.CompCmd cmd) {
+  private String getSourceMember(ObjectDescription spec, CompilationPattern.CompCmd cmd) {
     if (spec.sourceMember != null && !spec.sourceMember.isEmpty()) {
       return spec.sourceMember;
     }
