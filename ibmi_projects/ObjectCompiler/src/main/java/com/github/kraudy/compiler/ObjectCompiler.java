@@ -51,6 +51,7 @@ import picocli.CommandLine.Option;
 */
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.kraudy.compiler.ObjectDescription.ObjectType;
 
 @Command (name = "compiler", description = "OPM/ILE Object Compiler", mixinStandardHelpOptions = true, version = "ObjectCompiler 0.0.1")
 public class ObjectCompiler implements Runnable{
@@ -189,12 +190,22 @@ public class ObjectCompiler implements Runnable{
   }
 
   public void run() {
-    this.spec = buildSpec();
+    this.spec = new ObjectDescription(
+          library,
+          objectName,
+          objectType,
+          sourceLib, // Default to *LIBL
+          sourceFile,
+          sourceName,
+          sourceType, // Specified or inferred
+          text,
+          actGrp
+    );
 
     // Retrieve and fill in defaults from existing object if possible
     Map<String, Object> objInfo = null;
     try {
-      objInfo = retrieveObjectInfo(spec);
+      objInfo = retrieveObjectInfo(spec.getTargetLibrary(), spec.getObjectName(), spec.getObjectType());
       fillSpecFromObjInfo(spec, objInfo);
     } catch (Exception e) {
       if (verbose) System.err.println("Warning: Could not retrieve compilation params from object: " + e.getMessage() + ". Using defaults.");
@@ -224,28 +235,12 @@ public class ObjectCompiler implements Runnable{
     compile(commandStr);
   }
 
-  /* This methos is very important for the tool to be called from CLI or API */
-  // TODO: This should be done when initializing the ObjectDescription
-  private ObjectDescription buildSpec() {
-    // TODO: If any validation of the specs is needed, do it here.
-    return new ObjectDescription(
-          library,
-          objectName,
-          objectType,
-          sourceLib, // Default to *LIBL
-          sourceFile,
-          sourceName,
-          sourceType, // Specified or inferred
-          text,
-          actGrp
-    );
-  }
-
   private void fillSpecFromObjInfo(ObjectDescription spec, Map<String, Object> objInfo) {
     if (objInfo == null) return;
 
     if (debug) System.out.println("Found object info");
 
+    /* Check for filed with default value to subsitute */
     if (spec.getSourceType() == null) {
       String attr = (String) objInfo.get("attribute");
       if (debug) System.out.println("attr: " + attr);
@@ -294,19 +289,23 @@ public class ObjectCompiler implements Runnable{
     // To make spec mutable or use a builder for this.
   }
 
-  private Map<String, Object> retrieveObjectInfo(ObjectDescription spec) throws Exception {
+  private Map<String, Object> retrieveObjectInfo(String targetLibrary, String objectName, ObjectDescription.ObjectType objectType) throws Exception {
     String apiPgm;
     String format = "PGMI0100"; // Default for PGM
-    if (spec.isPGM()) {
-      apiPgm = "QCLRPGMI";
-    } else if (spec.isSRVPGM()) {
-      apiPgm = "QBNRSPGM";
-      format = "SPGI0100";
-    } else if (spec.isMODULE()) {
-      apiPgm = "QBNRMODI";
-      format = "MODI0100";
-    } else {
-      throw new Exception("Object type " + spec.getObjectType() + " not supported for retrieving compilation params.");
+    switch (objectType) {
+      case PGM:
+        apiPgm = "QCLRPGMI";
+        break;
+      case SRVPGM:
+        apiPgm = "QBNRSPGM";
+        format = "SPGI0100";
+        break;
+      case MODULE:
+        apiPgm = "QBNRMODI";
+        format = "MODI0100";
+        break;
+      default:
+        throw new Exception("Object type " + objectType.name() + " not supported for retrieving compilation params.");
     }
 
     ProgramCall pc = new ProgramCall(system);
@@ -317,7 +316,7 @@ public class ObjectCompiler implements Runnable{
     parms[0] = new ProgramParameter(recvLen); // Receiver
     parms[1] = new ProgramParameter(new AS400Bin4().toBytes(recvLen)); // Length of receiver
     parms[2] = new ProgramParameter(new AS400Text(8, system).toBytes(format)); // Format
-    String qualName = String.format("%-10s%-10s", spec.getObjectName(), spec.getTargetLibrary());
+    String qualName = String.format("%-10s%-10s", objectName, targetLibrary);
     parms[3] = new ProgramParameter(new AS400Text(20, system).toBytes(qualName)); // Qualified object name
     byte[] errorCode = new byte[16];
     new AS400Bin4().toBytes(0, errorCode, 0); // Bytes provided = 0 to throw exceptions
@@ -332,6 +331,7 @@ public class ObjectCompiler implements Runnable{
 
     byte[] data = parms[0].getOutputData();
     Map<String, Object> info = new HashMap<>();
+
     AS400Bin4 bin4 = new AS400Bin4();
     AS400Text text10 = new AS400Text(10, system);
     AS400Text text13 = new AS400Text(13, system);
@@ -364,7 +364,7 @@ public class ObjectCompiler implements Runnable{
     info.put("minParameters", bin4.toInt(data, offset)); offset += 4;
     info.put("maxParameters", bin4.toInt(data, offset)); offset += 4;
     offset = 368; // Jump to activation group (adjust if needed for SPGI/MODI differences)
-    if (spec.getObjectType() != ObjectDescription.ObjectType.MODULE) { // Modules don't have ACTGRP
+    if (objectType != ObjectDescription.ObjectType.MODULE) { // Modules don't have ACTGRP
       info.put("activationGroupAttribute", text30.toObject(data, offset).toString().trim());
     }
     // TODO: Parse additional fields as needed

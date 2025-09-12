@@ -144,6 +144,9 @@ public class ObjectDescription {
         @JsonProperty("text") String text,
         @JsonProperty("actGrp") String actGrp) {
     //TODO: If validtion like toUpperCase().trim() is needed, add it when passing the params to keep this clean
+
+    if (objectName == null || objectName.isEmpty()) throw new IllegalArgumentException("Object name is required.");
+
     this.targetLibrary = targetLibrary;
     this.objectName = objectName;
     this.objectType = objectType;
