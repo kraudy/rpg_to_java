@@ -297,12 +297,12 @@ public class ObjectCompiler implements Runnable{
   private Map<String, Object> retrieveObjectInfo(ObjectDescription spec) throws Exception {
     String apiPgm;
     String format = "PGMI0100"; // Default for PGM
-    if (spec.getObjectType() == ObjectDescription.ObjectType.PGM) {
+    if (spec.isPGM()) {
       apiPgm = "QCLRPGMI";
-    } else if (spec.getObjectType() == ObjectDescription.ObjectType.SRVPGM) {
+    } else if (spec.isSRVPGM()) {
       apiPgm = "QBNRSPGM";
       format = "SPGI0100";
-    } else if (spec.getObjectType() == ObjectDescription.ObjectType.MODULE) {
+    } else if (spec.isMODULE()) {
       apiPgm = "QBNRMODI";
       format = "MODI0100";
     } else {
