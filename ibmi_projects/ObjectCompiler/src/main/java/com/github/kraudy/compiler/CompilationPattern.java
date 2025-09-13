@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 import com.github.kraudy.compiler.ObjectDescription.ObjectType;
+import com.github.kraudy.compiler.ObjectDescription.SourceType;
 
 public class CompilationPattern {
     // Resolver map for command builders (functions that build command strings based on spec)
@@ -13,6 +14,7 @@ public class CompilationPattern {
 
   public enum CompCmd { 
     CRTRPGMOD, CRTSQLRPGI, CRTBNDRPG, CRTRPGPGM, CRTCLMOD, CRTBNDCL, CRTCLPGM, RUNSQLSTM, CRTSRVPGM, CRTDSPF, CRTLF, CRTPRTF, CRTMNU, CRTQMQRY;
+
     public static String compilationSourceName(CompCmd cmd, String sourceName){
       if (sourceName != null && !sourceName.isEmpty()) {
         return sourceName;
@@ -36,21 +38,78 @@ public class CompilationPattern {
     }
   }
 
-  public enum ParamCmd { PGM, MODULE, OBJ, OBJTYPE, OUTPUT, OUTMBR, BNDSRVPGM, LIBL, SRCFILE, SRCMBR, ACTGRP, DFTACTGRP, BNDDIR, COMMIT, TEXT, TGTCCSID, CRTFRMSTMF }
+  public enum ParamCmd { 
+    PGM, MODULE, OBJ, OBJTYPE, OUTPUT, OUTMBR, BNDSRVPGM, LIBL, SRCFILE, SRCMBR, ACTGRP, DFTACTGRP, BNDDIR, COMMIT, TEXT, TGTCCSID, CRTFRMSTMF;
+
+    public static ParamCmd fromString(String value) {
+      try {
+        return ParamCmd.valueOf(value);
+      } catch (IllegalArgumentException e) {
+        throw new IllegalArgumentException("Could not get compilation command param from string: '" + value + "'");
+      }
+    } 
+    
+    /* Validates if the option for a given param is valid */
+    public static String paramValue(ParamCmd paramCmd, ValCmd valCmd){
+      try {
+        switch (paramCmd){
+          case OUTPUT:
+            if (!EnumSet.of(ValCmd.OUTFILE).contains(valCmd)) throw new IllegalArgumentException();
+            break;
+          case OUTMBR:
+            if (!EnumSet.of(ValCmd.FIRST, ValCmd.REPLACE).contains(valCmd)) throw new IllegalArgumentException();
+            break;
+          case OBJTYPE:
+            if (!EnumSet.of(ValCmd.PGM, ValCmd.SRVPGM).contains(valCmd)) throw new IllegalArgumentException();
+            break;
+          case MODULE:
+            if (!EnumSet.of(ValCmd.PGM).contains(valCmd)) throw new IllegalArgumentException();
+            break;
+          case BNDSRVPGM:
+            if (!EnumSet.of(ValCmd.SRVPGM).contains(valCmd)) throw new IllegalArgumentException();
+            break;
+          case LIBL:
+            if (!EnumSet.of(ValCmd.LIBL).contains(valCmd)) throw new IllegalArgumentException();
+            break;
+          case SRCFILE:
+            if (!EnumSet.of(ValCmd.FILE, ValCmd.LIBL).contains(valCmd)) throw new IllegalArgumentException();
+            break;
+          case PGM:
+            if (!EnumSet.of(ValCmd.CURLIB, ValCmd.LIBL).contains(valCmd)) throw new IllegalArgumentException();
+            break;
+          case OBJ:
+            if (!EnumSet.of(ValCmd.LIBL, ValCmd.FILE, ValCmd.DTAARA).contains(valCmd)) throw new IllegalArgumentException();
+            break;
+          default:
+            throw new IllegalArgumentException();  
+        }
+      } catch (IllegalArgumentException e) {
+        throw new IllegalArgumentException("Option: '" + valCmd.name() + "'' not valid for param '" + paramCmd.name() + "'");
+      }     
+      return valCmd.toString();
+    }
+  }
 
   //TODO: Add a Map<String, ValCmd>
-  public enum ValCmd { FIRST, REPLACE, OUTFILE, LIBL, FILE, DTAARA, PGM, MODULE, OBJ, SRVPGM, CURLIB; 
+  public enum ValCmd { 
+    FIRST, REPLACE, OUTFILE, LIBL, FILE, DTAARA, PGM, MODULE, OBJ, SRVPGM, CURLIB; 
+
+    public static ValCmd fromString(String value) {
+      try {
+          return ValCmd.valueOf(value.substring(1)); // Remove the leading "*" and convert to enum
+      } catch (IllegalArgumentException e) {
+          throw new IllegalArgumentException("Could not convert '" + value + "' to ValCmd. Unknown value: '" + value + "'");
+      }
+    }
+
     @Override
     public String toString() {
         return "*" + name();
     }  
-  } // add * to these
+  }
 
   /* Maps source type to its compilation command */
   public static final Map<ObjectDescription.SourceType, Map<ObjectDescription.ObjectType, CompCmd>> typeToCmdMap = new EnumMap<>(ObjectDescription.SourceType.class);
-
-  /* Maps params to values */
-  public static final Map<ParamCmd, EnumSet<ValCmd>> valueParamsMap = new EnumMap<>(ParamCmd.class);
 
   static{
     /*
@@ -93,26 +152,9 @@ public class CompilationPattern {
     sqlMap.put(ObjectDescription.ObjectType.FUNCTION, CompCmd.RUNSQLSTM);
     typeToCmdMap.put(ObjectDescription.SourceType.SQL, sqlMap);
 
-    // TODO: Make the Arrays as Set and use them to check if the parameter value is valid
     // The corresponding order should be defined just be sequence of if validaitons on the command constructor
-    // for this, a mapping from string to ParamCmd is needed like '*OUTPUT' => ParamCmd.OUTPUT  Map<String, ParamCmd>
-    // and other for Map<String, ValCmd>. These two are neede to make the conversion between parmas/value strinc to Enums
-    // this will ease the validation using the switch and also validate if they exist
-    // valueParamsMap would be change to Map<ParamCmd, Set<ValCmd>>
     // i'm thinking of a switch without break for optionla params where the command follow the requiered compilation order by the OS
     // TODO: Make these strings
-    // TODO: Maybe create a new class: CompilationPattern
-    // Populate valueParamsMap with special values for each parameter (add * when using in commands)
-    valueParamsMap.put(ParamCmd.OUTPUT, EnumSet.of(ValCmd.OUTFILE));
-    valueParamsMap.put(ParamCmd.OUTMBR, EnumSet.of(ValCmd.FIRST, ValCmd.REPLACE)); // FIRST is now reliably first
-    valueParamsMap.put(ParamCmd.OBJTYPE, EnumSet.of(ValCmd.PGM, ValCmd.SRVPGM));
-    valueParamsMap.put(ParamCmd.MODULE, EnumSet.of(ValCmd.PGM));
-    valueParamsMap.put(ParamCmd.BNDSRVPGM, EnumSet.of(ValCmd.SRVPGM));
-    valueParamsMap.put(ParamCmd.LIBL, EnumSet.of(ValCmd.LIBL));
-    valueParamsMap.put(ParamCmd.SRCFILE, EnumSet.of(ValCmd.FILE, ValCmd.LIBL));
-    valueParamsMap.put(ParamCmd.PGM, EnumSet.of(ValCmd.CURLIB, ValCmd.LIBL)); // CURLIB is now first; swap if you want LIBL first
-    valueParamsMap.put(ParamCmd.OBJ, EnumSet.of(ValCmd.LIBL, ValCmd.FILE, ValCmd.DTAARA));
-    // TODO: for parms with no defined value: EnumSet.noneOf(ValCmd.class)
 
     // TODO: I think this Supliers is what i really need
     // Maybe i can send enums as parameters too
@@ -124,7 +166,6 @@ public class CompilationPattern {
 
   public CompilationPattern(){
     // TODO: These could be build base on object type and source.
-    // TODO: Move this to the constructor or the iObject class?
     // Command builders as functions (pattern matching via enums)
     cmdBuilders.put(CompCmd.CRTRPGMOD, this::buildModuleCmd);
     cmdBuilders.put(CompCmd.CRTCLMOD, this::buildModuleCmd);
@@ -185,6 +226,7 @@ public class CompilationPattern {
 
   // For CRTSRVPGM
   public String buildSrvPgmCmd(ObjectDescription spec) {
+    //TODO: The spec for the SRPVGM should indicate if it is build using modules, binding dir, export symbols or export all, etc
     StringBuilder sb = new StringBuilder();
     sb.append(" SRVPGM(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
     sb.append(" MODULE(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")"); // Assume single module
