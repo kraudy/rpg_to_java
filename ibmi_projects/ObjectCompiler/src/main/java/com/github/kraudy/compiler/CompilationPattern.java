@@ -5,6 +5,8 @@ import java.util.EnumSet;
 import java.util.Map;
 import java.util.function.Function;
 
+import com.github.kraudy.compiler.ObjectDescription.ObjectType;
+
 public class CompilationPattern {
     // Resolver map for command builders (functions that build command strings based on spec)
   private Map<CompCmd, Function<ObjectDescription, String>> cmdBuilders = new EnumMap<>(CompCmd.class);
@@ -131,7 +133,7 @@ public class CompilationPattern {
     StringBuilder sb = new StringBuilder();
     sb.append(" MODULE(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
     sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(getSourceMember(spec, CompCmd.CRTRPGMOD)).append(")");
+    sb.append(" SRCMBR(").append(getSourceName(spec, CompCmd.CRTRPGMOD)).append(")");
     appendCommonParams(sb, spec);
     return sb.toString();
   }
@@ -141,7 +143,7 @@ public class CompilationPattern {
     StringBuilder sb = new StringBuilder();
     sb.append(" PGM(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
     sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(getSourceMember(spec, CompCmd.CRTBNDRPG)).append(")");
+    sb.append(" SRCMBR(").append(getSourceName(spec, CompCmd.CRTBNDRPG)).append(")");
     appendCommonParams(sb, spec);
     return sb.toString();
   }
@@ -152,7 +154,7 @@ public class CompilationPattern {
     sb.append(" OBJ(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
     sb.append(" OBJTYPE(*").append(spec.getObjectType().name()).append(")");
     sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(getSourceMember(spec, CompCmd.CRTSQLRPGI)).append(")");
+    sb.append(" SRCMBR(").append(getSourceName(spec, CompCmd.CRTSQLRPGI)).append(")");
     appendCommonParams(sb, spec);
     return sb.toString();
   }
@@ -171,7 +173,7 @@ public class CompilationPattern {
   public String buildSqlCmd(ObjectDescription spec) {
     StringBuilder sb = new StringBuilder();
     sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(getSourceMember(spec, CompCmd.RUNSQLSTM)).append(")");
+    sb.append(" SRCMBR(").append(getSourceName(spec, CompCmd.RUNSQLSTM)).append(")");
     sb.append(" COMMIT(*NONE)");
     appendCommonParams(sb, spec);
     return sb.toString();
@@ -187,23 +189,17 @@ public class CompilationPattern {
     // Add more common params (e.g., DFTACTGRP(*NO), BNDDIR, etc.)
   }
 
-  // TODO: Move these two to ObjectDescription? / getDefaultSourceFile
-  //public String getSourceFile(String sourceFile, ObjectDescription.SourceType sourceType) {
-  public String getSourceFile(ObjectDescription spec) {
-    String sourceFile = spec.getSourceFile();
-    String sourceLib = spec.getSourceLibrary();
-    //String file = (sourceFile != null) ? sourceFile : ObjectDescription.typeToDftSrc.getOrDefault(sourceType, ObjectDescription.DftSrc.QRPGLESRC).name();
-    String file = (sourceFile != null) ? sourceFile : ObjectDescription.typeToDftSrc.get(spec.getSourceType()).name();
-    //TODO: Validate if it should use library when library = null o *LIBL
-    return sourceLib + "/" + file;
-  }
-
   // TODO: Move this to ObjectDescription and add '*' if needed to the String method
-  public String getSourceMember(ObjectDescription spec, CompCmd cmd) {
-    if (spec.sourceMember != null && !spec.sourceMember.isEmpty()) {
-      return spec.sourceMember;
+  public String getSourceName(ObjectDescription spec, CompCmd cmd) {
+    /* Get Source Member name */
+    if (spec.getSourceName() != null && !spec.getSourceName().isEmpty()) {
+      return spec.getSourceName();
     }
-    // Command-specific default special value
+
+    // ObjectDescription.ObjectType objectType = spec.getObjectType();
+    
+    // TODO: I tried using objectType to do the map but CRTSQLRPGI is different. Validate this
+    /* If no source member name is provided, the system default is supplied based on the object type */
     switch (cmd) {
       case CRTBNDRPG:
       case CRTBNDCL:

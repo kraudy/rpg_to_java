@@ -19,7 +19,7 @@ public class ObjectDescription {
   public ObjectType objectType;
   public String sourceLibrary;
   public String sourceFile;
-  public String sourceMember;
+  public String sourceName;
   public SourceType sourceType;
   public String text;
   public String actGrp;//TODO: Remove this
@@ -68,7 +68,7 @@ public class ObjectDescription {
         @JsonProperty("objectType") ObjectType objectType,
         @JsonProperty("sourceLibrary") String sourceLibrary,
         @JsonProperty("sourceFile") String sourceFile,
-        @JsonProperty("sourceMember") String sourceMember,
+        @JsonProperty("sourceName") String sourceName,
         @JsonProperty("sourceType") SourceType sourceType,
         @JsonProperty("text") String text,
         @JsonProperty("actGrp") String actGrp) {
@@ -80,8 +80,8 @@ public class ObjectDescription {
     this.objectName = objectName;
     this.objectType = objectType;
     this.sourceLibrary = sourceLibrary;
-    this.sourceFile = (sourceFile.isEmpty()) ? typeToDftSrc.get(sourceType).name() : sourceFile;
-    this.sourceMember = (sourceMember.isEmpty() ? objectName : sourceMember); //TODO: Add logic for stream files
+    this.sourceFile = (sourceFile.isEmpty()) ? typeToDftSrc.get(sourceType).name() : sourceFile; // TODO: Add logic for sourcePF or directory
+    this.sourceName = (sourceName.isEmpty() ? objectName : sourceName); //TODO: Add logic for stream files / members / default
     this.sourceType = sourceType;
     this.text = text;
     this.actGrp = actGrp; //TODO: Remove this, maybe add it to another struct with the compilation command params
@@ -94,7 +94,7 @@ public class ObjectDescription {
   public ObjectType getObjectType() { return objectType; }
   public String getSourceLibrary() { return sourceLibrary; }
   public String getSourceFile() { return sourceFile; }
-  public String getSourceMember() { return sourceMember; }
+  public String getSourceName() { return sourceName; }
   public SourceType getSourceType() { return sourceType; }
   public String getText() { return text; }
   public String getActGrp() { return actGrp; }

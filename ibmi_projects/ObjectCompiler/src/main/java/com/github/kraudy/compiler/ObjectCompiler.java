@@ -240,10 +240,10 @@ public class ObjectCompiler implements Runnable{
       spec.sourceFile = retrievedFile.trim().toUpperCase();
     } 
 
-    String retrievedMbr = (String) objInfo.get("sourceMember");
+    String retrievedMbr = (String) objInfo.get("sourceName");
     if (debug) System.out.println("retrievedMbr: " + retrievedMbr);
     if (retrievedMbr != null && !retrievedMbr.trim().isEmpty()) {
-      spec.sourceMember = retrievedMbr.trim().toUpperCase();
+      spec.sourceName = retrievedMbr.trim().toUpperCase();
     }
 
     String retrievedText = (String) objInfo.get("textDescription");
@@ -326,7 +326,7 @@ public class ObjectCompiler implements Runnable{
     info.put("creationDateTime", text13.toObject(data, offset).toString().trim()); offset += 13;
     info.put("sourceFile", text10.toObject(data, offset).toString().trim()); offset += 10;
     info.put("sourceLibrary", text10.toObject(data, offset).toString().trim()); offset += 10;
-    info.put("sourceMember", text10.toObject(data, offset).toString().trim()); offset += 10;
+    info.put("sourceName", text10.toObject(data, offset).toString().trim()); offset += 10;
     info.put("sourceUpdatedDateTime", text13.toObject(data, offset).toString().trim()); offset += 13;
     info.put("observable", text1.toObject(data, offset).toString().trim()); offset += 1;
     info.put("userProfileOption", text1.toObject(data, offset).toString().trim()); offset += 1;
