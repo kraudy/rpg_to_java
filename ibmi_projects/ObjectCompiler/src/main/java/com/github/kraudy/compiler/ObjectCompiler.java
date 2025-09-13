@@ -221,10 +221,7 @@ public class ObjectCompiler implements Runnable{
       String attr = (String) objInfo.get("attribute");
       if (debug) System.out.println("attr: " + attr);
       if (attr != null && !attr.trim().isEmpty()) {
-        spec.sourceType = ObjectDescription.attrToSourceType.get(attr.trim().toUpperCase());
-        if (spec.getSourceType() == null) {
-          throw new IllegalArgumentException("Could not infer source type from object attribute '" + attr + "'. Source type is required.");
-        } 
+        spec.sourceType = ObjectDescription.SourceType.fromString(attr.trim().toUpperCase());
       }
     }
 

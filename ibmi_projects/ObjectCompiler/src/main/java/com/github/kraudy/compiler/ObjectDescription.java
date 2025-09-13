@@ -26,7 +26,16 @@ public class ObjectDescription {
 
   public enum SysCmd { CHGLIBL, DSPPGMREF, DSPOBJD, DSPDBR }
 
-  public enum SourceType { RPG, RPGLE, SQLRPGLE, CLP, CLLE, SQL }
+  public enum SourceType { 
+    RPG, RPGLE, SQLRPGLE, CLP, CLLE, SQL;
+    public static SourceType fromString(String value) {
+      try {
+          return SourceType.valueOf(value);
+      } catch (IllegalArgumentException e) {
+          throw new IllegalArgumentException("Could not get source type from object attribute '" + value + "'");
+      }
+    } 
+  }
 
   public enum ObjectType { PGM, SRVPGM, MODULE, TABLE, LF, VIEW, ALIAS, PROCEDURE, FUNCTION } // Add more as needed
 
@@ -37,24 +46,14 @@ public class ObjectDescription {
   /* Maps source type to its default source pf */
   public static final Map<SourceType, DftSrc> typeToDftSrc = new EnumMap<>(SourceType.class);
 
-  /* Maps object attribute to source type (for inference) */
-  public static final Map<String, SourceType> attrToSourceType = new HashMap<>();
-
   static{
-        /* From source member type to default source file default name */
+    /* From source member type to default source file default name */
     typeToDftSrc.put(SourceType.RPG, DftSrc.QRPGSRC);
     typeToDftSrc.put(SourceType.RPGLE, DftSrc.QRPGLESRC);
     typeToDftSrc.put(SourceType.SQLRPGLE, DftSrc.QRPGLESRC); // Often same as RPGLE
     typeToDftSrc.put(SourceType.CLP, DftSrc.QCLSRC);
     typeToDftSrc.put(SourceType.CLLE, DftSrc.QCLSRC);
     typeToDftSrc.put(SourceType.SQL, DftSrc.QSQLSRC);
-
-    // Populate attrToSourceType (basic mapping, expand as needed)
-    attrToSourceType.put("RPG", SourceType.RPG);
-    attrToSourceType.put("RPGLE", SourceType.RPGLE);
-    attrToSourceType.put("SQLRPGLE", SourceType.SQLRPGLE);
-    attrToSourceType.put("CLP", SourceType.CLP);
-    attrToSourceType.put("CLLE", SourceType.CLLE);
 
   }
 

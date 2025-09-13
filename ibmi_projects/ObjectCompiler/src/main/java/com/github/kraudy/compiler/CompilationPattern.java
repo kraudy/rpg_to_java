@@ -180,6 +180,7 @@ public class CompilationPattern {
   }
 
   public void appendCommonParams(StringBuilder sb, ObjectDescription spec) {
+    //TODO: This should have the optional params in the corresponding order so they can be added or omited with no problem
     if (spec.getText() != null && !spec.getText().isEmpty()) {
       sb.append(" TEXT('").append(spec.getText()).append("')");
     }
