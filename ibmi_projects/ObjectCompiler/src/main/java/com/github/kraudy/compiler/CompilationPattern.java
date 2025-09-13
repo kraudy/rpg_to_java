@@ -11,12 +11,34 @@ public class CompilationPattern {
     // Resolver map for command builders (functions that build command strings based on spec)
   private Map<CompCmd, Function<ObjectDescription, String>> cmdBuilders = new EnumMap<>(CompCmd.class);
 
-  public enum CompCmd { CRTRPGMOD, CRTSQLRPGI, CRTBNDRPG, CRTRPGPGM, CRTCLMOD, CRTBNDCL, CRTCLPGM, RUNSQLSTM, CRTSRVPGM, CRTDSPF, CRTLF, CRTPRTF, CRTMNU, CRTQMQRY }
+  public enum CompCmd { 
+    CRTRPGMOD, CRTSQLRPGI, CRTBNDRPG, CRTRPGPGM, CRTCLMOD, CRTBNDCL, CRTCLPGM, RUNSQLSTM, CRTSRVPGM, CRTDSPF, CRTLF, CRTPRTF, CRTMNU, CRTQMQRY;
+    public static String compilationSourceName(CompCmd cmd, String sourceName, String objectName){
+      if (sourceName != null && !sourceName.isEmpty()) {
+        return sourceName;
+      }
+      switch (cmd) {
+        case CRTBNDRPG:
+        case CRTBNDCL:
+        case CRTRPGPGM:
+        case CRTCLPGM:
+          return ValCmd.PGM.toString(); //"*PGM";
+        case CRTRPGMOD:
+        case CRTCLMOD:
+          return ValCmd.MODULE.toString();
+        case CRTSQLRPGI:
+          return ValCmd.OBJ.toString();
+        default:
+          // TODO: Fix this
+          return objectName; // Fallback for SQL, etc.
+      }
+    }
+  }
 
-  public enum ParamCmd { PGM, OBJ, OBJTYPE, OUTPUT, OUTMBR, MODULE, BNDSRVPGM, LIBL, SRCFILE, SRCMBR, ACTGRP, DFTACTGRP, BNDDIR, COMMIT, TEXT, TGTCCSID, CRTFRMSTMF }
+  public enum ParamCmd { PGM, MODULE, OBJ, OBJTYPE, OUTPUT, OUTMBR, BNDSRVPGM, LIBL, SRCFILE, SRCMBR, ACTGRP, DFTACTGRP, BNDDIR, COMMIT, TEXT, TGTCCSID, CRTFRMSTMF }
 
   //TODO: Add a Map<String, ValCmd>
-  public enum ValCmd { FIRST, REPLACE, OUTFILE, LIBL, FILE, DTAARA, PGM, SRVPGM, CURLIB; 
+  public enum ValCmd { FIRST, REPLACE, OUTFILE, LIBL, FILE, DTAARA, PGM, MODULE, OBJ, SRVPGM, CURLIB; 
     @Override
     public String toString() {
         return "*" + name();
@@ -129,11 +151,12 @@ public class CompilationPattern {
   }
 
   // Example builder function for module commands
+  // TODO: Add CompCmd as param or something, don't burn it.
   public String buildModuleCmd(ObjectDescription spec) {
     StringBuilder sb = new StringBuilder();
     sb.append(" MODULE(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
     sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(getSourceName(spec, CompCmd.CRTRPGMOD)).append(")");
+    sb.append(" SRCMBR(").append(CompCmd.compilationSourceName(CompCmd.CRTRPGMOD, spec.getSourceName(), spec.getObjectName())).append(")");
     appendCommonParams(sb, spec);
     return sb.toString();
   }
@@ -143,7 +166,7 @@ public class CompilationPattern {
     StringBuilder sb = new StringBuilder();
     sb.append(" PGM(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
     sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(getSourceName(spec, CompCmd.CRTBNDRPG)).append(")");
+    sb.append(" SRCMBR(").append(CompCmd.compilationSourceName(CompCmd.CRTBNDRPG, spec.getSourceName(), spec.getObjectName())).append(")");
     appendCommonParams(sb, spec);
     return sb.toString();
   }
@@ -154,7 +177,7 @@ public class CompilationPattern {
     sb.append(" OBJ(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
     sb.append(" OBJTYPE(*").append(spec.getObjectType().name()).append(")");
     sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(getSourceName(spec, CompCmd.CRTSQLRPGI)).append(")");
+    sb.append(" SRCMBR(").append(CompCmd.compilationSourceName(CompCmd.CRTSQLRPGI, spec.getSourceName(), spec.getObjectName())).append(")");
     appendCommonParams(sb, spec);
     return sb.toString();
   }
@@ -173,7 +196,7 @@ public class CompilationPattern {
   public String buildSqlCmd(ObjectDescription spec) {
     StringBuilder sb = new StringBuilder();
     sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(getSourceName(spec, CompCmd.RUNSQLSTM)).append(")");
+    sb.append(" SRCMBR(").append(CompCmd.compilationSourceName(CompCmd.RUNSQLSTM, spec.getSourceName(), spec.getObjectName())).append(")");
     sb.append(" COMMIT(*NONE)");
     appendCommonParams(sb, spec);
     return sb.toString();
@@ -188,33 +211,6 @@ public class CompilationPattern {
     //   sb.append(" ACTGRP(").append(spec.getActGrp()).append(")");
     // }
     // Add more common params (e.g., DFTACTGRP(*NO), BNDDIR, etc.)
-  }
-
-  // TODO: Move this to ObjectDescription and add '*' if needed to the String method
-  public String getSourceName(ObjectDescription spec, CompCmd cmd) {
-    /* Get Source Member name */
-    if (spec.getSourceName() != null && !spec.getSourceName().isEmpty()) {
-      return spec.getSourceName();
-    }
-
-    // ObjectDescription.ObjectType objectType = spec.getObjectType();
-    
-    // TODO: I tried using objectType to do the map but CRTSQLRPGI is different. Validate this
-    /* If no source member name is provided, the system default is supplied based on the object type */
-    switch (cmd) {
-      case CRTBNDRPG:
-      case CRTBNDCL:
-      case CRTRPGPGM:
-      case CRTCLPGM:
-        return "*PGM";
-      case CRTRPGMOD:
-      case CRTCLMOD:
-        return "*MODULE";
-      case CRTSQLRPGI:
-        return "*OBJ";
-      default:
-        return spec.objectName; // Fallback for SQL, etc.
-    }
   }
 
 }

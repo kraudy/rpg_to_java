@@ -28,13 +28,31 @@ public class ObjectDescription {
 
   public enum SourceType { 
     RPG, RPGLE, SQLRPGLE, CLP, CLLE, SQL;
+
     public static SourceType fromString(String value) {
       try {
-          return SourceType.valueOf(value);
+        return SourceType.valueOf(value);
       } catch (IllegalArgumentException e) {
-          throw new IllegalArgumentException("Could not get source type from object attribute '" + value + "'");
+        throw new IllegalArgumentException("Could not get source type from object attribute '" + value + "'");
       }
     } 
+
+    public static String defaultSourcePf (SourceType sourceType){
+      switch (sourceType){
+        case RPG:
+          return DftSrc.QRPGSRC.name(); //TODO: Add .name()? and return string?
+        case RPGLE:
+        case SQLRPGLE:
+          return DftSrc.QRPGLESRC.name();
+        case CLP:
+        case CLLE:
+          return DftSrc.QCLSRC.name();
+        case SQL:
+          return DftSrc.QSQLSRC.name();
+        default:
+          throw new IllegalArgumentException("Could not get default sourcePf for '" + sourceType + "'");
+      }
+    }
   }
 
   public enum ObjectType { PGM, SRVPGM, MODULE, TABLE, LF, VIEW, ALIAS, PROCEDURE, FUNCTION } // Add more as needed
@@ -42,20 +60,6 @@ public class ObjectDescription {
   public enum PostCmpCmd { CHGOBJD }
 
   public enum DftSrc { QRPGLESRC, QRPGSRC, QCLSRC, QSQLSRC } // TODO: Expand
-
-  /* Maps source type to its default source pf */
-  public static final Map<SourceType, DftSrc> typeToDftSrc = new EnumMap<>(SourceType.class);
-
-  static{
-    /* From source member type to default source file default name */
-    typeToDftSrc.put(SourceType.RPG, DftSrc.QRPGSRC);
-    typeToDftSrc.put(SourceType.RPGLE, DftSrc.QRPGLESRC);
-    typeToDftSrc.put(SourceType.SQLRPGLE, DftSrc.QRPGLESRC); // Often same as RPGLE
-    typeToDftSrc.put(SourceType.CLP, DftSrc.QCLSRC);
-    typeToDftSrc.put(SourceType.CLLE, DftSrc.QCLSRC);
-    typeToDftSrc.put(SourceType.SQL, DftSrc.QSQLSRC);
-
-  }
 
   //TODO: Move this class to its own file and remove static
   //TODO: Change this name to IbmObject, to be more broader
@@ -79,7 +83,7 @@ public class ObjectDescription {
     this.objectName = objectName;
     this.objectType = objectType;
     this.sourceLibrary = sourceLibrary;
-    this.sourceFile = (sourceFile.isEmpty()) ? typeToDftSrc.get(sourceType).name() : sourceFile; // TODO: Add logic for sourcePF or directory
+    this.sourceFile = (sourceFile.isEmpty()) ? SourceType.defaultSourcePf(sourceType) : sourceFile; // TODO: Add logic for sourcePF or directory
     this.sourceName = (sourceName.isEmpty() ? objectName : sourceName); //TODO: Add logic for stream files / members / default
     this.sourceType = sourceType;
     this.text = text;
