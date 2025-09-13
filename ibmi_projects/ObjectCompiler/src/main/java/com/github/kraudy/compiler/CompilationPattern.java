@@ -13,7 +13,7 @@ public class CompilationPattern {
 
   public enum CompCmd { 
     CRTRPGMOD, CRTSQLRPGI, CRTBNDRPG, CRTRPGPGM, CRTCLMOD, CRTBNDCL, CRTCLPGM, RUNSQLSTM, CRTSRVPGM, CRTDSPF, CRTLF, CRTPRTF, CRTMNU, CRTQMQRY;
-    public static String compilationSourceName(CompCmd cmd, String sourceName, String objectName){
+    public static String compilationSourceName(CompCmd cmd, String sourceName){
       if (sourceName != null && !sourceName.isEmpty()) {
         return sourceName;
       }
@@ -28,9 +28,10 @@ public class CompilationPattern {
           return ValCmd.MODULE.toString();
         case CRTSQLRPGI:
           return ValCmd.OBJ.toString();
+        // TODO: Add SQL Types
+        //case RUNSQLSTM:
         default:
-          // TODO: Fix this
-          return objectName; // Fallback for SQL, etc.
+          throw new IllegalArgumentException("Could not found compilation source name and no default value defined for Cmd: " + cmd.name());
       }
     }
   }
@@ -156,7 +157,7 @@ public class CompilationPattern {
     StringBuilder sb = new StringBuilder();
     sb.append(" MODULE(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
     sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(CompCmd.compilationSourceName(CompCmd.CRTRPGMOD, spec.getSourceName(), spec.getObjectName())).append(")");
+    sb.append(" SRCMBR(").append(CompCmd.compilationSourceName(CompCmd.CRTRPGMOD, spec.getSourceName())).append(")");
     appendCommonParams(sb, spec);
     return sb.toString();
   }
@@ -166,7 +167,7 @@ public class CompilationPattern {
     StringBuilder sb = new StringBuilder();
     sb.append(" PGM(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
     sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(CompCmd.compilationSourceName(CompCmd.CRTBNDRPG, spec.getSourceName(), spec.getObjectName())).append(")");
+    sb.append(" SRCMBR(").append(CompCmd.compilationSourceName(CompCmd.CRTBNDRPG, spec.getSourceName())).append(")");
     appendCommonParams(sb, spec);
     return sb.toString();
   }
@@ -177,7 +178,7 @@ public class CompilationPattern {
     sb.append(" OBJ(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
     sb.append(" OBJTYPE(*").append(spec.getObjectType().name()).append(")");
     sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(CompCmd.compilationSourceName(CompCmd.CRTSQLRPGI, spec.getSourceName(), spec.getObjectName())).append(")");
+    sb.append(" SRCMBR(").append(CompCmd.compilationSourceName(CompCmd.CRTSQLRPGI, spec.getSourceName())).append(")");
     appendCommonParams(sb, spec);
     return sb.toString();
   }
@@ -196,7 +197,7 @@ public class CompilationPattern {
   public String buildSqlCmd(ObjectDescription spec) {
     StringBuilder sb = new StringBuilder();
     sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(CompCmd.compilationSourceName(CompCmd.RUNSQLSTM, spec.getSourceName(), spec.getObjectName())).append(")");
+    sb.append(" SRCMBR(").append(CompCmd.compilationSourceName(CompCmd.RUNSQLSTM, spec.getSourceName())).append(")");
     sb.append(" COMMIT(*NONE)");
     appendCommonParams(sb, spec);
     return sb.toString();
