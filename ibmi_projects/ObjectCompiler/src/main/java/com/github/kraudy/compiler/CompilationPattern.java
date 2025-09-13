@@ -5,9 +5,6 @@ import java.util.EnumSet;
 import java.util.Map;
 import java.util.function.Function;
 
-import com.github.kraudy.compiler.ObjectDescription.ObjectType;
-import com.github.kraudy.compiler.ObjectDescription.SourceType;
-
 public class CompilationPattern {
     // Resolver map for command builders (functions that build command strings based on spec)
   private Map<CompCmd, Function<ObjectDescription, String>> cmdBuilders = new EnumMap<>(CompCmd.class);

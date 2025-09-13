@@ -1,7 +1,6 @@
 package com.github.kraudy.compiler;
 
 import java.beans.PropertyVetoException;
-import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -9,18 +8,8 @@ import java.sql.Timestamp;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import com.ibm.as400.access.AS400;
 import com.ibm.as400.access.AS400Message;
@@ -38,15 +27,10 @@ import io.github.theprez.dotenv_ibmi.IBMiDotEnv;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
-import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Option;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Command (name = "compiler", description = "OPM/ILE Object Compiler", mixinStandardHelpOptions = true, version = "ObjectCompiler 0.0.1")
 public class ObjectCompiler implements Runnable{
-  private static final String UTF8_CCSID = "1208"; // UTF-8 for stream files
   public static final String INVARIANT_CCSID = "37"; // EBCDIC
   private final AS400 system;
   private final Connection connection;
