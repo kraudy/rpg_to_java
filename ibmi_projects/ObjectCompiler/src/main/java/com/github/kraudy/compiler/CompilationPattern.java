@@ -5,6 +5,8 @@ import java.util.EnumSet;
 import java.util.Map;
 import java.util.function.Function;
 
+import com.fasterxml.jackson.databind.deser.impl.CreatorCandidate.Param;
+
 public class CompilationPattern {
     // Resolver map for command builders (functions that build command strings based on spec)
   private Map<CompCmd, Function<ObjectDescription, String>> cmdBuilders = new EnumMap<>(CompCmd.class);
@@ -45,6 +47,20 @@ public class CompilationPattern {
         throw new IllegalArgumentException("Could not get compilation command param from string: '" + value + "'");
       }
     } 
+
+    public static String ParamPgmName(String library, String objectName){
+      StringBuilder sb = new StringBuilder();
+      
+      if (library.isEmpty()){
+        sb.append(ParamCmd.paramValue(ParamCmd.PGM, ValCmd.LIBL));
+      } else {
+        sb.append(library);
+      }
+
+      sb.append("/").append(objectName);
+
+      return sb.toString();
+    }
     
     /* Validates if the option for a given param is valid */
     public static String paramValue(ParamCmd paramCmd, ValCmd valCmd){
@@ -200,13 +216,19 @@ public class CompilationPattern {
     return sb.toString();
   }
 
+    //TODO: Maybe define what params all these have in common and then a list of the option params as enmus
+  // and then validate them in the corresponding order like : PGM, SRCFILE, SRCMBR
   // Similar for bound commands
+  // public String buildBoundCmd(ObjectDescription spec, EnumSet<ParamCmd> options) {
   public String buildBoundCmd(ObjectDescription spec) {
     StringBuilder sb = new StringBuilder();
     sb.append(" PGM(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
     sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
     sb.append(" SRCMBR(").append(CompCmd.compilationSourceName(CompCmd.CRTBNDRPG, spec.getSourceName())).append(")");
     appendCommonParams(sb, spec);
+
+    // if(!options.contains(ParamCmd.PGM)) throw new IllegalArgumentException("Required param not found : '" + ParamCmd.PGM.name() + "'");
+
     return sb.toString();
   }
 
