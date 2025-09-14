@@ -5,8 +5,6 @@ import java.util.EnumSet;
 import java.util.Map;
 import java.util.function.Function;
 
-import com.fasterxml.jackson.databind.deser.impl.CreatorCandidate.Param;
-
 public class CompilationPattern {
     // Resolver map for command builders (functions that build command strings based on spec)
   private Map<CompCmd, Function<ObjectDescription, String>> cmdBuilders = new EnumMap<>(CompCmd.class);
@@ -222,7 +220,8 @@ public class CompilationPattern {
   // public String buildBoundCmd(ObjectDescription spec, EnumSet<ParamCmd> options) {
   public String buildBoundCmd(ObjectDescription spec) {
     StringBuilder sb = new StringBuilder();
-    sb.append(" PGM(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
+    //sb.append(" PGM(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
+    sb.append(" " + ParamCmd.PGM.name() + "(").append(ParamCmd.ParamPgmName(spec.getTargetLibrary(), spec.getObjectName())).append(")");
     sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
     sb.append(" SRCMBR(").append(CompCmd.compilationSourceName(CompCmd.CRTBNDRPG, spec.getSourceName())).append(")");
     appendCommonParams(sb, spec);
