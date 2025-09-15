@@ -54,35 +54,6 @@ public class CompilationPattern {
         throw new IllegalArgumentException("Could not get compilation command param from string: '" + value + "'");
       }
     } 
-
-    public static String ParamPgmName(String targetLibrary, String objectName){
-      StringBuilder sb = new StringBuilder();
-      
-      if (targetLibrary.isEmpty()){
-        sb.append(ParamCmd.paramValue(ParamCmd.PGM, ValCmd.LIBL));
-      } else {
-        sb.append(targetLibrary);
-      }
-
-      sb.append("/").append(objectName);
-
-      return sb.toString();
-    }
-
-    // TODO: Maybe i could overlaod this
-    public static String ParamSrcfileName(String sourceLibrary, String sourceName){
-      StringBuilder sb = new StringBuilder();
-      
-      sb.append(sourceLibrary).append("/");
-
-      if (sourceName.isEmpty()){
-        sb.append(ParamCmd.paramValue(ParamCmd.SRCFILE, ValCmd.PGM));
-      } else {
-        sb.append(sourceName);
-      }
-
-      return sb.toString();
-    }
     
     /* Validates if the option for a given param is valid */
     public static String paramValue(ParamCmd paramCmd, ValCmd valCmd){
@@ -208,6 +179,11 @@ public class CompilationPattern {
     this.sourceName = odes.getSourceName();
     this.sourceType = odes.getSourceType();
 
+    /* Add default values if not provided */
+
+    if (this.targetLibrary.isEmpty()) this.targetLibrary = ValCmd.LIBL.toString();
+    if (this.sourceName.isEmpty())    this.sourceName = ValCmd.PGM.toString();
+
 
 
     // TODO: These could be build base on object type and source.
@@ -255,8 +231,11 @@ public class CompilationPattern {
   public String buildBoundCmd(ObjectDescription spec) {
     StringBuilder sb = new StringBuilder();
 
-    sb.append(" " + ParamCmd.PGM.name() + "(").append(ParamCmd.ParamPgmName(targetLibrary, objectName)).append(")");
-    sb.append(" " + ParamCmd.SRCFILE.name() + "(").append(ParamCmd.ParamSrcfileName(sourceLibrary, sourceFile)).append(")");
+    //TODO: If i can store each ParamCmd in an ordered list, here, i could just do for parcmd in parcmdList : and call the method
+    //sb.append(" " + ParamCmd.PGM.name() + "(").append(targetLibrary).append("/").append(objectName).append(")");
+    sb.append(getParamString(ParamCmd.PGM));
+    //sb.append(" " + ParamCmd.SRCFILE.name() + "(").append(ParamCmd.ParamSrcfileName(sourceLibrary, sourceFile)).append(")");
+    sb.append(getParamString(ParamCmd.SRCFILE));
     sb.append(" " + ParamCmd.SRCMBR.name() + "(").append(CompCmd.compilationSourceName(CompCmd.CRTBNDRPG, sourceName)).append(")");
     
     appendCommonParams(sb, spec);
@@ -307,6 +286,19 @@ public class CompilationPattern {
     //   sb.append(" ACTGRP(").append(spec.getActGrp()).append(")");
     // }
     // Add more common params (e.g., DFTACTGRP(*NO), BNDDIR, etc.)
+  }
+
+  public  String getParamString(ParamCmd paramCmd){
+    switch (paramCmd) {
+      case PGM:
+        return " " + paramCmd.name() + "(" + targetLibrary + "/" + objectName + ")";
+    
+      case SRCFILE:
+        return " " + paramCmd.name() + "(" + sourceLibrary + "/" + sourceFile + ")";
+
+      default:
+        return "";
+    }
   }
 
 }
