@@ -241,7 +241,8 @@ public class CompilationPattern {
     sb.append(getParamString(ParamCmd.PGM));
     //sb.append(" " + ParamCmd.SRCFILE.name() + "(").append(ParamCmd.ParamSrcfileName(sourceLibrary, sourceFile)).append(")");
     sb.append(getParamString(ParamCmd.SRCFILE));
-    sb.append(" " + ParamCmd.SRCMBR.name() + "(").append(CompCmd.compilationSourceName(CompCmd.CRTBNDRPG, sourceName)).append(")");
+    //sb.append(" " + ParamCmd.SRCMBR.name() + "(").append(CompCmd.compilationSourceName(CompCmd.CRTBNDRPG, sourceName)).append(")");
+    sb.append(getParamString(ParamCmd.SRCMBR));
     
     appendCommonParams(sb, spec);
 
@@ -301,6 +302,10 @@ public class CompilationPattern {
       case SRCFILE:
         return " " + paramCmd.name() + "(" + sourceLibrary + "/" + sourceFile + ")";
 
+      case SRCMBR:
+        return " " + paramCmd.name() + "(" + sourceName + ")";
+
+      //TODO: Add TEXT
       default:
         return "";
     }
