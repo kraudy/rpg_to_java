@@ -178,7 +178,7 @@ public class ObjectCompiler implements Runnable{
 
 
     // TODO: This could be encapsulated on the Iobject class
-    CompilationPattern.CompCmd mainCmd = cpat.getCompilationCommand(spec.getSourceType(), spec.getObjectType());
+    CompilationPattern.CompCmd mainCmd = cpat.getCompilationCommand();
     if (mainCmd == null) {
       System.err.println("No compilation command for source type " + spec.getSourceType() + " and object type " + spec.getObjectType());
       return;

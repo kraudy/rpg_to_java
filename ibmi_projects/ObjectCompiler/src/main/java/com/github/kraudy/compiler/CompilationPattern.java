@@ -9,6 +9,8 @@ public class CompilationPattern {
     // Resolver map for command builders (functions that build command strings based on spec)
   private Map<CompCmd, Function<ObjectDescription, String>> cmdBuilders = new EnumMap<>(CompCmd.class);
 
+  private CompCmd compilationCommand;
+
   private String targetLibrary;
   private String objectName;
   private ObjectDescription.ObjectType objectType;
@@ -21,10 +23,8 @@ public class CompilationPattern {
   public enum CompCmd { 
     CRTRPGMOD, CRTSQLRPGI, CRTBNDRPG, CRTRPGPGM, CRTCLMOD, CRTBNDCL, CRTCLPGM, RUNSQLSTM, CRTSRVPGM, CRTDSPF, CRTLF, CRTPRTF, CRTMNU, CRTQMQRY;
 
+    //TODO: This could be done with a MAP.
     public static String compilationSourceName(CompCmd cmd, String sourceName){
-      if (sourceName != null && !sourceName.isEmpty()) {
-        return sourceName;
-      }
       switch (cmd) {
         case CRTBNDRPG:
         case CRTBNDCL:
@@ -179,10 +179,15 @@ public class CompilationPattern {
     this.sourceName = odes.getSourceName();
     this.sourceType = odes.getSourceType();
 
+    /* Get compilation command */
+
+    this.compilationCommand = typeToCmdMap.get(sourceType).get(objectType);
+
     /* Add default values if not provided */
 
     if (this.targetLibrary.isEmpty()) this.targetLibrary = ValCmd.LIBL.toString();
-    if (this.sourceName.isEmpty())    this.sourceName = ValCmd.PGM.toString();
+    //if (this.sourceName.isEmpty())    this.sourceName = ValCmd.PGM.toString();
+    if (this.sourceName.isEmpty())    this.sourceName = CompCmd.compilationSourceName(compilationCommand, sourceName);//ValCmd.PGM.toString();
 
 
 
@@ -200,8 +205,8 @@ public class CompilationPattern {
     // Add more builders for other commands
   }
 
-  public CompCmd getCompilationCommand(ObjectDescription.SourceType sourceType, ObjectDescription.ObjectType objectType){
-    return typeToCmdMap.get(sourceType).get(objectType);
+  public CompCmd getCompilationCommand(){
+    return this.compilationCommand;
   }
 
   public String buildCommand(ObjectDescription spec, CompCmd cmd) {
