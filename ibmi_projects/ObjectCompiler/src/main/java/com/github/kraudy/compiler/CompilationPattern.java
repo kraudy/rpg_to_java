@@ -18,6 +18,9 @@ public class CompilationPattern {
   private String sourceFile;
   private String sourceName;
   private ObjectDescription.SourceType sourceType;
+  // TODO: These should be in a tuple or something else.
+  private String text; 
+  private String actGrp; 
 
 
   public enum CompCmd { 
@@ -179,6 +182,10 @@ public class CompilationPattern {
     this.sourceName = odes.getSourceName();
     this.sourceType = odes.getSourceType();
 
+    /* Get optional params */
+    this.text = odes.getText();
+    this.actGrp = odes.getActGrp();
+
     /* Get compilation command */
 
     this.compilationCommand = typeToCmdMap.get(sourceType).get(objectType);
@@ -237,11 +244,8 @@ public class CompilationPattern {
     StringBuilder sb = new StringBuilder();
 
     //TODO: If i can store each ParamCmd in an ordered list, here, i could just do for parcmd in parcmdList : and call the method
-    //sb.append(" " + ParamCmd.PGM.name() + "(").append(targetLibrary).append("/").append(objectName).append(")");
     sb.append(getParamString(ParamCmd.PGM));
-    //sb.append(" " + ParamCmd.SRCFILE.name() + "(").append(ParamCmd.ParamSrcfileName(sourceLibrary, sourceFile)).append(")");
     sb.append(getParamString(ParamCmd.SRCFILE));
-    //sb.append(" " + ParamCmd.SRCMBR.name() + "(").append(CompCmd.compilationSourceName(CompCmd.CRTBNDRPG, sourceName)).append(")");
     sb.append(getParamString(ParamCmd.SRCMBR));
     
     appendCommonParams(sb, spec);
@@ -285,16 +289,18 @@ public class CompilationPattern {
 
   public void appendCommonParams(StringBuilder sb, ObjectDescription spec) {
     //TODO: This should have the optional params in the corresponding order so they can be added or omited with no problem
-    if (spec.getText() != null && !spec.getText().isEmpty()) {
-      sb.append(" TEXT('").append(spec.getText()).append("')");
-    }
-    // if (spec.getActGrp() != null) && !spec.getActGrp().isEmpty(){
-    //   sb.append(" ACTGRP(").append(spec.getActGrp()).append(")");
-    // }
-    // Add more common params (e.g., DFTACTGRP(*NO), BNDDIR, etc.)
+    
+    // TODO: Maybe soemthing like this to check the param list: // if(options.contains(ParamCmd.TEXT)) do something;
+    sb.append(getParamString(ParamCmd.TEXT));
+
+    // for now, this gives error por CRTBNDRPG: CRTBNDRPG PGM(ROBKRAUDY1/HELLO) SRCFILE(*LIBL/QRPGLESRC) SRCMBR(HELLO) TEXT('Cool hello') ACTGRP('QILE')
+    // sb.append(getParamString(ParamCmd.ACTGRP));
+
   }
 
   public  String getParamString(ParamCmd paramCmd){
+    //TODO: Here, i could check if the param value is supplied, in that case, i would
+    // return that and otherwise, return the calculated value and then, maybe upbdate the object desc
     switch (paramCmd) {
       case PGM:
         return " " + paramCmd.name() + "(" + targetLibrary + "/" + objectName + ")";
@@ -305,7 +311,16 @@ public class CompilationPattern {
       case SRCMBR:
         return " " + paramCmd.name() + "(" + sourceName + ")";
 
-      //TODO: Add TEXT
+      case TEXT:
+        return (text.isEmpty()) ? "" : " " + paramCmd.name() + "('" + text + "')"; //TODO: This idea could be important.
+      
+      case ACTGRP:
+        return (actGrp.isEmpty()) ? "" : " " + paramCmd.name() + "('" + actGrp + "')"; 
+
+      // TODO: Implement these
+      case DFTACTGRP: // DFTACTGRP(*NO)
+      case BNDDIR:
+
       default:
         return "";
     }
