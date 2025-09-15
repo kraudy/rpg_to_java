@@ -174,7 +174,7 @@ public class ObjectCompiler implements Runnable{
     if (debug) System.err.println("Source type: " + spec.getSourceType());
 
     // cspec
-    cpat = new CompilationPattern();
+    cpat = new CompilationPattern(spec);
 
 
     // TODO: This could be encapsulated on the Iobject class

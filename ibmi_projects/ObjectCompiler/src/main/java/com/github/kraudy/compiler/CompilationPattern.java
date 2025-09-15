@@ -9,6 +9,15 @@ public class CompilationPattern {
     // Resolver map for command builders (functions that build command strings based on spec)
   private Map<CompCmd, Function<ObjectDescription, String>> cmdBuilders = new EnumMap<>(CompCmd.class);
 
+  private String targetLibrary;
+  private String objectName;
+  private ObjectDescription.ObjectType objectType;
+  private String sourceLibrary;
+  private String sourceFile;
+  private String sourceName;
+  private ObjectDescription.SourceType sourceType;
+
+
   public enum CompCmd { 
     CRTRPGMOD, CRTSQLRPGI, CRTBNDRPG, CRTRPGPGM, CRTCLMOD, CRTBNDCL, CRTCLPGM, RUNSQLSTM, CRTSRVPGM, CRTDSPF, CRTLF, CRTPRTF, CRTMNU, CRTQMQRY;
 
@@ -141,8 +150,7 @@ public class CompilationPattern {
     /*
      * Populate mapping from (ObjectDescription.SourceType, ObjectDescription.ObjectType) to CompCmd
     */
-    // TODO: There has to be a cleaner way of doing this, maybe using :: or lambda to auto define them
-    /* Maps sources and object type to compilation command */
+
     Map<ObjectDescription.ObjectType, CompCmd> rpgMap = new EnumMap<>(ObjectDescription.ObjectType.class);
     rpgMap.put(ObjectDescription.ObjectType.PGM, CompCmd.CRTRPGPGM);
     typeToCmdMap.put(ObjectDescription.SourceType.RPG, rpgMap);
@@ -150,7 +158,7 @@ public class CompilationPattern {
     Map<ObjectDescription.ObjectType, CompCmd> rpgLeMap = new EnumMap<>(ObjectDescription.ObjectType.class);
     rpgLeMap.put(ObjectDescription.ObjectType.MODULE, CompCmd.CRTRPGMOD);
     rpgLeMap.put(ObjectDescription.ObjectType.PGM, CompCmd.CRTBNDRPG);
-    rpgLeMap.put(ObjectDescription.ObjectType.SRVPGM, CompCmd.CRTSRVPGM); // Assuming compilation involves module creation first, but mapping to final command
+    rpgLeMap.put(ObjectDescription.ObjectType.SRVPGM, CompCmd.CRTSRVPGM);
     typeToCmdMap.put(ObjectDescription.SourceType.RPGLE, rpgLeMap);
 
     Map<ObjectDescription.ObjectType, CompCmd> sqlRpgLeMap = new EnumMap<>(ObjectDescription.ObjectType.class);
@@ -190,7 +198,18 @@ public class CompilationPattern {
     //TODO: I can also return the lambda function... that would be nice and would allow a higher abstraction function to get it
   }  
 
-  public CompilationPattern(){
+  public CompilationPattern(ObjectDescription odes){
+
+    this.targetLibrary = odes.getTargetLibrary();
+    this.objectName = odes.getObjectName();
+    this.objectType = odes.getObjectType();
+    this.sourceLibrary = odes.getSourceLibrary();
+    this.sourceFile = odes.getSourceFile();
+    this.sourceName = odes.getSourceName();
+    this.sourceType = odes.getSourceType();
+
+
+
     // TODO: These could be build base on object type and source.
     // Command builders as functions (pattern matching via enums)
     cmdBuilders.put(CompCmd.CRTRPGMOD, this::buildModuleCmd);
@@ -236,7 +255,7 @@ public class CompilationPattern {
   public String buildBoundCmd(ObjectDescription spec) {
     StringBuilder sb = new StringBuilder();
     //sb.append(" PGM(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
-    sb.append(" " + ParamCmd.PGM.name() + "(").append(ParamCmd.ParamPgmName(spec.getTargetLibrary(), spec.getObjectName())).append(")");
+    sb.append(" " + ParamCmd.PGM.name() + "(").append(ParamCmd.ParamPgmName(targetLibrary, objectName)).append(")");
     //sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
     sb.append(" " + ParamCmd.SRCFILE.name() + "(").append(ParamCmd.ParamSrcfileName(spec.getSourceLibrary(), spec.getSourceFile())).append(")");
     //sb.append(" SRCMBR(").append(CompCmd.compilationSourceName(CompCmd.CRTBNDRPG, spec.getSourceName())).append(")");
