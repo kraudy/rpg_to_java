@@ -254,12 +254,11 @@ public class CompilationPattern {
   // public String buildBoundCmd(ObjectDescription spec, EnumSet<ParamCmd> options) {
   public String buildBoundCmd(ObjectDescription spec) {
     StringBuilder sb = new StringBuilder();
-    //sb.append(" PGM(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
+
     sb.append(" " + ParamCmd.PGM.name() + "(").append(ParamCmd.ParamPgmName(targetLibrary, objectName)).append(")");
-    //sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" " + ParamCmd.SRCFILE.name() + "(").append(ParamCmd.ParamSrcfileName(spec.getSourceLibrary(), spec.getSourceFile())).append(")");
-    //sb.append(" SRCMBR(").append(CompCmd.compilationSourceName(CompCmd.CRTBNDRPG, spec.getSourceName())).append(")");
-    sb.append(" " + ParamCmd.SRCMBR.name() + "(").append(CompCmd.compilationSourceName(CompCmd.CRTBNDRPG, spec.getSourceName())).append(")");
+    sb.append(" " + ParamCmd.SRCFILE.name() + "(").append(ParamCmd.ParamSrcfileName(sourceLibrary, sourceFile)).append(")");
+    sb.append(" " + ParamCmd.SRCMBR.name() + "(").append(CompCmd.compilationSourceName(CompCmd.CRTBNDRPG, sourceName)).append(")");
+    
     appendCommonParams(sb, spec);
 
     // if(!options.contains(ParamCmd.PGM)) throw new IllegalArgumentException("Required param not found : '" + ParamCmd.PGM.name() + "'");
