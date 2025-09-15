@@ -5,6 +5,8 @@ import java.util.EnumSet;
 import java.util.Map;
 import java.util.function.Function;
 
+import com.github.kraudy.compiler.ObjectDescription.ObjectType;
+
 public class CompilationPattern {
     // Resolver map for command builders (functions that build command strings based on spec)
   private Map<CompCmd, Function<ObjectDescription, String>> cmdBuilders = new EnumMap<>(CompCmd.class);
@@ -26,8 +28,8 @@ public class CompilationPattern {
   public enum CompCmd { 
     CRTRPGMOD, CRTSQLRPGI, CRTBNDRPG, CRTRPGPGM, CRTCLMOD, CRTBNDCL, CRTCLPGM, RUNSQLSTM, CRTSRVPGM, CRTDSPF, CRTLF, CRTPRTF, CRTMNU, CRTQMQRY;
 
-    //TODO: This could be done with a MAP.
-    public static String compilationSourceName(CompCmd cmd, String sourceName){
+    //TODO: This could be done with a MAP. or a non static method.
+    public static String compilationSourceName(CompCmd cmd){
       switch (cmd) {
         case CRTBNDRPG:
         case CRTBNDCL:
@@ -193,8 +195,7 @@ public class CompilationPattern {
     /* Add default values if not provided */
 
     if (this.targetLibrary.isEmpty()) this.targetLibrary = ValCmd.LIBL.toString();
-    //if (this.sourceName.isEmpty())    this.sourceName = ValCmd.PGM.toString();
-    if (this.sourceName.isEmpty())    this.sourceName = CompCmd.compilationSourceName(compilationCommand, sourceName);//ValCmd.PGM.toString();
+    if (this.sourceName.isEmpty())    this.sourceName = CompCmd.compilationSourceName(compilationCommand);//ValCmd.PGM.toString();
 
 
 
@@ -231,8 +232,8 @@ public class CompilationPattern {
     StringBuilder sb = new StringBuilder();
     sb.append(" MODULE(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
     sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(CompCmd.compilationSourceName(CompCmd.CRTRPGMOD, spec.getSourceName())).append(")");
-    appendCommonParams(sb, spec);
+    sb.append(" SRCMBR(").append(CompCmd.compilationSourceName(compilationCommand)).append(")");
+    appendCommonParams(sb);
     return sb.toString();
   }
 
@@ -248,7 +249,7 @@ public class CompilationPattern {
     sb.append(getParamString(ParamCmd.SRCFILE));
     sb.append(getParamString(ParamCmd.SRCMBR));
     
-    appendCommonParams(sb, spec);
+    appendCommonParams(sb);
 
     // if(!options.contains(ParamCmd.PGM)) throw new IllegalArgumentException("Required param not found : '" + ParamCmd.PGM.name() + "'");
 
@@ -258,11 +259,14 @@ public class CompilationPattern {
   // For CRTSQLRPGI
   public String buildSqlRpgCmd(ObjectDescription spec) {
     StringBuilder sb = new StringBuilder();
-    sb.append(" OBJ(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
-    sb.append(" OBJTYPE(*").append(spec.getObjectType().name()).append(")");
-    sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(CompCmd.compilationSourceName(CompCmd.CRTSQLRPGI, spec.getSourceName())).append(")");
-    appendCommonParams(sb, spec);
+
+    sb.append(getParamString(ParamCmd.OBJ));
+    sb.append(getParamString(ParamCmd.OBJTYPE));
+    sb.append(getParamString(ParamCmd.SRCFILE));
+    sb.append(getParamString(ParamCmd.SRCMBR));
+
+    appendCommonParams(sb);
+
     return sb.toString();
   }
 
@@ -273,7 +277,7 @@ public class CompilationPattern {
     sb.append(" SRVPGM(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
     sb.append(" MODULE(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")"); // Assume single module
     sb.append(" BNDSRVPGM(*NONE)");
-    appendCommonParams(sb, spec);
+    appendCommonParams(sb);
     return sb.toString();
   }
 
@@ -281,13 +285,13 @@ public class CompilationPattern {
   public String buildSqlCmd(ObjectDescription spec) {
     StringBuilder sb = new StringBuilder();
     sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(CompCmd.compilationSourceName(CompCmd.RUNSQLSTM, spec.getSourceName())).append(")");
+    sb.append(" SRCMBR(").append(CompCmd.compilationSourceName(compilationCommand)).append(")");
     sb.append(" COMMIT(*NONE)");
-    appendCommonParams(sb, spec);
+    appendCommonParams(sb);
     return sb.toString();
   }
 
-  public void appendCommonParams(StringBuilder sb, ObjectDescription spec) {
+  public void appendCommonParams(StringBuilder sb) {
     //TODO: This should have the optional params in the corresponding order so they can be added or omited with no problem
     
     // TODO: Maybe soemthing like this to check the param list: // if(options.contains(ParamCmd.TEXT)) do something;
@@ -302,8 +306,12 @@ public class CompilationPattern {
     //TODO: Here, i could check if the param value is supplied, in that case, i would
     // return that and otherwise, return the calculated value and then, maybe upbdate the object desc
     switch (paramCmd) {
+      case OBJ:
       case PGM:
         return " " + paramCmd.name() + "(" + targetLibrary + "/" + objectName + ")";
+      
+      case OBJTYPE:
+        return " " + paramCmd.name() + "(" + ObjectType.toParam(objectType) + ")";
     
       case SRCFILE:
         return " " + paramCmd.name() + "(" + sourceLibrary + "/" + sourceFile + ")";

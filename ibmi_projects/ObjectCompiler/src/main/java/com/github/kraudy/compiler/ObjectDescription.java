@@ -47,7 +47,11 @@ public class ObjectDescription {
     }
   }
 
-  public enum ObjectType { PGM, SRVPGM, MODULE, TABLE, LF, VIEW, ALIAS, PROCEDURE, FUNCTION } // Add more as needed
+  public enum ObjectType { PGM, SRVPGM, MODULE, TABLE, LF, VIEW, ALIAS, PROCEDURE, FUNCTION;
+    public static String toParam(ObjectType objectType){
+      return "*" + objectType.name();
+    }
+  } // Add more as needed
 
   public enum PostCmpCmd { CHGOBJD }
 
