@@ -46,16 +46,31 @@ public class CompilationPattern {
       }
     } 
 
-    public static String ParamPgmName(String library, String objectName){
+    public static String ParamPgmName(String targetLibrary, String objectName){
       StringBuilder sb = new StringBuilder();
       
-      if (library.isEmpty()){
+      if (targetLibrary.isEmpty()){
         sb.append(ParamCmd.paramValue(ParamCmd.PGM, ValCmd.LIBL));
       } else {
-        sb.append(library);
+        sb.append(targetLibrary);
       }
 
       sb.append("/").append(objectName);
+
+      return sb.toString();
+    }
+
+    // TODO: Maybe i could overlaod this
+    public static String ParamSrcfileName(String sourceLibrary, String sourceName){
+      StringBuilder sb = new StringBuilder();
+      
+      sb.append(sourceLibrary).append("/");
+
+      if (sourceName.isEmpty()){
+        sb.append(ParamCmd.paramValue(ParamCmd.SRCFILE, ValCmd.PGM));
+      } else {
+        sb.append(sourceName);
+      }
 
       return sb.toString();
     }
@@ -83,7 +98,7 @@ public class CompilationPattern {
             if (!EnumSet.of(ValCmd.LIBL).contains(valCmd)) throw new IllegalArgumentException();
             break;
           case SRCFILE:
-            if (!EnumSet.of(ValCmd.FILE, ValCmd.LIBL).contains(valCmd)) throw new IllegalArgumentException();
+            if (!EnumSet.of(ValCmd.PGM, ValCmd.FILE, ValCmd.LIBL).contains(valCmd)) throw new IllegalArgumentException();
             break;
           case PGM:
             if (!EnumSet.of(ValCmd.CURLIB, ValCmd.LIBL).contains(valCmd)) throw new IllegalArgumentException();
@@ -222,8 +237,10 @@ public class CompilationPattern {
     StringBuilder sb = new StringBuilder();
     //sb.append(" PGM(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
     sb.append(" " + ParamCmd.PGM.name() + "(").append(ParamCmd.ParamPgmName(spec.getTargetLibrary(), spec.getObjectName())).append(")");
-    sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(CompCmd.compilationSourceName(CompCmd.CRTBNDRPG, spec.getSourceName())).append(")");
+    //sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
+    sb.append(" " + ParamCmd.SRCFILE.name() + "(").append(ParamCmd.ParamSrcfileName(spec.getSourceLibrary(), spec.getSourceFile())).append(")");
+    //sb.append(" SRCMBR(").append(CompCmd.compilationSourceName(CompCmd.CRTBNDRPG, spec.getSourceName())).append(")");
+    sb.append(" " + ParamCmd.SRCMBR.name() + "(").append(CompCmd.compilationSourceName(CompCmd.CRTBNDRPG, spec.getSourceName())).append(")");
     appendCommonParams(sb, spec);
 
     // if(!options.contains(ParamCmd.PGM)) throw new IllegalArgumentException("Required param not found : '" + ParamCmd.PGM.name() + "'");
