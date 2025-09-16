@@ -93,6 +93,7 @@ public class ObjectCompiler implements Runnable{
     }
   }
 
+  /* Required params */
   @Option(names = { "-l", "--lib" }, required = true, description = "Target library for object", converter = LibraryConverter.class)
   private String library;
 
@@ -102,8 +103,9 @@ public class ObjectCompiler implements Runnable{
   @Option(names = {"-t","--type"}, required = true, description = "Object type (e.g., PGM, SRVPGM)", converter = ObjectTypeConverter.class)
   private ObjectDescription.ObjectType objectType;
 
+  /* Good to have */
   @Option(names = { "-sl", "--source-lib" }, description = "Source library (defaults to *LIBL or retrieved from object)", converter = LibraryConverter.class)
-  private String sourceLib = "*LIBL";
+  private String sourceLib = CompilationPattern.ValCmd.LIBL.toString(); //"*LIBL";
 
   @Option(names = { "-sf", "--source-file" }, description = "Source physical file (defaults based on source type or retrieved from object)")
   private String sourceFile = "";
@@ -114,13 +116,14 @@ public class ObjectCompiler implements Runnable{
   @Option(names = {"-st","--source-type"}, description = "Source type (e.g., RPGLE, CLLE) (defaults to retrieved from object if possible)", converter = SourceTypeConverter.class)
   private ObjectDescription.SourceType sourceType;
 
+  /* Compilation flags */
   @Option(names = { "--text" }, description = "Object text description (defaults to retrieved from object if possible)")
   private String text = "";
 
-  //TODO: Is this needed?
   @Option(names = { "--actgrp" }, description = "Activation group (defaults to retrieved from object if possible)")
-  private String actGrp;
+  private String actGrp = "";
 
+  /* Options */
   @Option(names = "-x", description = "Debug")
   private boolean debug = false;
 

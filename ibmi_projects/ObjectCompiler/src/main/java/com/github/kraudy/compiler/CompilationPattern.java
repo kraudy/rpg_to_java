@@ -21,8 +21,7 @@ public class CompilationPattern {
   private String sourceName;
   private ObjectDescription.SourceType sourceType;
   // TODO: These should be in a tuple or something else.
-  private String text; 
-  private String actGrp; 
+  private Map<ParamCmd, String> ParamCmdSequence;
 
 
   public enum CompCmd { 
@@ -119,6 +118,8 @@ public class CompilationPattern {
     }  
   }
 
+  //public static final Map<ParamCmd, String> ParamCmdSequence = new  EnumMap<>(ParamCmd.class);
+
   /* Maps source type to its compilation command */
   public static final Map<ObjectDescription.SourceType, Map<ObjectDescription.ObjectType, CompCmd>> typeToCmdMap = new EnumMap<>(ObjectDescription.SourceType.class);
 
@@ -185,8 +186,11 @@ public class CompilationPattern {
     this.sourceType = odes.getSourceType();
 
     /* Get optional params */
-    this.text = odes.getText();
-    this.actGrp = odes.getActGrp();
+
+    this.ParamCmdSequence = odes.getParamCmdSequence();
+
+    // this.text = odes.getText();
+    // this.actGrp = odes.getActGrp();
 
     /* Get compilation command */
 
@@ -334,10 +338,9 @@ public class CompilationPattern {
         return " " + paramCmd.name() + "(" + "*NONE" + ")"; //TODO: Add validation here to return default *None or real value if given.
 
       case TEXT:
-        return (text.isEmpty()) ? "" : " " + paramCmd.name() + "('" + text + "')"; //TODO: This idea could be important.
-      
       case ACTGRP:
-        return (actGrp.isEmpty()) ? "" : " " + paramCmd.name() + "('" + actGrp + "')"; 
+        //return (text.isEmpty()) ? "" : " " + paramCmd.name() + "('" + text + "')"; //TODO: This idea could be important.
+        return (ParamCmdSequence.get(paramCmd).isEmpty()) ? "" : " " + paramCmd.name() + "('" + ParamCmdSequence.get(paramCmd) + "')";
 
       // TODO: Implement these
       case DFTACTGRP: // DFTACTGRP(*NO)

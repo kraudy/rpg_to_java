@@ -1,7 +1,11 @@
 package com.github.kraudy.compiler;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 
 // Core struct for capturing compilation specs (JSON-friendly via Jackson)
 public class ObjectDescription {
@@ -13,6 +17,9 @@ public class ObjectDescription {
   public String sourceFile;
   public String sourceName;
   public SourceType sourceType;
+
+  public Map<CompilationPattern.ParamCmd, String> ParamCmdSequence = new HashMap<>();
+
   public String text;
   public String actGrp;//TODO: Remove this
 
@@ -58,7 +65,6 @@ public class ObjectDescription {
   public enum DftSrc { QRPGLESRC, QRPGSRC, QCLSRC, QSQLSRC } // TODO: Expand
 
   //TODO: Move this class to its own file and remove static
-  //TODO: Change this name to IbmObject, to be more broader
   // Constructor for Jackson deserialization
   @JsonCreator
   public ObjectDescription(
@@ -82,8 +88,11 @@ public class ObjectDescription {
     this.sourceFile = (sourceFile.isEmpty()) ? SourceType.defaultSourcePf(sourceType) : sourceFile; // TODO: Add logic for sourcePF or directory
     this.sourceName = (sourceName.isEmpty() ? objectName : sourceName); //TODO: Add logic for stream files / members / default
     this.sourceType = sourceType;
-    this.text = text;
-    this.actGrp = actGrp; //TODO: Remove this, maybe add it to another struct with the compilation command params
+
+    //TODO: Maybe this should be done in the object compiler.
+    /* Add compilation params values */
+    ParamCmdSequence.put(ParamCmd.TEXT, (text.isEmpty()) ? "" : text);
+    ParamCmdSequence.put(ParamCmd.ACTGRP, (actGrp.isEmpty()) ? "" : actGrp);
 
   }
 
@@ -97,6 +106,7 @@ public class ObjectDescription {
   public SourceType getSourceType() { return sourceType; }
   public String getText() { return text; }
   public String getActGrp() { return actGrp; }
+  public Map<CompilationPattern.ParamCmd, String> getParamCmdSequence() { return ParamCmdSequence; }
 
   // TODO: This logic encapsulation is nice. It will be helpfull in the future
   // Key method for use in graphs (matches ObjectDependency format)
