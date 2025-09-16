@@ -50,7 +50,7 @@ public class CompilationPattern {
   }
 
   public enum ParamCmd { 
-    PGM, MODULE, OBJ, OBJTYPE, OUTPUT, OUTMBR, BNDSRVPGM, LIBL, SRCFILE, SRCMBR, ACTGRP, DFTACTGRP, BNDDIR, COMMIT, TEXT, TGTCCSID, CRTFRMSTMF;
+    PGM, MODULE, OBJ, OBJTYPE, OUTPUT, OUTMBR, SRVPGM, BNDSRVPGM, LIBL, SRCFILE, SRCMBR, ACTGRP, DFTACTGRP, BNDDIR, COMMIT, TEXT, TGTCCSID, CRTFRMSTMF;
 
     public static ParamCmd fromString(String value) {
       try {
@@ -230,10 +230,13 @@ public class CompilationPattern {
   // TODO: Add CompCmd as param or something, don't burn it.
   public String buildModuleCmd(ObjectDescription spec) {
     StringBuilder sb = new StringBuilder();
-    sb.append(" MODULE(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
-    sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(CompCmd.compilationSourceName(compilationCommand)).append(")");
+
+    sb.append(getParamString(ParamCmd.MODULE));
+    sb.append(getParamString(ParamCmd.SRCFILE));
+    sb.append(getParamString(ParamCmd.SRCMBR));
+
     appendCommonParams(sb);
+
     return sb.toString();
   }
 
@@ -274,20 +277,28 @@ public class CompilationPattern {
   public String buildSrvPgmCmd(ObjectDescription spec) {
     //TODO: The spec for the SRPVGM should indicate if it is build using modules, binding dir, export symbols or export all, etc
     StringBuilder sb = new StringBuilder();
-    sb.append(" SRVPGM(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")");
-    sb.append(" MODULE(").append(spec.getTargetLibrary()).append("/").append(spec.getObjectName()).append(")"); // Assume single module
-    sb.append(" BNDSRVPGM(*NONE)");
+
+    sb.append(getParamString(ParamCmd.SRVPGM));
+    sb.append(getParamString(ParamCmd.MODULE));
+
+    sb.append(getParamString(ParamCmd.BNDSRVPGM));
+
     appendCommonParams(sb);
+
     return sb.toString();
   }
 
   // For RUNSQLSTM
   public String buildSqlCmd(ObjectDescription spec) {
     StringBuilder sb = new StringBuilder();
-    sb.append(" SRCFILE(").append(spec.getSourceLibrary()).append("/").append(spec.getSourceFile()).append(")");
-    sb.append(" SRCMBR(").append(CompCmd.compilationSourceName(compilationCommand)).append(")");
-    sb.append(" COMMIT(*NONE)");
+    
+    sb.append(getParamString(ParamCmd.SRCFILE));
+    sb.append(getParamString(ParamCmd.SRCMBR));
+
+    sb.append(getParamString(ParamCmd.COMMIT));
+
     appendCommonParams(sb);
+
     return sb.toString();
   }
 
@@ -308,6 +319,8 @@ public class CompilationPattern {
     switch (paramCmd) {
       case OBJ:
       case PGM:
+      case SRVPGM:
+      case MODULE:
         return " " + paramCmd.name() + "(" + targetLibrary + "/" + objectName + ")";
       
       case OBJTYPE:
@@ -318,6 +331,10 @@ public class CompilationPattern {
 
       case SRCMBR:
         return " " + paramCmd.name() + "(" + sourceName + ")";
+      
+      case BNDSRVPGM:
+      case COMMIT:
+        return " " + paramCmd.name() + "(" + "*NONE" + ")"; //TODO: Add validation here to return default *None or real value if given.
 
       case TEXT:
         return (text.isEmpty()) ? "" : " " + paramCmd.name() + "('" + text + "')"; //TODO: This idea could be important.
