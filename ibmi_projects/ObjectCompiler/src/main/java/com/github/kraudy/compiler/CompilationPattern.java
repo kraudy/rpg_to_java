@@ -103,7 +103,7 @@ public class CompilationPattern {
 
   //TODO: Add a Map<String, ValCmd>
   public enum ValCmd { 
-    FIRST, REPLACE, OUTFILE, LIBL, FILE, DTAARA, PGM, MODULE, OBJ, SRVPGM, CURLIB; 
+    FIRST, REPLACE, OUTFILE, LIBL, FILE, DTAARA, PGM, MODULE, OBJ, SRVPGM, CURLIB, NO; 
 
     public static ValCmd fromString(String value) {
       try {
@@ -342,7 +342,8 @@ public class CompilationPattern {
       // TODO: Implement these
       case DFTACTGRP: // DFTACTGRP(*NO)
       case BNDDIR:
-
+        return ValCmd.NO.toString();
+        
       default:
         return "";
     }

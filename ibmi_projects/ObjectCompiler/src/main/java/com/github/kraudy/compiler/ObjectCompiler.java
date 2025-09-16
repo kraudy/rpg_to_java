@@ -35,7 +35,7 @@ public class ObjectCompiler implements Runnable{
   private final AS400 system;
   private final Connection connection;
   private final User currentUser;
-  private ObjectDescription spec;
+  private ObjectDescription odes;
   private CompilationPattern cpat;
 
 
@@ -146,7 +146,7 @@ public class ObjectCompiler implements Runnable{
   }
 
   public void run() {
-    this.spec = new ObjectDescription(
+    this.odes = new ObjectDescription(
           library,
           objectName,
           objectType,
@@ -161,19 +161,19 @@ public class ObjectCompiler implements Runnable{
     // Retrieve and fill in defaults from existing object if possible
     Map<String, Object> objInfo = null;
     try {
-      objInfo = retrieveObjectInfo(spec.getTargetLibrary(), spec.getObjectName(), spec.getObjectType());
-      fillSpecFromObjInfo(spec, objInfo);
+      objInfo = retrieveObjectInfo(odes.getTargetLibrary(), odes.getObjectName(), odes.getObjectType());
+      fillSpecFromObjInfo(odes, objInfo);
     } catch (Exception e) {
       if (verbose) System.err.println("Warning: Could not retrieve compilation params from object: " + e.getMessage() + ". Using defaults.");
     }
 
-    if (spec.getSourceType() == null) {
+    if (odes.getSourceType() == null) {
       System.err.println("Source type is required if not retrievable from object.");
       return;
     }
-    if (debug) System.err.println("Source type: " + spec.getSourceType());
+    if (debug) System.err.println("Source type: " + odes.getSourceType());
 
-    cpat = new CompilationPattern(spec);
+    cpat = new CompilationPattern(odes);
 
     if (debug) System.out.println("Compilation command: " + cpat.getCompilationCommand().name());
 
@@ -187,55 +187,55 @@ public class ObjectCompiler implements Runnable{
     compile(commandStr);
   }
 
-  private void fillSpecFromObjInfo(ObjectDescription spec, Map<String, Object> objInfo) {
+  private void fillSpecFromObjInfo(ObjectDescription odes, Map<String, Object> objInfo) {
     if (objInfo == null) return;
 
     if (debug) System.out.println("Found object info");
 
     /* Check for filed with default value to subsitute */
-    if (spec.getSourceType() == null) {
+    if (odes.getSourceType() == null) {
       String attr = (String) objInfo.get("attribute");
       if (debug) System.out.println("attr: " + attr);
       if (attr != null && !attr.trim().isEmpty()) {
-        spec.sourceType = ObjectDescription.SourceType.fromString(attr.trim().toUpperCase());
+        odes.sourceType = ObjectDescription.SourceType.fromString(attr.trim().toUpperCase());
       }
     }
 
     String retrievedLib = (String) objInfo.get("sourceLibrary");
     if (debug) System.out.println("retrievedLib: " + retrievedLib);
     if (retrievedLib != null && !retrievedLib.trim().isEmpty()) {
-      spec.sourceLibrary = retrievedLib.trim().toUpperCase();
+      odes.sourceLibrary = retrievedLib.trim().toUpperCase();
     }
 
     String retrievedFile = (String) objInfo.get("sourceFile");
     if (debug) System.out.println("retrievedFile: " + retrievedFile);
     if (retrievedFile != null && !retrievedFile.trim().isEmpty()) {
-      spec.sourceFile = retrievedFile.trim().toUpperCase();
+      odes.sourceFile = retrievedFile.trim().toUpperCase();
     } 
 
     String retrievedMbr = (String) objInfo.get("sourceName");
     if (debug) System.out.println("retrievedMbr: " + retrievedMbr);
     if (retrievedMbr != null && !retrievedMbr.trim().isEmpty()) {
-      spec.sourceName = retrievedMbr.trim().toUpperCase();
+      odes.sourceName = retrievedMbr.trim().toUpperCase();
     }
 
     String retrievedText = (String) objInfo.get("textDescription");
     if (debug) System.out.println("retrievedText: " + retrievedText);
     if (retrievedText != null && !retrievedText.trim().isEmpty()) {
-      spec.text = retrievedText.trim();
+      odes.text = retrievedText.trim();
     }
 
-    if (spec.getActGrp() == null && objInfo.containsKey("activationGroupAttribute")) {
+    if (odes.getActGrp() == null && objInfo.containsKey("activationGroupAttribute")) {
       String retrievedActGrp = ((String) objInfo.get("activationGroupAttribute")).trim();
       if (debug) System.out.println("retrievedActGrp: " + retrievedActGrp);
       if (!retrievedActGrp.isEmpty()) {
-        spec.actGrp = retrievedActGrp;
+        odes.actGrp = retrievedActGrp;
       }
     }
       
       // TODO: Add more params like --usrprf, --useadpaut, etc., and map from objInfo
     // Similarly fill other fields (sourceLib, sourceFile, etc.)
-    // To make spec mutable or use a builder for this.
+    // To make odes mutable or use a builder for this.
   }
 
   private Map<String, Object> retrieveObjectInfo(String targetLibrary, String objectName, ObjectDescription.ObjectType objectType) throws Exception {
