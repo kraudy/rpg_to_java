@@ -173,19 +173,11 @@ public class ObjectCompiler implements Runnable{
     }
     if (debug) System.err.println("Source type: " + spec.getSourceType());
 
-    // cspec
     cpat = new CompilationPattern(spec);
 
+    if (debug) System.out.println("Compilation command: " + cpat.getCompilationCommand().name());
 
-    // TODO: This could be encapsulated on the Iobject class
-    CompilationPattern.CompCmd mainCmd = cpat.getCompilationCommand();
-    if (mainCmd == null) {
-      System.err.println("No compilation command for source type " + spec.getSourceType() + " and object type " + spec.getObjectType());
-      return;
-    }
-    if (debug) System.out.println("Compilation command: " + mainCmd.name());
-
-    String commandStr = cpat.buildCommand(spec, mainCmd);
+    String commandStr = cpat.buildCommand();
     
     if (debug) System.out.println("Full command: " + commandStr);
 

@@ -3,13 +3,13 @@ package com.github.kraudy.compiler;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.function.Supplier;
 
 import com.github.kraudy.compiler.ObjectDescription.ObjectType;
 
 public class CompilationPattern {
     // Resolver map for command builders (functions that build command strings based on spec)
-  private Map<CompCmd, Function<ObjectDescription, String>> cmdBuilders = new EnumMap<>(CompCmd.class);
+  private Map<CompCmd, Supplier<String>> cmdBuilders = new EnumMap<>(CompCmd.class);
 
   private CompCmd compilationCommand;
 
@@ -217,18 +217,15 @@ public class CompilationPattern {
     return this.compilationCommand;
   }
 
-  public String buildCommand(ObjectDescription spec, CompCmd cmd) {
-    Function<ObjectDescription, String> builder = cmdBuilders.getOrDefault(cmd, s -> {
-      throw new IllegalArgumentException("Unsupported command: " + cmd);
-    });
-    String params = builder.apply(spec);
+  public String buildCommand() {
+    String params = cmdBuilders.get(compilationCommand).get();
     // Prepend the command name
-    return cmd.name() + params;
+    return compilationCommand.name() + params;
   }
 
   // Example builder function for module commands
   // TODO: Add CompCmd as param or something, don't burn it.
-  public String buildModuleCmd(ObjectDescription spec) {
+  public String buildModuleCmd() {
     StringBuilder sb = new StringBuilder();
 
     sb.append(getParamString(ParamCmd.MODULE));
@@ -243,8 +240,8 @@ public class CompilationPattern {
     //TODO: Maybe define what params all these have in common and then a list of the option params as enmus
   // and then validate them in the corresponding order like : PGM, SRCFILE, SRCMBR
   // Similar for bound commands
-  // public String buildBoundCmd(ObjectDescription spec, EnumSet<ParamCmd> options) {
-  public String buildBoundCmd(ObjectDescription spec) {
+  // public String buildBoundCmd(, EnumSet<ParamCmd> options) {
+  public String buildBoundCmd() {
     StringBuilder sb = new StringBuilder();
 
     //TODO: If i can store each ParamCmd in an ordered list, here, i could just do for parcmd in parcmdList : and call the method
@@ -260,7 +257,7 @@ public class CompilationPattern {
   }
 
   // For CRTSQLRPGI
-  public String buildSqlRpgCmd(ObjectDescription spec) {
+  public String buildSqlRpgCmd() {
     StringBuilder sb = new StringBuilder();
 
     sb.append(getParamString(ParamCmd.OBJ));
@@ -274,7 +271,7 @@ public class CompilationPattern {
   }
 
   // For CRTSRVPGM
-  public String buildSrvPgmCmd(ObjectDescription spec) {
+  public String buildSrvPgmCmd() {
     //TODO: The spec for the SRPVGM should indicate if it is build using modules, binding dir, export symbols or export all, etc
     StringBuilder sb = new StringBuilder();
 
@@ -289,9 +286,9 @@ public class CompilationPattern {
   }
 
   // For RUNSQLSTM
-  public String buildSqlCmd(ObjectDescription spec) {
+  public String buildSqlCmd() {
     StringBuilder sb = new StringBuilder();
-    
+
     sb.append(getParamString(ParamCmd.SRCFILE));
     sb.append(getParamString(ParamCmd.SRCMBR));
 
