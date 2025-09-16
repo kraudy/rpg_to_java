@@ -93,7 +93,7 @@ public class ObjectCompiler implements Runnable{
     }
   }
 
-  /* Required params */
+  /* Object attributes. Required params */
   @Option(names = { "-l", "--lib" }, required = true, description = "Target library for object", converter = LibraryConverter.class)
   private String library;
 
@@ -103,9 +103,9 @@ public class ObjectCompiler implements Runnable{
   @Option(names = {"-t","--type"}, required = true, description = "Object type (e.g., PGM, SRVPGM)", converter = ObjectTypeConverter.class)
   private ObjectDescription.ObjectType objectType;
 
-  /* Good to have */
+  /* Source-related params. Good to have */
   @Option(names = { "-sl", "--source-lib" }, description = "Source library (defaults to *LIBL or retrieved from object)", converter = LibraryConverter.class)
-  private String sourceLib = CompilationPattern.ValCmd.LIBL.toString(); //"*LIBL";
+  private String sourceLib = CompilationPattern.ValCmd.LIBL.toString(); //"*LIBL"
 
   @Option(names = { "-sf", "--source-file" }, description = "Source physical file (defaults based on source type or retrieved from object)")
   private String sourceFile = "";
@@ -116,12 +116,32 @@ public class ObjectCompiler implements Runnable{
   @Option(names = {"-st","--source-type"}, description = "Source type (e.g., RPGLE, CLLE) (defaults to retrieved from object if possible)", converter = SourceTypeConverter.class)
   private ObjectDescription.SourceType sourceType;
 
-  /* Compilation flags */
+  /* Compilation flags. Optionals */
   @Option(names = { "--text" }, description = "Object text description (defaults to retrieved from object if possible)")
   private String text = "";
 
   @Option(names = { "--actgrp" }, description = "Activation group (defaults to retrieved from object if possible)")
   private String actGrp = "";
+
+  @Option(names = "--dbgview", description = "Debug view (e.g., *ALL, *SOURCE, *LIST, *NONE). Defaults to *ALL.")
+  private String dbgView = CompilationPattern.ValCmd.ALL.toString(); //"*ALL"
+
+  @Option(names = "--optimize", description = "Optimization level (e.g., *NONE, 10, 20, 30, 40). Defaults to 10.")
+  private String optimize = "10";
+
+  @Option(names = "--tgtrls", description = "Target release (e.g., *CURRENT, V7R4M0). Defaults to retrieved or *CURRENT.")
+  private String tgtRls = CompilationPattern.ValCmd.CURRENT.toString();  //"*CURRENT"
+
+  @Option(names = "--option", description = "Compile options (e.g., *EVENTF, *SRCDBG). Defaults based on type.")
+  private String option = "";
+
+  @Option(names = "--bnddir", description = "Binding directories (space-separated). Defaults to *NONE.")
+  private String bndDir = CompilationPattern.ValCmd.NONE.toString(); // "*NONE"
+
+  @Option(names = "--stgmdl", description = "Storage model (*SNGLVL, *TERASPACE, *INHERIT). Defaults to *SNGLVL.")
+  private String stgMdl = CompilationPattern.ValCmd.SNGLVL.toString(); // "*SNGLVL"
+
+  // Add more: --define (for macros), --inline, --sysifcopt, --teraspace, etc.
 
   /* Options */
   @Option(names = "-x", description = "Debug")
@@ -149,6 +169,9 @@ public class ObjectCompiler implements Runnable{
   }
 
   public void run() {
+
+    //Map<CompilationPattern.ParamCmd, String> ParamCmdSequence = new HashMap<>();
+
     this.odes = new ObjectDescription(
           library,
           objectName,
@@ -158,7 +181,8 @@ public class ObjectCompiler implements Runnable{
           sourceName,
           sourceType, // Specified or inferred
           text,
-          actGrp
+          actGrp//,
+          //ParamCmdSequence
     );
 
     // Retrieve and fill in defaults from existing object if possible

@@ -102,7 +102,7 @@ public class CompilationPattern {
 
   //TODO: Add a Map<String, ValCmd>
   public enum ValCmd { 
-    FIRST, REPLACE, OUTFILE, LIBL, FILE, DTAARA, PGM, MODULE, OBJ, SRVPGM, CURLIB, NO; 
+    FIRST, REPLACE, OUTFILE, LIBL, FILE, DTAARA, PGM, MODULE, OBJ, SRVPGM, CURLIB, NO, NONE, ALL, SNGLVL, CURRENT; 
 
     public static ValCmd fromString(String value) {
       try {
@@ -256,6 +256,9 @@ public class CompilationPattern {
     appendCommonParams(sb);
 
     // if(!options.contains(ParamCmd.PGM)) throw new IllegalArgumentException("Required param not found : '" + ParamCmd.PGM.name() + "'");
+    // TODO: This is important!!!
+    // if(!ParamCmdSequence.keySet().contains(ParamCmd.PGM)) throw new IllegalArgumentException("Required param not found : '" + ParamCmd.PGM.name() + "'");
+    // ParamCmdSequence.values() => Returns a colletion of values from the map. Can be useful. : Collection<Integer> values = map.values();
 
     return sb.toString();
   }

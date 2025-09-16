@@ -76,7 +76,10 @@ public class ObjectDescription {
         @JsonProperty("sourceName") String sourceName,
         @JsonProperty("sourceType") SourceType sourceType,
         @JsonProperty("text") String text,
-        @JsonProperty("actGrp") String actGrp) {
+        @JsonProperty("actGrp") String actGrp ) {//,
+        //@JsonProperty("ParamCmdSequence") Map<CompilationPattern.ParamCmd, String> ParamCmdSequence) {
+    // @JsonProperty("ParamCmdSequence") Map<CompilationPattern.ParamCmd, String> ParamCmdSequence
+    // String json = objectDescription.writeValueAsString(example);
     //TODO: If validtion like toUpperCase().trim() is needed, add it when passing the params to keep this clean
 
     if (objectName == null || objectName.isEmpty()) throw new IllegalArgumentException("Object name is required.");
