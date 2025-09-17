@@ -241,7 +241,53 @@ public class ObjectDescription {
 
   }
 
-  
+  private void retrieveModuleInfo(String qualName) throws Exception {
+    ProgramCall pc = new ProgramCall(system);
+    pc.setProgram("/QSYS.LIB/QBNLPGMI.PGM");
+
+    int recvLen = 2048; // Sufficient buffer
+    byte[] errorCode = new byte[16];
+    new AS400Bin4().toBytes(0, errorCode, 0);
+
+    ProgramParameter[] parms = new ProgramParameter[7];
+    parms[0] = new ProgramParameter(recvLen); // Receiver variable
+    parms[1] = new ProgramParameter(new AS400Bin4().toBytes(recvLen)); // Length of receiver
+    parms[2] = new ProgramParameter(80); // List information
+    parms[3] = new ProgramParameter(new AS400Bin4().toBytes(-1)); // Number of records (-1 for all)
+    parms[4] = new ProgramParameter(new AS400Text(8, system).toBytes("PGML0100")); // Format
+    parms[5] = new ProgramParameter(new AS400Text(20, system).toBytes(qualName)); // Qualified program name
+    parms[6] = new ProgramParameter(errorCode); // Error code
+
+    pc.setParameterList(parms);
+
+    if (!pc.run()) {
+      AS400Message[] msgs = pc.getMessageList();
+      throw new Exception("QBNLPGMI API call failed: " + (msgs.length > 0 ? msgs[0].getText() : "Unknown error"));
+    }
+
+    byte[] listInfoData = parms[2].getOutputData();
+    AS400Bin4 bin4 = new AS400Bin4();
+    int listOffset = bin4.toInt(listInfoData, 20); // Offset to list
+    int numEntries = bin4.toInt(listInfoData, 28); // Number of entries
+    int entrySize = bin4.toInt(listInfoData, 32); // Size of each entry
+
+    if (numEntries > 0) {
+      byte[] recVarData = parms[0].getOutputData();
+      // For simplicity, take the first module (common for single-module bound programs)
+      int entryOffset = listOffset;
+      AS400Text text10 = new AS400Text(10, system);
+
+      // Update objInfo with module source info
+      this.objInfo.put("sourceFile", text10.toObject(recVarData, entryOffset + 56).toString().trim());
+      this.objInfo.put("sourceLibrary", text10.toObject(recVarData, entryOffset + 66).toString().trim());
+      this.objInfo.put("sourceName", text10.toObject(recVarData, entryOffset + 76).toString().trim());
+
+      // TODO: If multi-module, you may need logic to select the appropriate one or aggregate
+    } else {
+      throw new Exception("No modules found in ILE program.");
+    }
+  }
+
   public void fillSpecFromObjInfo() {
     if (this.objInfo == null) return;
 
