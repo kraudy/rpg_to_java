@@ -225,8 +225,23 @@ public class ObjectDescription {
     }
     // TODO: Parse additional fields as needed
 
+    // If this is an ILE program ('1'), retrieve module information for source details
+    String typeOfProgram = (String) this.objInfo.get("typeOfProgram");
+    System.out.println("typeOfProgram: " + typeOfProgram);
+
+    System.out.println("All data: ");
+    for (String ob : objInfo.keySet()){
+      System.out.println(ob + ": " + objInfo.get(ob));
+    }
+
+    if ("1".equals(typeOfProgram) && this.objectType == ObjectType.PGM) {
+      System.out.println("Doing retrieveModuleInfo");
+      retrieveModuleInfo(qualName);
+    }
+
   }
 
+  
   public void fillSpecFromObjInfo() {
     if (this.objInfo == null) return;
 
