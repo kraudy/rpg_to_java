@@ -11,6 +11,7 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.ibm.as400.access.AS400;
 import com.ibm.as400.access.AS400Message;
 import com.ibm.as400.access.AS400Bin4;
@@ -170,9 +171,14 @@ public class ObjectCompiler implements Runnable{
 
   public void run() {
 
-    //Map<CompilationPattern.ParamCmd, String> ParamCmdSequence = new HashMap<>();
+    Map<CompilationPattern.ParamCmd, String> ParamCmdSequence = new HashMap<>();
+
+    ParamCmdSequence.put(ParamCmd.TEXT, (text.isEmpty()) ? "" : text);
+    ParamCmdSequence.put(ParamCmd.ACTGRP, (actGrp.isEmpty()) ? "" : actGrp);
 
     this.odes = new ObjectDescription(
+          system,
+          debug,
           library,
           objectName,
           objectType,
@@ -180,16 +186,14 @@ public class ObjectCompiler implements Runnable{
           sourceFile,
           sourceName,
           sourceType, // Specified or inferred
-          text,
-          actGrp//,
-          //ParamCmdSequence
+          //text,
+          //actGrp,
+          ParamCmdSequence
     );
 
-    // Retrieve and fill in defaults from existing object if possible
-    Map<String, Object> objInfo = null;
     try {
-      objInfo = retrieveObjectInfo(odes.getTargetLibrary(), odes.getObjectName(), odes.getObjectType());
-      fillSpecFromObjInfo(odes, objInfo);
+      odes.retrieveObjectInfo();
+      odes.fillSpecFromObjInfo();
     } catch (Exception e) {
       if (verbose) System.err.println("Warning: Could not retrieve compilation params from object: " + e.getMessage() + ". Using defaults.");
     }
@@ -214,140 +218,6 @@ public class ObjectCompiler implements Runnable{
     compile(commandStr);
   }
 
-  private void fillSpecFromObjInfo(ObjectDescription odes, Map<String, Object> objInfo) {
-    if (objInfo == null) return;
-
-    if (debug) System.out.println("Found object info");
-
-    /* Check for filed with default value to subsitute */
-    if (odes.getSourceType() == null) {
-      String attr = (String) objInfo.get("attribute");
-      if (debug) System.out.println("attr: " + attr);
-      if (attr != null && !attr.trim().isEmpty()) {
-        odes.sourceType = ObjectDescription.SourceType.fromString(attr.trim().toUpperCase());
-      }
-    }
-
-    String retrievedLib = (String) objInfo.get("sourceLibrary");
-    if (debug) System.out.println("retrievedLib: " + retrievedLib);
-    if (retrievedLib != null && !retrievedLib.trim().isEmpty()) {
-      odes.sourceLibrary = retrievedLib.trim().toUpperCase();
-    }
-
-    String retrievedFile = (String) objInfo.get("sourceFile");
-    if (debug) System.out.println("retrievedFile: " + retrievedFile);
-    if (retrievedFile != null && !retrievedFile.trim().isEmpty()) {
-      odes.sourceFile = retrievedFile.trim().toUpperCase();
-    } 
-
-    String retrievedMbr = (String) objInfo.get("sourceName");
-    if (debug) System.out.println("retrievedMbr: " + retrievedMbr);
-    if (retrievedMbr != null && !retrievedMbr.trim().isEmpty()) {
-      odes.sourceName = retrievedMbr.trim().toUpperCase();
-    }
-
-    String retrievedText = (String) objInfo.get("textDescription");
-    if (debug) System.out.println("retrievedText: " + retrievedText);
-    if (retrievedText != null && !retrievedText.trim().isEmpty()) {
-      odes.text = retrievedText.trim();
-    }
-
-    if (odes.getActGrp() == null && objInfo.containsKey("activationGroupAttribute")) {
-      String retrievedActGrp = ((String) objInfo.get("activationGroupAttribute")).trim();
-      if (debug) System.out.println("retrievedActGrp: " + retrievedActGrp);
-      if (!retrievedActGrp.isEmpty()) {
-        odes.actGrp = retrievedActGrp;
-      }
-    }
-      
-      // TODO: Add more params like --usrprf, --useadpaut, etc., and map from objInfo
-    // Similarly fill other fields (sourceLib, sourceFile, etc.)
-    // To make odes mutable or use a builder for this.
-  }
-
-  private Map<String, Object> retrieveObjectInfo(String targetLibrary, String objectName, ObjectDescription.ObjectType objectType) throws Exception {
-    String apiPgm;
-    String format;
-    switch (objectType) {
-      case PGM:
-        apiPgm = "QCLRPGMI";
-        format = "PGMI0100";
-        break;
-      case SRVPGM:
-        apiPgm = "QBNRSPGM";
-        format = "SPGI0100";
-        break;
-      case MODULE:
-        apiPgm = "QBNRMODI";
-        format = "MODI0100";
-        break;
-      default:
-        throw new Exception("Object type " + objectType.name() + " not supported for retrieving compilation params.");
-    }
-
-    ProgramCall pc = new ProgramCall(system);
-    pc.setProgram("/QSYS.LIB/" + apiPgm + ".PGM");
-
-    int recvLen = 2048; // Sufficient for PGMI0100/SPGI0100/MODI0100
-    ProgramParameter[] parms = new ProgramParameter[5];
-    parms[0] = new ProgramParameter(recvLen); // Receiver
-    parms[1] = new ProgramParameter(new AS400Bin4().toBytes(recvLen)); // Length of receiver
-    parms[2] = new ProgramParameter(new AS400Text(8, system).toBytes(format)); // Format
-    String qualName = String.format("%-10s%-10s", objectName, targetLibrary);
-    parms[3] = new ProgramParameter(new AS400Text(20, system).toBytes(qualName)); // Qualified object name
-    byte[] errorCode = new byte[16];
-    new AS400Bin4().toBytes(0, errorCode, 0); // Bytes provided = 0 to throw exceptions
-    parms[4] = new ProgramParameter(errorCode); // Error code
-
-    pc.setParameterList(parms);
-
-    if (!pc.run()) {
-      AS400Message[] msgs = pc.getMessageList();
-      throw new Exception("API call failed: " + (msgs.length > 0 ? msgs[0].getText() : "Unknown error"));
-    }
-
-    byte[] data = parms[0].getOutputData();
-    Map<String, Object> info = new HashMap<>();
-
-    AS400Bin4 bin4 = new AS400Bin4();
-    AS400Text text10 = new AS400Text(10, system);
-    AS400Text text13 = new AS400Text(13, system);
-    AS400Text text1 = new AS400Text(1, system);
-    AS400Text text50 = new AS400Text(50, system);
-    AS400Text text30 = new AS400Text(30, system);
-
-    int offset = 0;
-    info.put("bytesReturned", bin4.toInt(data, offset)); offset += 4;
-    info.put("bytesAvailable", bin4.toInt(data, offset)); offset += 4;
-    info.put("programName", text10.toObject(data, offset).toString().trim()); offset += 10;
-    info.put("programLibrary", text10.toObject(data, offset).toString().trim()); offset += 10;
-    info.put("owner", text10.toObject(data, offset).toString().trim()); offset += 10;
-    info.put("attribute", text10.toObject(data, offset).toString().trim()); offset += 10;
-    info.put("creationDateTime", text13.toObject(data, offset).toString().trim()); offset += 13;
-    info.put("sourceFile", text10.toObject(data, offset).toString().trim()); offset += 10;
-    info.put("sourceLibrary", text10.toObject(data, offset).toString().trim()); offset += 10;
-    info.put("sourceName", text10.toObject(data, offset).toString().trim()); offset += 10;
-    info.put("sourceUpdatedDateTime", text13.toObject(data, offset).toString().trim()); offset += 13;
-    info.put("observable", text1.toObject(data, offset).toString().trim()); offset += 1;
-    info.put("userProfileOption", text1.toObject(data, offset).toString().trim()); offset += 1;
-    info.put("useAdoptedAuthority", text1.toObject(data, offset).toString().trim()); offset += 1;
-    info.put("logCommands", text1.toObject(data, offset).toString().trim()); offset += 1;
-    info.put("allowRTVCLSRC", text1.toObject(data, offset).toString().trim()); offset += 1;
-    info.put("fixDecimalData", text1.toObject(data, offset).toString().trim()); offset += 1;
-    info.put("textDescription", text50.toObject(data, offset).toString().trim()); offset += 50;
-    info.put("typeOfProgram", text1.toObject(data, offset).toString().trim()); offset += 1;
-    info.put("teraspaceEnabled", text1.toObject(data, offset).toString().trim()); offset += 1;
-    offset += 58; // Reserved
-    info.put("minParameters", bin4.toInt(data, offset)); offset += 4;
-    info.put("maxParameters", bin4.toInt(data, offset)); offset += 4;
-    offset = 368; // Jump to activation group (adjust if needed for SPGI/MODI differences)
-    if (objectType != ObjectDescription.ObjectType.MODULE) { // Modules don't have ACTGRP
-      info.put("activationGroupAttribute", text30.toObject(data, offset).toString().trim());
-    }
-    // TODO: Parse additional fields as needed
-
-    return info;
-  }
 
 
   private void compile(String commandStr) {
