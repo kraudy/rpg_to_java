@@ -14,14 +14,10 @@ import java.util.Map;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.ibm.as400.access.AS400;
 import com.ibm.as400.access.AS400Message;
-import com.ibm.as400.access.AS400Bin4;
-import com.ibm.as400.access.AS400Text;
 import com.ibm.as400.access.AS400SecurityException;
 import com.ibm.as400.access.ErrorCompletingRequestException;
 import com.ibm.as400.access.AS400JDBCDataSource;
 import com.ibm.as400.access.CommandCall;
-import com.ibm.as400.access.ProgramCall;
-import com.ibm.as400.access.ProgramParameter;
 import com.ibm.as400.access.User;
 
 import io.github.theprez.dotenv_ibmi.IBMiDotEnv;

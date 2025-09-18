@@ -12,6 +12,7 @@ import com.ibm.as400.access.AS400Message;
 import com.ibm.as400.access.AS400Text;
 import com.ibm.as400.access.ProgramCall;
 import com.ibm.as400.access.ProgramParameter;
+import com.ibm.as400.access.UserSpace;
 
 // Core struct for capturing compilation specs (JSON-friendly via Jackson)
 public class ObjectDescription {
@@ -148,7 +149,17 @@ public class ObjectDescription {
     String apiPgm;
     String format;
     switch (this.objectType) {
+      //TODO: Add these to maps
       case PGM:
+        /* QBNRPGMI => Gives error: "Could not retrieve compilation params from object: /QSYS.LIB/QBNRPGMI.PGM: Object does not exist"
+        if (sourceType == SourceType.RPG || sourceType == SourceType.RPGLE || sourceType == SourceType.SQLRPGLE) {
+          apiPgm = "QBNRPGMI";
+        } else if (sourceType == SourceType.CLP || sourceType == SourceType.CLLE) {
+          apiPgm = "QCLRPGMI";
+        } else {
+          throw new Exception("Unsupported source type " + (sourceType != null ? sourceType.name() : "null") + " for retrieving compilation params.");
+        }
+        */
         apiPgm = "QCLRPGMI";
         format = "PGMI0100";
         break;
@@ -213,6 +224,8 @@ public class ObjectDescription {
     this.objInfo.put("logCommands", text1.toObject(data, offset).toString().trim()); offset += 1;
     this.objInfo.put("allowRTVCLSRC", text1.toObject(data, offset).toString().trim()); offset += 1;
     this.objInfo.put("fixDecimalData", text1.toObject(data, offset).toString().trim()); offset += 1;
+
+
     this.objInfo.put("textDescription", text50.toObject(data, offset).toString().trim()); offset += 50;
     this.objInfo.put("typeOfProgram", text1.toObject(data, offset).toString().trim()); offset += 1;
     this.objInfo.put("teraspaceEnabled", text1.toObject(data, offset).toString().trim()); offset += 1;
@@ -225,68 +238,94 @@ public class ObjectDescription {
     }
     // TODO: Parse additional fields as needed
 
-    // If this is an ILE program ('1'), retrieve module information for source details
+    // If this is an ILE program ('B'), retrieve module information for source details
     String typeOfProgram = (String) this.objInfo.get("typeOfProgram");
     System.out.println("typeOfProgram: " + typeOfProgram);
 
-    System.out.println("All data: ");
-    for (String ob : objInfo.keySet()){
-      System.out.println(ob + ": " + objInfo.get(ob));
-    }
-
-    if ("1".equals(typeOfProgram) && this.objectType == ObjectType.PGM) {
+    if ("B".equals(typeOfProgram) && this.objectType == ObjectType.PGM) {
       System.out.println("Doing retrieveModuleInfo");
       retrieveModuleInfo(qualName);
     }
 
+    System.out.println("All data: ");
+    for (String ob : this.objInfo.keySet()){
+      System.out.println(ob + ": " + this.objInfo.get(ob));
+    }
+
   }
 
+  //TODO:  handle/select from multiple entries and choose the main module
   private void retrieveModuleInfo(String qualName) throws Exception {
+    // Import required: import com.ibm.as400.access.UserSpace;
+    String usName = "PGMLIST";
+    String usLib = "QTEMP";
+    UserSpace us = new UserSpace(system, "/QSYS.LIB/" + usLib + ".LIB/" + usName + ".USRSPC");
+    
+    int initialSize = 2048 * 10; // Sufficient buffer, adjust if needed for multi-module
+    //us.create(initialSize, true, "", (byte) 0x00, "Temp user space for QBNLPGMI", "*USE");
+    us.create(initialSize, true, " ", (byte) 0x00, "Temp user space for QBNLPGMI", "*USE");  // Added space for extended attribute to enable native read support
+
+    String qualUs = String.format("%-10s%-10s", usName, usLib);
+
     ProgramCall pc = new ProgramCall(system);
     pc.setProgram("/QSYS.LIB/QBNLPGMI.PGM");
 
-    int recvLen = 2048; // Sufficient buffer
-    byte[] errorCode = new byte[16];
+    byte[] errorCode = new byte[32];
     new AS400Bin4().toBytes(0, errorCode, 0);
 
-    ProgramParameter[] parms = new ProgramParameter[7];
-    parms[0] = new ProgramParameter(recvLen); // Receiver variable
-    parms[1] = new ProgramParameter(new AS400Bin4().toBytes(recvLen)); // Length of receiver
-    parms[2] = new ProgramParameter(80); // List information
-    parms[3] = new ProgramParameter(new AS400Bin4().toBytes(-1)); // Number of records (-1 for all)
-    parms[4] = new ProgramParameter(new AS400Text(8, system).toBytes("PGML0100")); // Format
-    parms[5] = new ProgramParameter(new AS400Text(20, system).toBytes(qualName)); // Qualified program name
-    parms[6] = new ProgramParameter(errorCode); // Error code
+    System.out.println("Inside retrieveModuleInfo");
+
+    ProgramParameter[] parms = new ProgramParameter[4];
+    parms[0] = new ProgramParameter(new AS400Text(20, system).toBytes(qualUs)); // Qualified user space name
+    parms[1] = new ProgramParameter(new AS400Text(8, system).toBytes("PGML0100")); // Format
+    parms[2] = new ProgramParameter(new AS400Text(20, system).toBytes(qualName)); // Qualified program name
+    parms[3] = new ProgramParameter(errorCode); // Error code
 
     pc.setParameterList(parms);
+
+    System.out.println("Before pc.run()");
 
     if (!pc.run()) {
       AS400Message[] msgs = pc.getMessageList();
       throw new Exception("QBNLPGMI API call failed: " + (msgs.length > 0 ? msgs[0].getText() : "Unknown error"));
     }
 
-    byte[] listInfoData = parms[2].getOutputData();
+    System.out.println("After pc.run()");
+
+    // Read the entire user space
+    byte[] data = new byte[initialSize];
+    us.read(data, 0);
+
+    System.out.println("us.read()");
+
     AS400Bin4 bin4 = new AS400Bin4();
-    int listOffset = bin4.toInt(listInfoData, 20); // Offset to list
-    int numEntries = bin4.toInt(listInfoData, 28); // Number of entries
-    int entrySize = bin4.toInt(listInfoData, 32); // Size of each entry
+    int listOffset = bin4.toInt(data, 122); // Offset to list data section
+    int numEntries = bin4.toInt(data, 126); // Number of list entries
+    int entrySize = bin4.toInt(data, 130); // Size of each entry
+
+    System.out.println("entrySize: " + entrySize);
 
     if (numEntries > 0) {
-      byte[] recVarData = parms[0].getOutputData();
       // For simplicity, take the first module (common for single-module bound programs)
       int entryOffset = listOffset;
       AS400Text text10 = new AS400Text(10, system);
 
       // Update objInfo with module source info
-      this.objInfo.put("sourceFile", text10.toObject(recVarData, entryOffset + 56).toString().trim());
-      this.objInfo.put("sourceLibrary", text10.toObject(recVarData, entryOffset + 66).toString().trim());
-      this.objInfo.put("sourceName", text10.toObject(recVarData, entryOffset + 76).toString().trim());
+      this.objInfo.put("sourceFile", text10.toObject(data, entryOffset + 56).toString().trim());
+      this.objInfo.put("sourceLibrary", text10.toObject(data, entryOffset + 66).toString().trim());
+      this.objInfo.put("sourceName", text10.toObject(data, entryOffset + 76).toString().trim());
 
       // TODO: If multi-module, you may need logic to select the appropriate one or aggregate
     } else {
       throw new Exception("No modules found in ILE program.");
     }
+
+    // Optional: Delete the user space after use
+    us.delete();    
   }
+
+
+
 
   public void fillSpecFromObjInfo() {
     if (this.objInfo == null) return;
