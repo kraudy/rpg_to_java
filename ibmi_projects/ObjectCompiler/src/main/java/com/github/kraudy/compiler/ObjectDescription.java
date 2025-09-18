@@ -260,7 +260,8 @@ public class ObjectDescription {
     String usName = "PGMLIST";
     String usLib = "QTEMP";
     UserSpace us = new UserSpace(system, "/QSYS.LIB/" + usLib + ".LIB/" + usName + ".USRSPC");
-    
+    us.setMustUseProgramCall(true);  // Ensure operations in same job for QTEMP
+    us.setMustUseSockets(true);      // Force sockets to avoid native issues
     int initialSize = 2048 * 10; // Sufficient buffer, adjust if needed for multi-module
     //us.create(initialSize, true, "", (byte) 0x00, "Temp user space for QBNLPGMI", "*USE");
     us.create(initialSize, true, " ", (byte) 0x00, "Temp user space for QBNLPGMI", "*USE");  // Added space for extended attribute to enable native read support
