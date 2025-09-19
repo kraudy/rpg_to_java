@@ -158,7 +158,7 @@ public class ObjectDescription {
               "PROGRAM_TYPE, " +  // [ILE, OPM] 
               "OBJECT_TYPE, " +   // typeOfProgram
               "CREATE_TIMESTAMP, " + // creationDateTime
-              "TEXT_DESCRIPTION, " + // textDescription
+              "COALESCE(TEXT_DESCRIPTION, '') As TEXT_DESCRIPTION, " + // textDescription
               "PROGRAM_OWNER, " + // owner
               "PROGRAM_ATTRIBUTE, " + // attribute
               "USER_PROFILE, " +
@@ -270,7 +270,7 @@ public class ObjectDescription {
         throw new IllegalArgumentException("Could not get object '" + objectName + "' from library '" + targetLibrary + "' type" + "'" + objectType.toString() + "'");
       }
 
-      System.out.println("Found object '" + objectName + "' from library '" + targetLibrary + "' type" + "'" + objectType.toString() + "'");
+      System.out.println("Found object '" + objectName + "' from library '" + targetLibrary + "' type " + "'" + objectType.toParam() + "'");
 
       String text = rsObj.getString("TEXT_DESCRIPTION").trim();
       if (!text.isEmpty()) ParamCmdSequence.put(ParamCmd.TEXT, text);

@@ -344,7 +344,8 @@ public class CompilationPattern {
       case TEXT:
       case ACTGRP:
         //return (text.isEmpty()) ? "" : " " + paramCmd.name() + "('" + text + "')"; //TODO: This idea could be important.
-        return (ParamCmdSequence.get(paramCmd).isEmpty()) ? "" : " " + paramCmd.name() + "('" + ParamCmdSequence.get(paramCmd) + "')";
+        //return (ParamCmdSequence.get(paramCmd).isEmpty()) ? "" : " " + paramCmd.name() + "('" + ParamCmdSequence.get(paramCmd) + "')";
+        return (ParamCmdSequence.getOrDefault(paramCmd, "").isEmpty()) ? "" : " " + paramCmd.name() + "('" + ParamCmdSequence.get(paramCmd) + "')";
 
       // TODO: Implement these
       case DFTACTGRP: // DFTACTGRP(*NO)
