@@ -169,11 +169,14 @@ public class ObjectCompiler implements Runnable{
 
     Map<CompilationPattern.ParamCmd, String> ParamCmdSequence = new HashMap<>();
 
+    /* Default values */
+    // TODO: If we dont want to put unused values getParamString() need to be modified
     ParamCmdSequence.put(ParamCmd.TEXT, (text.isEmpty()) ? "" : text);
     ParamCmdSequence.put(ParamCmd.ACTGRP, (actGrp.isEmpty()) ? "" : actGrp);
 
     this.odes = new ObjectDescription(
           system,
+          connection,
           debug,
           library,
           objectName,
@@ -188,8 +191,9 @@ public class ObjectCompiler implements Runnable{
     );
 
     try {
-      odes.retrieveObjectInfo();
-      odes.fillSpecFromObjInfo();
+      odes.retrieveSQLObjectInfo();
+      // odes.retrieveObjectInfo();
+      // odes.fillSpecFromObjInfo();
     } catch (Exception e) {
       if (verbose) System.err.println("Warning: Could not retrieve compilation params from object: " + e.getMessage() + ". Using defaults.");
     }

@@ -328,7 +328,8 @@ public class CompilationPattern {
         return " " + paramCmd.name() + "(" + targetLibrary + "/" + objectName + ")";
       
       case OBJTYPE:
-        return " " + paramCmd.name() + "(" + ObjectType.toParam(objectType) + ")";
+        //return " " + paramCmd.name() + "(" + ObjectType.toParam(objectType) + ")";
+        return " " + paramCmd.name() + "(" + objectType.toParam() + ")";
     
       case SRCFILE:
         return " " + paramCmd.name() + "(" + sourceLibrary + "/" + sourceFile + ")";

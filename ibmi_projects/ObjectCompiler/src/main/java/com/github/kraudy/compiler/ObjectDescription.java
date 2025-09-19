@@ -1,5 +1,9 @@
 package com.github.kraudy.compiler;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,6 +21,7 @@ import com.ibm.as400.access.UserSpace;
 // Core struct for capturing compilation specs (JSON-friendly via Jackson)
 public class ObjectDescription {
   private final AS400 system;
+  private final Connection connection;
   private final boolean debug;
   //TODO: Make this private, add set method and move to another file
   public String targetLibrary;
@@ -30,8 +35,6 @@ public class ObjectDescription {
   public Map<CompilationPattern.ParamCmd, String> ParamCmdSequence = new HashMap<>();
   public Map<String, Object> objInfo = new HashMap<>();
 
-  public String text;
-  public String actGrp;//TODO: Remove this
 
   public enum SysCmd { CHGLIBL, DSPPGMREF, DSPOBJD, DSPDBR }
 
@@ -65,8 +68,10 @@ public class ObjectDescription {
   }
 
   public enum ObjectType { PGM, SRVPGM, MODULE, TABLE, LF, VIEW, ALIAS, PROCEDURE, FUNCTION;
-    public static String toParam(ObjectType objectType){
-      return "*" + objectType.name();
+    //public static String toParam(ObjectType objectType){
+    public String toParam(){
+      // return "*" + objectType.name();
+      return "*" + this.name();
     }
   } // Add more as needed
 
@@ -79,6 +84,7 @@ public class ObjectDescription {
   @JsonCreator
   public ObjectDescription(
         AS400 system,
+        Connection connection,
         boolean debug,
         @JsonProperty("targetLibrary") String targetLibrary,
         @JsonProperty("objectName") String objectName,
@@ -95,6 +101,7 @@ public class ObjectDescription {
     //TODO: If validtion like toUpperCase().trim() is needed, add it when passing the params to keep this clean
 
     this.system = system;
+    this.connection = connection;
     this.debug = debug;
 
     if (objectName == null || objectName.isEmpty()) throw new IllegalArgumentException("Object name is required.");
@@ -123,8 +130,6 @@ public class ObjectDescription {
   public String getSourceFile() { return sourceFile; }
   public String getSourceName() { return sourceName; }
   public SourceType getSourceType() { return sourceType; }
-  public String getText() { return text; }
-  public String getActGrp() { return actGrp; }
   public Map<CompilationPattern.ParamCmd, String> getParamCmdSequence() { return ParamCmdSequence; }
 
   // TODO: This logic encapsulation is nice. It will be helpfull in the future
@@ -143,6 +148,148 @@ public class ObjectDescription {
 
   public boolean isMODULE(){
     return (this.objectType == ObjectType.MODULE) ? true: false;
+  }
+
+  public void retrieveSQLObjectInfo() throws SQLException {
+    try (Statement stmt = connection.createStatement();
+        ResultSet rsObj = stmt.executeQuery(
+          "SELECT PROGRAM_LIBRARY, " + // programLibrary
+              "PROGRAM_NAME, " + // programName
+              "PROGRAM_TYPE, " +  // [ILE, OPM] 
+              "OBJECT_TYPE, " +   // typeOfProgram
+              "CREATE_TIMESTAMP, " + // creationDateTime
+              "TEXT_DESCRIPTION, " + // textDescription
+              "PROGRAM_OWNER, " + // owner
+              "PROGRAM_ATTRIBUTE, " + // attribute
+              "USER_PROFILE, " +
+              "USE_ADOPTED_AUTHORITY, " +
+              "RELEASE_CREATED_ON, " +
+              "TARGET_RELEASE, " +
+              "MINIMUM_NUMBER_PARMS, " + // minParameters
+              "MAXIMUM_NUMBER_PARMS, " + // maxParameters
+              "PAGING_POOL, " +
+              "PAGING_AMOUNT, " +
+              "ALLOW_RTVCLSRC, " + // allowRTVCLSRC
+              "CONVERSION_REQUIRED, " +
+              "CONVERSION_DETAIL, " +
+              //-- These seem to be for ILE objects
+              "PROGRAM_ENTRY_PROCEDURE_MODULE_LIBRARY, " +
+              "PROGRAM_ENTRY_PROCEDURE_MODULE, " +
+              "COALESCE(ACTIVATION_GROUP, '') AS ACTIVATION_GROUP, " + // activationGroupAttribute
+              "SHARED_ACTIVATION_GROUP, " +
+              "OBSERVABLE_INFO_COMPRESSED, " +
+              "RUNTIME_INFO_COMPRESSED, " +
+              "ALLOW_UPDATE, " +
+              "ALLOW_BOUND_SRVPGM_LIBRARY_UPDATE, " +
+              "ALL_CREATION_DATA, " +
+              "PROFILING_DATA, " +
+              "TERASPACE_STORAGE_ENABLED_MODULES, " +
+              "TERASPACE_STORAGE_ENABLED_PEP, " +
+              "STORAGE_MODEL, " +
+              "ARGUMENT_OPTIMIZATION, " +
+              "NUMBER_OF_UNRESOLVED_REFERENCES, " +
+              "ALLOW_STATIC_STORAGE_REINIT, " +
+              "MINIMUM_STATIC_STORAGE_SIZE, " +
+              "MAXIMUM_STATIC_STORAGE_SIZE, " +
+              "AUXILIARY_STORAGE_SEGMENTS, " +
+              "MAXIMUM_AUXILIARY_STORAGE_SEGMENTS, " +
+              "PROGRAM_SIZE, " +
+              "MAXIMUM_PROGRAM_SIZE, " +
+              // Module related data
+              "MODULES, " + 
+              "MAXIMUM_MODULES, " +
+              "SERVICE_PROGRAMS, " +
+              "MAXIMUM_SERVICE_PROGRAMS, " +
+              "STRING_DIRECTORY_SIZE, " +
+              "MAXIMUM_STRING_DIRECTORY_SIZE, " +
+              "COPYRIGHTS, " +
+              "COPYRIGHT_STRINGS, " +
+              "COPYRIGHT_STRING_SIZE, " +
+              "MAXIMUM_COPYRIGHT_STRING_SIZE, " +
+              "EXPORT_SOURCE_LIBRARY, " +
+              "EXPORT_SOURCE_FILE, " +
+              "EXPORT_SOURCE_FILE_MEMBER, " +
+              "EXPORT_SOURCE_STREAM_FILE, " +
+              "PROCEDURE_EXPORTS, " + // Symbols info
+              "MAXIMUM_PROCEDURE_EXPORTS, " +
+              "DATA_EXPORTS, " +
+              "MAXIMUM_DATA_EXPORTS, " +
+              "SIGNATURES, " +
+              "EXPORT_SIGNATURES, " +
+              "MAXIMUM_SIGNATURES, " +
+              // Source file related data
+              "SOURCE_FILE_LIBRARY, " + // sourceLibrary
+              "SOURCE_FILE, " + // sourceFile
+              "SOURCE_FILE_MEMBER, " +
+              "SOURCE_FILE_CHANGE_TIMESTAMP, " + // sourceUpdatedDateTime
+              "SORT_SEQUENCE_LIBRARY, " +
+              "SORT_SEQUENCE, " +
+              "LANGUAGE_ID, " +
+              "OBSERVABLE, " + // observable
+              "OPTIMIZATION, " +
+              "LOG_COMMANDS, " +
+              "FIX_DECIMAL_DATA, " + // fixDecimalData
+              "UPDATE_PASA, " +
+              "CLEAR_PASA, " +
+              "COMPILER_ID, " +
+              "TERASPACE_STORAGE_ENABLED_PROGRAM, " + // teraspaceEnabled
+              "OPM_PROGRAM_SIZE, " +
+              "STATIC_STORAGE_SIZE, " +
+              "AUTOMATIC_STORAGE_SIZE, " +
+              "NUMBER_MI_INSTRUCTIONS, " +
+              "NUMBER_MI_ODT_ENTRIES, " +
+              //-- Sql related info
+              "SQL_STATEMENT_COUNT, " +
+              "SQL_RELATIONAL_DATABASE, " +
+              "SQL_COMMITMENT_CONTROL, " +
+              "SQL_NAMING, " +
+              "SQL_DATE_FORMAT, " +
+              "SQL_DATE_SEPARATOR, " +
+              "SQL_TIME_FORMAT, " +
+              "SQL_TIME_SEPARATOR, " +
+              "SQL_SORT_SEQUENCE_LIBRARY, " +
+              "SQL_SORT_SEQUENCE, " +
+              "SQL_LANGUAGE_ID, " +
+              "SQL_DEFAULT_SCHEMA, " +
+              "SQL_PATH, " +
+              "SQL_DYNAMIC_USER_PROFILE, " +
+              "SQL_ALLOW_COPY_DATA, " +
+              "SQL_CLOSE_SQL_CURSOR, " +
+              "SQL_DELAY_PREPARE, " +
+              "SQL_ALLOW_BLOCK, " +
+              "SQL_PACKAGE_LIBRARY, " +
+              "SQL_PACKAGE, " +
+              "SQL_RDB_CONNECTION_METHOD " +
+            "FROM QSYS2.PROGRAM_INFO " +
+            "WHERE PROGRAM_LIBRARY = '" + targetLibrary + "' " +
+                "AND PROGRAM_NAME = '" + objectName + "' " +
+                "AND OBJECT_TYPE = '" + objectType.toParam() + "' "
+          )) {
+      if (!rsObj.next()) {
+        // TODO: Maybe this should be optional for new objects. Just throw a warning
+        throw new IllegalArgumentException("Could not get object '" + objectName + "' from library '" + targetLibrary + "' type" + "'" + objectType.toString() + "'");
+      }
+
+      System.out.println("Found object '" + objectName + "' from library '" + targetLibrary + "' type" + "'" + objectType.toString() + "'");
+
+      String text = rsObj.getString("TEXT_DESCRIPTION").trim();
+      if (!text.isEmpty()) ParamCmdSequence.put(ParamCmd.TEXT, text);
+
+      String programType = rsObj.getString("PROGRAM_TYPE").trim();
+      System.out.println("PROGRAM_TYPE " + programType );
+
+      if (programType.equals("ILE")){
+        String actgrp = rsObj.getString("ACTIVATION_GROUP").trim();
+        if (!actgrp.isEmpty()) ParamCmdSequence.put(ParamCmd.ACTGRP, actgrp);
+      }
+
+      //if (debug)
+      System.out.println("All data: ");
+      for (CompilationPattern.ParamCmd paramCmd : this.ParamCmdSequence.keySet()){
+        System.out.println(paramCmd.name() + ": " + this.ParamCmdSequence.get(paramCmd));
+      }
+      
+    }
   }
 
   public void retrieveObjectInfo() throws Exception {
@@ -364,14 +511,6 @@ public class ObjectDescription {
     if (debug) System.out.println("retrievedText: " + retrievedText);
     if (retrievedText != null && !retrievedText.trim().isEmpty()) {
       this.ParamCmdSequence.put(ParamCmd.TEXT, retrievedText.trim());
-    }
-
-    if (this.actGrp == null && objInfo.containsKey("activationGroupAttribute")) {
-      String retrievedActGrp = ((String) objInfo.get("activationGroupAttribute")).trim();
-      if (debug) System.out.println("retrievedActGrp: " + retrievedActGrp);
-      if (!retrievedActGrp.isEmpty()) {
-        this.ParamCmdSequence.put(ParamCmd.ACTGRP, retrievedActGrp);
-      }
     }
       
       // TODO: Add more params like --usrprf, --useadpaut, etc., and map from objInfo
