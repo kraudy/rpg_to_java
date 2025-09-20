@@ -334,7 +334,54 @@ public class ObjectDescription {
     }
   }
 
-  
+  // NEW: Query BOUND_MODULE_INFO for module-specific fields (e.g., GENLVL, OPTION)
+  public void retrieveBoundModuleInfo(String entryModuleLib, String entryModule) throws SQLException {
+    if (entryModuleLib == null || entryModule == null) return;  // Skip if no entry module
+
+    try (Statement stmt = connection.createStatement();
+        ResultSet rsMod = stmt.executeQuery(
+          "SELECT GEN_SEVERITY_LEVEL, COMPILER_OPTIONS, DEBUG_VIEWS, OPTIMIZATION_LEVEL, " +  // Assume these columns; adjust per docs/blog
+          "SOURCE_FILE_LIBRARY, SOURCE_FILE, SOURCE_FILE_MEMBER, " +
+          "DEFINE_CONDITION_NAMES, INCLUDE_DIRECTORY, PREPROCESSOR_OPTIONS " +  // Etc.
+          "FROM QSYS2.BOUND_MODULE_INFO " +
+          "WHERE PROGRAM_LIBRARY = '" + targetLibrary + "' " +
+            "AND PROGRAM_NAME = '" + objectName + "' " +
+            "AND BOUND_MODULE_LIBRARY = '" + entryModuleLib + "' " +
+            "AND BOUND_MODULE = '" + entryModule + "' "
+        )) {
+      if (rsMod.next()) {
+        String genLvl = rsMod.getString("GEN_SEVERITY_LEVEL").trim();
+        if (!genLvl.isEmpty()) ParamCmdSequence.put(ParamCmd.GENLVL, genLvl);
+
+        String option = rsMod.getString("COMPILER_OPTIONS").trim();
+        if (!option.isEmpty()) ParamCmdSequence.put(ParamCmd.OPTION, option);
+
+        String dbgView = rsMod.getString("DEBUG_VIEWS").trim();
+        if (!dbgView.isEmpty()) ParamCmdSequence.put(ParamCmd.DBGVIEW, dbgView);
+
+        // Override OPTIMIZE if more specific here
+        String modOptimize = rsMod.getString("OPTIMIZATION_LEVEL").trim();
+        if (!modOptimize.isEmpty()) ParamCmdSequence.put(ParamCmd.OPTIMIZE, modOptimize);
+
+        // Update source if more accurate
+        String modSrcLib = rsMod.getString("SOURCE_FILE_LIBRARY").trim();
+        if (!modSrcLib.isEmpty()) {
+            sourceLibrary = modSrcLib.toUpperCase();
+            ParamCmdSequence.put(ParamCmd.SRCFILE, sourceLibrary + "/" + sourceFile);  // Update
+        }
+        // Similar for SOURCE_FILE, SOURCE_FILE_MEMBER
+
+        // Add more mappings (e.g., DEFINE, INCDIR, PPGENOPT)
+      } else {
+        // FALLBACK: Call your existing retrieveModuleInfo() API if SQL misses
+        try {
+          retrieveModuleInfo(targetLibrary + "/" + objectName);  // Qual name
+        } catch (Exception e) {
+          if (debug) System.err.println("Fallback API failed: " + e.getMessage());
+        }
+      }
+    }
+  }
 
   public void retrieveObjectInfo() throws Exception {
     String apiPgm;
