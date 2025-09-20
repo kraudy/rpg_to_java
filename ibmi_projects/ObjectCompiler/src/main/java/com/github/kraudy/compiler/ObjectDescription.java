@@ -10,6 +10,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
+import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 import com.ibm.as400.access.AS400;
 import com.ibm.as400.access.AS400Bin4;
 import com.ibm.as400.access.AS400Message;
@@ -275,12 +276,53 @@ public class ObjectDescription {
       String text = rsObj.getString("TEXT_DESCRIPTION").trim();
       if (!text.isEmpty()) ParamCmdSequence.put(ParamCmd.TEXT, text);
 
+      String tgtRls = rsObj.getString("TARGET_RELEASE").trim();
+      if (!tgtRls.isEmpty()) ParamCmdSequence.put(ParamCmd.TGTRLS, tgtRls);
+
+      String usrPrf = rsObj.getString("USER_PROFILE").trim();
+      if (!usrPrf.isEmpty()) ParamCmdSequence.put(ParamCmd.USRPRF, usrPrf);
+
+      String srtSeq = rsObj.getString("SORT_SEQUENCE").trim();
+      if (!srtSeq.isEmpty()) ParamCmdSequence.put(ParamCmd.SRTSEQ, srtSeq);
+      String srtLib = rsObj.getString("SORT_SEQUENCE_LIBRARY").trim();
+      if (!srtLib.isEmpty()) ParamCmdSequence.put(ParamCmd.SORTSEQ_LIB, srtLib);  // Custom key if needed
+
+      String langId = rsObj.getString("LANGUAGE_ID").trim();
+      if (!langId.isEmpty()) ParamCmdSequence.put(ParamCmd.LANGID, langId);
+
+      String optimize = rsObj.getString("OPTIMIZATION").trim();
+      if (!optimize.isEmpty()) ParamCmdSequence.put(ParamCmd.OPTIMIZE, optimize);
+
+      String fixNbr = rsObj.getString("FIX_DECIMAL_DATA").trim().equals("1") ? ValCmd.YES.toString() : ValCmd.NO.toString();  // Map boolean-ish
+      ParamCmdSequence.put(ParamCmd.FIXNBR, fixNbr);
+
+      String prfDta = rsObj.getString("PROFILING_DATA").trim();
+      if (!prfDta.isEmpty()) ParamCmdSequence.put(ParamCmd.PRFDTA, prfDta);
+
+      String stgMdl = rsObj.getString("STORAGE_MODEL").trim();
+      if (!stgMdl.isEmpty()) ParamCmdSequence.put(ParamCmd.STGMDL, stgMdl);
+
+      String logCmds = rsObj.getString("LOG_COMMANDS").trim();
+      if (!logCmds.isEmpty()) ParamCmdSequence.put(ParamCmd.LOG, logCmds.equals("1") ? ValCmd.YES.toString() : ValCmd.NO.toString());
+
+      String alwRtvSrc = rsObj.getString("ALLOW_RTVCLSRC").trim();
+      if (!alwRtvSrc.isEmpty()) ParamCmdSequence.put(ParamCmd.ALWRTVSRC, alwRtvSrc.equals("1") ? ValCmd.YES.toString() : ValCmd.NO.toString());
+
+      /* Specific program type */
       String programType = rsObj.getString("PROGRAM_TYPE").trim();
       System.out.println("PROGRAM_TYPE " + programType );
 
-      if (programType.equals("ILE")){
+      if ("ILE".equals(programType)) {
         String actgrp = rsObj.getString("ACTIVATION_GROUP").trim();
         if (!actgrp.isEmpty()) ParamCmdSequence.put(ParamCmd.ACTGRP, actgrp);
+
+        // retrieveBoundModuleInfo(rsObj.getString("PROGRAM_ENTRY_PROCEDURE_MODULE_LIBRARY").trim(), 
+        //                                 rsObj.getString("PROGRAM_ENTRY_PROCEDURE_MODULE").trim());
+      }
+
+      // For OPM-specific (e.g., SAAFLAG, if in view)
+      if ("OPM".equals(programType)) {
+        // Map OPM fields similarly if present in query
       }
 
       //if (debug)
@@ -291,6 +333,8 @@ public class ObjectDescription {
       
     }
   }
+
+  
 
   public void retrieveObjectInfo() throws Exception {
     String apiPgm;

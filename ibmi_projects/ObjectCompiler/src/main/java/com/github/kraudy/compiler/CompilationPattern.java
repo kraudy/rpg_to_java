@@ -5,8 +5,6 @@ import java.util.EnumSet;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import com.github.kraudy.compiler.ObjectDescription.ObjectType;
-
 public class CompilationPattern {
     // Resolver map for command builders (functions that build command strings based on spec)
   private Map<CompCmd, Supplier<String>> cmdBuilders = new EnumMap<>(CompCmd.class);
@@ -49,7 +47,12 @@ public class CompilationPattern {
   }
 
   public enum ParamCmd { 
-    PGM, MODULE, OBJ, OBJTYPE, OUTPUT, OUTMBR, SRVPGM, BNDSRVPGM, LIBL, SRCFILE, SRCMBR, ACTGRP, DFTACTGRP, BNDDIR, COMMIT, TEXT, TGTCCSID, CRTFRMSTMF;
+    PGM, MODULE, OBJ, OBJTYPE, OUTPUT, OUTMBR, SRVPGM, BNDSRVPGM, LIBL, SRCFILE, SRCMBR, ACTGRP, DFTACTGRP, BNDDIR, COMMIT, TEXT, TGTCCSID, CRTFRMSTMF,
+    OPTION, TGTRLS, SORTSEQ_LIB,
+    // NEW: Added for (RPG/CL specific)
+    GENLVL, DBGVIEW, DBGENCKEY, OPTIMIZE, INDENT, CVTOPT, SRTSEQ, LANGID, REPLACE, USRPRF, AUT, TRUNCNBR, FIXNBR, ALWNULL, DEFINE, ENBPFRCOL, PRFDTA, 
+    LICOPT, INCDIR, PGMINFO, INFOSTMF, PPGENOPT, PPSRCFILE, PPSRCMBR, PPSRCSTMF, REQPREXP, PPMINOUTLN,
+    GENOPT, SAAFLAG, PRTFILE, PHSTRC, ITDUMP, SNPDUMP, CODELIST, IGNDECERR, LOG, ALWRTVSRC, INCFILE, STGMDL;  // STGMDL for teraspace/inherit
 
     public static ParamCmd fromString(String value) {
       try {
@@ -102,7 +105,9 @@ public class CompilationPattern {
 
   //TODO: Add a Map<String, ValCmd>
   public enum ValCmd { 
-    FIRST, REPLACE, OUTFILE, LIBL, FILE, DTAARA, PGM, MODULE, OBJ, SRVPGM, CURLIB, NO, NONE, ALL, SNGLVL, CURRENT; 
+    FIRST, REPLACE, OUTFILE, LIBL, FILE, DTAARA, PGM, MODULE, OBJ, SRVPGM, CURLIB, NONE, ALL, CURRENT,
+
+    YES, NO, STMT, SOURCE, LIST, HEX, JOBRUN, USER, LIBCRTAUT, PEP, NOCOL, PRINT, SNGLVL; 
 
     public static ValCmd fromString(String value) {
       try {
@@ -205,6 +210,7 @@ public class CompilationPattern {
 
     // TODO: These could be build base on object type and source.
     // Command builders as functions (pattern matching via enums)
+    //TODO: Use buildBoundCmdForOPM() if programType == "OPM"
     cmdBuilders.put(CompCmd.CRTRPGMOD, this::buildModuleCmd);
     cmdBuilders.put(CompCmd.CRTCLMOD, this::buildModuleCmd);
     cmdBuilders.put(CompCmd.CRTBNDRPG, this::buildBoundCmd);
@@ -227,9 +233,10 @@ public class CompilationPattern {
     return compilationCommand.name() + params;
   }
 
-  // Example builder function for module commands
+  // Update for module cmds if needed (e.g., CRTRPGMOD uses similar optionals)
   // TODO: Add CompCmd as param or something, don't burn it.
   public String buildModuleCmd() {
+    // Similar to buildBoundCmd but without PGM/DFTACTGRP; add GENLVL, OPTION, etc.
     StringBuilder sb = new StringBuilder();
 
     sb.append(getParamString(ParamCmd.MODULE));
@@ -244,8 +251,7 @@ public class CompilationPattern {
     //TODO: Maybe define what params all these have in common and then a list of the option params as enmus
   // and then validate them in the corresponding order like : PGM, SRCFILE, SRCMBR
   // Similar for bound commands
-  // public String buildBoundCmd(, EnumSet<ParamCmd> options) {
-  public String buildBoundCmd() {
+  public String buildBoundCmd() { // For CRTBNDRPG/CRTBNDCL
     StringBuilder sb = new StringBuilder();
 
     //TODO: If i can store each ParamCmd in an ordered list, here, i could just do for parcmd in parcmdList : and call the method
@@ -253,13 +259,76 @@ public class CompilationPattern {
     sb.append(getParamString(ParamCmd.SRCFILE));
     sb.append(getParamString(ParamCmd.SRCMBR));
     
-    appendCommonParams(sb);
+    // Required/early optionals
+    sb.append(getParamString(ParamCmd.GENLVL));
+    sb.append(getParamString(ParamCmd.TEXT));
+    sb.append(getParamString(ParamCmd.DFTACTGRP));  // Or ACTGRP for ILE
+    // Additional params section
+    sb.append(getParamString(ParamCmd.OPTION));
+    sb.append(getParamString(ParamCmd.DBGVIEW));
+    sb.append(getParamString(ParamCmd.DBGENCKEY));
+    sb.append(getParamString(ParamCmd.OUTPUT));
+    sb.append(getParamString(ParamCmd.OPTIMIZE));
+    sb.append(getParamString(ParamCmd.INDENT));
+    sb.append(getParamString(ParamCmd.CVTOPT));
+    sb.append(getParamString(ParamCmd.SRTSEQ));
+    sb.append(getParamString(ParamCmd.LANGID));
+    sb.append(getParamString(ParamCmd.REPLACE));
+    sb.append(getParamString(ParamCmd.USRPRF));
+    sb.append(getParamString(ParamCmd.AUT));
+    sb.append(getParamString(ParamCmd.TRUNCNBR));
+    sb.append(getParamString(ParamCmd.FIXNBR));
+    sb.append(getParamString(ParamCmd.TGTRLS));
+    sb.append(getParamString(ParamCmd.ALWNULL));
+    sb.append(getParamString(ParamCmd.DEFINE));
+    sb.append(getParamString(ParamCmd.ENBPFRCOL));
+    sb.append(getParamString(ParamCmd.PRFDTA));
+    sb.append(getParamString(ParamCmd.LICOPT));
+    sb.append(getParamString(ParamCmd.INCDIR));
+    sb.append(getParamString(ParamCmd.PGMINFO));
+    sb.append(getParamString(ParamCmd.INFOSTMF));
+    sb.append(getParamString(ParamCmd.PPGENOPT));
+    sb.append(getParamString(ParamCmd.PPSRCFILE));
+    sb.append(getParamString(ParamCmd.PPSRCMBR));
+    sb.append(getParamString(ParamCmd.PPSRCSTMF));
+    sb.append(getParamString(ParamCmd.TGTCCSID));
+    sb.append(getParamString(ParamCmd.REQPREXP));
+    sb.append(getParamString(ParamCmd.PPMINOUTLN));
+    sb.append(getParamString(ParamCmd.STGMDL));  // Late optional
+
+    return sb.toString();
 
     // if(!options.contains(ParamCmd.PGM)) throw new IllegalArgumentException("Required param not found : '" + ParamCmd.PGM.name() + "'");
     // TODO: This is important!!!
     // if(!ParamCmdSequence.keySet().contains(ParamCmd.PGM)) throw new IllegalArgumentException("Required param not found : '" + ParamCmd.PGM.name() + "'");
     // ParamCmdSequence.values() => Returns a colletion of values from the map. Can be useful. : Collection<Integer> values = map.values();
+  }
 
+  public String builOpmCmd() {  // For CRTRPGPGM/CRTCLPGM (similar but OPM-specific)
+    StringBuilder sb = new StringBuilder();
+    sb.append(getParamString(ParamCmd.PGM));
+    sb.append(getParamString(ParamCmd.SRCFILE));
+    sb.append(getParamString(ParamCmd.SRCMBR));
+    sb.append(getParamString(ParamCmd.GENLVL));
+    sb.append(getParamString(ParamCmd.TEXT));
+    sb.append(getParamString(ParamCmd.OPTION));
+    sb.append(getParamString(ParamCmd.GENOPT));
+    sb.append(getParamString(ParamCmd.INDENT));
+    sb.append(getParamString(ParamCmd.CVTOPT));
+    sb.append(getParamString(ParamCmd.SRTSEQ));
+    sb.append(getParamString(ParamCmd.LANGID));
+    sb.append(getParamString(ParamCmd.SAAFLAG));
+    sb.append(getParamString(ParamCmd.PRTFILE));
+    sb.append(getParamString(ParamCmd.REPLACE));
+    sb.append(getParamString(ParamCmd.TGTRLS));
+    sb.append(getParamString(ParamCmd.USRPRF));
+    sb.append(getParamString(ParamCmd.AUT));
+    sb.append(getParamString(ParamCmd.PHSTRC));
+    sb.append(getParamString(ParamCmd.ITDUMP));
+    sb.append(getParamString(ParamCmd.SNPDUMP));
+    sb.append(getParamString(ParamCmd.CODELIST));
+    sb.append(getParamString(ParamCmd.IGNDECERR));
+    sb.append(getParamString(ParamCmd.ALWNULL));
     return sb.toString();
   }
 
@@ -320,12 +389,14 @@ public class CompilationPattern {
   public  String getParamString(ParamCmd paramCmd){
     //TODO: Here, i could check if the param value is supplied, in that case, i would
     // return that and otherwise, return the calculated value and then, maybe upbdate the object desc
+    String val = ParamCmdSequence.getOrDefault(paramCmd, "");  // Retrieved or empty
+
     switch (paramCmd) {
       case OBJ:
       case PGM:
       case SRVPGM:
       case MODULE:
-        return " " + paramCmd.name() + "(" + targetLibrary + "/" + objectName + ")";
+        return " " + paramCmd.name() + "(" + targetLibrary + "/" + objectName + ")"; //TODO: Add these with put.
       
       case OBJTYPE:
         //return " " + paramCmd.name() + "(" + ObjectType.toParam(objectType) + ")";
@@ -350,8 +421,33 @@ public class CompilationPattern {
       // TODO: Implement these
       case DFTACTGRP: // DFTACTGRP(*NO)
       case BNDDIR:
-        return ValCmd.NO.toString();
+        //return ValCmd.NO.toString();
+        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
         
+      case GENLVL:
+        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
+      case DBGVIEW:
+        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
+      case OPTIMIZE:
+        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
+      case SRTSEQ:
+        String srtLib = ParamCmdSequence.getOrDefault(ParamCmd.SORTSEQ_LIB, "");  // Assume you add SORTSEQ_LIB if needed
+        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + (srtLib.isEmpty() ? "" : " " + srtLib) + ")";
+      case LANGID:
+        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
+      case USRPRF:
+        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
+      case TGTRLS:
+        return val.isEmpty() ? " " + paramCmd.name() + "(" + ValCmd.CURRENT.toString() + ")" : " " + paramCmd.name() + "(" + val + ")";
+      case FIXNBR:
+        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
+      case ALWNULL:
+        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
+      case PRFDTA:
+        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
+      case STGMDL:
+        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
+      // Add cases for others (e.g., DEFINE(*NONE), ENBPFRCOL(*PEP), etc.)
       default:
         return "";
     }
