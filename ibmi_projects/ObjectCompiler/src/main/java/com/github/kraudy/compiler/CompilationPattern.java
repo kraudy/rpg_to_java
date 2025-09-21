@@ -61,6 +61,8 @@ public class CompilationPattern {
         throw new IllegalArgumentException("Could not get compilation command param from string: '" + value + "'");
       }
     } 
+
+    //TODO: Maybe i could add a method here that does the same as getParamString()
     
     /* Validates if the option for a given param is valid */
     public static String paramValue(ParamCmd paramCmd, ValCmd valCmd){
@@ -246,7 +248,10 @@ public class CompilationPattern {
     if (this.targetLibrary.isEmpty()) this.targetLibrary = ValCmd.LIBL.toString();
     if (this.sourceName.isEmpty())    this.sourceName = CompCmd.compilationSourceName(compilationCommand);//ValCmd.PGM.toString();
 
-
+    ParamCmdSequence.put(ParamCmd.OBJ, this.targetLibrary + "/" + this.objectName);
+    ParamCmdSequence.put(ParamCmd.PGM, this.targetLibrary + "/" + this.objectName);
+    ParamCmdSequence.put(ParamCmd.SRVPGM, this.targetLibrary + "/" + this.objectName);
+    ParamCmdSequence.put(ParamCmd.MODULE, this.targetLibrary + "/" + this.objectName);
 
     // TODO: These could be build base on object type and source.
     // Command builders as functions (pattern matching via enums)
@@ -444,7 +449,8 @@ public class CompilationPattern {
       case PGM:
       case SRVPGM:
       case MODULE:
-        return " " + paramCmd.name() + "(" + targetLibrary + "/" + objectName + ")"; //TODO: Add these with put.
+        //return " " + paramCmd.name() + "(" + targetLibrary + "/" + objectName + ")";
+        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
       
       case OBJTYPE:
         //return " " + paramCmd.name() + "(" + ObjectType.toParam(objectType) + ")";
