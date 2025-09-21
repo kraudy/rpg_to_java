@@ -93,7 +93,49 @@ public class CompilationPattern {
           case OBJ:
             if (!EnumSet.of(ValCmd.LIBL, ValCmd.FILE, ValCmd.DTAARA).contains(valCmd)) throw new IllegalArgumentException();
             break;
-          
+          case GENLVL:
+            if (!EnumSet.of(ValCmd.NONE).contains(valCmd) && !(valCmd.name().matches("\\d+"))) throw new IllegalArgumentException();
+            break;
+          case DBGVIEW:
+            if (!EnumSet.of(ValCmd.ALL, ValCmd.NONE, ValCmd.STMT, ValCmd.SOURCE, ValCmd.LIST).contains(valCmd)) throw new IllegalArgumentException();  // Add more as needed
+            break;
+          case OPTIMIZE:
+            if (!EnumSet.of(ValCmd.NONE).contains(valCmd) && !(valCmd.name().matches("\\d+"))) throw new IllegalArgumentException();
+            break;
+          case SRTSEQ:
+            if (!EnumSet.of(ValCmd.HEX, ValCmd.NONE).contains(valCmd)) throw new IllegalArgumentException();
+            break;
+          case LANGID:
+            if (!EnumSet.of(ValCmd.JOBRUN).contains(valCmd)) throw new IllegalArgumentException();
+            break;
+          case REPLACE:
+          case TRUNCNBR:
+          case ALWNULL:
+          case FIXNBR:
+          case REQPREXP:
+          case SAAFLAG:
+          case PHSTRC:
+          case IGNDECERR:
+          case LOG:
+          case ALWRTVSRC:
+            if (!EnumSet.of(ValCmd.YES, ValCmd.NO).contains(valCmd)) throw new IllegalArgumentException();
+            break;
+          case USRPRF:
+            if (!EnumSet.of(ValCmd.USER).contains(valCmd)) throw new IllegalArgumentException();
+            break;
+          case AUT:
+            if (!EnumSet.of(ValCmd.LIBCRTAUT).contains(valCmd)) throw new IllegalArgumentException();
+            break;
+          case PRFDTA:
+            if (!EnumSet.of(ValCmd.NOCOL).contains(valCmd)) throw new IllegalArgumentException();
+            break;
+          case ENBPFRCOL:
+            if (!EnumSet.of(ValCmd.PEP).contains(valCmd)) throw new IllegalArgumentException();
+            break;
+          case STGMDL:
+            if (!EnumSet.of(ValCmd.SNGLVL).contains(valCmd)) throw new IllegalArgumentException();
+            break;
+            // Add cases for others as needed (e.g., DEFINE(*NONE), etc.)
           default:
             throw new IllegalArgumentException();  
         }
