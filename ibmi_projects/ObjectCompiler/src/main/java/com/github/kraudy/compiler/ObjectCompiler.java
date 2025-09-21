@@ -186,8 +186,6 @@ public class ObjectCompiler implements Runnable{
           sourceFile,
           sourceName,
           sourceType, // Specified or inferred
-          //text,
-          //actGrp,
           ParamCmdSequence
     );
 

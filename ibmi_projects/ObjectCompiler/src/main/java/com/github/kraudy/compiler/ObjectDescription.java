@@ -165,7 +165,7 @@ public class ObjectDescription {
               "USER_PROFILE, " +
               "USE_ADOPTED_AUTHORITY, " +
               "RELEASE_CREATED_ON, " +
-              "TARGET_RELEASE, " +
+              "COALESCE(TARGET_RELEASE, '') As TARGET_RELEASE, " +
               "MINIMUM_NUMBER_PARMS, " + // minParameters
               "MAXIMUM_NUMBER_PARMS, " + // maxParameters
               "PAGING_POOL, " +
@@ -183,10 +183,10 @@ public class ObjectDescription {
               "ALLOW_UPDATE, " +
               "ALLOW_BOUND_SRVPGM_LIBRARY_UPDATE, " +
               "ALL_CREATION_DATA, " +
-              "PROFILING_DATA, " +
+              "COALESCE(PROFILING_DATA, '') As PROFILING_DATA, " +
               "TERASPACE_STORAGE_ENABLED_MODULES, " +
               "TERASPACE_STORAGE_ENABLED_PEP, " +
-              "STORAGE_MODEL, " +
+              "COALESCE(STORAGE_MODEL , '') As STORAGE_MODEL, " +
               "ARGUMENT_OPTIMIZATION, " +
               "NUMBER_OF_UNRESOLVED_REFERENCES, " +
               "ALLOW_STATIC_STORAGE_REINIT, " +
@@ -315,6 +315,7 @@ public class ObjectDescription {
       String programType = rsObj.getString("PROGRAM_TYPE").trim();
       System.out.println("PROGRAM_TYPE " + programType );
 
+      //TODO: Here i could try to migrate the sources for ILE to stream files and adjust the command
       if ("ILE".equals(programType)) {
         String actgrp = rsObj.getString("ACTIVATION_GROUP").trim();
         if (!actgrp.isEmpty()) ParamCmdSequence.put(ParamCmd.ACTGRP, actgrp);

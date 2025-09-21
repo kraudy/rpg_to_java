@@ -237,9 +237,6 @@ public class CompilationPattern {
 
     this.ParamCmdSequence = odes.getParamCmdSequence();
 
-    // this.text = odes.getText();
-    // this.actGrp = odes.getActGrp();
-
     /* Get compilation command */
 
     this.compilationCommand = typeToCmdMap.get(sourceType).get(objectType);
@@ -254,11 +251,13 @@ public class CompilationPattern {
     // TODO: These could be build base on object type and source.
     // Command builders as functions (pattern matching via enums)
     //TODO: Use buildBoundCmdForOPM() if programType == "OPM"
-    cmdBuilders.put(CompCmd.CRTRPGMOD, this::buildModuleCmd);
+    cmdBuilders.put(CompCmd.CRTRPGMOD, this::buildModuleCmd); 
     cmdBuilders.put(CompCmd.CRTCLMOD, this::buildModuleCmd);
     cmdBuilders.put(CompCmd.CRTBNDRPG, this::buildBoundCmd);
     cmdBuilders.put(CompCmd.CRTBNDCL, this::buildBoundCmd);
-    cmdBuilders.put(CompCmd.CRTRPGPGM, this::buildBoundCmd);
+
+    cmdBuilders.put(CompCmd.CRTRPGPGM, this::builOpmCmd); // OPM command
+
     cmdBuilders.put(CompCmd.CRTCLPGM, this::buildBoundCmd);
     cmdBuilders.put(CompCmd.CRTSQLRPGI, this::buildSqlRpgCmd);
     cmdBuilders.put(CompCmd.CRTSRVPGM, this::buildSrvPgmCmd);
