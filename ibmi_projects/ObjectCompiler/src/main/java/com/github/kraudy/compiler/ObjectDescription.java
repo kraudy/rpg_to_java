@@ -170,7 +170,7 @@ public class ObjectDescription {
               "MAXIMUM_NUMBER_PARMS, " + // maxParameters
               "PAGING_POOL, " +
               "PAGING_AMOUNT, " +
-              "ALLOW_RTVCLSRC, " + // allowRTVCLSRC
+              "COALESCE(ALLOW_RTVCLSRC, '') As ALLOW_RTVCLSRC, " + // allowRTVCLSRC
               "CONVERSION_REQUIRED, " +
               "CONVERSION_DETAIL, " +
               //-- These seem to be for ILE objects
@@ -223,13 +223,13 @@ public class ObjectDescription {
               "SOURCE_FILE, " + // sourceFile
               "SOURCE_FILE_MEMBER, " +
               "SOURCE_FILE_CHANGE_TIMESTAMP, " + // sourceUpdatedDateTime
-              "SORT_SEQUENCE_LIBRARY, " +
-              "SORT_SEQUENCE, " +
-              "LANGUAGE_ID, " +
+              "COALESCE(SORT_SEQUENCE_LIBRARY, '') As SORT_SEQUENCE_LIBRARY, " +
+              "COALESCE(SORT_SEQUENCE, '') As SORT_SEQUENCE, " +
+              "COALESCE(LANGUAGE_ID, '') As LANGUAGE_ID, " +
               "OBSERVABLE, " + // observable
-              "OPTIMIZATION, " +
-              "LOG_COMMANDS, " +
-              "FIX_DECIMAL_DATA, " + // fixDecimalData
+              "COALESCE(OPTIMIZATION, '') As OPTIMIZATION, " +
+              "COALESCE(LOG_COMMANDS, '' ) As LOG_COMMANDS, " +
+              "COALESCE(FIX_DECIMAL_DATA, '') As FIX_DECIMAL_DATA, " + // fixDecimalData
               "UPDATE_PASA, " +
               "CLEAR_PASA, " +
               "COMPILER_ID, " +
@@ -293,8 +293,11 @@ public class ObjectDescription {
       String optimize = rsObj.getString("OPTIMIZATION").trim();
       if (!optimize.isEmpty()) ParamCmdSequence.put(ParamCmd.OPTIMIZE, optimize);
 
-      String fixNbr = rsObj.getString("FIX_DECIMAL_DATA").trim().equals("1") ? ValCmd.YES.toString() : ValCmd.NO.toString();  // Map boolean-ish
-      ParamCmdSequence.put(ParamCmd.FIXNBR, fixNbr);
+      String fixNbr = rsObj.getString("FIX_DECIMAL_DATA").trim();
+      if (!fixNbr.isEmpty()){
+        fixNbr = fixNbr.equals("1") ? ValCmd.YES.toString() : ValCmd.NO.toString();  // Map boolean-ish
+        ParamCmdSequence.put(ParamCmd.FIXNBR, fixNbr);
+      }
 
       String prfDta = rsObj.getString("PROFILING_DATA").trim();
       if (!prfDta.isEmpty()) ParamCmdSequence.put(ParamCmd.PRFDTA, prfDta);

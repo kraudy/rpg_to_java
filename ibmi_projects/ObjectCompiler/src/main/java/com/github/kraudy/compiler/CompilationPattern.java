@@ -93,6 +93,7 @@ public class CompilationPattern {
           case OBJ:
             if (!EnumSet.of(ValCmd.LIBL, ValCmd.FILE, ValCmd.DTAARA).contains(valCmd)) throw new IllegalArgumentException();
             break;
+          
           default:
             throw new IllegalArgumentException();  
         }
@@ -252,6 +253,7 @@ public class CompilationPattern {
   // and then validate them in the corresponding order like : PGM, SRCFILE, SRCMBR
   // Similar for bound commands
   public String buildBoundCmd() { // For CRTBNDRPG/CRTBNDCL
+    //TODO: Here on in the initializer i could check for required params that are missing and use the default values
     StringBuilder sb = new StringBuilder();
 
     //TODO: If i can store each ParamCmd in an ordered list, here, i could just do for parcmd in parcmdList : and call the method
@@ -282,7 +284,9 @@ public class CompilationPattern {
     sb.append(getParamString(ParamCmd.ALWNULL));
     sb.append(getParamString(ParamCmd.DEFINE));
     sb.append(getParamString(ParamCmd.ENBPFRCOL));
-    sb.append(getParamString(ParamCmd.PRFDTA));
+    if (compilationCommand != CompCmd.CRTBNDCL){
+      sb.append(getParamString(ParamCmd.PRFDTA));
+    }
     sb.append(getParamString(ParamCmd.LICOPT));
     sb.append(getParamString(ParamCmd.INCDIR));
     sb.append(getParamString(ParamCmd.PGMINFO));
@@ -294,7 +298,10 @@ public class CompilationPattern {
     sb.append(getParamString(ParamCmd.TGTCCSID));
     sb.append(getParamString(ParamCmd.REQPREXP));
     sb.append(getParamString(ParamCmd.PPMINOUTLN));
-    sb.append(getParamString(ParamCmd.STGMDL));  // Late optional
+    // if (!ParamCmdSequence.getOrDefault(ParamCmd.DFTACTGRP, "").equals("*YES")) {
+    if (ParamCmdSequence.keySet().contains(ParamCmd.DFTACTGRP)) {
+      sb.append(getParamString(ParamCmd.STGMDL));  // Late optional
+    }    
 
     return sb.toString();
 

@@ -196,7 +196,8 @@ public class ObjectCompiler implements Runnable{
       // odes.retrieveObjectInfo();
       // odes.fillSpecFromObjInfo();
     } catch (Exception e) {
-      if (verbose) System.err.println("Warning: Could not retrieve compilation params from object: " + e.getMessage() + ". Using defaults.");
+      //if (verbose) System.err.println("Warning: Could not retrieve compilation params from object: " + e.getMessage() + ". Using defaults.");
+      e.printStackTrace();
     }
 
     if (odes.getSourceType() == null) {
