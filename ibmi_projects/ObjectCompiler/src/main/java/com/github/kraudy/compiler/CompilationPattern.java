@@ -448,68 +448,12 @@ public class CompilationPattern {
   }
 
   public  String getParamString(ParamCmd paramCmd){
-    //TODO: Here, i could check if the param value is supplied, in that case, i would
-    // return that and otherwise, return the calculated value and then, maybe upbdate the object desc
+    //TODO: Shoul i update the object desc?
     String val = ParamCmdSequence.getOrDefault(paramCmd, "");  // Retrieved or empty
 
-    // if (val.isEmpty()) return "";
+    if (val.isEmpty()) return "";
 
-    switch (paramCmd) {
-      case OBJ:
-      case PGM:
-      case SRVPGM:
-      case MODULE:
-        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
-      
-      case OBJTYPE:
-        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
-    
-      case SRCFILE:
-        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
-
-      case SRCMBR:
-        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
-      
-      case BNDSRVPGM:
-      case COMMIT:
-        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
-
-      case TEXT:
-      case ACTGRP:
-        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
-
-      case DFTACTGRP:
-      case BNDDIR:
-        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
-        
-      case GENLVL:
-        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
-      case DBGVIEW:
-        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
-      case OPTIMIZE:
-        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
-      case SRTSEQ:
-        //String srtLib = ParamCmdSequence.getOrDefault(ParamCmd.SORTSEQ_LIB, "");  // Assume you add SORTSEQ_LIB if needed
-        //return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + (srtLib.isEmpty() ? "" : " " + srtLib) + ")";
-        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
-      case LANGID:
-        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
-      case USRPRF:
-        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
-      case TGTRLS:
-        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
-      case FIXNBR:
-        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
-      case ALWNULL:
-        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
-      case PRFDTA:
-        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
-      case STGMDL:
-        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
-      // Add cases for others (e.g., DEFINE(*NONE), ENBPFRCOL(*PEP), etc.)
-      default:
-        return "";
-    }
+    return " " + paramCmd.name() + "(" + val + ")";
   }
 
 }
