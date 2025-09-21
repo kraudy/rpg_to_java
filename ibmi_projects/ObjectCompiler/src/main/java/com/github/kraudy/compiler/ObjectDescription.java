@@ -277,15 +277,15 @@ public class ObjectDescription {
       if (!text.isEmpty()) ParamCmdSequence.put(ParamCmd.TEXT, "'" + text +"'");
 
       String tgtRls = rsObj.getString("TARGET_RELEASE").trim();
-      if (!tgtRls.isEmpty()) ParamCmdSequence.put(ParamCmd.TGTRLS, tgtRls);
+      if (!tgtRls.isEmpty()) ParamCmdSequence.put(ParamCmd.TGTRLS, tgtRls); //TODO: Consider ValCmd.CURRENT.toString()
 
       String usrPrf = rsObj.getString("USER_PROFILE").trim();
       if (!usrPrf.isEmpty()) ParamCmdSequence.put(ParamCmd.USRPRF, usrPrf);
 
-      String srtSeq = rsObj.getString("SORT_SEQUENCE").trim();
-      if (!srtSeq.isEmpty()) ParamCmdSequence.put(ParamCmd.SRTSEQ, srtSeq);
       String srtLib = rsObj.getString("SORT_SEQUENCE_LIBRARY").trim();
       if (!srtLib.isEmpty()) ParamCmdSequence.put(ParamCmd.SORTSEQ_LIB, srtLib);  // Custom key if needed
+      String srtSeq = rsObj.getString("SORT_SEQUENCE").trim();
+      if (!srtSeq.isEmpty()) ParamCmdSequence.put(ParamCmd.SRTSEQ, srtSeq + (srtLib.isEmpty() ? "" : " " + srtLib));
 
       String langId = rsObj.getString("LANGUAGE_ID").trim();
       if (!langId.isEmpty()) ParamCmdSequence.put(ParamCmd.LANGID, langId);

@@ -94,6 +94,7 @@ public class ObjectCompiler implements Runnable{
   @Option(names = { "-l", "--lib" }, required = true, description = "Target library for object", converter = LibraryConverter.class)
   private String library;
 
+  //TODO: --obj, -t and -st could be made in one: hello.pgm.rpgle and just parse it. Maybe the last could be optional if the object is found.
   @Option(names = "--obj", required = true, description = "Object name", converter = ObjectNameConverter.class)
   private String objectName;
 

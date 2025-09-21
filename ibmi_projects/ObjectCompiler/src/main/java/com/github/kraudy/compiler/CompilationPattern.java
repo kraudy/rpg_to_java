@@ -459,38 +459,27 @@ public class CompilationPattern {
       case PGM:
       case SRVPGM:
       case MODULE:
-        //return " " + paramCmd.name() + "(" + targetLibrary + "/" + objectName + ")";
         return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
       
       case OBJTYPE:
-        //return " " + paramCmd.name() + "(" + ObjectType.toParam(objectType) + ")";
-        //return " " + paramCmd.name() + "(" + objectType.toParam() + ")";
         return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
     
       case SRCFILE:
-        //return " " + paramCmd.name() + "(" + sourceLibrary + "/" + sourceFile + ")";
         return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
 
       case SRCMBR:
-        //return " " + paramCmd.name() + "(" + sourceName + ")";
         return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
       
       case BNDSRVPGM:
       case COMMIT:
-        //return " " + paramCmd.name() + "(" + "*NONE" + ")";
         return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
 
       case TEXT:
       case ACTGRP:
-        //return (text.isEmpty()) ? "" : " " + paramCmd.name() + "('" + text + "')"; //TODO: This idea could be important.
-        //return (ParamCmdSequence.get(paramCmd).isEmpty()) ? "" : " " + paramCmd.name() + "('" + ParamCmdSequence.get(paramCmd) + "')";
-        //return (ParamCmdSequence.getOrDefault(paramCmd, "").isEmpty()) ? "" : " " + paramCmd.name() + "('" + ParamCmdSequence.get(paramCmd) + "')";
         return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
 
-      // TODO: Implement these
-      case DFTACTGRP: // DFTACTGRP(*NO)
+      case DFTACTGRP:
       case BNDDIR:
-        //return ValCmd.NO.toString();
         return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
         
       case GENLVL:
@@ -500,14 +489,15 @@ public class CompilationPattern {
       case OPTIMIZE:
         return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
       case SRTSEQ:
-        String srtLib = ParamCmdSequence.getOrDefault(ParamCmd.SORTSEQ_LIB, "");  // Assume you add SORTSEQ_LIB if needed
-        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + (srtLib.isEmpty() ? "" : " " + srtLib) + ")";
+        //String srtLib = ParamCmdSequence.getOrDefault(ParamCmd.SORTSEQ_LIB, "");  // Assume you add SORTSEQ_LIB if needed
+        //return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + (srtLib.isEmpty() ? "" : " " + srtLib) + ")";
+        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
       case LANGID:
         return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
       case USRPRF:
         return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
       case TGTRLS:
-        return val.isEmpty() ? " " + paramCmd.name() + "(" + ValCmd.CURRENT.toString() + ")" : " " + paramCmd.name() + "(" + val + ")";
+        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
       case FIXNBR:
         return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
       case ALWNULL:
