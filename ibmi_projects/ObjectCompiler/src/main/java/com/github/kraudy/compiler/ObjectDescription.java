@@ -274,7 +274,7 @@ public class ObjectDescription {
       System.out.println("Found object '" + objectName + "' from library '" + targetLibrary + "' type " + "'" + objectType.toParam() + "'");
 
       String text = rsObj.getString("TEXT_DESCRIPTION").trim();
-      if (!text.isEmpty()) ParamCmdSequence.put(ParamCmd.TEXT, text);
+      if (!text.isEmpty()) ParamCmdSequence.put(ParamCmd.TEXT, "'" + text +"'");
 
       String tgtRls = rsObj.getString("TARGET_RELEASE").trim();
       if (!tgtRls.isEmpty()) ParamCmdSequence.put(ParamCmd.TGTRLS, tgtRls);

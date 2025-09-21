@@ -168,8 +168,6 @@ public class CompilationPattern {
     }  
   }
 
-  //public static final Map<ParamCmd, String> ParamCmdSequence = new  EnumMap<>(ParamCmd.class);
-
   /* Maps source type to its compilation command */
   public static final Map<ObjectDescription.SourceType, Map<ObjectDescription.ObjectType, CompCmd>> typeToCmdMap = new EnumMap<>(ObjectDescription.SourceType.class);
 
@@ -248,10 +246,20 @@ public class CompilationPattern {
     if (this.targetLibrary.isEmpty()) this.targetLibrary = ValCmd.LIBL.toString();
     if (this.sourceName.isEmpty())    this.sourceName = CompCmd.compilationSourceName(compilationCommand);//ValCmd.PGM.toString();
 
+    /* Generate compilation params values from object description */
     ParamCmdSequence.put(ParamCmd.OBJ, this.targetLibrary + "/" + this.objectName);
     ParamCmdSequence.put(ParamCmd.PGM, this.targetLibrary + "/" + this.objectName);
     ParamCmdSequence.put(ParamCmd.SRVPGM, this.targetLibrary + "/" + this.objectName);
     ParamCmdSequence.put(ParamCmd.MODULE, this.targetLibrary + "/" + this.objectName);
+
+    ParamCmdSequence.put(ParamCmd.OBJTYPE, this.objectType.toParam());
+
+    ParamCmdSequence.put(ParamCmd.SRCFILE, this.sourceLibrary + "/" + this.sourceFile);
+
+    ParamCmdSequence.put(ParamCmd.SRCMBR, this.sourceName);
+
+    ParamCmdSequence.put(ParamCmd.BNDSRVPGM, ValCmd.NONE.toString());
+    ParamCmdSequence.put(ParamCmd.COMMIT, ValCmd.NONE.toString());
 
     // TODO: These could be build base on object type and source.
     // Command builders as functions (pattern matching via enums)
@@ -444,6 +452,8 @@ public class CompilationPattern {
     // return that and otherwise, return the calculated value and then, maybe upbdate the object desc
     String val = ParamCmdSequence.getOrDefault(paramCmd, "");  // Retrieved or empty
 
+    // if (val.isEmpty()) return "";
+
     switch (paramCmd) {
       case OBJ:
       case PGM:
@@ -454,23 +464,28 @@ public class CompilationPattern {
       
       case OBJTYPE:
         //return " " + paramCmd.name() + "(" + ObjectType.toParam(objectType) + ")";
-        return " " + paramCmd.name() + "(" + objectType.toParam() + ")";
+        //return " " + paramCmd.name() + "(" + objectType.toParam() + ")";
+        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
     
       case SRCFILE:
-        return " " + paramCmd.name() + "(" + sourceLibrary + "/" + sourceFile + ")";
+        //return " " + paramCmd.name() + "(" + sourceLibrary + "/" + sourceFile + ")";
+        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
 
       case SRCMBR:
-        return " " + paramCmd.name() + "(" + sourceName + ")";
+        //return " " + paramCmd.name() + "(" + sourceName + ")";
+        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
       
       case BNDSRVPGM:
       case COMMIT:
-        return " " + paramCmd.name() + "(" + "*NONE" + ")"; //TODO: Add validation here to return default *None or real value if given.
+        //return " " + paramCmd.name() + "(" + "*NONE" + ")";
+        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
 
       case TEXT:
       case ACTGRP:
         //return (text.isEmpty()) ? "" : " " + paramCmd.name() + "('" + text + "')"; //TODO: This idea could be important.
         //return (ParamCmdSequence.get(paramCmd).isEmpty()) ? "" : " " + paramCmd.name() + "('" + ParamCmdSequence.get(paramCmd) + "')";
-        return (ParamCmdSequence.getOrDefault(paramCmd, "").isEmpty()) ? "" : " " + paramCmd.name() + "('" + ParamCmdSequence.get(paramCmd) + "')";
+        //return (ParamCmdSequence.getOrDefault(paramCmd, "").isEmpty()) ? "" : " " + paramCmd.name() + "('" + ParamCmdSequence.get(paramCmd) + "')";
+        return val.isEmpty() ? "" : " " + paramCmd.name() + "(" + val + ")";
 
       // TODO: Implement these
       case DFTACTGRP: // DFTACTGRP(*NO)
