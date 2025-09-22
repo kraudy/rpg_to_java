@@ -320,8 +320,8 @@ public class ObjectDescription {
         String actgrp = rsObj.getString("ACTIVATION_GROUP").trim();
         if (!actgrp.isEmpty()) ParamCmdSequence.put(ParamCmd.ACTGRP, actgrp);
 
-        // retrieveBoundModuleInfo(rsObj.getString("PROGRAM_ENTRY_PROCEDURE_MODULE_LIBRARY").trim(), 
-        //                                 rsObj.getString("PROGRAM_ENTRY_PROCEDURE_MODULE").trim());
+         retrieveBoundModuleInfo(rsObj.getString("PROGRAM_ENTRY_PROCEDURE_MODULE_LIBRARY").trim(), 
+                                         rsObj.getString("PROGRAM_ENTRY_PROCEDURE_MODULE").trim());
       }
 
       // For OPM-specific (e.g., SAAFLAG, if in view)
@@ -344,16 +344,74 @@ public class ObjectDescription {
 
     try (Statement stmt = connection.createStatement();
         ResultSet rsMod = stmt.executeQuery(
-          "SELECT GEN_SEVERITY_LEVEL, COMPILER_OPTIONS, DEBUG_VIEWS, OPTIMIZATION_LEVEL, " +  // Assume these columns; adjust per docs/blog
-          "SOURCE_FILE_LIBRARY, SOURCE_FILE, SOURCE_FILE_MEMBER, " +
-          "DEFINE_CONDITION_NAMES, INCLUDE_DIRECTORY, PREPROCESSOR_OPTIONS " +  // Etc.
+          "SELECT PROGRAM_LIBRARY, " +
+                "PROGRAM_NAME, " +
+                "OBJECT_TYPE, " +
+                "BOUND_MODULE_LIBRARY, " +
+                "BOUND_MODULE, " +
+                "MODULE_ATTRIBUTE, " +
+                "MODULE_CREATE_TIMESTAMP, " +
+                "SOURCE_FILE_LIBRARY, " +
+                "SOURCE_FILE, " +
+                "SOURCE_FILE_MEMBER, " +
+                "COALESCE(SOURCE_STREAM_FILE_PATH, '') As SOURCE_STREAM_FILE_PATH, " +
+                "SOURCE_CHANGE_TIMESTAMP, " +
+                "MODULE_CCSID, " +
+                "SORT_SEQUENCE_LIBRARY, " +
+                "SORT_SEQUENCE, " +
+                "LANGUAGE_ID, " +
+                "DEBUG_DATA, " +
+                "OPTIMIZATION_LEVEL, " +
+                "MAX_OPTIMIZATION_LEVEL, " +
+                "OBJECT_CONTROL_LEVEL, " +
+                "RELEASE_CREATED_ON, " +
+                "TARGET_RELEASE, " +
+                "CREATION_DATA, " +
+                "TERASPACE_STORAGE_ENABLED, " +
+                "STORAGE_MODEL, " +
+                "NUMBER_PROCEDURES, " +
+                "NUMBER_PROCEDURES_BLOCK_REORDERED, " +
+                "NUMBER_PROCEDURES_BLOCK_ORDER_MEASURED, " +
+                "PROFILING_DATA, " +
+                "ALLOW_RTVCLSRC, " +
+                "USER_MODIFIED, " +
+                "LIC_OPTIONS, " +
+                "LICENSED_PROGRAM, " +
+                "PTF_NUMBER, " +
+                "APAR_ID, " +
+                "SQL_STATEMENT_COUNT, " +
+                "SQL_RELATIONAL_DATABASE, " +
+                "SQL_COMMITMENT_CONTROL, " +
+                "SQL_NAMING, " +
+                "SQL_DATE_FORMAT, " +
+                "SQL_DATE_SEPARATOR, " +
+                "SQL_TIME_FORMAT, " +
+                "SQL_TIME_SEPARATOR, " +
+                "SQL_SORT_SEQUENCE_LIBRARY, " +
+                "SQL_SORT_SEQUENCE, " +
+                "SQL_LANGUAGE_ID, " +
+                "SQL_DEFAULT_SCHEMA, " +
+                "SQL_PATH, " +
+                "SQL_DYNAMIC_USER_PROFILE, " +
+                "SQL_ALLOW_COPY_DATA, " +
+                "SQL_CLOSE_SQL_CURSOR, " +
+                "SQL_DELAY_PREPARE, " +
+                "SQL_ALLOW_BLOCK, " +
+                "SQL_PACKAGE_LIBRARY, " +
+                "SQL_PACKAGE, " +
+                "SQL_RDB_CONNECTION_METHOD " + 
           "FROM QSYS2.BOUND_MODULE_INFO " +
           "WHERE PROGRAM_LIBRARY = '" + targetLibrary + "' " +
             "AND PROGRAM_NAME = '" + objectName + "' " +
             "AND BOUND_MODULE_LIBRARY = '" + entryModuleLib + "' " +
             "AND BOUND_MODULE = '" + entryModule + "' "
         )) {
-      if (rsMod.next()) {
+      if (!rsMod.next()) {
+        // TODO: Maybe this should be optional for new objects. Just throw a warning
+        throw new IllegalArgumentException("Could not get module '" + entryModule + "' from library '" + entryModuleLib + "'");
+      }
+
+        /* These are not found in the view 
         String genLvl = rsMod.getString("GEN_SEVERITY_LEVEL").trim();
         if (!genLvl.isEmpty()) ParamCmdSequence.put(ParamCmd.GENLVL, genLvl);
 
@@ -362,10 +420,14 @@ public class ObjectDescription {
 
         String dbgView = rsMod.getString("DEBUG_VIEWS").trim();
         if (!dbgView.isEmpty()) ParamCmdSequence.put(ParamCmd.DBGVIEW, dbgView);
+        */
+
 
         // Override OPTIMIZE if more specific here
+        /* This gives 10 but the param  OPTIMIZE only accepts: *NONE, *BASIC, *FULL   
         String modOptimize = rsMod.getString("OPTIMIZATION_LEVEL").trim();
         if (!modOptimize.isEmpty()) ParamCmdSequence.put(ParamCmd.OPTIMIZE, modOptimize);
+        */
 
         // Update source if more accurate
         String modSrcLib = rsMod.getString("SOURCE_FILE_LIBRARY").trim();
@@ -373,17 +435,20 @@ public class ObjectDescription {
             sourceLibrary = modSrcLib.toUpperCase();
             ParamCmdSequence.put(ParamCmd.SRCFILE, sourceLibrary + "/" + sourceFile);  // Update
         }
-        // Similar for SOURCE_FILE, SOURCE_FILE_MEMBER
+        
 
         // Add more mappings (e.g., DEFINE, INCDIR, PPGENOPT)
-      } else {
-        // FALLBACK: Call your existing retrieveModuleInfo() API if SQL misses
+      
+      /* 
+      else {
+        // FALLBACK: Call to retrieveModuleInfo() API for not found fields
         try {
           retrieveModuleInfo(targetLibrary + "/" + objectName);  // Qual name
         } catch (Exception e) {
           if (debug) System.err.println("Fallback API failed: " + e.getMessage());
         }
       }
+      */
     }
   }
 
