@@ -435,7 +435,11 @@ public class ObjectDescription {
             sourceLibrary = modSrcLib.toUpperCase();
             ParamCmdSequence.put(ParamCmd.SRCFILE, sourceLibrary + "/" + sourceFile);  // Update
         }
-        
+        String modSrcFil = rsMod.getString("SOURCE_FILE").trim();
+        String modSrcMbr = rsMod.getString("SOURCE_FILE_MEMBER").trim();
+        String modSteamFile = rsMod.getString("SOURCE_STREAM_FILE_PATH").trim();
+        //TODO: Here, if (modSteamFile.isEmpty()) do the migration to /temp or another route. and do the compilation
+        String modCCSID = rsMod.getString("MODULE_CCSID").trim();
 
         // Add more mappings (e.g., DEFINE, INCDIR, PPGENOPT)
       
