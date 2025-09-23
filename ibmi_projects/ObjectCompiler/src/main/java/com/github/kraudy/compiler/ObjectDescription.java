@@ -445,7 +445,15 @@ public class ObjectDescription {
 
         // Fallback to API for missing fields like DBGVIEW
         // Fallback to API for missing fields like DBGVIEW
-        
+        try {
+          String dbgView = getDbgViewFromBoundModule(targetLibrary, objectName, rsMod.getString("BOUND_MODULE").trim());
+          if (!dbgView.isEmpty()) {
+              ParamCmdSequence.put(ParamCmd.DBGVIEW, dbgView);
+          }
+        } catch (Exception e) {
+          if (debug) System.err.println("Failed to retrieve DBGVIEW via API: " + e.getMessage());
+          // Fallback to default or user-provided --dbgview
+        }
 
         // Add more mappings (e.g., DEFINE, INCDIR, PPGENOPT)
       
