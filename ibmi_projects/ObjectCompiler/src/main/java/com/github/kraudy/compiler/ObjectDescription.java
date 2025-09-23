@@ -136,6 +136,8 @@ public class ObjectDescription {
   // TODO: This logic encapsulation is nice. It will be helpfull in the future
   // Key method for use in graphs (matches ObjectDependency format)
   public String toGraphKey() {
+    // TODO: Make the key like objectName.ObjectType.SourceType
+    // this is the key that the compilator API will receive as a Json along with other files
     return targetLibrary + "/" + objectName + "/" + objectType.name();
   }
 
@@ -441,6 +443,10 @@ public class ObjectDescription {
         //TODO: Here, if (modSteamFile.isEmpty()) do the migration to /temp or another route. and do the compilation
         String modCCSID = rsMod.getString("MODULE_CCSID").trim();
 
+        // Fallback to API for missing fields like DBGVIEW
+        // Fallback to API for missing fields like DBGVIEW
+        
+
         // Add more mappings (e.g., DEFINE, INCDIR, PPGENOPT)
       
       /* 
@@ -455,6 +461,154 @@ public class ObjectDescription {
       */
     }
   }
+
+  private String getDbgViewFromBoundModule(String pgmLib, String pgmName, String entryModule) throws Exception {
+    // Use QBNLPGMI PGML0110 to get bound module creation command
+    String usName = "PGMLIST";
+    String usLib = "QTEMP";
+    UserSpace us = new UserSpace(system, "/QSYS.LIB/" + usLib + ".LIB/" + usName + ".USRSPC");
+    us.setMustUseProgramCall(true);
+    us.setMustUseSockets(true);
+    int initialSize = 4096 * 10; // Larger for PGML0110 variable entries and command data
+    us.create(initialSize, true, " ", (byte) 0x00, "Temp user space for QBNLPGMI", "*USE");
+
+    String qualUs = String.format("%-10s%-10s", usName, usLib);
+    String qualPgm = String.format("%-10s%-10s", pgmName, pgmLib);
+
+    ProgramCall pc = new ProgramCall(system);
+    pc.setProgram("/QSYS.LIB/QBNLPGMI.PGM");
+
+    ProgramParameter[] parms = new ProgramParameter[4];
+    parms[0] = new ProgramParameter(new AS400Text(20, system).toBytes(qualUs)); // Qualified user space
+    parms[1] = new ProgramParameter(new AS400Text(8, system).toBytes("PGML0110")); // Format
+    parms[2] = new ProgramParameter(new AS400Text(20, system).toBytes(qualPgm)); // Qualified program name
+    byte[] errorCode = new byte[32];
+    new AS400Bin4().toBytes(0, errorCode, 0);
+    parms[3] = new ProgramParameter(errorCode); // Error code
+
+    pc.setParameterList(parms);
+
+    if (!pc.run()) {
+        AS400Message[] msgs = pc.getMessageList();
+        throw new Exception("QBNLPGMI API call failed: " + (msgs.length > 0 ? msgs[0].getText() : "Unknown error"));
+    }
+
+    // Read user space
+    byte[] data = new byte[initialSize];
+    us.read(data, 0);
+
+    AS400Bin4 bin4 = new AS400Bin4();
+    /*  Previous, this worked to get the module but caused the memory leak
+    int listOffset = bin4.toInt(data, 124); // Standard offset to list data section (note: decimal 124 for V5R2+)
+    int numEntries = bin4.toInt(data, 132); // Number of entries
+    int genEntrySize = bin4.toInt(data, 136); // Generic entry size (ignore for PGML0110; use per-entry size)
+    */
+    int listOffset = bin4.toInt(data, 116);
+    int numEntries = bin4.toInt(data, 120);
+    int genEntrySize = bin4.toInt(data, 124);  // Expect 0 for PGML0110
+
+    if (numEntries == 0) {
+        us.delete();
+        return ValCmd.NONE.toString();
+    }
+
+    String command = "";
+    int currentOffset = listOffset;
+    AS400Text text10 = new AS400Text(10, system);
+
+    for (int i = 0; i < numEntries; i++) {
+        int entrySize = bin4.toInt(data, currentOffset); // Size of this entry at offset 0
+        String modName = text10.toObject(data, currentOffset + 24).toString().trim(); // Bound module name at +24
+
+        if (modName.equals(entryModule)) { // Match entry module
+            System.out.println("Found module: " + modName);
+            int cmdOffset = bin4.toInt(data, currentOffset + 346); // Offset to creation data
+            int cmdLength = bin4.toInt(data, currentOffset + 350); // Length of creation data
+            //int cmdLength = bin4.toInt(data, 0); // Length of creation data
+            if (cmdLength > 0) {
+                System.out.println("Command length: " + String.valueOf(cmdLength));
+                //cmdLength = 30000; //Increasing this gives the same information
+                AS400Text text = new AS400Text(cmdLength, system);
+                command = text.toObject(data, cmdOffset).toString().trim().toUpperCase();
+                System.out.println("Full command: " + command);
+                break;
+            }
+        }
+
+        currentOffset += entrySize; // Advance by variable entry size
+    }
+
+    us.delete();
+
+    if (command.isEmpty()) {
+        return ValCmd.NONE.toString();
+    }
+
+    // Parse DBGVIEW as before
+    int dbgIndex = command.indexOf("DBGVIEW(");
+    if (dbgIndex == -1) {
+        return ValCmd.NONE.toString();
+    }
+    int start = dbgIndex + "DBGVIEW(".length();
+    int end = command.indexOf(")", start);
+    if (end == -1) {
+        return ValCmd.NONE.toString();
+    }
+    String value = command.substring(start, end).trim().replace("'", "");
+    return "*" + value;
+  }
+
+  //Module info cannot be get directly from module for ile objects
+  private String getDbgViewFromModule(String moduleLib, String moduleName) throws Exception {
+    ProgramCall pc = new ProgramCall(system);
+    pc.setProgram("/QSYS.LIB/QBNRMODI.PGM");
+
+    int recvLen = 4096; // Large enough for the command string
+    ProgramParameter[] parms = new ProgramParameter[5];
+    parms[0] = new ProgramParameter(recvLen); // Receiver
+    parms[1] = new ProgramParameter(new AS400Bin4().toBytes(recvLen)); // Length
+    parms[2] = new ProgramParameter(new AS400Text(8, system).toBytes("MODI0200")); // Format
+    String qualName = String.format("%-10s%-10s", moduleName, moduleLib);
+    parms[3] = new ProgramParameter(new AS400Text(20, system).toBytes(qualName)); // Qualified module name
+    byte[] errorCode = new byte[16];
+    new AS400Bin4().toBytes(0, errorCode, 0); // Bytes provided = 0 (throw exceptions)
+    parms[4] = new ProgramParameter(errorCode); // Error code
+
+    pc.setParameterList(parms);
+
+    if (!pc.run()) {
+        AS400Message[] msgs = pc.getMessageList();
+        throw new Exception("QBNRMODI API call failed: " + (msgs.length > 0 ? msgs[0].getText() : "Unknown error"));
+    }
+
+    byte[] data = parms[0].getOutputData();
+    AS400Bin4 bin4 = new AS400Bin4();
+    int cmdOffset = bin4.toInt(data, 8);
+    int cmdLength = bin4.toInt(data, 12);
+    if (cmdLength == 0) {
+        return ValCmd.NONE.toString(); // No command data; default to *NONE
+    }
+
+    AS400Text text = new AS400Text(cmdLength, system);
+    String command = text.toObject(data, cmdOffset).toString().trim().toUpperCase();
+
+    System.out.println("Full command: " + command);
+
+    // Parse for DBGVIEW(value)
+    int dbgIndex = command.indexOf("DBGVIEW(");
+    if (dbgIndex == -1) {
+        return ValCmd.NONE.toString(); // Not found; default to *NONE
+    }
+    int start = dbgIndex + "DBGVIEW(".length();
+    int end = command.indexOf(")", start);
+    if (end == -1) {
+        return ValCmd.NONE.toString();
+    }
+    String value = command.substring(start, end).trim();
+    // Clean up any quotes or extras if needed
+    value = value.replace("'", "");
+    return "*" + value; // Map back to *STMT, *SOURCE, etc.
+}
 
   public void retrieveObjectInfo() throws Exception {
     String apiPgm;
