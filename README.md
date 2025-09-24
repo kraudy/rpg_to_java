@@ -412,11 +412,7 @@ Using **Apache PDFBox** can be a little awkard since you have to manually specif
 MVN compilation
 ```js
 
-// Create new mvn project 
-// This creates a different structure
-mvn archetype:generate -DarchetypeGroupId=org.apache.maven.archetypes -DarchetypeArtifactId=maven-archetype-quickstart -DarchetypeVersion=1.5 -DgroupId=com.example -DartifactId=CmdCallParam -DinteractiveMode=false
-
-mvn archetype:generate -DgroupId=com.github.kraudy.compiler -DartifactId=ObjectCompiler -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
+mvn archetype:generate -DgroupId=com.github.kraudy.api -DartifactId=ApiCaller -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
 
 
 // Check pom pacakges dependencies

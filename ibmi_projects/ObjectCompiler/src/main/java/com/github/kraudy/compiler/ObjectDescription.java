@@ -426,10 +426,15 @@ public class ObjectDescription {
 
 
         // Override OPTIMIZE if more specific here
-        /* This gives 10 but the param  OPTIMIZE only accepts: *NONE, *BASIC, *FULL   
+        // This gives 10 but the param  OPTIMIZE only accepts: *NONE, *BASIC, *FULL   
         String modOptimize = rsMod.getString("OPTIMIZATION_LEVEL").trim();
-        if (!modOptimize.isEmpty()) ParamCmdSequence.put(ParamCmd.OPTIMIZE, modOptimize);
-        */
+        if (!modOptimize.isEmpty()) {
+          switch (modOptimize) {
+            case "10": ParamCmdSequence.put(ParamCmd.OPTIMIZE, ValCmd.NONE.toString());   break;
+            case "30": ParamCmdSequence.put(ParamCmd.OPTIMIZE, ValCmd.BASIC.toString());  break;
+            case "40": ParamCmdSequence.put(ParamCmd.OPTIMIZE, ValCmd.FULL.toString());   break;
+          }
+        }
 
         // Update source if more accurate
         String modSrcLib = rsMod.getString("SOURCE_FILE_LIBRARY").trim();
