@@ -141,18 +141,6 @@ public class ObjectDescription {
     return targetLibrary + "/" + objectName + "/" + objectType.name();
   }
 
-  public boolean isPGM(){
-    return (this.objectType == ObjectType.PGM) ? true: false;
-  }
-
-  public boolean isSRVPGM(){
-    return (this.objectType == ObjectType.SRVPGM) ? true: false;
-  }
-
-  public boolean isMODULE(){
-    return (this.objectType == ObjectType.MODULE) ? true: false;
-  }
-
   public void retrieveSQLObjectInfo() throws SQLException {
     try (Statement stmt = connection.createStatement();
         ResultSet rsObj = stmt.executeQuery(
