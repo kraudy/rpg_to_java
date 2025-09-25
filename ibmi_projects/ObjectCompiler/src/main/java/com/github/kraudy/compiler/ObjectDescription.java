@@ -12,12 +12,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 import com.ibm.as400.access.AS400;
-import com.ibm.as400.access.AS400Bin4;
-import com.ibm.as400.access.AS400Message;
-import com.ibm.as400.access.AS400Text;
-import com.ibm.as400.access.ProgramCall;
-import com.ibm.as400.access.ProgramParameter;
-import com.ibm.as400.access.UserSpace;
 
 // Core struct for capturing compilation specs (JSON-friendly via Jackson)
 public class ObjectDescription {
@@ -34,7 +28,6 @@ public class ObjectDescription {
   public SourceType sourceType;
 
   public Map<CompilationPattern.ParamCmd, String> ParamCmdSequence = new HashMap<>();
-  public Map<String, Object> objInfo = new HashMap<>();
 
 
   public enum SysCmd { CHGLIBL, DSPPGMREF, DSPOBJD, DSPDBR }

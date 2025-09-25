@@ -12,12 +12,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.ibm.as400.access.AS400;
-import com.ibm.as400.access.AS400Message;
 import com.ibm.as400.access.AS400SecurityException;
 import com.ibm.as400.access.ErrorCompletingRequestException;
 import com.ibm.as400.access.AS400JDBCDataSource;
 import com.ibm.as400.access.CommandCall;
 import com.ibm.as400.access.User;
+
+import com.ibm.as400.access.AS400Bin4;
+import com.ibm.as400.access.AS400Message;
+import com.ibm.as400.access.AS400Text;
+import com.ibm.as400.access.ProgramCall;
+import com.ibm.as400.access.ProgramParameter;
+import com.ibm.as400.access.UserSpace;
+
 
 import io.github.theprez.dotenv_ibmi.IBMiDotEnv;
 
@@ -315,7 +322,7 @@ public class ApiCaller {
     return "*" + value; // Map back to *STMT, *SOURCE, etc.
 }
 
-  public void retrieveObjectInfo() throws Exception {
+  public void retrieveObjectInfo(String objectName, String targetLibrary) throws Exception {
     String apiPgm;
     String format;
     switch (this.objectType) {
@@ -342,7 +349,7 @@ public class ApiCaller {
         format = "MODI0100";
         break;
       default:
-        throw new Exception("Object type " + this.objectType.name() + " not supported for retrieving compilation params.");
+        throw new Exception("Object type " + objectType.name() + " not supported for retrieving compilation params.");
     }
 
     ProgramCall pc = new ProgramCall(system);
@@ -353,7 +360,7 @@ public class ApiCaller {
     parms[0] = new ProgramParameter(recvLen); // Receiver
     parms[1] = new ProgramParameter(new AS400Bin4().toBytes(recvLen)); // Length of receiver
     parms[2] = new ProgramParameter(new AS400Text(8, system).toBytes(format)); // Format
-    String qualName = String.format("%-10s%-10s", this.objectName, this.targetLibrary);
+    String qualName = String.format("%-10s%-10s", objectName, targetLibrary);
     parms[3] = new ProgramParameter(new AS400Text(20, this.system).toBytes(qualName)); // Qualified object name
     byte[] errorCode = new byte[16];
     new AS400Bin4().toBytes(0, errorCode, 0); // Bytes provided = 0 to throw exceptions
@@ -376,50 +383,53 @@ public class ApiCaller {
     AS400Text text50 = new AS400Text(50, system);
     AS400Text text30 = new AS400Text(30, system);
 
+    //TODO: Remove this
+    Map<String, Object> objInfo = new HashMap<>();
+
     int offset = 0;
-    this.objInfo.put("bytesReturned", bin4.toInt(data, offset)); offset += 4;
-    this.objInfo.put("bytesAvailable", bin4.toInt(data, offset)); offset += 4;
-    this.objInfo.put("programName", text10.toObject(data, offset).toString().trim()); offset += 10;
-    this.objInfo.put("programLibrary", text10.toObject(data, offset).toString().trim()); offset += 10;
-    this.objInfo.put("owner", text10.toObject(data, offset).toString().trim()); offset += 10;
-    this.objInfo.put("attribute", text10.toObject(data, offset).toString().trim()); offset += 10;
-    this.objInfo.put("creationDateTime", text13.toObject(data, offset).toString().trim()); offset += 13;
-    this.objInfo.put("sourceFile", text10.toObject(data, offset).toString().trim()); offset += 10;
-    this.objInfo.put("sourceLibrary", text10.toObject(data, offset).toString().trim()); offset += 10;
-    this.objInfo.put("sourceName", text10.toObject(data, offset).toString().trim()); offset += 10;
-    this.objInfo.put("sourceUpdatedDateTime", text13.toObject(data, offset).toString().trim()); offset += 13;
-    this.objInfo.put("observable", text1.toObject(data, offset).toString().trim()); offset += 1;
-    this.objInfo.put("userProfileOption", text1.toObject(data, offset).toString().trim()); offset += 1;
-    this.objInfo.put("useAdoptedAuthority", text1.toObject(data, offset).toString().trim()); offset += 1;
-    this.objInfo.put("logCommands", text1.toObject(data, offset).toString().trim()); offset += 1;
-    this.objInfo.put("allowRTVCLSRC", text1.toObject(data, offset).toString().trim()); offset += 1;
-    this.objInfo.put("fixDecimalData", text1.toObject(data, offset).toString().trim()); offset += 1;
+    objInfo.put("bytesReturned", bin4.toInt(data, offset)); offset += 4;
+    objInfo.put("bytesAvailable", bin4.toInt(data, offset)); offset += 4;
+    objInfo.put("programName", text10.toObject(data, offset).toString().trim()); offset += 10;
+    objInfo.put("programLibrary", text10.toObject(data, offset).toString().trim()); offset += 10;
+    objInfo.put("owner", text10.toObject(data, offset).toString().trim()); offset += 10;
+    objInfo.put("attribute", text10.toObject(data, offset).toString().trim()); offset += 10;
+    objInfo.put("creationDateTime", text13.toObject(data, offset).toString().trim()); offset += 13;
+    objInfo.put("sourceFile", text10.toObject(data, offset).toString().trim()); offset += 10;
+    objInfo.put("sourceLibrary", text10.toObject(data, offset).toString().trim()); offset += 10;
+    objInfo.put("sourceName", text10.toObject(data, offset).toString().trim()); offset += 10;
+    objInfo.put("sourceUpdatedDateTime", text13.toObject(data, offset).toString().trim()); offset += 13;
+    objInfo.put("observable", text1.toObject(data, offset).toString().trim()); offset += 1;
+    objInfo.put("userProfileOption", text1.toObject(data, offset).toString().trim()); offset += 1;
+    objInfo.put("useAdoptedAuthority", text1.toObject(data, offset).toString().trim()); offset += 1;
+    objInfo.put("logCommands", text1.toObject(data, offset).toString().trim()); offset += 1;
+    objInfo.put("allowRTVCLSRC", text1.toObject(data, offset).toString().trim()); offset += 1;
+    objInfo.put("fixDecimalData", text1.toObject(data, offset).toString().trim()); offset += 1;
 
 
-    this.objInfo.put("textDescription", text50.toObject(data, offset).toString().trim()); offset += 50;
-    this.objInfo.put("typeOfProgram", text1.toObject(data, offset).toString().trim()); offset += 1;
-    this.objInfo.put("teraspaceEnabled", text1.toObject(data, offset).toString().trim()); offset += 1;
+    objInfo.put("textDescription", text50.toObject(data, offset).toString().trim()); offset += 50;
+    objInfo.put("typeOfProgram", text1.toObject(data, offset).toString().trim()); offset += 1;
+    objInfo.put("teraspaceEnabled", text1.toObject(data, offset).toString().trim()); offset += 1;
     offset += 58; // Reserved
-    this.objInfo.put("minParameters", bin4.toInt(data, offset)); offset += 4;
-    this.objInfo.put("maxParameters", bin4.toInt(data, offset)); offset += 4;
+    objInfo.put("minParameters", bin4.toInt(data, offset)); offset += 4;
+    objInfo.put("maxParameters", bin4.toInt(data, offset)); offset += 4;
     offset = 368; // Jump to activation group (adjust if needed for SPGI/MODI differences)
-    if (this.objectType != ObjectDescription.ObjectType.MODULE) { // Modules don't have ACTGRP
-      this.objInfo.put("activationGroupAttribute", text30.toObject(data, offset).toString().trim());
+    if (objectType != ObjectType.MODULE) { // Modules don't have ACTGRP
+      objInfo.put("activationGroupAttribute", text30.toObject(data, offset).toString().trim());
     }
     // TODO: Parse additional fields as needed
 
     // If this is an ILE program ('B'), retrieve module information for source details
-    String typeOfProgram = (String) this.objInfo.get("typeOfProgram");
+    String typeOfProgram = (String) objInfo.get("typeOfProgram");
     System.out.println("typeOfProgram: " + typeOfProgram);
 
-    if ("B".equals(typeOfProgram) && this.objectType == ObjectType.PGM) {
+    if ("B".equals(typeOfProgram) && objectType == ObjectType.PGM) {
       System.out.println("Doing retrieveModuleInfo");
       retrieveModuleInfo(qualName);
     }
 
     System.out.println("All data: ");
-    for (String ob : this.objInfo.keySet()){
-      System.out.println(ob + ": " + this.objInfo.get(ob));
+    for (String ob : objInfo.keySet()){
+      System.out.println(ob + ": " + objInfo.get(ob));
     }
 
   }
@@ -476,15 +486,18 @@ public class ApiCaller {
 
     System.out.println("entrySize: " + entrySize);
 
+     //TODO: Remove this
+    Map<String, Object> objInfo = new HashMap<>();
+
     if (numEntries > 0) {
       // For simplicity, take the first module (common for single-module bound programs)
       int entryOffset = listOffset;
       AS400Text text10 = new AS400Text(10, system);
 
       // Update objInfo with module source info
-      this.objInfo.put("sourceFile", text10.toObject(data, entryOffset + 56).toString().trim());
-      this.objInfo.put("sourceLibrary", text10.toObject(data, entryOffset + 66).toString().trim());
-      this.objInfo.put("sourceName", text10.toObject(data, entryOffset + 76).toString().trim());
+      objInfo.put("sourceFile", text10.toObject(data, entryOffset + 56).toString().trim());
+      objInfo.put("sourceLibrary", text10.toObject(data, entryOffset + 66).toString().trim());
+      objInfo.put("sourceName", text10.toObject(data, entryOffset + 76).toString().trim());
 
       // TODO: If multi-module, you may need logic to select the appropriate one or aggregate
     } else {
