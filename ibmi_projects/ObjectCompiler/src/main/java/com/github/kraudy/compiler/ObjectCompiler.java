@@ -171,13 +171,11 @@ public class ObjectCompiler implements Runnable{
     Map<CompilationPattern.ParamCmd, String> ParamCmdSequence = new HashMap<>();
 
     /* Default values */
-    // TODO: If we dont want to put unused values getParamString() need to be modified
     if (!text.isEmpty()) ParamCmdSequence.put(ParamCmd.TEXT, text);
     if (!actGrp.isEmpty()) ParamCmdSequence.put(ParamCmd.ACTGRP, actGrp);
     
 
     this.odes = new ObjectDescription(
-          system,
           connection,
           debug,
           library,

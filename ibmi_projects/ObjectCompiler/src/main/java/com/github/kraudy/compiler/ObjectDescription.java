@@ -11,11 +11,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
-import com.ibm.as400.access.AS400;
 
 // Core struct for capturing compilation specs (JSON-friendly via Jackson)
 public class ObjectDescription {
-  private final AS400 system;
   private final Connection connection;
   private final boolean debug;
   //TODO: Make this private, add set method and move to another file
@@ -77,7 +75,6 @@ public class ObjectDescription {
   // Constructor for Jackson deserialization
   @JsonCreator
   public ObjectDescription(
-        AS400 system,
         Connection connection,
         boolean debug,
         @JsonProperty("targetLibrary") String targetLibrary,
@@ -94,7 +91,6 @@ public class ObjectDescription {
     // String json = objectDescription.writeValueAsString(example);
     //TODO: If validtion like toUpperCase().trim() is needed, add it when passing the params to keep this clean
 
-    this.system = system;
     this.connection = connection;
     this.debug = debug;
 
@@ -312,7 +308,8 @@ public class ObjectDescription {
         // Map OPM fields similarly if present in query
       }
 
-      //if (debug)
+      if (!debug) return;
+
       System.out.println("All data: ");
       for (CompilationPattern.ParamCmd paramCmd : this.ParamCmdSequence.keySet()){
         System.out.println(paramCmd.name() + ": " + this.ParamCmdSequence.get(paramCmd));
