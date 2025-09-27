@@ -169,8 +169,6 @@ public class ObjectCompiler implements Runnable{
   }
 
   public void run() {
-
-    Map<CompilationPattern.ParamCmd, String> ParamCmdSequence = new HashMap<>();
     
     /* Try to get compilation params from object. If it exists. */
     this.odes = new ObjectDescription(
@@ -192,6 +190,8 @@ public class ObjectCompiler implements Runnable{
       //if (verbose) System.err.println("Warning: Could not retrieve compilation params from object: " + e.getMessage() + ". Using defaults.");
       e.printStackTrace();
     }
+
+    Map<CompilationPattern.ParamCmd, String> ParamCmdSequence = new HashMap<>();
 
     /* Parameters values, if provided, overwrite retrieved values */
     if (!text.isEmpty()) ParamCmdSequence.put(ParamCmd.TEXT, "'" + text +"'");

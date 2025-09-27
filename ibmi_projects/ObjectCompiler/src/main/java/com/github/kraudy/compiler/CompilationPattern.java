@@ -259,6 +259,7 @@ public class CompilationPattern {
 
     ParamCmdSequence.put(ParamCmd.SRCMBR, this.sourceName);
 
+    
     ParamCmdSequence.put(ParamCmd.BNDSRVPGM, ValCmd.NONE.toString());
     ParamCmdSequence.put(ParamCmd.COMMIT, ValCmd.NONE.toString());
 
