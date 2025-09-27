@@ -90,6 +90,8 @@ public class ObjectCompiler implements Runnable{
     }
   }
 
+  
+
   /* Object attributes. Required params */
   //TODO: Change to target library
   @Option(names = { "-l", "--lib" }, required = true, description = "Target library for object", converter = LibraryConverter.class)
