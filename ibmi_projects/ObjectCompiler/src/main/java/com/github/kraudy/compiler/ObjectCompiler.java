@@ -193,7 +193,10 @@ public class ObjectCompiler implements Runnable{
       e.printStackTrace();
     }
 
-    
+    /* Parameters values, if provided, overwrite retrieved values */
+    if (!text.isEmpty()) ParamCmdSequence.put(ParamCmd.TEXT, "'" + text +"'");
+    if (!actGrp.isEmpty()) ParamCmdSequence.put(ParamCmd.ACTGRP, actGrp);
+    odes.setParamsSequence(ParamCmdSequence);
 
     if (odes.getSourceType() == null) {
       System.err.println("Source type is required if not retrievable from object.");
