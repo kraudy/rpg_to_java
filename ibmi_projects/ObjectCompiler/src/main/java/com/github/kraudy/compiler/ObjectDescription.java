@@ -84,12 +84,7 @@ public class ObjectDescription {
         @JsonProperty("sourceFile") String sourceFile,
         @JsonProperty("sourceName") String sourceName,
         @JsonProperty("sourceType") SourceType sourceType,
-        //@JsonProperty("text") String text,
-        //@JsonProperty("actGrp") String actGrp ,//) {//,
         @JsonProperty("ParamCmdSequence") Map<CompilationPattern.ParamCmd, String> ParamCmdSequence) {
-    // @JsonProperty("ParamCmdSequence") Map<CompilationPattern.ParamCmd, String> ParamCmdSequence
-    // String json = objectDescription.writeValueAsString(example);
-    //TODO: If validtion like toUpperCase().trim() is needed, add it when passing the params to keep this clean
 
     this.connection = connection;
     this.debug = debug;
@@ -104,11 +99,35 @@ public class ObjectDescription {
     this.sourceName = (sourceName.isEmpty() ? objectName : sourceName); //TODO: Add logic for stream files / members / default
     this.sourceType = sourceType;
 
-    //TODO: Maybe this should be done in the object compiler.
-    /* Add compilation params values */
-    //this.ParamCmdSequence.put(ParamCmd.TEXT, (text.isEmpty()) ? "" : text);
-    //this.ParamCmdSequence.put(ParamCmd.ACTGRP, (actGrp.isEmpty()) ? "" : actGrp);
+
     this.ParamCmdSequence = ParamCmdSequence;
+
+  }
+
+  @JsonCreator
+  public ObjectDescription(
+        Connection connection,
+        boolean debug,
+        @JsonProperty("targetLibrary") String targetLibrary,
+        @JsonProperty("objectName") String objectName,
+        @JsonProperty("objectType") ObjectType objectType,
+        @JsonProperty("sourceLibrary") String sourceLibrary,
+        @JsonProperty("sourceFile") String sourceFile,
+        @JsonProperty("sourceName") String sourceName,
+        @JsonProperty("sourceType") SourceType sourceType) {
+
+    this.connection = connection;
+    this.debug = debug;
+
+    if (objectName == null || objectName.isEmpty()) throw new IllegalArgumentException("Object name is required.");
+
+    this.targetLibrary = targetLibrary;
+    this.objectName = objectName;
+    this.objectType = objectType;
+    this.sourceLibrary = sourceLibrary;
+    this.sourceFile = (sourceFile.isEmpty()) ? SourceType.defaultSourcePf(sourceType) : sourceFile; // TODO: Add logic for sourcePF or directory
+    this.sourceName = (sourceName.isEmpty() ? objectName : sourceName); //TODO: Add logic for stream files / members / default
+    this.sourceType = sourceType;
 
   }
 
@@ -130,7 +149,13 @@ public class ObjectDescription {
     return targetLibrary + "/" + objectName + "/" + objectType.name();
   }
 
-  public void retrieveSQLObjectInfo() throws SQLException {
+  public void setParamsSequence(Map<CompilationPattern.ParamCmd, String> ParamCmdSequence) {
+    for (CompilationPattern.ParamCmd paramCmd : ParamCmdSequence.keySet()){
+      this.ParamCmdSequence.put(paramCmd, ParamCmdSequence.get(paramCmd));
+    }
+  }
+
+  public void getObjectInfo() throws SQLException {
     try (Statement stmt = connection.createStatement();
         ResultSet rsObj = stmt.executeQuery(
           "SELECT PROGRAM_LIBRARY, " + // programLibrary

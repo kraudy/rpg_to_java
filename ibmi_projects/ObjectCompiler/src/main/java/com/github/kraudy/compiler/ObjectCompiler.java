@@ -91,10 +91,12 @@ public class ObjectCompiler implements Runnable{
   }
 
   /* Object attributes. Required params */
+  //TODO: Change to target library
   @Option(names = { "-l", "--lib" }, required = true, description = "Target library for object", converter = LibraryConverter.class)
   private String library;
 
   //TODO: --obj, -t and -st could be made in one: hello.pgm.rpgle and just parse it. Maybe the last could be optional if the object is found.
+  // format: objLibrary.objectName.objectType.sourceType?, This will match the toposort keys.
   @Option(names = "--obj", required = true, description = "Object name", converter = ObjectNameConverter.class)
   private String objectName;
 
@@ -169,32 +171,29 @@ public class ObjectCompiler implements Runnable{
   public void run() {
 
     Map<CompilationPattern.ParamCmd, String> ParamCmdSequence = new HashMap<>();
-
-    /* Default values */
-    if (!text.isEmpty()) ParamCmdSequence.put(ParamCmd.TEXT, text);
-    if (!actGrp.isEmpty()) ParamCmdSequence.put(ParamCmd.ACTGRP, actGrp);
     
-
+    /* Try to get compilation params from object. If it exists. */
     this.odes = new ObjectDescription(
           connection,
           debug,
+          //TODO: Maybe i should pass these as the topo key. The Key should uniquely indentify an object
           library,
           objectName,
           objectType,
           sourceLib, // Default to *LIBL
           sourceFile,
           sourceName,
-          sourceType, // Specified or inferred
-          ParamCmdSequence
+          sourceType // Specified or inferred
     );
 
     try {
-      odes.retrieveSQLObjectInfo();
-      // odes.retrieveObjectInfo();
+      odes.getObjectInfo();
     } catch (Exception e) {
       //if (verbose) System.err.println("Warning: Could not retrieve compilation params from object: " + e.getMessage() + ". Using defaults.");
       e.printStackTrace();
     }
+
+    
 
     if (odes.getSourceType() == null) {
       System.err.println("Source type is required if not retrievable from object.");
