@@ -253,7 +253,7 @@ public class ObjectCompiler implements Runnable{
         System.out.println("Compilation successful.");
       } else {
         System.out.println("Compilation failed.");
-        showCompilationSpool(compilationTime, system.getUserId().trim().toUpperCase(), targetKeyobjectName);
+        showCompilationSpool(compilationTime, system.getUserId().trim().toUpperCase(), targetKey.objectName);
       }
       for (AS400Message msg : messages) {
         System.out.println(msg.getID() + ": " + msg.getText());
