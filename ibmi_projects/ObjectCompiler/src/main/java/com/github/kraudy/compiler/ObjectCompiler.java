@@ -90,9 +90,22 @@ public class ObjectCompiler implements Runnable{
     }
   }
 
-  
+  static class TargetKeyConverter implements CommandLine.ITypeConverter<Utilities.ParsedKey> {
+    @Override
+    public Utilities.ParsedKey convert(String value) throws Exception {
+      try {
+        return new Utilities.ParsedKey(value.trim().toUpperCase());
+      } catch (IllegalArgumentException e) {
+        throw new Exception("Invalid target key: " + e.getMessage());
+      }
+    }
+  }
+
+  @Option(names = {"-tk","--target-key"}, required = true, description = "Target key: library.objectName.objectType[.sourceType] (e.g., MYLIB.HELLO.PGM.RPGLE)", converter = TargetKeyConverter.class)
+  private Utilities.ParsedKey targetKey;
 
   /* Object attributes. Required params */
+  /*
   //TODO: Change to target library
   @Option(names = { "-l", "--lib" }, required = true, description = "Target library for object", converter = LibraryConverter.class)
   private String library;
@@ -104,6 +117,7 @@ public class ObjectCompiler implements Runnable{
 
   @Option(names = {"-t","--type"}, required = true, description = "Object type (e.g., PGM, SRVPGM)", converter = ObjectTypeConverter.class)
   private ObjectDescription.ObjectType objectType;
+   */
 
   /* Source-related params. Good to have */
   @Option(names = { "-sl", "--source-lib" }, description = "Source library (defaults to *LIBL or retrieved from object)", converter = LibraryConverter.class)
@@ -177,13 +191,13 @@ public class ObjectCompiler implements Runnable{
           connection,
           debug,
           //TODO: Maybe i should pass these as the topo key. The Key should uniquely indentify an object
-          library,
-          objectName,
-          objectType,
+          targetKey.library ,//library,
+          targetKey.objectName, //objectName,
+          targetKey.objectType, //objectType,
           sourceLib, // Default to *LIBL
           sourceFile,
           sourceName,
-          sourceType // Specified or inferred
+          (targetKey.sourceType != null) ? targetKey.sourceType : sourceType//sourceType // Specified or inferred
     );
 
     try {
@@ -239,7 +253,7 @@ public class ObjectCompiler implements Runnable{
         System.out.println("Compilation successful.");
       } else {
         System.out.println("Compilation failed.");
-        showCompilationSpool(compilationTime, system.getUserId().trim().toUpperCase(), objectName);
+        showCompilationSpool(compilationTime, system.getUserId().trim().toUpperCase(), targetKeyobjectName);
       }
       for (AS400Message msg : messages) {
         System.out.println(msg.getID() + ": " + msg.getText());
