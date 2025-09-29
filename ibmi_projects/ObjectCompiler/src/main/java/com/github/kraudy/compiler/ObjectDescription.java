@@ -9,6 +9,7 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.github.kraudy.compiler.CompilationPattern.CompCmd;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 
@@ -17,13 +18,14 @@ public class ObjectDescription {
   private final Connection connection;
   private final boolean debug;
   //TODO: Make this private, add set method and move to another file
-  public String targetLibrary;
-  public String objectName;
-  public ObjectType objectType;
+  //public String targetLibrary;
+  // public String objectName;
+  //public ObjectType objectType;
   public String sourceLibrary;
   public String sourceFile;
   public String sourceName;
   public SourceType sourceType;
+  Utilities.ParsedKey targetKey;
 
   public Map<CompilationPattern.ParamCmd, String> ParamCmdSequence = new HashMap<>();
 
@@ -91,9 +93,9 @@ public class ObjectDescription {
 
     if (objectName == null || objectName.isEmpty()) throw new IllegalArgumentException("Object name is required.");
 
-    this.targetLibrary = targetLibrary;
-    this.objectName = objectName;
-    this.objectType = objectType;
+    //this.targetLibrary = targetLibrary;
+    //this.objectName = objectName;
+    //this.objectType = objectType;
     this.sourceLibrary = sourceLibrary;
     this.sourceFile = (sourceFile.isEmpty()) ? SourceType.defaultSourcePf(sourceType) : sourceFile; // TODO: Add logic for sourcePF or directory
     this.sourceName = (sourceName.isEmpty() ? objectName : sourceName); //TODO: Add logic for stream files / members / default
@@ -121,9 +123,9 @@ public class ObjectDescription {
 
     if (objectName == null || objectName.isEmpty()) throw new IllegalArgumentException("Object name is required.");
 
-    this.targetLibrary = targetLibrary;
-    this.objectName = objectName;
-    this.objectType = objectType;
+    //this.targetLibrary = targetLibrary;
+    //this.objectName = objectName;
+    //this.objectType = objectType;
     this.sourceLibrary = sourceLibrary;
     this.sourceFile = (sourceFile.isEmpty()) ? SourceType.defaultSourcePf(sourceType) : sourceFile; // TODO: Add logic for sourcePF or directory
     this.sourceName = (sourceName.isEmpty() ? objectName : sourceName); //TODO: Add logic for stream files / members / default
@@ -131,23 +133,65 @@ public class ObjectDescription {
 
   }
 
+  @JsonCreator
+  public ObjectDescription(
+        Connection connection,
+        boolean debug,
+        @JsonProperty("targetKey") Utilities.ParsedKey targetKey,
+        @JsonProperty("sourceLibrary") String sourceLibrary,
+        @JsonProperty("sourceFile") String sourceFile,
+        @JsonProperty("sourceName") String sourceName) {
+
+    this.connection = connection;
+    this.debug = debug;
+
+    //if (objectName == null || objectName.isEmpty()) throw new IllegalArgumentException("Object name is required.");
+
+    this.targetKey = targetKey;
+    this.sourceLibrary = sourceLibrary;
+    this.sourceFile = (sourceFile.isEmpty()) ? SourceType.defaultSourcePf(this.targetKey.sourceType) : sourceFile; // TODO: Add logic for sourcePF or directory
+    this.sourceName = (sourceName.isEmpty() ? this.targetKey.objectName : sourceName); //TODO: Add logic for stream files / members / default
+
+    /* Generate compilation params values from object description */
+    //TODO: I'm not sure if these are needed now or maybe add them to the input validation in Utilities
+    //if (this.targetLibrary.isEmpty()) this.targetLibrary = ValCmd.LIBL.toString();
+    //if (this.sourceName.isEmpty())    this.sourceName = CompCmd.compilationSourceName(compilationCommand);//ValCmd.PGM.toString();
+
+    /* Set default values */
+    ParamCmdSequence.put(ParamCmd.OBJ, this.targetKey.library + "/" + this.targetKey.objectName);
+    ParamCmdSequence.put(ParamCmd.PGM, this.targetKey.library + "/" + this.targetKey.objectName);
+    ParamCmdSequence.put(ParamCmd.SRVPGM, this.targetKey.library + "/" + this.targetKey.objectName);
+    ParamCmdSequence.put(ParamCmd.MODULE, this.targetKey.library + "/" + this.targetKey.objectName);
+
+    ParamCmdSequence.put(ParamCmd.OBJTYPE, this.targetKey.objectType.toParam());
+
+    ParamCmdSequence.put(ParamCmd.SRCFILE, this.sourceLibrary + "/" + this.sourceFile);
+
+    ParamCmdSequence.put(ParamCmd.SRCMBR, this.sourceName);
+
+    
+    ParamCmdSequence.put(ParamCmd.BNDSRVPGM, ValCmd.NONE.toString());
+    ParamCmdSequence.put(ParamCmd.COMMIT, ValCmd.NONE.toString());
+
+  }
+
   // Getters for Jackson serialization
-  public String getTargetLibrary() { return targetLibrary; }
-  public String getObjectName() { return objectName; }
-  public ObjectType getObjectType() { return objectType; }
+  //public String getTargetLibrary() { return targetLibrary; }
+  //public String getObjectName() { return objectName; }
+  //public ObjectType getObjectType() { return objectType; }
   public String getSourceLibrary() { return sourceLibrary; }
   public String getSourceFile() { return sourceFile; }
   public String getSourceName() { return sourceName; }
-  public SourceType getSourceType() { return sourceType; }
+  public SourceType getSourceType() { return this.targetKey.sourceType; }
   public Map<CompilationPattern.ParamCmd, String> getParamCmdSequence() { return ParamCmdSequence; }
 
   // TODO: This logic encapsulation is nice. It will be helpfull in the future
   // Key method for use in graphs (matches ObjectDependency format)
-  public String toGraphKey() {
+  //public String toGraphKey() {
     // TODO: Make the key like objectName.ObjectType.SourceType
     // this is the key that the compilator API will receive as a Json along with other files
-    return targetLibrary + "/" + objectName + "/" + objectType.name();
-  }
+    //return targetLibrary + "/" + objectName + "/" + objectType.name();
+  //}
 
   public void setParamsSequence(Map<CompilationPattern.ParamCmd, String> ParamCmdSequence) {
     for (CompilationPattern.ParamCmd paramCmd : ParamCmdSequence.keySet()){
@@ -266,16 +310,16 @@ public class ObjectDescription {
               "SQL_PACKAGE, " +
               "SQL_RDB_CONNECTION_METHOD " +
             "FROM QSYS2.PROGRAM_INFO " +
-            "WHERE PROGRAM_LIBRARY = '" + targetLibrary + "' " +
-                "AND PROGRAM_NAME = '" + objectName + "' " +
-                "AND OBJECT_TYPE = '" + objectType.toParam() + "' "
+            "WHERE PROGRAM_LIBRARY = '" + this.targetKey.library + "' " +
+                "AND PROGRAM_NAME = '" + this.targetKey.objectName + "' " +
+                "AND OBJECT_TYPE = '" + this.targetKey.objectType.toParam() + "' "
           )) {
       if (!rsObj.next()) {
         // TODO: Maybe this should be optional for new objects. Just throw a warning
-        throw new IllegalArgumentException("Could not get object '" + objectName + "' from library '" + targetLibrary + "' type" + "'" + objectType.toString() + "'");
+        throw new IllegalArgumentException("Could not get object '" + this.targetKey.objectName + "' from library '" + this.targetKey.library + "' type" + "'" + this.targetKey.objectType.toString() + "'");
       }
 
-      System.out.println("Found object '" + objectName + "' from library '" + targetLibrary + "' type " + "'" + objectType.toParam() + "'");
+      System.out.println("Found object '" + this.targetKey.objectName + "' from library '" + this.targetKey.library + "' type " + "'" + this.targetKey.objectType.toParam() + "'");
 
       String text = rsObj.getString("TEXT_DESCRIPTION").trim();
       if (!text.isEmpty()) ParamCmdSequence.put(ParamCmd.TEXT, "'" + text +"'");
@@ -406,8 +450,8 @@ public class ObjectDescription {
                 "SQL_PACKAGE, " +
                 "SQL_RDB_CONNECTION_METHOD " + 
           "FROM QSYS2.BOUND_MODULE_INFO " +
-          "WHERE PROGRAM_LIBRARY = '" + targetLibrary + "' " +
-            "AND PROGRAM_NAME = '" + objectName + "' " +
+          "WHERE PROGRAM_LIBRARY = '" + this.targetKey.library + "' " +
+            "AND PROGRAM_NAME = '" + this.targetKey.objectName + "' " +
             "AND BOUND_MODULE_LIBRARY = '" + entryModuleLib + "' " +
             "AND BOUND_MODULE = '" + entryModule + "' "
         )) {

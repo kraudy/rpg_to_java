@@ -129,6 +129,7 @@ public class ObjectCompiler implements Runnable{
   @Option(names = { "-sn", "--source-name" }, description = "Source member name (defaults to object name, command-specific *SPECIAL, or retrieved from object)")
   private String sourceName = "";
 
+  //TODO: Should this be part of the key?
   @Option(names = {"-st","--source-type"}, description = "Source type (e.g., RPGLE, CLLE) (defaults to retrieved from object if possible)", converter = SourceTypeConverter.class)
   private ObjectDescription.SourceType sourceType;
 
@@ -187,6 +188,7 @@ public class ObjectCompiler implements Runnable{
   public void run() {
     
     /* Try to get compilation params from object. If it exists. */
+    /* 
     this.odes = new ObjectDescription(
           connection,
           debug,
@@ -198,6 +200,17 @@ public class ObjectCompiler implements Runnable{
           sourceFile,
           sourceName,
           (targetKey.sourceType != null) ? targetKey.sourceType : sourceType//sourceType // Specified or inferred
+    );
+    */
+
+    this.odes = new ObjectDescription(
+          connection,
+          debug,
+          //TODO: Maybe i should pass these as the topo key. The Key should uniquely indentify an object
+          targetKey,
+          sourceLib, // Default to *LIBL
+          sourceFile,
+          sourceName
     );
 
     try {
@@ -215,6 +228,7 @@ public class ObjectCompiler implements Runnable{
     odes.setParamsSequence(ParamCmdSequence);
 
     if (odes.getSourceType() == null) {
+      /* Source type not provided nor retreived */
       System.err.println("Source type is required if not retrievable from object.");
       return;
     }

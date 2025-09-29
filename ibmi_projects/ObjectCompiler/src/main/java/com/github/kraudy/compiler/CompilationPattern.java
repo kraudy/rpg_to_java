@@ -20,6 +20,8 @@ public class CompilationPattern {
   private ObjectDescription.SourceType sourceType;
   // TODO: These should be in a tuple or something else.
   private Map<ParamCmd, String> ParamCmdSequence;
+  Utilities.ParsedKey targetKey;
+  Supplier<String> cmdSupplier;
 
 
   public enum CompCmd { 
@@ -226,9 +228,11 @@ public class CompilationPattern {
 
   public CompilationPattern(ObjectDescription odes){
 
-    this.targetLibrary = odes.getTargetLibrary();
-    this.objectName = odes.getObjectName();
-    this.objectType = odes.getObjectType();
+    //TODO: I think these should not be here
+    this.targetLibrary = odes.targetKey.library;
+    this.objectName = odes.targetKey.objectName;
+    this.objectType = odes.targetKey.objectType;
+    //this.targetKey = odes.targetKey;
     this.sourceLibrary = odes.getSourceLibrary();
     this.sourceFile = odes.getSourceFile();
     this.sourceName = odes.getSourceName();
@@ -244,39 +248,26 @@ public class CompilationPattern {
 
     /* Add default values if not provided */
 
-    if (this.targetLibrary.isEmpty()) this.targetLibrary = ValCmd.LIBL.toString();
-    if (this.sourceName.isEmpty())    this.sourceName = CompCmd.compilationSourceName(compilationCommand);//ValCmd.PGM.toString();
-
-    /* Generate compilation params values from object description */
-    ParamCmdSequence.put(ParamCmd.OBJ, this.targetLibrary + "/" + this.objectName);
-    ParamCmdSequence.put(ParamCmd.PGM, this.targetLibrary + "/" + this.objectName);
-    ParamCmdSequence.put(ParamCmd.SRVPGM, this.targetLibrary + "/" + this.objectName);
-    ParamCmdSequence.put(ParamCmd.MODULE, this.targetLibrary + "/" + this.objectName);
-
-    ParamCmdSequence.put(ParamCmd.OBJTYPE, this.objectType.toParam());
-
-    ParamCmdSequence.put(ParamCmd.SRCFILE, this.sourceLibrary + "/" + this.sourceFile);
-
-    ParamCmdSequence.put(ParamCmd.SRCMBR, this.sourceName);
-
-    
-    ParamCmdSequence.put(ParamCmd.BNDSRVPGM, ValCmd.NONE.toString());
-    ParamCmdSequence.put(ParamCmd.COMMIT, ValCmd.NONE.toString());
-
     // TODO: These could be build base on object type and source.
     // Command builders as functions (pattern matching via enums)
-    //TODO: Use buildBoundCmdForOPM() if programType == "OPM"
+    //TODO: Maybe use a switch here to just set the corresponding command
+    
+    
+    /* 
     cmdBuilders.put(CompCmd.CRTRPGMOD, this::buildModuleCmd); 
     cmdBuilders.put(CompCmd.CRTCLMOD, this::buildModuleCmd);
+
     cmdBuilders.put(CompCmd.CRTBNDRPG, this::buildBoundCmd);
     cmdBuilders.put(CompCmd.CRTBNDCL, this::buildBoundCmd);
+    cmdBuilders.put(CompCmd.CRTCLPGM, this::buildBoundCmd);
 
     cmdBuilders.put(CompCmd.CRTRPGPGM, this::builOpmCmd); // OPM command
 
-    cmdBuilders.put(CompCmd.CRTCLPGM, this::buildBoundCmd);
     cmdBuilders.put(CompCmd.CRTSQLRPGI, this::buildSqlRpgCmd);
     cmdBuilders.put(CompCmd.CRTSRVPGM, this::buildSrvPgmCmd);
     cmdBuilders.put(CompCmd.RUNSQLSTM, this::buildSqlCmd);
+    */
+
     // Add more builders for other commands
   }
 
@@ -285,7 +276,8 @@ public class CompilationPattern {
   }
 
   public String buildCommand() {
-    String params = cmdBuilders.get(compilationCommand).get();
+    //String params = cmdBuilders.get(compilationCommand).get();
+    String params = this.cmdSupplier.get();
     // Prepend the command name
     return compilationCommand.name() + params;
   }

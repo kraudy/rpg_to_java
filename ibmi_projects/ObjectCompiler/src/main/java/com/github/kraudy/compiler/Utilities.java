@@ -1,5 +1,8 @@
 package com.github.kraudy.compiler;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 import com.github.kraudy.compiler.ObjectDescription.ObjectType;
 import com.github.kraudy.compiler.ObjectDescription.SourceType;
 
@@ -15,11 +18,13 @@ public class Utilities {
     public final ObjectType objectType;
     public final SourceType sourceType; // null if absent
 
+    @JsonCreator  // Enables deserialization from a JSON string like "MYLIB.HELLO.PGM.RPGLE"
     public ParsedKey(String key) {
       String[] parts = key.split("\\.");
       if (parts.length < 3 || parts.length > 4) {
         throw new IllegalArgumentException("Invalid key: " + key + ". Expected: library.objectName.objectType[.sourceType]");
       }
+      //TODO: Add validation if (parts.length == 2) to get *LIBL
       this.library = parts[0].toUpperCase();
       this.objectName = parts[1].toUpperCase();
       try {
@@ -28,6 +33,12 @@ public class Utilities {
         throw new IllegalArgumentException("Invalid objectType in key: " + parts[2]);
       }
       this.sourceType = (parts.length == 4) ? SourceType.valueOf(parts[3].toUpperCase()) : null;
+    }
+
+    @JsonValue  // Serializes to a JSON string like "MYLIB.HELLO.PGM.RPGLE"
+    public String asString() {
+        String base = library + "." + objectName + "." + objectType.name();
+        return (sourceType != null) ? base + "." + sourceType.name() : base;
     }
   }
 }
