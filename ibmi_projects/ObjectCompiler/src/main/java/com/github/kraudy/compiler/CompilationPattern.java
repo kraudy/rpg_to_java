@@ -252,7 +252,30 @@ public class CompilationPattern {
     // Command builders as functions (pattern matching via enums)
     //TODO: Maybe use a switch here to just set the corresponding command
     
-    
+    switch (compilationCommand){
+      case CRTRPGMOD:
+      case CRTCLMOD:
+        this.cmdSupplier = this::buildModuleCmd;
+        break;
+      case CRTBNDRPG:
+      case CRTBNDCL:
+      case CRTCLPGM:
+        this.cmdSupplier = this::buildBoundCmd;
+        break;
+      case CRTRPGPGM:
+        this.cmdSupplier = this::builOpmCmd;
+        break;
+      case CRTSQLRPGI:
+        this.cmdSupplier = this::buildSqlRpgCmd;
+        break;
+      case CRTSRVPGM:
+        this.cmdSupplier = this::buildSrvPgmCmd;
+        break;
+      case RUNSQLSTM:
+        this.cmdSupplier = this::buildSqlCmd;
+        break;
+      default: throw new IllegalArgumentException("Compilation command builder not found");
+    }
     /* 
     cmdBuilders.put(CompCmd.CRTRPGMOD, this::buildModuleCmd); 
     cmdBuilders.put(CompCmd.CRTCLMOD, this::buildModuleCmd);
