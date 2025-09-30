@@ -6,23 +6,12 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 public class CompilationPattern {
-    // Resolver map for command builders (functions that build command strings based on spec)
-  private Map<CompCmd, Supplier<String>> cmdBuilders = new EnumMap<>(CompCmd.class);
-
   private CompCmd compilationCommand;
-
-  private String targetLibrary;
-  private String objectName;
   private ObjectDescription.ObjectType objectType;
-  private String sourceLibrary;
-  private String sourceFile;
-  private String sourceName;
   private ObjectDescription.SourceType sourceType;
-  // TODO: These should be in a tuple or something else.
   private Map<ParamCmd, String> ParamCmdSequence;
   Utilities.ParsedKey targetKey;
-  Supplier<String> cmdSupplier;
-
+  Supplier<String> cmdSupplier; // Resolver map for command builders (functions that build command strings based on spec)
 
   public enum CompCmd { 
     CRTRPGMOD, CRTSQLRPGI, CRTBNDRPG, CRTRPGPGM, CRTCLMOD, CRTBNDCL, CRTCLPGM, RUNSQLSTM, CRTSRVPGM, CRTDSPF, CRTLF, CRTPRTF, CRTMNU, CRTQMQRY;
@@ -150,7 +139,6 @@ public class CompilationPattern {
     }
   }
 
-  //TODO: Add a Map<String, ValCmd>
   public enum ValCmd { 
     FIRST, REPLACE, OUTFILE, LIBL, FILE, DTAARA, PGM, MODULE, OBJ, SRVPGM, CURLIB, ALL, CURRENT,
     NONE, BASIC, FULL,
@@ -214,43 +202,23 @@ public class CompilationPattern {
     sqlMap.put(ObjectDescription.ObjectType.FUNCTION, CompCmd.RUNSQLSTM);
     typeToCmdMap.put(ObjectDescription.SourceType.SQL, sqlMap);
 
-    // The corresponding order should be defined just be sequence of if validaitons on the command constructor
-    // i'm thinking of a switch without break for optionla params where the command follow the requiered compilation order by the OS
-    // TODO: Make these strings
-
-    // TODO: I think this Supliers is what i really need
-    // Maybe i can send enums as parameters too
-
-    //TODO: These suppliers could be instances and not static to add param validation
-    //TODO: If there is not a supplier, then an input param is needed
-    //TODO: I can also return the lambda function... that would be nice and would allow a higher abstraction function to get it
   }  
 
   public CompilationPattern(ObjectDescription odes){
 
-    //TODO: I think these should not be here
-    this.targetLibrary = odes.targetKey.library;
-    this.objectName = odes.targetKey.objectName;
     this.objectType = odes.targetKey.objectType;
     //this.targetKey = odes.targetKey;
-    this.sourceLibrary = odes.getSourceLibrary();
-    this.sourceFile = odes.getSourceFile();
-    this.sourceName = odes.getSourceName();
     this.sourceType = odes.getSourceType();
 
     /* Get optional params */
-
+    //TODO: I think, only this is necessary.
     this.ParamCmdSequence = odes.getParamCmdSequence();
 
     /* Get compilation command */
 
     this.compilationCommand = typeToCmdMap.get(sourceType).get(objectType);
 
-    /* Add default values if not provided */
-
-    // TODO: These could be build base on object type and source.
-    // Command builders as functions (pattern matching via enums)
-    //TODO: Maybe use a switch here to just set the corresponding command
+    /* Command builders */
     
     switch (compilationCommand){
       case CRTRPGMOD:
@@ -276,22 +244,7 @@ public class CompilationPattern {
         break;
       default: throw new IllegalArgumentException("Compilation command builder not found");
     }
-    /* 
-    cmdBuilders.put(CompCmd.CRTRPGMOD, this::buildModuleCmd); 
-    cmdBuilders.put(CompCmd.CRTCLMOD, this::buildModuleCmd);
-
-    cmdBuilders.put(CompCmd.CRTBNDRPG, this::buildBoundCmd);
-    cmdBuilders.put(CompCmd.CRTBNDCL, this::buildBoundCmd);
-    cmdBuilders.put(CompCmd.CRTCLPGM, this::buildBoundCmd);
-
-    cmdBuilders.put(CompCmd.CRTRPGPGM, this::builOpmCmd); // OPM command
-
-    cmdBuilders.put(CompCmd.CRTSQLRPGI, this::buildSqlRpgCmd);
-    cmdBuilders.put(CompCmd.CRTSRVPGM, this::buildSrvPgmCmd);
-    cmdBuilders.put(CompCmd.RUNSQLSTM, this::buildSqlCmd);
-    */
-
-    // Add more builders for other commands
+    //TODO: Add more builders for other commands
   }
 
   public CompCmd getCompilationCommand(){
@@ -299,14 +252,11 @@ public class CompilationPattern {
   }
 
   public String buildCommand() {
-    //String params = cmdBuilders.get(compilationCommand).get();
     String params = this.cmdSupplier.get();
     // Prepend the command name
     return compilationCommand.name() + params;
   }
 
-  // Update for module cmds if needed (e.g., CRTRPGMOD uses similar optionals)
-  // TODO: Add CompCmd as param or something, don't burn it.
   public String buildModuleCmd() {
     // Similar to buildBoundCmd but without PGM/DFTACTGRP; add GENLVL, OPTION, etc.
     StringBuilder sb = new StringBuilder();
@@ -315,19 +265,14 @@ public class CompilationPattern {
     sb.append(getParamString(ParamCmd.SRCFILE));
     sb.append(getParamString(ParamCmd.SRCMBR));
 
-    appendCommonParams(sb);
+    sb.append(getParamString(ParamCmd.TEXT));
 
     return sb.toString();
   }
 
-    //TODO: Maybe define what params all these have in common and then a list of the option params as enmus
-  // and then validate them in the corresponding order like : PGM, SRCFILE, SRCMBR
-  // Similar for bound commands
   public String buildBoundCmd() { // For CRTBNDRPG/CRTBNDCL
-    //TODO: Here on in the initializer i could check for required params that are missing and use the default values
     StringBuilder sb = new StringBuilder();
 
-    //TODO: If i can store each ParamCmd in an ordered list, here, i could just do for parcmd in parcmdList : and call the method
     sb.append(getParamString(ParamCmd.PGM));
     sb.append(getParamString(ParamCmd.SRCFILE));
     sb.append(getParamString(ParamCmd.SRCMBR));
@@ -375,15 +320,11 @@ public class CompilationPattern {
     }    
 
     return sb.toString();
-
-    // if(!options.contains(ParamCmd.PGM)) throw new IllegalArgumentException("Required param not found : '" + ParamCmd.PGM.name() + "'");
-    // TODO: This is important!!!
-    // if(!ParamCmdSequence.keySet().contains(ParamCmd.PGM)) throw new IllegalArgumentException("Required param not found : '" + ParamCmd.PGM.name() + "'");
-    // ParamCmdSequence.values() => Returns a colletion of values from the map. Can be useful. : Collection<Integer> values = map.values();
   }
 
   public String builOpmCmd() {  // For CRTRPGPGM/CRTCLPGM (similar but OPM-specific)
     StringBuilder sb = new StringBuilder();
+
     sb.append(getParamString(ParamCmd.PGM));
     sb.append(getParamString(ParamCmd.SRCFILE));
     sb.append(getParamString(ParamCmd.SRCMBR));
@@ -407,6 +348,7 @@ public class CompilationPattern {
     sb.append(getParamString(ParamCmd.CODELIST));
     sb.append(getParamString(ParamCmd.IGNDECERR));
     sb.append(getParamString(ParamCmd.ALWNULL));
+
     return sb.toString();
   }
 
@@ -419,14 +361,13 @@ public class CompilationPattern {
     sb.append(getParamString(ParamCmd.SRCFILE));
     sb.append(getParamString(ParamCmd.SRCMBR));
 
-    appendCommonParams(sb);
+    sb.append(getParamString(ParamCmd.TEXT));
 
     return sb.toString();
   }
 
   // For CRTSRVPGM
   public String buildSrvPgmCmd() {
-    //TODO: The spec for the SRPVGM should indicate if it is build using modules, binding dir, export symbols or export all, etc
     StringBuilder sb = new StringBuilder();
 
     sb.append(getParamString(ParamCmd.SRVPGM));
@@ -434,7 +375,7 @@ public class CompilationPattern {
 
     sb.append(getParamString(ParamCmd.BNDSRVPGM));
 
-    appendCommonParams(sb);
+    sb.append(getParamString(ParamCmd.TEXT));
 
     return sb.toString();
   }
@@ -448,24 +389,13 @@ public class CompilationPattern {
 
     sb.append(getParamString(ParamCmd.COMMIT));
 
-    appendCommonParams(sb);
+    sb.append(getParamString(ParamCmd.TEXT));
 
     return sb.toString();
   }
 
-  public void appendCommonParams(StringBuilder sb) {
-    //TODO: This should have the optional params in the corresponding order so they can be added or omited with no problem
-    
-    // TODO: Maybe soemthing like this to check the param list: // if(options.contains(ParamCmd.TEXT)) do something;
-    sb.append(getParamString(ParamCmd.TEXT));
-
-    // for now, this gives error por CRTBNDRPG: CRTBNDRPG PGM(ROBKRAUDY1/HELLO) SRCFILE(*LIBL/QRPGLESRC) SRCMBR(HELLO) TEXT('Cool hello') ACTGRP('QILE')
-    // sb.append(getParamString(ParamCmd.ACTGRP));
-
-  }
-
   public  String getParamString(ParamCmd paramCmd){
-    //TODO: Shoul i update the object desc?
+    //TODO: Should i update the object desc?
     String val = ParamCmdSequence.getOrDefault(paramCmd, "");  // Retrieved or empty
 
     if (val.isEmpty()) return "";
