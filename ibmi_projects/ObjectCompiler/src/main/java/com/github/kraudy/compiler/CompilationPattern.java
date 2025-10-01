@@ -204,6 +204,7 @@ public class CompilationPattern {
 
   }  
 
+  //public CompilationPattern(ObjectDescription odes){
   public CompilationPattern(ObjectDescription odes){
 
     this.objectType = odes.targetKey.objectType;

@@ -21,17 +21,22 @@ public class Utilities {
     @JsonCreator  // Enables deserialization from a JSON string like "MYLIB.HELLO.PGM.RPGLE"
     public ParsedKey(String key) {
       String[] parts = key.split("\\.");
-      if (parts.length < 3 || parts.length > 4) {
+      if (parts.length < 3 || parts.length > 4) { // != 4
         throw new IllegalArgumentException("Invalid key: " + key + ". Expected: library.objectName.objectType[.sourceType]");
       }
       //TODO: Add validation if (parts.length == 2) to get *LIBL
       this.library = parts[0].toUpperCase();
+      if (this.library.isEmpty()) throw new IllegalArgumentException("Library name is required.");
+
       this.objectName = parts[1].toUpperCase();
+      if (this.objectName.isEmpty()) throw new IllegalArgumentException("Object name is required.");
+
       try {
         this.objectType = ObjectType.valueOf(parts[2].toUpperCase());
       } catch (IllegalArgumentException e) {
-        throw new IllegalArgumentException("Invalid objectType in key: " + parts[2]);
+        throw new IllegalArgumentException("Invalid objectType : " + parts[2]);
       }
+      //TODO: Maybe this should be required. That will depend on the referencer being able to determine the souce type from source code.
       this.sourceType = (parts.length == 4) ? SourceType.valueOf(parts[3].toUpperCase()) : null;
     }
 

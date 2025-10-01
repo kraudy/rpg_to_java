@@ -73,66 +73,6 @@ public class ObjectDescription {
 
   public enum DftSrc { QRPGLESRC, QRPGSRC, QCLSRC, QSQLSRC } // TODO: Expand
 
-  //TODO: Move this class to its own file and remove static
-  // Constructor for Jackson deserialization
-  @JsonCreator
-  public ObjectDescription(
-        Connection connection,
-        boolean debug,
-        @JsonProperty("targetLibrary") String targetLibrary,
-        @JsonProperty("objectName") String objectName,
-        @JsonProperty("objectType") ObjectType objectType,
-        @JsonProperty("sourceLibrary") String sourceLibrary,
-        @JsonProperty("sourceFile") String sourceFile,
-        @JsonProperty("sourceName") String sourceName,
-        @JsonProperty("sourceType") SourceType sourceType,
-        @JsonProperty("ParamCmdSequence") Map<CompilationPattern.ParamCmd, String> ParamCmdSequence) {
-
-    this.connection = connection;
-    this.debug = debug;
-
-    if (objectName == null || objectName.isEmpty()) throw new IllegalArgumentException("Object name is required.");
-
-    //this.targetLibrary = targetLibrary;
-    //this.objectName = objectName;
-    //this.objectType = objectType;
-    this.sourceLibrary = sourceLibrary;
-    this.sourceFile = (sourceFile.isEmpty()) ? SourceType.defaultSourcePf(sourceType) : sourceFile; // TODO: Add logic for sourcePF or directory
-    this.sourceName = (sourceName.isEmpty() ? objectName : sourceName); //TODO: Add logic for stream files / members / default
-    this.sourceType = sourceType;
-
-
-    this.ParamCmdSequence = ParamCmdSequence;
-
-  }
-
-  @JsonCreator
-  public ObjectDescription(
-        Connection connection,
-        boolean debug,
-        @JsonProperty("targetLibrary") String targetLibrary,
-        @JsonProperty("objectName") String objectName,
-        @JsonProperty("objectType") ObjectType objectType,
-        @JsonProperty("sourceLibrary") String sourceLibrary,
-        @JsonProperty("sourceFile") String sourceFile,
-        @JsonProperty("sourceName") String sourceName,
-        @JsonProperty("sourceType") SourceType sourceType) {
-
-    this.connection = connection;
-    this.debug = debug;
-
-    if (objectName == null || objectName.isEmpty()) throw new IllegalArgumentException("Object name is required.");
-
-    //this.targetLibrary = targetLibrary;
-    //this.objectName = objectName;
-    //this.objectType = objectType;
-    this.sourceLibrary = sourceLibrary;
-    this.sourceFile = (sourceFile.isEmpty()) ? SourceType.defaultSourcePf(sourceType) : sourceFile; // TODO: Add logic for sourcePF or directory
-    this.sourceName = (sourceName.isEmpty() ? objectName : sourceName); //TODO: Add logic for stream files / members / default
-    this.sourceType = sourceType;
-
-  }
-
   @JsonCreator
   public ObjectDescription(
         Connection connection,
@@ -144,8 +84,6 @@ public class ObjectDescription {
 
     this.connection = connection;
     this.debug = debug;
-
-    //if (objectName == null || objectName.isEmpty()) throw new IllegalArgumentException("Object name is required.");
 
     this.targetKey = targetKey;
     this.sourceLibrary = sourceLibrary;
