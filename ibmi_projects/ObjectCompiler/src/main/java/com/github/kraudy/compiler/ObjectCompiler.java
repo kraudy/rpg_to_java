@@ -188,20 +188,6 @@ public class ObjectCompiler implements Runnable{
   public void run() {
     
     /* Try to get compilation params from object. If it exists. */
-    /* 
-    this.odes = new ObjectDescription(
-          connection,
-          debug,
-          //TODO: Maybe i should pass these as the topo key. The Key should uniquely indentify an object
-          targetKey.library ,//library,
-          targetKey.objectName, //objectName,
-          targetKey.objectType, //objectType,
-          sourceLib, // Default to *LIBL
-          sourceFile,
-          sourceName,
-          (targetKey.sourceType != null) ? targetKey.sourceType : sourceType//sourceType // Specified or inferred
-    );
-    */
 
     //TODO: Add --dry-run to just run without executing. Just to generate the command string
 
