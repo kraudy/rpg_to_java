@@ -203,6 +203,8 @@ public class ObjectCompiler implements Runnable{
     );
     */
 
+    //TODO: Add --dry-run to just run without executing. Just to generate the command string
+
     this.odes = new ObjectDescription(
           connection,
           debug,
@@ -216,8 +218,8 @@ public class ObjectCompiler implements Runnable{
     try {
       odes.getObjectInfo();
     } catch (Exception e) {
-      //if (verbose) System.err.println("Warning: Could not retrieve compilation params from object: " + e.getMessage() + ". Using defaults.");
-      e.printStackTrace();
+      //TODO: Change logging for SLF4J or java.util.logging 
+      if (verbose) System.err.println("Object not found; using defaults.");
     }
 
     Map<CompilationPattern.ParamCmd, String> ParamCmdSequence = new HashMap<>();
@@ -228,9 +230,7 @@ public class ObjectCompiler implements Runnable{
     odes.setParamsSequence(ParamCmdSequence);
 
     if (odes.getSourceType() == null) {
-      /* Source type not provided nor retreived */
-      System.err.println("Source type is required if not retrievable from object.");
-      return;
+      throw new IllegalArgumentException("Source type is required for new or unresolvable objects.");
     }
     if (debug) System.err.println("Source type: " + odes.getSourceType());
 
@@ -245,12 +245,22 @@ public class ObjectCompiler implements Runnable{
     // TODO: Integrate with SourceMigrator if source is in member; migrate to IFS and compile from there
     // For OPM, create temp member if needed
 
+    //TODO: Migration
+    /*
+    String stmfPath = migrateSourceToIfs(odes.getSourceLibrary(), odes.getSourceFile(), odes.getSourceName());
+    ParamCmdSequence.put(ParamCmd.SRCSTMF, stmfPath);
+    ParamCmdSequence.remove(ParamCmd.SRCFILE);  // Switch to stream file
+     */
+
+    // For OPM, create temp members if source is IFS (reverse migration).
+
     compile(commandStr);
   }
 
 
 
   private void compile(String commandStr) {
+    //TODO: Use QCMDEXC via JDBC
     CommandCall cc = new CommandCall(system);
     try {
       if (debug) System.out.println("Executing: " + commandStr);
@@ -279,6 +289,8 @@ public class ObjectCompiler implements Runnable{
     }
 
   //TODO: This is kinda slow.
+  // String cpysplfCmd = "CPYSPLF FILE(" + objectName + ") TOFILE(QTEMP/SPLFCPY) JOB(*) SPLNBR(*LAST)";
+  // Or send it to a stream file
   // Try to use CPYSPLF to a stream file or db2 table
   /*  https://gist.github.com/BirgittaHauser/f28e3527f1cc4c422a05eea865b455bb */
   private void showCompilationSpool(Timestamp compilationTime, String user, String objectName) throws SQLException{

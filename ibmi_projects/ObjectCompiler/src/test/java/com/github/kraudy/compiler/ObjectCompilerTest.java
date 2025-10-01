@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class ObjectCompilerTest {
 
+  //TODO: Add JUnit tests for key parsing, command building (e.g., assert "CRTRPGMOD MODULE(MYLIB/HELLO) ..." ).
   /**
    * Rigorous Test :P
    */

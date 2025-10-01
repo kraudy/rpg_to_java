@@ -96,6 +96,8 @@ public class ObjectDescription {
     //if (this.sourceName.isEmpty())    this.sourceName = CompCmd.compilationSourceName(compilationCommand);//ValCmd.PGM.toString();
 
     /* Set default values */
+    //TODO: Condition wich of these are used to not put them all
+    // maybe based on object type?
     ParamCmdSequence.put(ParamCmd.OBJ, this.targetKey.library + "/" + this.targetKey.objectName);
     ParamCmdSequence.put(ParamCmd.PGM, this.targetKey.library + "/" + this.targetKey.objectName);
     ParamCmdSequence.put(ParamCmd.SRVPGM, this.targetKey.library + "/" + this.targetKey.objectName);
@@ -122,14 +124,6 @@ public class ObjectDescription {
   public String getSourceName() { return sourceName; }
   public SourceType getSourceType() { return this.targetKey.sourceType; }
   public Map<CompilationPattern.ParamCmd, String> getParamCmdSequence() { return ParamCmdSequence; }
-
-  // TODO: This logic encapsulation is nice. It will be helpfull in the future
-  // Key method for use in graphs (matches ObjectDependency format)
-  //public String toGraphKey() {
-    // TODO: Make the key like objectName.ObjectType.SourceType
-    // this is the key that the compilator API will receive as a Json along with other files
-    //return targetLibrary + "/" + objectName + "/" + objectType.name();
-  //}
 
   public void setParamsSequence(Map<CompilationPattern.ParamCmd, String> ParamCmdSequence) {
     for (CompilationPattern.ParamCmd paramCmd : ParamCmdSequence.keySet()){
@@ -305,6 +299,8 @@ public class ObjectDescription {
       if ("ILE".equals(programType)) {
         String actgrp = rsObj.getString("ACTIVATION_GROUP").trim();
         if (!actgrp.isEmpty()) ParamCmdSequence.put(ParamCmd.ACTGRP, actgrp);
+        if ("QILE".equals(actgrp)) ParamCmdSequence.put(ParamCmd.DFTACTGRP, ValCmd.NO.toString());
+
 
          retrieveBoundModuleInfo(rsObj.getString("PROGRAM_ENTRY_PROCEDURE_MODULE_LIBRARY").trim(), 
                                          rsObj.getString("PROGRAM_ENTRY_PROCEDURE_MODULE").trim());
@@ -327,7 +323,7 @@ public class ObjectDescription {
 
   // NEW: Query BOUND_MODULE_INFO for module-specific fields (e.g., GENLVL, OPTION)
   public void retrieveBoundModuleInfo(String entryModuleLib, String entryModule) throws SQLException {
-    if (entryModuleLib == null || entryModule == null) return;  // Skip if no entry module
+    if (entryModuleLib == null || entryModule == null) throw new IllegalArgumentException("Entry module or lib are null");;  // Skip if no entry module
 
     try (Statement stmt = connection.createStatement();
         ResultSet rsMod = stmt.executeQuery(
@@ -404,11 +400,12 @@ public class ObjectDescription {
 
         String option = rsMod.getString("COMPILER_OPTIONS").trim();
         if (!option.isEmpty()) ParamCmdSequence.put(ParamCmd.OPTION, option);
-
-        //TODO: Just do if DEBUG_DATA == 'Y' then use a default
-        String dbgView = rsMod.getString("DEBUG_VIEWS").trim();
-        if (!dbgView.isEmpty()) ParamCmdSequence.put(ParamCmd.DBGVIEW, dbgView);
         */
+
+        //TODO: Should i validate the compilation command here?
+        String dbgData = rsMod.getString("DEBUG_DATA").trim();
+        if ("*YES".equals(dbgData)) ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.ALL.toString());
+        
 
         // Override OPTIMIZE if more specific here
         // This gives 10 but the param  OPTIMIZE only accepts: *NONE, *BASIC, *FULL   
@@ -416,6 +413,7 @@ public class ObjectDescription {
         if (!modOptimize.isEmpty()) {
           switch (modOptimize) {
             case "10": ParamCmdSequence.put(ParamCmd.OPTIMIZE, ValCmd.NONE.toString());   break;
+            case "20": ParamCmdSequence.put(ParamCmd.OPTIMIZE, ValCmd.BASIC.toString());  break;
             case "30": ParamCmdSequence.put(ParamCmd.OPTIMIZE, ValCmd.BASIC.toString());  break;
             case "40": ParamCmdSequence.put(ParamCmd.OPTIMIZE, ValCmd.FULL.toString());   break;
           }

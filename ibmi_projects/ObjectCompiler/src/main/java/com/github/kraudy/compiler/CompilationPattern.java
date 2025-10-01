@@ -272,38 +272,42 @@ public class CompilationPattern {
   }
 
   public String buildBoundCmd() { // For CRTBNDRPG/CRTBNDCL
-    StringBuilder sb = new StringBuilder();
+    StringBuilder sb = new StringBuilder();               
 
+    //TODO: This is the order for CRTBNDRPG. If it gets too convoluted, make a switch or a method for each command
     sb.append(getParamString(ParamCmd.PGM));
     sb.append(getParamString(ParamCmd.SRCFILE));
     sb.append(getParamString(ParamCmd.SRCMBR));
     
     // Required/early optionals
-    sb.append(getParamString(ParamCmd.GENLVL));
     sb.append(getParamString(ParamCmd.TEXT));
     sb.append(getParamString(ParamCmd.DFTACTGRP));  // Or ACTGRP for ILE
+    sb.append(getParamString(ParamCmd.DBGVIEW));
+
+    sb.append(getParamString(ParamCmd.OPTIMIZE));
+    sb.append(getParamString(ParamCmd.USRPRF));
+    sb.append(getParamString(ParamCmd.TGTRLS));
+    if (compilationCommand != CompCmd.CRTBNDCL){
+      sb.append(getParamString(ParamCmd.PRFDTA));
+    }
+
+    sb.append(getParamString(ParamCmd.GENLVL));
     // Additional params section
     sb.append(getParamString(ParamCmd.OPTION));
-    sb.append(getParamString(ParamCmd.DBGVIEW));
     sb.append(getParamString(ParamCmd.DBGENCKEY));
     sb.append(getParamString(ParamCmd.OUTPUT));
-    sb.append(getParamString(ParamCmd.OPTIMIZE));
     sb.append(getParamString(ParamCmd.INDENT));
     sb.append(getParamString(ParamCmd.CVTOPT));
     sb.append(getParamString(ParamCmd.SRTSEQ));
     sb.append(getParamString(ParamCmd.LANGID));
     sb.append(getParamString(ParamCmd.REPLACE));
-    sb.append(getParamString(ParamCmd.USRPRF));
     sb.append(getParamString(ParamCmd.AUT));
     sb.append(getParamString(ParamCmd.TRUNCNBR));
     sb.append(getParamString(ParamCmd.FIXNBR));
-    sb.append(getParamString(ParamCmd.TGTRLS));
     sb.append(getParamString(ParamCmd.ALWNULL));
     sb.append(getParamString(ParamCmd.DEFINE));
     sb.append(getParamString(ParamCmd.ENBPFRCOL));
-    if (compilationCommand != CompCmd.CRTBNDCL){
-      sb.append(getParamString(ParamCmd.PRFDTA));
-    }
+
     sb.append(getParamString(ParamCmd.LICOPT));
     sb.append(getParamString(ParamCmd.INCDIR));
     sb.append(getParamString(ParamCmd.PGMINFO));

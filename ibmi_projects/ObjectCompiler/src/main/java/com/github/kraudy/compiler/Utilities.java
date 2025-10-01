@@ -26,6 +26,7 @@ public class Utilities {
       }
       //TODO: Add validation if (parts.length == 2) to get *LIBL
       this.library = parts[0].toUpperCase();
+      // if (this.library.equals("*LIBL") || this.library.equals("*CURLIB"))
       if (this.library.isEmpty()) throw new IllegalArgumentException("Library name is required.");
 
       this.objectName = parts[1].toUpperCase();
