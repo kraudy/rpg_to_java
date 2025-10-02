@@ -1,9 +1,15 @@
 package com.github.kraudy.compiler;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 
 public class CompilationPattern {
   private CompCmd compilationCommand;
@@ -204,6 +210,49 @@ public class CompilationPattern {
 
   }  
 
+  public static final List<ParamCmd> reqPgmParams = Arrays.asList(
+      ParamCmd.PGM,       // Required first
+      ParamCmd.SRCFILE,
+      ParamCmd.SRCMBR,
+      ParamCmd.TEXT
+    );
+
+  public static final List<ParamCmd> ilePgmParams = Arrays.asList(
+      // reqPgmParams
+      ParamCmd.DFTACTGRP,
+      ParamCmd.DBGVIEW,
+      ParamCmd.OPTIMIZE
+      // releasePgmParams
+    );
+
+  public static final List<ParamCmd> opmPgmParams = Arrays.asList(
+      // reqPgmParams
+      ParamCmd.OPTION,
+      ParamCmd.GENOPT
+      // releasePgmParams
+    );            
+
+  public static final List<ParamCmd> releasePgmParams = Arrays.asList(
+        ParamCmd.USRPRF,
+        ParamCmd.TGTRLS
+    );          
+    
+  //TODO: Maybe these could be put in a MAP in the future along the suppliers
+  public static final List<ParamCmd> ilePgmPattern;
+  static {
+      ilePgmPattern = new ArrayList<>(reqPgmParams);
+      ilePgmPattern.addAll(ilePgmParams);
+      ilePgmPattern.addAll(releasePgmParams);
+  }
+    
+  public static final List<ParamCmd> opmPgmPattern;
+  static {
+      opmPgmPattern = new ArrayList<>(reqPgmParams);
+      opmPgmPattern.add(ParamCmd.GENLVL); //TODO: Could be added to opmPgmParams
+      opmPgmPattern.addAll(opmPgmParams);
+      opmPgmPattern.addAll(releasePgmParams);
+  }
+
   //public CompilationPattern(ObjectDescription odes){
   public CompilationPattern(ObjectDescription odes){
 
@@ -275,6 +324,7 @@ public class CompilationPattern {
     StringBuilder sb = new StringBuilder();               
 
     //TODO: This is the order for CRTBNDRPG. If it gets too convoluted, make a switch or a method for each command
+    /* 
     sb.append(getParamString(ParamCmd.PGM));
     sb.append(getParamString(ParamCmd.SRCFILE));
     sb.append(getParamString(ParamCmd.SRCMBR));
@@ -287,6 +337,26 @@ public class CompilationPattern {
     sb.append(getParamString(ParamCmd.OPTIMIZE));
     sb.append(getParamString(ParamCmd.USRPRF));
     sb.append(getParamString(ParamCmd.TGTRLS));
+    */
+
+    //for (ParamCmd param : ilePgmParams) {
+    //Stream.concat(reqPgmParams.stream(), ilePgmParams.stream())
+    //        .forEach(param -> sb.append(getParamString(param)));
+
+    /* 
+    List<ParamCmd> allParams = Stream.of(
+        reqPgmParams,
+        ilePgmParams,
+        releasePgmParams
+    ).flatMap(List::stream).collect(Collectors.toList());
+
+    allParams.forEach(param -> sb.append(getParamString(param)));
+    */
+
+    for (ParamCmd param : ilePgmPattern) {
+      sb.append(getParamString(param));
+    }
+
     if (compilationCommand != CompCmd.CRTBNDCL){
       sb.append(getParamString(ParamCmd.PRFDTA));
     }
@@ -319,7 +389,6 @@ public class CompilationPattern {
     sb.append(getParamString(ParamCmd.TGTCCSID));
     sb.append(getParamString(ParamCmd.REQPREXP));
     sb.append(getParamString(ParamCmd.PPMINOUTLN));
-    // if (!ParamCmdSequence.getOrDefault(ParamCmd.DFTACTGRP, "").equals("*YES")) {
     if (ParamCmdSequence.keySet().contains(ParamCmd.DFTACTGRP)) {
       sb.append(getParamString(ParamCmd.STGMDL));  // Late optional
     }    
@@ -330,6 +399,7 @@ public class CompilationPattern {
   public String builOpmCmd() {  // For CRTRPGPGM/CRTCLPGM (similar but OPM-specific)
     StringBuilder sb = new StringBuilder();
 
+    /* 
     sb.append(getParamString(ParamCmd.PGM));
     sb.append(getParamString(ParamCmd.SRCFILE));
     sb.append(getParamString(ParamCmd.SRCMBR));
@@ -337,6 +407,14 @@ public class CompilationPattern {
     sb.append(getParamString(ParamCmd.TEXT));
     sb.append(getParamString(ParamCmd.OPTION));
     sb.append(getParamString(ParamCmd.GENOPT));
+    sb.append(getParamString(ParamCmd.TGTRLS));
+    sb.append(getParamString(ParamCmd.USRPRF));
+    */
+
+    for (ParamCmd param : opmPgmPattern) {
+      sb.append(getParamString(param));
+    }
+
     sb.append(getParamString(ParamCmd.INDENT));
     sb.append(getParamString(ParamCmd.CVTOPT));
     sb.append(getParamString(ParamCmd.SRTSEQ));
@@ -344,8 +422,7 @@ public class CompilationPattern {
     sb.append(getParamString(ParamCmd.SAAFLAG));
     sb.append(getParamString(ParamCmd.PRTFILE));
     sb.append(getParamString(ParamCmd.REPLACE));
-    sb.append(getParamString(ParamCmd.TGTRLS));
-    sb.append(getParamString(ParamCmd.USRPRF));
+
     sb.append(getParamString(ParamCmd.AUT));
     sb.append(getParamString(ParamCmd.PHSTRC));
     sb.append(getParamString(ParamCmd.ITDUMP));

@@ -309,6 +309,7 @@ public class ObjectDescription {
       // For OPM-specific (e.g., SAAFLAG, if in view)
       if ("OPM".equals(programType)) {
         // Map OPM fields similarly if present in query
+        //TODO: Add OPTION(*LSTDBG) GENOPT(*LIST)
       }
 
       if (!debug) return;
