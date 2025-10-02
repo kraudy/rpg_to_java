@@ -324,34 +324,6 @@ public class CompilationPattern {
     StringBuilder sb = new StringBuilder();               
 
     //TODO: This is the order for CRTBNDRPG. If it gets too convoluted, make a switch or a method for each command
-    /* 
-    sb.append(getParamString(ParamCmd.PGM));
-    sb.append(getParamString(ParamCmd.SRCFILE));
-    sb.append(getParamString(ParamCmd.SRCMBR));
-    
-    // Required/early optionals
-    sb.append(getParamString(ParamCmd.TEXT));
-    sb.append(getParamString(ParamCmd.DFTACTGRP));  // Or ACTGRP for ILE
-    sb.append(getParamString(ParamCmd.DBGVIEW));
-
-    sb.append(getParamString(ParamCmd.OPTIMIZE));
-    sb.append(getParamString(ParamCmd.USRPRF));
-    sb.append(getParamString(ParamCmd.TGTRLS));
-    */
-
-    //for (ParamCmd param : ilePgmParams) {
-    //Stream.concat(reqPgmParams.stream(), ilePgmParams.stream())
-    //        .forEach(param -> sb.append(getParamString(param)));
-
-    /* 
-    List<ParamCmd> allParams = Stream.of(
-        reqPgmParams,
-        ilePgmParams,
-        releasePgmParams
-    ).flatMap(List::stream).collect(Collectors.toList());
-
-    allParams.forEach(param -> sb.append(getParamString(param)));
-    */
 
     for (ParamCmd param : ilePgmPattern) {
       sb.append(getParamString(param));
@@ -398,18 +370,6 @@ public class CompilationPattern {
 
   public String builOpmCmd() {  // For CRTRPGPGM/CRTCLPGM (similar but OPM-specific)
     StringBuilder sb = new StringBuilder();
-
-    /* 
-    sb.append(getParamString(ParamCmd.PGM));
-    sb.append(getParamString(ParamCmd.SRCFILE));
-    sb.append(getParamString(ParamCmd.SRCMBR));
-    sb.append(getParamString(ParamCmd.GENLVL));
-    sb.append(getParamString(ParamCmd.TEXT));
-    sb.append(getParamString(ParamCmd.OPTION));
-    sb.append(getParamString(ParamCmd.GENOPT));
-    sb.append(getParamString(ParamCmd.TGTRLS));
-    sb.append(getParamString(ParamCmd.USRPRF));
-    */
 
     for (ParamCmd param : opmPgmPattern) {
       sb.append(getParamString(param));
