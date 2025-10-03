@@ -263,7 +263,37 @@ public class CompilationPattern {
 
   );
 
-  
+  public static final List<ParamCmd> ileClPgmPattern = Arrays.asList(
+    ParamCmd.PGM,       // Program
+    ParamCmd.SRCFILE,   // Source file
+    ParamCmd.SRCMBR,    // Source member
+    ParamCmd.SRCSTMF,   // Source stream file
+    ParamCmd.TEXT,      // Text 'description'
+
+    ParamCmd.DFTACTGRP,
+    ParamCmd.ACTGRP,
+    ParamCmd.STGMDL,
+    ParamCmd.OUTPUT,
+
+    ParamCmd.OPTION,
+    ParamCmd.USRPRF,   
+    ParamCmd.LOG,      
+    ParamCmd.ALWRTVSRC,
+    ParamCmd.REPLACE,  
+    ParamCmd.TGTRLS,   
+    ParamCmd.AUT,      
+    ParamCmd.SRTSEQ,           
+    ParamCmd.LANGID,   
+    ParamCmd.OPTIMIZE, 
+    ParamCmd.DBGVIEW,  
+    ParamCmd.DBGENCKEY,
+    ParamCmd.ENBPFRCOL,
+
+    ParamCmd.INCFILE,
+    ParamCmd.INCDIR,
+    ParamCmd.TGTCCSID
+
+  );
 
   public static final List<ParamCmd> reqPgmParams = Arrays.asList(
       ParamCmd.PGM,       // Required first
