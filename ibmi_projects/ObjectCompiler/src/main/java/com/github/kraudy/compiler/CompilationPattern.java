@@ -463,28 +463,6 @@ public class CompilationPattern {
       sb.append(getParamString(param));
     }
 
-    /* 
-    for (ParamCmd param : opmPgmPattern) {
-      sb.append(getParamString(param));
-    }
-
-    sb.append(getParamString(ParamCmd.INDENT));
-    sb.append(getParamString(ParamCmd.CVTOPT));
-    sb.append(getParamString(ParamCmd.SRTSEQ));
-    sb.append(getParamString(ParamCmd.LANGID));
-    sb.append(getParamString(ParamCmd.SAAFLAG));
-    sb.append(getParamString(ParamCmd.PRTFILE));
-    sb.append(getParamString(ParamCmd.REPLACE));
-
-    sb.append(getParamString(ParamCmd.AUT));
-    sb.append(getParamString(ParamCmd.PHSTRC));
-    sb.append(getParamString(ParamCmd.ITDUMP));
-    sb.append(getParamString(ParamCmd.SNPDUMP));
-    sb.append(getParamString(ParamCmd.CODELIST));
-    sb.append(getParamString(ParamCmd.IGNDECERR));
-    sb.append(getParamString(ParamCmd.ALWNULL));
-    */
-
     return sb.toString();
   }
 
