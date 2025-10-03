@@ -639,7 +639,7 @@ public class CompilationPattern {
     /* Get compilation command */
 
     this.compilationCommand = typeToCmdMap.get(sourceType).get(objectType);
-    this.compilationPattern = cmdToPatternMap.get(this.compilationCommand);
+    this.compilationPattern = cmdToPatternMap.get(this.compilationCommand); // new ArrayList<>(ileRpgPgmPattern)
     /* Command builders */
     
     switch (compilationCommand){
@@ -649,18 +649,15 @@ public class CompilationPattern {
         break;
 
       case CRTBNDRPG:
-        //this.compilationPattern = ileRpgPgmPattern; // new ArrayList<>(ileRpgPgmPattern)
         if (!ParamCmdSequence.containsKey(ParamCmd.DFTACTGRP)) {
           this.compilationPattern.remove(ParamCmd.STGMDL);
         }
       case CRTBNDCL:
-        //this.compilationPattern = ileClPgmPattern;
       case CRTCLPGM:
         this.cmdSupplier = this::buildBoundCmd;
         break;
         
       case CRTRPGPGM:
-        //this.compilationPattern = opmRpgPgmPattern;
         this.cmdSupplier = this::builOpmCmd;
         break;
 
@@ -683,9 +680,15 @@ public class CompilationPattern {
   }
 
   public String buildCommand() {
-    String params = this.cmdSupplier.get();
+    StringBuilder sb = new StringBuilder(); 
+
+    for (ParamCmd param : compilationPattern) {
+      sb.append(getParamString(param));
+    }
+
+    //String params = this.cmdSupplier.get();
     // Prepend the command name
-    return compilationCommand.name() + params;
+    return compilationCommand.name() + sb.toString();
   }
 
   public String buildModuleCmd() {
