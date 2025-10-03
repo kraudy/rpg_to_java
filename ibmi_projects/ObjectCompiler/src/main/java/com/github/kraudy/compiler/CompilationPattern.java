@@ -211,6 +211,7 @@ public class CompilationPattern {
 
   }  
 
+  // CRTBNDRPG
   public static final List<ParamCmd> ileRpgPgmPattern = Arrays.asList(
     ParamCmd.PGM,       // Program
     ParamCmd.SRCFILE,   // Source file
@@ -263,6 +264,7 @@ public class CompilationPattern {
 
   );
 
+  // CRTBNDCL
   public static final List<ParamCmd> ileClPgmPattern = Arrays.asList(
     ParamCmd.PGM,       // Program
     ParamCmd.SRCFILE,   // Source file
@@ -295,6 +297,7 @@ public class CompilationPattern {
 
   );
 
+  // CRTRPGPGM
   public static final List<ParamCmd> opmRpgPgmPattern = Arrays.asList(
     ParamCmd.PGM,       // Program
     ParamCmd.SRCFILE,   // Source file
@@ -323,6 +326,51 @@ public class CompilationPattern {
     ParamCmd.IGNDECERR, 
     ParamCmd.ALWNULL  
 
+  );
+
+  // CRTRPGMOD
+  public static final List<ParamCmd> RpgModulePattern = Arrays.asList(
+    ParamCmd.MODULE, 
+    ParamCmd.SRCFILE,
+    ParamCmd.SRCMBR, 
+    ParamCmd.SRCSTMF,
+    ParamCmd.GENLVL, 
+    ParamCmd.TEXT,   
+    ParamCmd.OPTION,   
+    ParamCmd.DBGVIEW,
+    
+    ParamCmd.DBGENCKEY,  
+    ParamCmd.OUTPUT,     
+    ParamCmd.OPTIMIZE,   
+    ParamCmd.INDENT,     
+    ParamCmd.CVTOPT,     
+    ParamCmd.SRTSEQ,     
+    ParamCmd.LANGID,     
+    ParamCmd.REPLACE,    
+    ParamCmd.AUT,        
+    ParamCmd.TRUNCNBR,   
+    ParamCmd.FIXNBR,     
+    ParamCmd.TGTRLS,     
+    ParamCmd.ALWNULL,    
+
+    ParamCmd.DEFINE,            
+    ParamCmd.ENBPFRCOL,
+    ParamCmd.PRFDTA,   
+    ParamCmd.STGMDL,   
+    ParamCmd.BNDDIR,   
+
+    ParamCmd.LICOPT,   
+    ParamCmd.INCDIR,   
+    ParamCmd.PGMINFO,
+    
+    ParamCmd.INFOSTMF,   
+    ParamCmd.PPGENOPT,   
+    ParamCmd.PPSRCFILE,  
+    ParamCmd.PPSRCMBR,   
+    ParamCmd.PPSRCSTMF,  
+    ParamCmd.TGTCCSID,   
+    ParamCmd.REQPREXP,   
+    ParamCmd.PPMINOUTLN
   );
 
   public static final List<ParamCmd> reqPgmParams = Arrays.asList(
