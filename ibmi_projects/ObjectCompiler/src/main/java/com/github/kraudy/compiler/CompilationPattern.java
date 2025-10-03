@@ -295,6 +295,36 @@ public class CompilationPattern {
 
   );
 
+  public static final List<ParamCmd> opmRpgPgmPattern = Arrays.asList(
+    ParamCmd.PGM,       // Program
+    ParamCmd.SRCFILE,   // Source file
+    ParamCmd.SRCMBR,    // Source member
+    ParamCmd.GENLVL,   
+    ParamCmd.TEXT,   
+
+    ParamCmd.OPTION,   
+    ParamCmd.GENOPT,   
+    ParamCmd.INDENT,   
+
+    ParamCmd.CVTOPT,  
+    ParamCmd.SRTSEQ,  
+    ParamCmd.LANGID,  
+    ParamCmd.SAAFLAG, 
+    ParamCmd.PRTFILE, 
+    ParamCmd.REPLACE, 
+    ParamCmd.TGTRLS,  
+    ParamCmd.USRPRF,  
+    ParamCmd.AUT,     
+    ParamCmd.PHSTRC,  
+    ParamCmd.ITDUMP,  
+
+    ParamCmd.SNPDUMP,   
+    ParamCmd.CODELIST,  
+    ParamCmd.IGNDECERR, 
+    ParamCmd.ALWNULL  
+
+  );
+
   public static final List<ParamCmd> reqPgmParams = Arrays.asList(
       ParamCmd.PGM,       // Required first
       ParamCmd.SRCFILE,
@@ -370,8 +400,10 @@ public class CompilationPattern {
         break;
         
       case CRTRPGPGM:
+        this.compilationPattern = opmRpgPgmPattern;
         this.cmdSupplier = this::builOpmCmd;
         break;
+
       case CRTSQLRPGI:
         this.cmdSupplier = this::buildSqlRpgCmd;
         break;
@@ -469,6 +501,11 @@ public class CompilationPattern {
   public String builOpmCmd() {  // For CRTRPGPGM/CRTCLPGM (similar but OPM-specific)
     StringBuilder sb = new StringBuilder();
 
+    for (ParamCmd param : compilationPattern) {
+      sb.append(getParamString(param));
+    }
+
+    /* 
     for (ParamCmd param : opmPgmPattern) {
       sb.append(getParamString(param));
     }
@@ -488,6 +525,7 @@ public class CompilationPattern {
     sb.append(getParamString(ParamCmd.CODELIST));
     sb.append(getParamString(ParamCmd.IGNDECERR));
     sb.append(getParamString(ParamCmd.ALWNULL));
+    */
 
     return sb.toString();
   }
