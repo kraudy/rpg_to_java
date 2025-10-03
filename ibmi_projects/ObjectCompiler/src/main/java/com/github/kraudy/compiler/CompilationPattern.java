@@ -54,8 +54,13 @@ public class CompilationPattern {
     LICOPT, INCDIR, PGMINFO, INFOSTMF, PPGENOPT, PPSRCFILE, PPSRCMBR, PPSRCSTMF, REQPREXP, PPMINOUTLN,
     GENOPT, SAAFLAG, PRTFILE, PHSTRC, ITDUMP, SNPDUMP, CODELIST, IGNDECERR, LOG, ALWRTVSRC, INCFILE, STGMDL,
 
+    // SQLRPGLEI
     RDB, RPGPPOPT, ALWCPYDTA, CLOSQLCSR, ALWBLK, DLYPRP, CONACC, DATFMT, DATSEP, TIMFMT, TIMSEP, RDBCNNMTH, DFTRDBCOL, DYNDFTCOL, SQLPKG, SQLPATH, SQLCURR,
-    FLAGSTD, DYNUSRPRF, CVTCCSID, TOSRCFILE, DECRESULT, DECFLTRND, COMPILEOPT;
+    FLAGSTD, DYNUSRPRF, CVTCCSID, TOSRCFILE, DECRESULT, DECFLTRND, COMPILEOPT,
+    
+    // RUNSQLSTM
+    NAMING, ERRLVL, MARGINS, DECMPT, PROCESS, SECLVLTXT, SQLCURRULE, SYSTIME
+    ;
 
     public static ParamCmd fromString(String value) {
       try {
@@ -479,6 +484,46 @@ public class CompilationPattern {
     ParamCmd.DECRESULT,
     ParamCmd.DECFLTRND, 
     ParamCmd.COMPILEOPT
+
+  );
+
+  /* Sql */
+  // RUNSQLSTM
+  public static final List<ParamCmd> SqlPattern = Arrays.asList(
+    ParamCmd.SRCFILE,
+    ParamCmd.SRCMBR, 
+    ParamCmd.SRCSTMF,
+    ParamCmd.COMMIT, 
+    ParamCmd.NAMING,      
+    ParamCmd.ERRLVL, 
+    ParamCmd.DATFMT, 
+    ParamCmd.DATSEP, 
+    ParamCmd.TIMFMT, 
+    ParamCmd.TIMSEP,
+    ParamCmd.MARGINS,
+    ParamCmd.DFTRDBCOL,
+    ParamCmd.SAAFLAG,  
+    ParamCmd.FLAGSTD,  
+    ParamCmd.DECMPT,   
+    ParamCmd.SRTSEQ,   
+    ParamCmd.LANGID,   
+    ParamCmd.OPTION,   
+    ParamCmd.PRTFILE,  
+    ParamCmd.PROCESS,  
+    ParamCmd.SECLVLTXT,
+    ParamCmd.ALWCPYDTA,
+    ParamCmd.ALWBLK,    
+    ParamCmd.SQLCURRULE,
+    ParamCmd.DECRESULT, 
+    ParamCmd.CONACC,    
+    ParamCmd.SYSTIME,   
+    ParamCmd.OUTPUT,    
+    ParamCmd.TGTRLS,    
+    ParamCmd.DBGVIEW,   
+    ParamCmd.CLOSQLCSR, 
+    ParamCmd.DLYPRP,    
+    ParamCmd.USRPRF,    
+    ParamCmd.DYNUSRPRF
 
   );
 
