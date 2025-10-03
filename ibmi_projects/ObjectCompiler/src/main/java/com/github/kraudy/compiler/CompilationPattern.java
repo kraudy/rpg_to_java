@@ -52,7 +52,10 @@ public class CompilationPattern {
     // NEW: Added for (RPG/CL specific)
     GENLVL, DBGVIEW, DBGENCKEY, OPTIMIZE, INDENT, CVTOPT, SRTSEQ, LANGID, REPLACE, USRPRF, AUT, TRUNCNBR, FIXNBR, ALWNULL, DEFINE, ENBPFRCOL, PRFDTA, 
     LICOPT, INCDIR, PGMINFO, INFOSTMF, PPGENOPT, PPSRCFILE, PPSRCMBR, PPSRCSTMF, REQPREXP, PPMINOUTLN,
-    GENOPT, SAAFLAG, PRTFILE, PHSTRC, ITDUMP, SNPDUMP, CODELIST, IGNDECERR, LOG, ALWRTVSRC, INCFILE, STGMDL;  // STGMDL for teraspace/inherit
+    GENOPT, SAAFLAG, PRTFILE, PHSTRC, ITDUMP, SNPDUMP, CODELIST, IGNDECERR, LOG, ALWRTVSRC, INCFILE, STGMDL,
+
+    RDB, RPGPPOPT, ALWCPYDTA, CLOSQLCSR, ALWBLK, DLYPRP, CONACC, DATFMT, DATSEP, TIMFMT, TIMSEP, RDBCNNMTH, DFTRDBCOL, DYNDFTCOL, SQLPKG, SQLPATH, SQLCURR,
+    FLAGSTD, DYNUSRPRF, CVTCCSID, TOSRCFILE, DECRESULT, DECFLTRND, COMPILEOPT;
 
     public static ParamCmd fromString(String value) {
       try {
@@ -426,6 +429,59 @@ public class CompilationPattern {
     ParamCmd.TGTCCSID
 
   );
+
+  /* Sql and RPG */
+  // CRTSQLRPGI
+  public static final List<ParamCmd> SqlRpgPgmPattern = Arrays.asList(
+    ParamCmd.OBJ, 
+    ParamCmd.SRCFILE,
+    ParamCmd.SRCMBR, 
+    ParamCmd.SRCSTMF,
+
+    ParamCmd.COMMIT,  
+    ParamCmd.RDB,     
+    ParamCmd.OBJTYPE, 
+    ParamCmd.OUTPUT,  
+    ParamCmd.TEXT,   
+    ParamCmd.OPTION,    
+    ParamCmd.RPGPPOPT,  
+    ParamCmd.TGTRLS,    
+    ParamCmd.INCFILE,   
+    ParamCmd.INCDIR,    
+    ParamCmd.ALWCPYDTA, 
+    ParamCmd.CLOSQLCSR, 
+    ParamCmd.ALWBLK,    
+    ParamCmd.DLYPRP,    
+    ParamCmd.CONACC,       
+    ParamCmd.GENLVL,    
+    ParamCmd.DATFMT,    
+    ParamCmd.DATSEP,    
+    ParamCmd.TIMFMT,    
+    ParamCmd.TIMSEP,    
+    ParamCmd.REPLACE,   
+    ParamCmd.RDBCNNMTH, 
+    ParamCmd.DFTRDBCOL, 
+    ParamCmd.DYNDFTCOL, 
+    ParamCmd.SQLPKG, 
+    ParamCmd.SQLPATH,
+    ParamCmd.SQLCURR,
+    ParamCmd.SAAFLAG,
+    ParamCmd.FLAGSTD,
+    ParamCmd.PRTFILE,  
+    ParamCmd.DBGVIEW,  
+    ParamCmd.DBGENCKEY,
+    ParamCmd.USRPRF,   
+    ParamCmd.DYNUSRPRF,
+    ParamCmd.SRTSEQ,   
+    ParamCmd.LANGID,   
+    ParamCmd.CVTCCSID, 
+    ParamCmd.TOSRCFILE,
+    ParamCmd.DECRESULT,
+    ParamCmd.DECFLTRND, 
+    ParamCmd.COMPILEOPT
+
+  );
+
 
   public static final List<ParamCmd> reqPgmParams = Arrays.asList(
       ParamCmd.PGM,       // Required first
