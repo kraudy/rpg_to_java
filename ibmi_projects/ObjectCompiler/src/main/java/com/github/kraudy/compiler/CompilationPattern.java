@@ -59,7 +59,10 @@ public class CompilationPattern {
     FLAGSTD, DYNUSRPRF, CVTCCSID, TOSRCFILE, DECRESULT, DECFLTRND, COMPILEOPT,
     
     // RUNSQLSTM
-    NAMING, ERRLVL, MARGINS, DECMPT, PROCESS, SECLVLTXT, SQLCURRULE, SYSTIME
+    NAMING, ERRLVL, MARGINS, DECMPT, PROCESS, SECLVLTXT, SQLCURRULE, SYSTIME,
+
+    // CRTSRVPGM
+    EXPORT, DETAIL, ALWUPD, ALWLIBUPD, ALWRINZ, ARGOPT, IPA, IPACTLFILE
     ;
 
     public static ParamCmd fromString(String value) {
@@ -221,6 +224,36 @@ public class CompilationPattern {
 
   }  
 
+  /* ILE Patterns */
+  
+  // CRTSRVPGM
+  public static final List<ParamCmd> SrvpgmPattern = Arrays.asList(
+    ParamCmd.SRVPGM,
+    ParamCmd.MODULE,
+    ParamCmd.EXPORT,  
+    ParamCmd.SRCFILE, 
+    ParamCmd.SRCMBR,  
+    ParamCmd.SRCSTMF, 
+    ParamCmd.TEXT,    
+    ParamCmd.BNDSRVPGM,
+    ParamCmd.BNDDIR,
+    ParamCmd.ACTGRP,
+    ParamCmd.OPTION,
+    ParamCmd.DETAIL,
+    ParamCmd.ALWUPD,    
+    ParamCmd.ALWLIBUPD, 
+    ParamCmd.USRPRF,    
+    ParamCmd.REPLACE,   
+    ParamCmd.AUT,       
+    ParamCmd.TGTRLS,    
+    ParamCmd.ALWRINZ,   
+    ParamCmd.STGMDL,    
+    ParamCmd.ARGOPT,    
+    ParamCmd.IPA,       
+    ParamCmd.IPACTLFILE
+
+  );
+
   // CRTBNDRPG
   public static final List<ParamCmd> ileRpgPgmPattern = Arrays.asList(
     ParamCmd.PGM,       // Program
@@ -306,6 +339,8 @@ public class CompilationPattern {
     ParamCmd.TGTCCSID
 
   );
+
+  /* OPM */
 
   // CRTRPGPGM
   public static final List<ParamCmd> opmRpgPgmPattern = Arrays.asList(
