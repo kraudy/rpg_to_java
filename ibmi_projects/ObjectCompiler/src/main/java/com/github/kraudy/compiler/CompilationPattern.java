@@ -392,7 +392,10 @@ public class CompilationPattern {
         break;
 
       case CRTBNDRPG:
-        this.compilationPattern = ileRpgPgmPattern;
+        this.compilationPattern = ileRpgPgmPattern; // new ArrayList<>(ileRpgPgmPattern)
+        if (!ParamCmdSequence.containsKey(ParamCmd.DFTACTGRP)) {
+          this.compilationPattern.remove(ParamCmd.STGMDL);
+        }
       case CRTBNDCL:
         this.compilationPattern = ileClPgmPattern;
       case CRTCLPGM:
@@ -449,10 +452,6 @@ public class CompilationPattern {
     for (ParamCmd param : compilationPattern) {
       sb.append(getParamString(param));
     }
-
-    //if (ParamCmdSequence.keySet().contains(ParamCmd.DFTACTGRP)) {
-    //  sb.append(getParamString(ParamCmd.STGMDL));  // Late optional
-    //}    
 
     return sb.toString();
   }
