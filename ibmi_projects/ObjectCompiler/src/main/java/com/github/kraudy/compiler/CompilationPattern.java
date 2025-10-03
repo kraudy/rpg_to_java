@@ -10,6 +10,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
+
 
 public class CompilationPattern {
   private CompCmd compilationCommand;
@@ -325,6 +327,29 @@ public class CompilationPattern {
     ParamCmd.CODELIST,  
     ParamCmd.IGNDECERR, 
     ParamCmd.ALWNULL  
+
+  );
+
+  // CRTCLPGM
+  public static final List<ParamCmd> opmClPgmPattern = Arrays.asList(
+    ParamCmd.PGM,       // Program
+    ParamCmd.SRCFILE,   // Source file
+    ParamCmd.SRCMBR,    // Source member
+    ParamCmd.TEXT,   
+
+    ParamCmd.OUTPUT,
+    ParamCmd.OPTION,
+    ParamCmd.GENOPT,
+    ParamCmd.USRPRF,
+
+    ParamCmd.LOG,      
+    ParamCmd.ALWRTVSRC,
+    ParamCmd.REPLACE,  
+    ParamCmd.TGTRLS,   
+    ParamCmd.AUT,      
+    ParamCmd.SRTSEQ,   
+    ParamCmd.LANGID,   
+    ParamCmd.INCFILE  
 
   );
 
