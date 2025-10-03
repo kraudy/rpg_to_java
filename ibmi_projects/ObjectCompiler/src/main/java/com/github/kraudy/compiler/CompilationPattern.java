@@ -450,47 +450,6 @@ public class CompilationPattern {
       sb.append(getParamString(param));
     }
 
-    /* 
-    for (ParamCmd param : ilePgmPattern) {
-      sb.append(getParamString(param));
-    }
-    */
-
-    //if (compilationCommand != CompCmd.CRTBNDCL){
-    //  sb.append(getParamString(ParamCmd.PRFDTA));
-    //}
-
-    /* 
-    sb.append(getParamString(ParamCmd.GENLVL));
-    // Additional params section
-    sb.append(getParamString(ParamCmd.OPTION));
-    sb.append(getParamString(ParamCmd.DBGENCKEY));
-    sb.append(getParamString(ParamCmd.OUTPUT));
-    sb.append(getParamString(ParamCmd.INDENT));
-    sb.append(getParamString(ParamCmd.CVTOPT));
-    sb.append(getParamString(ParamCmd.SRTSEQ));
-    sb.append(getParamString(ParamCmd.LANGID));
-    sb.append(getParamString(ParamCmd.REPLACE));
-    sb.append(getParamString(ParamCmd.AUT));
-    sb.append(getParamString(ParamCmd.TRUNCNBR));
-    sb.append(getParamString(ParamCmd.FIXNBR));
-    sb.append(getParamString(ParamCmd.ALWNULL));
-    sb.append(getParamString(ParamCmd.DEFINE));
-    sb.append(getParamString(ParamCmd.ENBPFRCOL));
-
-    sb.append(getParamString(ParamCmd.LICOPT));
-    sb.append(getParamString(ParamCmd.INCDIR));
-    sb.append(getParamString(ParamCmd.PGMINFO));
-    sb.append(getParamString(ParamCmd.INFOSTMF));
-    sb.append(getParamString(ParamCmd.PPGENOPT));
-    sb.append(getParamString(ParamCmd.PPSRCFILE));
-    sb.append(getParamString(ParamCmd.PPSRCMBR));
-    sb.append(getParamString(ParamCmd.PPSRCSTMF));
-    sb.append(getParamString(ParamCmd.TGTCCSID));
-    sb.append(getParamString(ParamCmd.REQPREXP));
-    sb.append(getParamString(ParamCmd.PPMINOUTLN));
-    */
-
     //if (ParamCmdSequence.keySet().contains(ParamCmd.DFTACTGRP)) {
     //  sb.append(getParamString(ParamCmd.STGMDL));  // Late optional
     //}    
