@@ -340,63 +340,7 @@ public class CompilationPattern {
 
   );
 
-  /* OPM */
-
-  // CRTRPGPGM
-  public static final List<ParamCmd> opmRpgPgmPattern = Arrays.asList(
-    ParamCmd.PGM,       // Program
-    ParamCmd.SRCFILE,   // Source file
-    ParamCmd.SRCMBR,    // Source member
-    ParamCmd.GENLVL,   
-    ParamCmd.TEXT,   
-
-    ParamCmd.OPTION,   
-    ParamCmd.GENOPT,   
-    ParamCmd.INDENT,   
-
-    ParamCmd.CVTOPT,  
-    ParamCmd.SRTSEQ,  
-    ParamCmd.LANGID,  
-    ParamCmd.SAAFLAG, 
-    ParamCmd.PRTFILE, 
-    ParamCmd.REPLACE, 
-    ParamCmd.TGTRLS,  
-    ParamCmd.USRPRF,  
-    ParamCmd.AUT,     
-    ParamCmd.PHSTRC,  
-    ParamCmd.ITDUMP,  
-
-    ParamCmd.SNPDUMP,   
-    ParamCmd.CODELIST,  
-    ParamCmd.IGNDECERR, 
-    ParamCmd.ALWNULL  
-
-  );
-
-  // CRTCLPGM
-  public static final List<ParamCmd> opmClPgmPattern = Arrays.asList(
-    ParamCmd.PGM,       // Program
-    ParamCmd.SRCFILE,   // Source file
-    ParamCmd.SRCMBR,    // Source member
-    ParamCmd.TEXT,   
-
-    ParamCmd.OUTPUT,
-    ParamCmd.OPTION,
-    ParamCmd.GENOPT,
-    ParamCmd.USRPRF,
-
-    ParamCmd.LOG,      
-    ParamCmd.ALWRTVSRC,
-    ParamCmd.REPLACE,  
-    ParamCmd.TGTRLS,   
-    ParamCmd.AUT,      
-    ParamCmd.SRTSEQ,   
-    ParamCmd.LANGID,   
-    ParamCmd.INCFILE  
-
-  );
-
-  /* Modules */
+  // Modules 
 
   // CRTRPGMOD
   public static final List<ParamCmd> RpgModulePattern = Arrays.asList(
@@ -470,7 +414,8 @@ public class CompilationPattern {
 
   );
 
-  /* Sql and RPG */
+  // Sql and RPG
+
   // CRTSQLRPGI
   public static final List<ParamCmd> SqlRpgPgmPattern = Arrays.asList(
     ParamCmd.OBJ, 
@@ -522,6 +467,63 @@ public class CompilationPattern {
 
   );
 
+  /* OPM */
+
+  // CRTRPGPGM
+  public static final List<ParamCmd> opmRpgPgmPattern = Arrays.asList(
+    ParamCmd.PGM,       // Program
+    ParamCmd.SRCFILE,   // Source file
+    ParamCmd.SRCMBR,    // Source member
+    ParamCmd.GENLVL,   
+    ParamCmd.TEXT,   
+
+    ParamCmd.OPTION,   
+    ParamCmd.GENOPT,   
+    ParamCmd.INDENT,   
+
+    ParamCmd.CVTOPT,  
+    ParamCmd.SRTSEQ,  
+    ParamCmd.LANGID,  
+    ParamCmd.SAAFLAG, 
+    ParamCmd.PRTFILE, 
+    ParamCmd.REPLACE, 
+    ParamCmd.TGTRLS,  
+    ParamCmd.USRPRF,  
+    ParamCmd.AUT,     
+    ParamCmd.PHSTRC,  
+    ParamCmd.ITDUMP,  
+
+    ParamCmd.SNPDUMP,   
+    ParamCmd.CODELIST,  
+    ParamCmd.IGNDECERR, 
+    ParamCmd.ALWNULL  
+
+  );
+
+  // CRTCLPGM
+  public static final List<ParamCmd> opmClPgmPattern = Arrays.asList(
+    ParamCmd.PGM,       // Program
+    ParamCmd.SRCFILE,   // Source file
+    ParamCmd.SRCMBR,    // Source member
+    ParamCmd.TEXT,   
+
+    ParamCmd.OUTPUT,
+    ParamCmd.OPTION,
+    ParamCmd.GENOPT,
+    ParamCmd.USRPRF,
+
+    ParamCmd.LOG,      
+    ParamCmd.ALWRTVSRC,
+    ParamCmd.REPLACE,  
+    ParamCmd.TGTRLS,   
+    ParamCmd.AUT,      
+    ParamCmd.SRTSEQ,   
+    ParamCmd.LANGID,   
+    ParamCmd.INCFILE  
+
+  );
+
+
   /* Sql */
   // RUNSQLSTM
   public static final List<ParamCmd> SqlPattern = Arrays.asList(
@@ -562,6 +564,23 @@ public class CompilationPattern {
 
   );
 
+  /* Maps compilation command to its pattern */
+  public static final Map<CompCmd, List<ParamCmd>> cmdToPatternMap = new EnumMap<>(CompCmd.class);
+
+  static{
+    /* ILE */
+    cmdToPatternMap.put(CompCmd.CRTSRVPGM, SrvpgmPattern);
+    cmdToPatternMap.put(CompCmd.CRTBNDRPG, ileRpgPgmPattern);
+    cmdToPatternMap.put(CompCmd.CRTBNDCL, ileClPgmPattern);
+    cmdToPatternMap.put(CompCmd.CRTRPGMOD, RpgModulePattern);
+    cmdToPatternMap.put(CompCmd.CRTCLMOD, ClleModulePattern);
+    cmdToPatternMap.put(CompCmd.CRTSQLRPGI, SqlRpgPgmPattern);
+    /* OPM */
+    cmdToPatternMap.put(CompCmd.CRTRPGPGM, opmRpgPgmPattern);
+    cmdToPatternMap.put(CompCmd.CRTCLPGM, opmClPgmPattern);
+    /* SQL */
+    cmdToPatternMap.put(CompCmd.RUNSQLSTM, SqlPattern);
+  }
 
   public static final List<ParamCmd> reqPgmParams = Arrays.asList(
       ParamCmd.PGM,       // Required first
@@ -620,7 +639,7 @@ public class CompilationPattern {
     /* Get compilation command */
 
     this.compilationCommand = typeToCmdMap.get(sourceType).get(objectType);
-
+    this.compilationPattern = cmdToPatternMap.get(this.compilationCommand);
     /* Command builders */
     
     switch (compilationCommand){
@@ -630,18 +649,18 @@ public class CompilationPattern {
         break;
 
       case CRTBNDRPG:
-        this.compilationPattern = ileRpgPgmPattern; // new ArrayList<>(ileRpgPgmPattern)
+        //this.compilationPattern = ileRpgPgmPattern; // new ArrayList<>(ileRpgPgmPattern)
         if (!ParamCmdSequence.containsKey(ParamCmd.DFTACTGRP)) {
           this.compilationPattern.remove(ParamCmd.STGMDL);
         }
       case CRTBNDCL:
-        this.compilationPattern = ileClPgmPattern;
+        //this.compilationPattern = ileClPgmPattern;
       case CRTCLPGM:
         this.cmdSupplier = this::buildBoundCmd;
         break;
         
       case CRTRPGPGM:
-        this.compilationPattern = opmRpgPgmPattern;
+        //this.compilationPattern = opmRpgPgmPattern;
         this.cmdSupplier = this::builOpmCmd;
         break;
 
