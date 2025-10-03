@@ -353,6 +353,8 @@ public class CompilationPattern {
 
   );
 
+  /* Modules */
+
   // CRTRPGMOD
   public static final List<ParamCmd> RpgModulePattern = Arrays.asList(
     ParamCmd.MODULE, 
@@ -396,6 +398,33 @@ public class CompilationPattern {
     ParamCmd.TGTCCSID,   
     ParamCmd.REQPREXP,   
     ParamCmd.PPMINOUTLN
+  );
+
+  // CRTCLMOD
+  public static final List<ParamCmd> ClleModulePattern = Arrays.asList(
+    ParamCmd.MODULE, 
+    ParamCmd.SRCFILE,
+    ParamCmd.SRCMBR, 
+    ParamCmd.SRCSTMF,
+    ParamCmd.TEXT,   
+    ParamCmd.OUTPUT, 
+    ParamCmd.OPTION,   
+
+    ParamCmd.LOG,
+    ParamCmd.ALWRTVSRC, 
+    ParamCmd.REPLACE,   
+    ParamCmd.TGTRLS,    
+    ParamCmd.AUT,       
+    ParamCmd.SRTSEQ,    
+    ParamCmd.LANGID,    
+    ParamCmd.OPTIMIZE,  
+    ParamCmd.DBGVIEW,   
+    ParamCmd.DBGENCKEY, 
+    ParamCmd.ENBPFRCOL, 
+    ParamCmd.INCFILE,  
+    ParamCmd.INCDIR,
+    ParamCmd.TGTCCSID
+
   );
 
   public static final List<ParamCmd> reqPgmParams = Arrays.asList(
