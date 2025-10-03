@@ -18,6 +18,7 @@ public class CompilationPattern {
   private Map<ParamCmd, String> ParamCmdSequence;
   Utilities.ParsedKey targetKey;
   Supplier<String> cmdSupplier; // Resolver map for command builders (functions that build command strings based on spec)
+  List<ParamCmd> compilationPattern;
 
   public enum CompCmd { 
     CRTRPGMOD, CRTSQLRPGI, CRTBNDRPG, CRTRPGPGM, CRTCLMOD, CRTBNDCL, CRTCLPGM, RUNSQLSTM, CRTSRVPGM, CRTDSPF, CRTLF, CRTPRTF, CRTMNU, CRTQMQRY;
@@ -45,7 +46,7 @@ public class CompilationPattern {
 
   public enum ParamCmd { 
     PGM, MODULE, OBJ, OBJTYPE, OUTPUT, OUTMBR, SRVPGM, BNDSRVPGM, LIBL, SRCFILE, SRCMBR, ACTGRP, DFTACTGRP, BNDDIR, COMMIT, TEXT, TGTCCSID, CRTFRMSTMF,
-    OPTION, TGTRLS, SORTSEQ_LIB,
+    OPTION, TGTRLS, SORTSEQ_LIB, SRCSTMF,
     // NEW: Added for (RPG/CL specific)
     GENLVL, DBGVIEW, DBGENCKEY, OPTIMIZE, INDENT, CVTOPT, SRTSEQ, LANGID, REPLACE, USRPRF, AUT, TRUNCNBR, FIXNBR, ALWNULL, DEFINE, ENBPFRCOL, PRFDTA, 
     LICOPT, INCDIR, PGMINFO, INFOSTMF, PPGENOPT, PPSRCFILE, PPSRCMBR, PPSRCSTMF, REQPREXP, PPMINOUTLN,
@@ -210,6 +211,60 @@ public class CompilationPattern {
 
   }  
 
+  public static final List<ParamCmd> ileRpgPgmPattern = Arrays.asList(
+    ParamCmd.PGM,       // Program
+    ParamCmd.SRCFILE,   // Source file
+    ParamCmd.SRCMBR,    // Source member
+    ParamCmd.SRCSTMF,   // Source stream file
+
+    ParamCmd.GENLVL,    // Generation severity level
+    ParamCmd.TEXT,      // Text 'description'
+
+    ParamCmd.DFTACTGRP,
+    ParamCmd.ACTGRP,
+    ParamCmd.STGMDL,    //TODO: Maybe this needs to be conditional
+
+    ParamCmd.BNDDIR,    // Binding directory
+
+    ParamCmd.OPTION,    // Compiler options
+
+    ParamCmd.DBGVIEW,   // Debugging views
+    ParamCmd.DBGENCKEY, // Debug encryption key
+    ParamCmd.OUTPUT,    // Output
+    ParamCmd.OPTIMIZE,  // Optimization level
+    ParamCmd.INDENT,    // Source listing indentation
+    ParamCmd.CVTOPT,    // Type conversion options
+
+    ParamCmd.SRTSEQ,    // Sort sequence
+    ParamCmd.LANGID,    // Sort sequence
+    ParamCmd.REPLACE,
+    ParamCmd.USRPRF,
+    ParamCmd.AUT,
+    ParamCmd.TRUNCNBR,
+    ParamCmd.FIXNBR,
+    ParamCmd.TGTRLS,
+    ParamCmd.ALWNULL,
+    ParamCmd.DEFINE,
+    ParamCmd.ENBPFRCOL,
+
+    ParamCmd.PRFDTA,
+    ParamCmd.LICOPT,
+    ParamCmd.INCDIR,
+    ParamCmd.PGMINFO,
+
+    ParamCmd.INFOSTMF,
+    ParamCmd.PPGENOPT,
+    ParamCmd.PPSRCFILE,
+    ParamCmd.PPSRCMBR,
+    ParamCmd.PPSRCSTMF,
+    ParamCmd.TGTCCSID,
+    ParamCmd.REQPREXP,
+    ParamCmd.PPMINOUTLN
+
+  );
+
+  
+
   public static final List<ParamCmd> reqPgmParams = Arrays.asList(
       ParamCmd.PGM,       // Required first
       ParamCmd.SRCFILE,
@@ -275,11 +330,15 @@ public class CompilationPattern {
       case CRTCLMOD:
         this.cmdSupplier = this::buildModuleCmd;
         break;
+
       case CRTBNDRPG:
+        this.compilationPattern = ileRpgPgmPattern;
       case CRTBNDCL:
+        this.compilationPattern = ileClPgmPattern;
       case CRTCLPGM:
         this.cmdSupplier = this::buildBoundCmd;
         break;
+        
       case CRTRPGPGM:
         this.cmdSupplier = this::builOpmCmd;
         break;
@@ -325,14 +384,21 @@ public class CompilationPattern {
 
     //TODO: This is the order for CRTBNDRPG. If it gets too convoluted, make a switch or a method for each command
 
-    for (ParamCmd param : ilePgmPattern) {
+    for (ParamCmd param : compilationPattern) {
       sb.append(getParamString(param));
     }
 
-    if (compilationCommand != CompCmd.CRTBNDCL){
-      sb.append(getParamString(ParamCmd.PRFDTA));
+    /* 
+    for (ParamCmd param : ilePgmPattern) {
+      sb.append(getParamString(param));
     }
+    */
 
+    //if (compilationCommand != CompCmd.CRTBNDCL){
+    //  sb.append(getParamString(ParamCmd.PRFDTA));
+    //}
+
+    /* 
     sb.append(getParamString(ParamCmd.GENLVL));
     // Additional params section
     sb.append(getParamString(ParamCmd.OPTION));
@@ -361,9 +427,11 @@ public class CompilationPattern {
     sb.append(getParamString(ParamCmd.TGTCCSID));
     sb.append(getParamString(ParamCmd.REQPREXP));
     sb.append(getParamString(ParamCmd.PPMINOUTLN));
-    if (ParamCmdSequence.keySet().contains(ParamCmd.DFTACTGRP)) {
-      sb.append(getParamString(ParamCmd.STGMDL));  // Late optional
-    }    
+    */
+
+    //if (ParamCmdSequence.keySet().contains(ParamCmd.DFTACTGRP)) {
+    //  sb.append(getParamString(ParamCmd.STGMDL));  // Late optional
+    //}    
 
     return sb.toString();
   }
