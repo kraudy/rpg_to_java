@@ -121,7 +121,9 @@ public class ObjectDescription {
       ParamCmdSequence.put(ParamCmd.TGTCCSID, ValCmd.JOB.toString());
     }
 
-    // ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.ALL.toString());
+    ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.ALL.toString());
+
+    ParamCmdSequence.put(ParamCmd.OPTION, ValCmd.EVENTF.toString());
 
   }
 
