@@ -24,6 +24,7 @@ public class ObjectDescription {
   public String sourceLibrary;
   public String sourceFile;
   public String sourceName;
+  public String sourceStmf;
   public SourceType sourceType;
   Utilities.ParsedKey targetKey;
 
@@ -80,7 +81,8 @@ public class ObjectDescription {
         @JsonProperty("targetKey") Utilities.ParsedKey targetKey,
         @JsonProperty("sourceLibrary") String sourceLibrary,
         @JsonProperty("sourceFile") String sourceFile,
-        @JsonProperty("sourceName") String sourceName) {
+        @JsonProperty("sourceName") String sourceName,
+        @JsonProperty("sourceStmf") String sourceStmf) {
 
     this.connection = connection;
     this.debug = debug;
@@ -89,6 +91,7 @@ public class ObjectDescription {
     this.sourceLibrary = sourceLibrary;
     this.sourceFile = (sourceFile.isEmpty()) ? SourceType.defaultSourcePf(this.targetKey.sourceType) : sourceFile; // TODO: Add logic for sourcePF or directory
     this.sourceName = (sourceName.isEmpty() ? this.targetKey.objectName : sourceName); //TODO: Add logic for stream files / members / default
+    this.sourceStmf = sourceStmf;
 
     /* Generate compilation params values from object description */
     //TODO: I'm not sure if these are needed now or maybe add them to the input validation in Utilities
@@ -112,6 +115,13 @@ public class ObjectDescription {
     
     ParamCmdSequence.put(ParamCmd.BNDSRVPGM, ValCmd.NONE.toString());
     ParamCmdSequence.put(ParamCmd.COMMIT, ValCmd.NONE.toString());
+
+    if (!sourceStmf.isEmpty()) {
+      ParamCmdSequence.put(ParamCmd.SRCSTMF, "'" + this.sourceStmf + "'");
+      ParamCmdSequence.put(ParamCmd.TGTCCSID, ValCmd.JOB.toString());
+    }
+
+    // ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.ALL.toString());
 
   }
 

@@ -129,6 +129,9 @@ public class ObjectCompiler implements Runnable{
   @Option(names = { "-sn", "--source-name" }, description = "Source member name (defaults to object name, command-specific *SPECIAL, or retrieved from object)")
   private String sourceName = "";
 
+  @Option(names = { "-stmf", "--source-stmf" }, description = "Source stream file path in IFS (e.g., /home/sources/hello.rpgle). Overrides source-lib/file/name if provided.")
+  private String sourceStmf = "";
+
   //TODO: Should this be part of the key?
   @Option(names = {"-st","--source-type"}, description = "Source type (e.g., RPGLE, CLLE) (defaults to retrieved from object if possible)", converter = SourceTypeConverter.class)
   private ObjectDescription.SourceType sourceType;
@@ -198,7 +201,8 @@ public class ObjectCompiler implements Runnable{
           targetKey,
           sourceLib, // Default to *LIBL
           sourceFile,
-          sourceName
+          sourceName,
+          sourceStmf  
     );
 
     try {

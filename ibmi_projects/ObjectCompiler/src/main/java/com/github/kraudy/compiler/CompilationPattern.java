@@ -161,7 +161,7 @@ public class CompilationPattern {
 
   public enum ValCmd { 
     FIRST, REPLACE, OUTFILE, LIBL, FILE, DTAARA, PGM, MODULE, OBJ, SRVPGM, CURLIB, ALL, CURRENT,
-    NONE, BASIC, FULL, LSTDBG,
+    NONE, BASIC, FULL, LSTDBG, JOB,
 
     YES, NO, STMT, SOURCE, LIST, HEX, JOBRUN, USER, LIBCRTAUT, PEP, NOCOL, PRINT, SNGLVL; 
 
@@ -639,13 +639,17 @@ public class CompilationPattern {
     /* Get compilation command */
 
     this.compilationCommand = typeToCmdMap.get(sourceType).get(objectType);
-    this.compilationPattern = cmdToPatternMap.get(this.compilationCommand); // new ArrayList<>(ileRpgPgmPattern)
+    //this.compilationPattern = cmdToPatternMap.get(this.compilationCommand); // new ArrayList<>(ileRpgPgmPattern)
+    this.compilationPattern = new ArrayList<>(cmdToPatternMap.get(this.compilationCommand));
     /* Command builders */
     
     switch (compilationCommand){
       case CRTRPGMOD:
+        if (ParamCmdSequence.containsKey(ParamCmd.SRCSTMF)) {
+          this.compilationPattern.remove(ParamCmd.SRCFILE);
+          this.compilationPattern.remove(ParamCmd.SRCMBR);
+        }
       case CRTCLMOD:
-        this.cmdSupplier = this::buildModuleCmd;
         break;
 
       case CRTBNDRPG:
@@ -654,21 +658,16 @@ public class CompilationPattern {
         }
       case CRTBNDCL:
       case CRTCLPGM:
-        this.cmdSupplier = this::buildBoundCmd;
         break;
         
       case CRTRPGPGM:
-        this.cmdSupplier = this::builOpmCmd;
         break;
 
       case CRTSQLRPGI:
-        this.cmdSupplier = this::buildSqlRpgCmd;
         break;
       case CRTSRVPGM:
-        this.cmdSupplier = this::buildSrvPgmCmd;
         break;
       case RUNSQLSTM:
-        this.cmdSupplier = this::buildSqlCmd;
         break;
       default: throw new IllegalArgumentException("Compilation command builder not found");
     }
@@ -686,86 +685,7 @@ public class CompilationPattern {
       sb.append(getParamString(param));
     }
 
-    //String params = this.cmdSupplier.get();
-    // Prepend the command name
     return compilationCommand.name() + sb.toString();
-  }
-
-  public String buildModuleCmd() {
-    // Similar to buildBoundCmd but without PGM/DFTACTGRP; add GENLVL, OPTION, etc.
-    StringBuilder sb = new StringBuilder();
-
-    sb.append(getParamString(ParamCmd.MODULE));
-    sb.append(getParamString(ParamCmd.SRCFILE));
-    sb.append(getParamString(ParamCmd.SRCMBR));
-
-    sb.append(getParamString(ParamCmd.TEXT));
-
-    return sb.toString();
-  }
-
-  public String buildBoundCmd() { // For CRTBNDRPG/CRTBNDCL
-    StringBuilder sb = new StringBuilder();               
-
-    //TODO: This is the order for CRTBNDRPG. If it gets too convoluted, make a switch or a method for each command
-
-    for (ParamCmd param : compilationPattern) {
-      sb.append(getParamString(param));
-    }
-
-    return sb.toString();
-  }
-
-  public String builOpmCmd() {  // For CRTRPGPGM/CRTCLPGM (similar but OPM-specific)
-    StringBuilder sb = new StringBuilder();
-
-    for (ParamCmd param : compilationPattern) {
-      sb.append(getParamString(param));
-    }
-
-    return sb.toString();
-  }
-
-  // For CRTSQLRPGI
-  public String buildSqlRpgCmd() {
-    StringBuilder sb = new StringBuilder();
-
-    sb.append(getParamString(ParamCmd.OBJ));
-    sb.append(getParamString(ParamCmd.OBJTYPE));
-    sb.append(getParamString(ParamCmd.SRCFILE));
-    sb.append(getParamString(ParamCmd.SRCMBR));
-
-    sb.append(getParamString(ParamCmd.TEXT));
-
-    return sb.toString();
-  }
-
-  // For CRTSRVPGM
-  public String buildSrvPgmCmd() {
-    StringBuilder sb = new StringBuilder();
-
-    sb.append(getParamString(ParamCmd.SRVPGM));
-    sb.append(getParamString(ParamCmd.MODULE));
-
-    sb.append(getParamString(ParamCmd.BNDSRVPGM));
-
-    sb.append(getParamString(ParamCmd.TEXT));
-
-    return sb.toString();
-  }
-
-  // For RUNSQLSTM
-  public String buildSqlCmd() {
-    StringBuilder sb = new StringBuilder();
-
-    sb.append(getParamString(ParamCmd.SRCFILE));
-    sb.append(getParamString(ParamCmd.SRCMBR));
-
-    sb.append(getParamString(ParamCmd.COMMIT));
-
-    sb.append(getParamString(ParamCmd.TEXT));
-
-    return sb.toString();
   }
 
   public  String getParamString(ParamCmd paramCmd){
