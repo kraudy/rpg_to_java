@@ -798,14 +798,22 @@ public class CompilationPattern {
 
       case CRTSQLRPGI:
         break;
+        
       case CRTSRVPGM:
         if (ParamCmdSequence.containsKey(ParamCmd.EXPORT)) {
           this.compilationPattern.remove(ParamCmd.SRCFILE);
           this.compilationPattern.remove(ParamCmd.SRCMBR);
         }
         break;
+
       case RUNSQLSTM:
         break;
+
+      case CRTDSPF:
+      case CRTPF:
+      case CRTLF:
+          break;
+
       default: throw new IllegalArgumentException("Compilation command builder not found");
     }
     //TODO: Add more builders for other commands

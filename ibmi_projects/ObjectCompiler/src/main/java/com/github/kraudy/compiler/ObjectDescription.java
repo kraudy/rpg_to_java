@@ -56,6 +56,8 @@ public class ObjectDescription {
         case CLP:
         case CLLE:
           return DftSrc.QCLSRC.name();
+        case DDS: //TODO: This need to be fixed for DSPF, PF and LF, maybe add objectType as param
+          return DftSrc.QDSPFSRC.name();
         case SQL:
           return DftSrc.QSQLSRC.name();
         default:
@@ -75,7 +77,7 @@ public class ObjectDescription {
 
   public enum PostCmpCmd { CHGOBJD }
 
-  public enum DftSrc { QRPGLESRC, QRPGSRC, QCLSRC, QSQLSRC, QSRVSRC } // TODO: Expand
+  public enum DftSrc { QRPGLESRC, QRPGSRC, QCLSRC, QSQLSRC, QSRVSRC, QDSPFSRC } // TODO: Expand
 
   @JsonCreator
   public ObjectDescription(
@@ -98,6 +100,7 @@ public class ObjectDescription {
 
     /* Generate compilation params values from object description */
     //TODO: I'm not sure if these are needed now or maybe add them to the input validation in Utilities
+    // Maybe if something like a library list is provided, these could be set to *LIBL
     //if (this.targetLibrary.isEmpty()) this.targetLibrary = ValCmd.LIBL.toString();
     //if (this.sourceName.isEmpty())    this.sourceName = CompCmd.compilationSourceName(compilationCommand);//ValCmd.PGM.toString();
 
@@ -106,14 +109,19 @@ public class ObjectDescription {
     // maybe based on object type?
     ParamCmdSequence.put(ParamCmd.OBJ, this.targetKey.library + "/" + this.targetKey.objectName);
     ParamCmdSequence.put(ParamCmd.PGM, this.targetKey.library + "/" + this.targetKey.objectName);
+    ParamCmdSequence.put(ParamCmd.FILE, this.targetKey.library + "/" + this.targetKey.objectName);
     ParamCmdSequence.put(ParamCmd.SRVPGM, this.targetKey.library + "/" + this.targetKey.objectName);
     ParamCmdSequence.put(ParamCmd.MODULE, this.targetKey.library + "/" + this.targetKey.objectName);
 
     ParamCmdSequence.put(ParamCmd.OBJTYPE, this.targetKey.objectType.toParam());
 
-    ParamCmdSequence.put(ParamCmd.SRCFILE, this.sourceLibrary + "/" + this.sourceFile);
+    //ParamCmdSequence.put(ParamCmd.SRCFILE, this.sourceLibrary + "/" + this.sourceFile);
+    //TODO: Changed it to same target library, could be overwritten later if a param is provided
+    ParamCmdSequence.put(ParamCmd.SRCFILE, this.targetKey.library + "/" + this.sourceFile);
 
     ParamCmdSequence.put(ParamCmd.SRCMBR, this.sourceName);
+
+    //ParamCmdSequence.put(ParamCmd.REPLACE, ValCmd.YES.toString());
 
     
     ParamCmdSequence.put(ParamCmd.BNDSRVPGM, ValCmd.NONE.toString());
