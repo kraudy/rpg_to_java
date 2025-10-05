@@ -69,7 +69,10 @@ public class CompilationPattern {
 
     // CRTPF
     RCDLEN, FILETYPE, MBR, SYSTEM, EXPDATE, MAXMBRS, ACCPTHSIZ, PAGESIZE, MAINT, RECOVER, FRCACCPTH, SIZE, ALLOCATE, CONTIG, UNIT, FRCRATIO,
-    DLTPCT, REUSEDLT, CCSID, ALWDLT, NODGRP, PTNKEY
+    DLTPCT, REUSEDLT, CCSID, ALWDLT, NODGRP, PTNKEY,
+
+    // CRTLF
+    DTAMBRS, FMTSLR
     ;
 
     public static ParamCmd fromString(String value) {
@@ -225,6 +228,8 @@ public class CompilationPattern {
     //clleMap.put(ObjectDescription.ObjectType.SRVPGM, CompCmd.CRTSRVPGM);
     typeToCmdMap.put(ObjectDescription.SourceType.CLLE, clleMap);
 
+    /* Sql maps */
+
     Map<ObjectDescription.ObjectType, CompCmd> sqlMap = new EnumMap<>(ObjectDescription.ObjectType.class);
     sqlMap.put(ObjectDescription.ObjectType.TABLE, CompCmd.RUNSQLSTM);
     sqlMap.put(ObjectDescription.ObjectType.LF, CompCmd.RUNSQLSTM);
@@ -234,11 +239,15 @@ public class CompilationPattern {
     sqlMap.put(ObjectDescription.ObjectType.FUNCTION, CompCmd.RUNSQLSTM);
     typeToCmdMap.put(ObjectDescription.SourceType.SQL, sqlMap);
 
+    /* Dds maps */
+
     Map<ObjectDescription.ObjectType, CompCmd> ddsMap = new EnumMap<>(ObjectDescription.ObjectType.class);
     ddsMap.put(ObjectDescription.ObjectType.PF, CompCmd.CRTPF);
     ddsMap.put(ObjectDescription.ObjectType.DSPF, CompCmd.CRTDSPF);
     ddsMap.put(ObjectDescription.ObjectType.LF, CompCmd.CRTLF);
     typeToCmdMap.put(ObjectDescription.SourceType.DDS, ddsMap);
+
+    //TODO: Maybe i could extend this to being also like a standard command executor. We'll see.
 
   }  
 
@@ -653,6 +662,37 @@ public class CompilationPattern {
     ParamCmd.AUT
   );
 
+  // CRTLF
+  public static final List<ParamCmd> ddsLfPattern = Arrays.asList(
+    ParamCmd.FILE,
+    ParamCmd.SRCFILE,
+    ParamCmd.SRCMBR,  
+    ParamCmd.GENLVL,  
+    ParamCmd.FLAG,    
+    ParamCmd.FILETYPE,
+    ParamCmd.MBR,     
+    ParamCmd.DTAMBRS, 
+    ParamCmd.TEXT,
+    ParamCmd.OPTION,
+    ParamCmd.SYSTEM,    
+    ParamCmd.MAXMBRS,   
+    ParamCmd.ACCPTHSIZ, 
+    ParamCmd.PAGESIZE,  
+    ParamCmd.MAINT,     
+    ParamCmd.RECOVER,   
+    ParamCmd.FRCACCPTH, 
+    ParamCmd.UNIT,      
+    ParamCmd.FMTSLR,
+    ParamCmd.FRCRATIO, 
+    ParamCmd.WAITFILE, 
+    ParamCmd.WAITRCD,  
+    ParamCmd.SHARE,    
+    ParamCmd.SRTSEQ,   
+    ParamCmd.LANGID,   
+    ParamCmd.LVLCHK,   
+    ParamCmd.AUT 
+  );
+
   /* Maps compilation command to its pattern */
   public static final Map<CompCmd, List<ParamCmd>> cmdToPatternMap = new EnumMap<>(CompCmd.class);
 
@@ -669,6 +709,10 @@ public class CompilationPattern {
     cmdToPatternMap.put(CompCmd.CRTCLPGM, opmClPgmPattern);
     /* SQL */
     cmdToPatternMap.put(CompCmd.RUNSQLSTM, SqlPattern);
+    /* DDS */
+    cmdToPatternMap.put(CompCmd.CRTDSPF, ddsDspfPattern);
+    cmdToPatternMap.put(CompCmd.CRTPF, ddsPfPattern);
+    cmdToPatternMap.put(CompCmd.CRTLF, ddsLfPattern);
   }
 
   public static final List<ParamCmd> reqPgmParams = Arrays.asList(
