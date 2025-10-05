@@ -259,6 +259,10 @@ public class ObjectCompiler implements Runnable{
 
     // For OPM, create temp members if source is IFS (reverse migration).
 
+    // TODO: CHKOBJ OBJ(ROBKRAUDY2/CUSTOMER) OBJTYPE(*FILE)
+    // DLTOBJ OBJ(ROBKRAUDY2/CUSTOMER) OBJTYPE(*FILE)
+    // Maybe i can put these in another parameter, like, a pre or post pattern of commands using a map   
+
     compile(commandStr);
   }
 

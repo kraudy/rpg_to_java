@@ -44,7 +44,7 @@ public class ObjectDescription {
       }
     } 
 
-    public static String defaultSourcePf (SourceType sourceType){
+    public static String defaultSourcePf (SourceType sourceType, ObjectType objectType){
       switch (sourceType){
         case RPG:
           return DftSrc.QRPGSRC.name(); //TODO: Add .name()? and return string?
@@ -57,7 +57,15 @@ public class ObjectDescription {
         case CLLE:
           return DftSrc.QCLSRC.name();
         case DDS: //TODO: This need to be fixed for DSPF, PF and LF, maybe add objectType as param
-          return DftSrc.QDSPFSRC.name();
+          switch (objectType) {
+            case DSPF:
+              return DftSrc.QDSPFSRC.name();
+            case PF:
+              return DftSrc.QPFSRC.name();
+            case LF:
+              break;
+          }
+          
         case SQL:
           return DftSrc.QSQLSRC.name();
         default:
@@ -68,16 +76,14 @@ public class ObjectDescription {
 
   public enum ObjectType { 
     PGM, SRVPGM, MODULE, TABLE, LF, VIEW, ALIAS, PROCEDURE, FUNCTION, PF, DSPF;
-    //public static String toParam(ObjectType objectType){
     public String toParam(){
-      // return "*" + objectType.name();
       return "*" + this.name();
     }
   } // Add more as needed
 
   public enum PostCmpCmd { CHGOBJD }
 
-  public enum DftSrc { QRPGLESRC, QRPGSRC, QCLSRC, QSQLSRC, QSRVSRC, QDSPFSRC } // TODO: Expand
+  public enum DftSrc { QRPGLESRC, QRPGSRC, QCLSRC, QSQLSRC, QSRVSRC, QDSPFSRC, QPFSRC } // TODO: Expand
 
   @JsonCreator
   public ObjectDescription(
@@ -94,7 +100,7 @@ public class ObjectDescription {
 
     this.targetKey = targetKey;
     this.sourceLibrary = sourceLibrary;
-    this.sourceFile = (sourceFile.isEmpty()) ? SourceType.defaultSourcePf(this.targetKey.sourceType) : sourceFile; // TODO: Add logic for sourcePF or directory
+    this.sourceFile = (sourceFile.isEmpty()) ? SourceType.defaultSourcePf(this.targetKey.sourceType, this.targetKey.objectType) : sourceFile; // TODO: Add logic for sourcePF or directory
     this.sourceName = (sourceName.isEmpty() ? this.targetKey.objectName : sourceName); //TODO: Add logic for stream files / members / default
     this.sourceStmf = sourceStmf;
 
