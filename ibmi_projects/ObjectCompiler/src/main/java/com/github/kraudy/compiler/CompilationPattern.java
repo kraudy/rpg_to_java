@@ -62,7 +62,10 @@ public class CompilationPattern {
     NAMING, ERRLVL, MARGINS, DECMPT, PROCESS, SECLVLTXT, SQLCURRULE, SYSTIME,
 
     // CRTSRVPGM
-    EXPORT, DETAIL, ALWUPD, ALWLIBUPD, ALWRINZ, ARGOPT, IPA, IPACTLFILE
+    EXPORT, DETAIL, ALWUPD, ALWLIBUPD, ALWRINZ, ARGOPT, IPA, IPACTLFILE,
+
+    // CRTDSPF
+    FILE, FLAG, DEV, MAXDEV, ENHDSP, RSTDSP, DFRWRT, CHRID, DECFMT, SFLENDTXT, WAITFILE, WAITRCD, DTAQ, SHARE, LVLCHK,
     ;
 
     public static ParamCmd fromString(String value) {
@@ -566,6 +569,36 @@ public class CompilationPattern {
     ParamCmd.DLYPRP,    
     ParamCmd.USRPRF,    
     ParamCmd.DYNUSRPRF
+
+  );
+
+  /* Files */
+  // CRTDSPF
+  public static final List<ParamCmd> DspFilePattern = Arrays.asList(
+    ParamCmd.FILE,    
+    ParamCmd.SRCFILE, 
+    ParamCmd.SRCMBR,  
+    ParamCmd.GENLVL,  
+    ParamCmd.FLAG,    
+    ParamCmd.DEV,     
+    ParamCmd.TEXT,
+    ParamCmd.OPTION,
+    ParamCmd.MAXDEV, 
+    ParamCmd.ENHDSP, 
+    ParamCmd.RSTDSP, 
+    ParamCmd.DFRWRT, 
+    ParamCmd.CHRID,  
+    ParamCmd.DECFMT,    
+    ParamCmd.SFLENDTXT, 
+    ParamCmd.WAITFILE,  
+    ParamCmd.WAITRCD,   
+    ParamCmd.DTAQ,      
+    ParamCmd.SHARE, 
+    ParamCmd.SRTSEQ,
+    ParamCmd.LANGID,  
+    ParamCmd.LVLCHK,  
+    ParamCmd.AUT,     
+    ParamCmd.REPLACE
 
   );
 

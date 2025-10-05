@@ -227,7 +227,7 @@ public class ObjectCompiler implements Runnable{
         sb.append(targetKey.library + "/" + mod);
         sb.append(" ");
       }
-      ParamCmdSequence.put(ParamCmd.MODULE, sb.toString());
+      ParamCmdSequence.put(ParamCmd.MODULE, sb.toString().trim());
 
       if (sourceStmf.isEmpty()) ParamCmdSequence.put(ParamCmd.EXPORT, CompilationPattern.ValCmd.ALL.toString());
     }
