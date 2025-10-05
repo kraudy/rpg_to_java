@@ -34,7 +34,7 @@ public class ObjectDescription {
   public enum SysCmd { CHGLIBL, DSPPGMREF, DSPOBJD, DSPDBR }
 
   public enum SourceType { 
-    RPG, RPGLE, SQLRPGLE, CLP, CLLE, SQL, BND;
+    RPG, RPGLE, SQLRPGLE, CLP, CLLE, SQL, BND, DDS;
 
     public static SourceType fromString(String value) {
       try {
@@ -64,7 +64,8 @@ public class ObjectDescription {
     }
   }
 
-  public enum ObjectType { PGM, SRVPGM, MODULE, TABLE, LF, VIEW, ALIAS, PROCEDURE, FUNCTION;
+  public enum ObjectType { 
+    PGM, SRVPGM, MODULE, TABLE, LF, VIEW, ALIAS, PROCEDURE, FUNCTION, PF, DSPF;
     //public static String toParam(ObjectType objectType){
     public String toParam(){
       // return "*" + objectType.name();

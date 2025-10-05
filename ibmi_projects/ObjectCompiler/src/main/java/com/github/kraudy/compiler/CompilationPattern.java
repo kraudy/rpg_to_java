@@ -23,7 +23,7 @@ public class CompilationPattern {
   List<ParamCmd> compilationPattern;
 
   public enum CompCmd { 
-    CRTRPGMOD, CRTSQLRPGI, CRTBNDRPG, CRTRPGPGM, CRTCLMOD, CRTBNDCL, CRTCLPGM, RUNSQLSTM, CRTSRVPGM, CRTDSPF, CRTLF, CRTPRTF, CRTMNU, CRTQMQRY;
+    CRTRPGMOD, CRTSQLRPGI, CRTBNDRPG, CRTRPGPGM, CRTCLMOD, CRTBNDCL, CRTCLPGM, RUNSQLSTM, CRTSRVPGM, CRTDSPF, CRTLF, CRTPRTF, CRTMNU, CRTQMQRY, CRTPF;
 
     //TODO: This could be done with a MAP. or a non static method.
     public static String compilationSourceName(CompCmd cmd){
@@ -66,6 +66,10 @@ public class CompilationPattern {
 
     // CRTDSPF
     FILE, FLAG, DEV, MAXDEV, ENHDSP, RSTDSP, DFRWRT, CHRID, DECFMT, SFLENDTXT, WAITFILE, WAITRCD, DTAQ, SHARE, LVLCHK,
+
+    // CRTPF
+    RCDLEN, FILETYPE, MBR, SYSTEM, EXPDATE, MAXMBRS, ACCPTHSIZ, PAGESIZE, MAINT, RECOVER, FRCACCPTH, SIZE, ALLOCATE, CONTIG, UNIT, FRCRATIO,
+    DLTPCT, REUSEDLT, CCSID, ALWDLT, NODGRP, PTNKEY
     ;
 
     public static ParamCmd fromString(String value) {
@@ -229,6 +233,12 @@ public class CompilationPattern {
     sqlMap.put(ObjectDescription.ObjectType.PROCEDURE, CompCmd.RUNSQLSTM);
     sqlMap.put(ObjectDescription.ObjectType.FUNCTION, CompCmd.RUNSQLSTM);
     typeToCmdMap.put(ObjectDescription.SourceType.SQL, sqlMap);
+
+    Map<ObjectDescription.ObjectType, CompCmd> ddsMap = new EnumMap<>(ObjectDescription.ObjectType.class);
+    ddsMap.put(ObjectDescription.ObjectType.PF, CompCmd.CRTPF);
+    ddsMap.put(ObjectDescription.ObjectType.DSPF, CompCmd.CRTDSPF);
+    ddsMap.put(ObjectDescription.ObjectType.LF, CompCmd.CRTLF);
+    typeToCmdMap.put(ObjectDescription.SourceType.DDS, ddsMap);
 
   }  
 
@@ -572,9 +582,10 @@ public class CompilationPattern {
 
   );
 
-  /* Files */
+  /* DDS Files */
+
   // CRTDSPF
-  public static final List<ParamCmd> DspFilePattern = Arrays.asList(
+  public static final List<ParamCmd> ddsDspfPattern = Arrays.asList(
     ParamCmd.FILE,    
     ParamCmd.SRCFILE, 
     ParamCmd.SRCMBR,  
@@ -599,7 +610,47 @@ public class CompilationPattern {
     ParamCmd.LVLCHK,  
     ParamCmd.AUT,     
     ParamCmd.REPLACE
+  );
 
+  // CRTPF
+  public static final List<ParamCmd> ddsPfPattern = Arrays.asList(
+    ParamCmd.FILE,
+    ParamCmd.SRCFILE,
+    ParamCmd.SRCMBR,  
+    ParamCmd.RCDLEN,  
+    ParamCmd.GENLVL,  
+    ParamCmd.FLAG,    
+    ParamCmd.FILETYPE,
+    ParamCmd.MBR,     
+    ParamCmd.TEXT,    
+    ParamCmd.OPTION,
+    ParamCmd.SYSTEM,   
+    ParamCmd.EXPDATE,  
+    ParamCmd.MAXMBRS,  
+    ParamCmd.ACCPTHSIZ,
+    ParamCmd.PAGESIZE, 
+    ParamCmd.MAINT,    
+    ParamCmd.RECOVER,  
+    ParamCmd.FRCACCPTH,
+    ParamCmd.SIZE,
+    ParamCmd.ALLOCATE,
+    ParamCmd.CONTIG,  
+    ParamCmd.UNIT,    
+    ParamCmd.FRCRATIO,
+    ParamCmd.WAITFILE,
+    ParamCmd.WAITRCD, 
+    ParamCmd.SHARE,   
+    ParamCmd.DLTPCT,  
+    ParamCmd.REUSEDLT,
+    ParamCmd.SRTSEQ,       
+    ParamCmd.LANGID,  
+    ParamCmd.CCSID, 
+    ParamCmd.ALWUPD,
+    ParamCmd.ALWDLT,
+    ParamCmd.LVLCHK,
+    ParamCmd.NODGRP,
+    ParamCmd.PTNKEY,
+    ParamCmd.AUT
   );
 
   /* Maps compilation command to its pattern */
