@@ -191,6 +191,7 @@ public class CompilationPattern {
     rpgMap.put(ObjectDescription.ObjectType.PGM, CompCmd.CRTRPGPGM);
     typeToCmdMap.put(ObjectDescription.SourceType.RPG, rpgMap);
 
+    // TODO: Maybe add another sourc type BND to map SRVPGM to CRTSRVPGM
     Map<ObjectDescription.ObjectType, CompCmd> rpgLeMap = new EnumMap<>(ObjectDescription.ObjectType.class);
     rpgLeMap.put(ObjectDescription.ObjectType.MODULE, CompCmd.CRTRPGMOD);
     rpgLeMap.put(ObjectDescription.ObjectType.PGM, CompCmd.CRTBNDRPG);

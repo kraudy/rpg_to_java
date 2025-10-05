@@ -132,6 +132,9 @@ public class ObjectCompiler implements Runnable{
   @Option(names = { "-stmf", "--source-stmf" }, description = "Source stream file path in IFS (e.g., /home/sources/hello.rpgle). Overrides source-lib/file/name if provided.")
   private String sourceStmf = "";
 
+  @Option(names = { "-mods","--modules"}, description = "Space-separated list of modules for SRVPGM (e.g., *CURLIB/HELLO2NENT *CURLIB/HELLO2BYE). Defaults to retrieved from existing object.")
+  private String modules = "";
+
   //TODO: Should this be part of the key?
   @Option(names = {"-st","--source-type"}, description = "Source type (e.g., RPGLE, CLLE) (defaults to retrieved from object if possible)", converter = SourceTypeConverter.class)
   private ObjectDescription.SourceType sourceType;
@@ -217,6 +220,8 @@ public class ObjectCompiler implements Runnable{
     /* Parameters values, if provided, overwrite retrieved values */
     if (!text.isEmpty()) ParamCmdSequence.put(ParamCmd.TEXT, "'" + text +"'");
     if (!actGrp.isEmpty()) ParamCmdSequence.put(ParamCmd.ACTGRP, actGrp);
+    if (!modules.isEmpty()) ParamCmdSequence.put(ParamCmd.MODULE, modules);
+
     odes.setParamsSequence(ParamCmdSequence);
 
     if (odes.getSourceType() == null) {

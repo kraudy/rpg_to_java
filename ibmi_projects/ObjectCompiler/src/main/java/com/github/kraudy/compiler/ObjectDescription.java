@@ -116,6 +116,7 @@ public class ObjectDescription {
     ParamCmdSequence.put(ParamCmd.BNDSRVPGM, ValCmd.NONE.toString());
     ParamCmdSequence.put(ParamCmd.COMMIT, ValCmd.NONE.toString());
 
+    //TODO: Should i move this to ObjectCompiler?
     if (!sourceStmf.isEmpty()) {
       ParamCmdSequence.put(ParamCmd.SRCSTMF, "'" + this.sourceStmf + "'");
       ParamCmdSequence.put(ParamCmd.TGTCCSID, ValCmd.JOB.toString());
