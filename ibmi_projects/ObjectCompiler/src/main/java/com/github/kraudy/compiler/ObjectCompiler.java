@@ -7,8 +7,9 @@ import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.sql.SQLException;
 import java.sql.Statement;
-
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
@@ -132,8 +133,8 @@ public class ObjectCompiler implements Runnable{
   @Option(names = { "-stmf", "--source-stmf" }, description = "Source stream file path in IFS (e.g., /home/sources/hello.rpgle). Overrides source-lib/file/name if provided.")
   private String sourceStmf = "";
 
-  @Option(names = { "-mods","--modules"}, description = "Space-separated list of modules for SRVPGM (e.g., *CURLIB/HELLO2NENT *CURLIB/HELLO2BYE). Defaults to retrieved from existing object.")
-  private String modules = "";
+  @Option(names = { "-mods","--modules"}, arity = "0..*", description = "Space-separated list of modules for SRVPGM (e.g., *CURLIB/HELLO2NENT *CURLIB/HELLO2BYE). Defaults to retrieved from existing object.")
+  private List<String> modules = new ArrayList<>();
 
   //TODO: Should this be part of the key?
   @Option(names = {"-st","--source-type"}, description = "Source type (e.g., RPGLE, CLLE) (defaults to retrieved from object if possible)", converter = SourceTypeConverter.class)
@@ -220,7 +221,16 @@ public class ObjectCompiler implements Runnable{
     /* Parameters values, if provided, overwrite retrieved values */
     if (!text.isEmpty()) ParamCmdSequence.put(ParamCmd.TEXT, "'" + text +"'");
     if (!actGrp.isEmpty()) ParamCmdSequence.put(ParamCmd.ACTGRP, actGrp);
-    if (!modules.isEmpty()) ParamCmdSequence.put(ParamCmd.MODULE, modules);
+    if (!modules.isEmpty()) {
+      StringBuilder sb = new StringBuilder(); 
+      for (String mod: modules){
+        sb.append(targetKey.library + "/" + mod);
+        sb.append(" ");
+      }
+      ParamCmdSequence.put(ParamCmd.MODULE, sb.toString());
+
+      if (sourceStmf.isEmpty()) ParamCmdSequence.put(ParamCmd.EXPORT, CompilationPattern.ValCmd.ALL.toString());
+    }
 
     odes.setParamsSequence(ParamCmdSequence);
 

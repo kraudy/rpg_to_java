@@ -34,7 +34,7 @@ public class ObjectDescription {
   public enum SysCmd { CHGLIBL, DSPPGMREF, DSPOBJD, DSPDBR }
 
   public enum SourceType { 
-    RPG, RPGLE, SQLRPGLE, CLP, CLLE, SQL;
+    RPG, RPGLE, SQLRPGLE, CLP, CLLE, SQL, BND;
 
     public static SourceType fromString(String value) {
       try {
@@ -51,6 +51,8 @@ public class ObjectDescription {
         case RPGLE:
         case SQLRPGLE:
           return DftSrc.QRPGLESRC.name();
+        case BND:
+          return DftSrc.QSRVSRC.name(); 
         case CLP:
         case CLLE:
           return DftSrc.QCLSRC.name();
@@ -72,7 +74,7 @@ public class ObjectDescription {
 
   public enum PostCmpCmd { CHGOBJD }
 
-  public enum DftSrc { QRPGLESRC, QRPGSRC, QCLSRC, QSQLSRC } // TODO: Expand
+  public enum DftSrc { QRPGLESRC, QRPGSRC, QCLSRC, QSQLSRC, QSRVSRC } // TODO: Expand
 
   @JsonCreator
   public ObjectDescription(

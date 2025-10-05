@@ -187,6 +187,10 @@ public class CompilationPattern {
      * Populate mapping from (ObjectDescription.SourceType, ObjectDescription.ObjectType) to CompCmd
     */
 
+    Map<ObjectDescription.ObjectType, CompCmd> bndMap = new EnumMap<>(ObjectDescription.ObjectType.class);
+    bndMap.put(ObjectDescription.ObjectType.SRVPGM, CompCmd.CRTSRVPGM);
+    typeToCmdMap.put(ObjectDescription.SourceType.BND, bndMap);
+
     Map<ObjectDescription.ObjectType, CompCmd> rpgMap = new EnumMap<>(ObjectDescription.ObjectType.class);
     rpgMap.put(ObjectDescription.ObjectType.PGM, CompCmd.CRTRPGPGM);
     typeToCmdMap.put(ObjectDescription.SourceType.RPG, rpgMap);
@@ -195,13 +199,13 @@ public class CompilationPattern {
     Map<ObjectDescription.ObjectType, CompCmd> rpgLeMap = new EnumMap<>(ObjectDescription.ObjectType.class);
     rpgLeMap.put(ObjectDescription.ObjectType.MODULE, CompCmd.CRTRPGMOD);
     rpgLeMap.put(ObjectDescription.ObjectType.PGM, CompCmd.CRTBNDRPG);
-    rpgLeMap.put(ObjectDescription.ObjectType.SRVPGM, CompCmd.CRTSRVPGM);
+    //rpgLeMap.put(ObjectDescription.ObjectType.SRVPGM, CompCmd.CRTSRVPGM);
     typeToCmdMap.put(ObjectDescription.SourceType.RPGLE, rpgLeMap);
 
     Map<ObjectDescription.ObjectType, CompCmd> sqlRpgLeMap = new EnumMap<>(ObjectDescription.ObjectType.class);
     sqlRpgLeMap.put(ObjectDescription.ObjectType.MODULE, CompCmd.CRTSQLRPGI);
     sqlRpgLeMap.put(ObjectDescription.ObjectType.PGM, CompCmd.CRTSQLRPGI);
-    sqlRpgLeMap.put(ObjectDescription.ObjectType.SRVPGM, CompCmd.CRTSRVPGM);
+    //sqlRpgLeMap.put(ObjectDescription.ObjectType.SRVPGM, CompCmd.CRTSRVPGM);
     typeToCmdMap.put(ObjectDescription.SourceType.SQLRPGLE, sqlRpgLeMap);
 
     Map<ObjectDescription.ObjectType, CompCmd> clpMap = new EnumMap<>(ObjectDescription.ObjectType.class);
@@ -211,7 +215,7 @@ public class CompilationPattern {
     Map<ObjectDescription.ObjectType, CompCmd> clleMap = new EnumMap<>(ObjectDescription.ObjectType.class);
     clleMap.put(ObjectDescription.ObjectType.MODULE, CompCmd.CRTCLMOD);
     clleMap.put(ObjectDescription.ObjectType.PGM, CompCmd.CRTBNDCL);
-    clleMap.put(ObjectDescription.ObjectType.SRVPGM, CompCmd.CRTSRVPGM);
+    //clleMap.put(ObjectDescription.ObjectType.SRVPGM, CompCmd.CRTSRVPGM);
     typeToCmdMap.put(ObjectDescription.SourceType.CLLE, clleMap);
 
     Map<ObjectDescription.ObjectType, CompCmd> sqlMap = new EnumMap<>(ObjectDescription.ObjectType.class);
@@ -667,6 +671,10 @@ public class CompilationPattern {
       case CRTSQLRPGI:
         break;
       case CRTSRVPGM:
+        if (ParamCmdSequence.containsKey(ParamCmd.EXPORT)) {
+          this.compilationPattern.remove(ParamCmd.SRCFILE);
+          this.compilationPattern.remove(ParamCmd.SRCMBR);
+        }
         break;
       case RUNSQLSTM:
         break;
