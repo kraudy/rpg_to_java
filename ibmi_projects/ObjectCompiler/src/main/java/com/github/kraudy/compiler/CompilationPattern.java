@@ -798,7 +798,7 @@ public class CompilationPattern {
 
       case CRTSQLRPGI:
         // This command does not accepts *ALL
-        
+        ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.SOURCE.toString());
         break;
 
       case CRTSRVPGM:
