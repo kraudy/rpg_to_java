@@ -797,8 +797,10 @@ public class CompilationPattern {
         break;
 
       case CRTSQLRPGI:
-        break;
+        // This command does not accepts *ALL
         
+        break;
+
       case CRTSRVPGM:
         if (ParamCmdSequence.containsKey(ParamCmd.EXPORT)) {
           this.compilationPattern.remove(ParamCmd.SRCFILE);

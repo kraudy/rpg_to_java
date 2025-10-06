@@ -49,8 +49,9 @@ public class ObjectDescription {
         case RPG:
           return DftSrc.QRPGSRC.name(); //TODO: Add .name()? and return string?
         case RPGLE:
-        case SQLRPGLE:
           return DftSrc.QRPGLESRC.name();
+        case SQLRPGLE:
+          return DftSrc.QSQLRPGSRC.name();
         case BND:
           return DftSrc.QSRVSRC.name(); 
         case CLP:
@@ -63,7 +64,7 @@ public class ObjectDescription {
             case PF:
               return DftSrc.QPFSRC.name();
             case LF:
-              break;
+              return DftSrc.QLFSRC.name();
           }
           
         case SQL:
@@ -83,7 +84,7 @@ public class ObjectDescription {
 
   public enum PostCmpCmd { CHGOBJD }
 
-  public enum DftSrc { QRPGLESRC, QRPGSRC, QCLSRC, QSQLSRC, QSRVSRC, QDSPFSRC, QPFSRC } // TODO: Expand
+  public enum DftSrc { QRPGLESRC, QRPGSRC, QCLSRC, QSQLSRC, QSRVSRC, QDSPFSRC, QPFSRC, QLFSRC, QSQLRPGSRC, QSQLMODSRC }
 
   @JsonCreator
   public ObjectDescription(
