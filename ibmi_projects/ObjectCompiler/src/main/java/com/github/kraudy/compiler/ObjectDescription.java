@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.kraudy.compiler.CompilationPattern.CompCmd;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
+import com.github.kraudy.migrator.SourceMigrator;
 
 // Core struct for capturing compilation specs (JSON-friendly via Jackson)
 public class ObjectDescription {
@@ -27,6 +28,7 @@ public class ObjectDescription {
   public String sourceStmf;
   public SourceType sourceType;
   Utilities.ParsedKey targetKey;
+  SourceMigrator migrator;
 
   public Map<CompilationPattern.ParamCmd, String> ParamCmdSequence = new HashMap<>();
 
@@ -90,6 +92,7 @@ public class ObjectDescription {
   public ObjectDescription(
         Connection connection,
         boolean debug,
+        SourceMigrator migrator,
         @JsonProperty("targetKey") Utilities.ParsedKey targetKey,
         @JsonProperty("sourceLibrary") String sourceLibrary,
         @JsonProperty("sourceFile") String sourceFile,
@@ -98,6 +101,7 @@ public class ObjectDescription {
 
     this.connection = connection;
     this.debug = debug;
+    this.migrator = migrator;
 
     this.targetKey = targetKey;
     this.sourceLibrary = sourceLibrary;

@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
+import com.github.kraudy.migrator.SourceMigrator;
 import com.ibm.as400.access.AS400;
 import com.ibm.as400.access.AS400Message;
 import com.ibm.as400.access.AS400SecurityException;
@@ -35,6 +36,7 @@ public class ObjectCompiler implements Runnable{
   private final User currentUser;
   private ObjectDescription odes;
   private CompilationPattern cpat;
+  private SourceMigrator migrator;
 
 
   static class LibraryConverter implements CommandLine.ITypeConverter<String> {
@@ -185,6 +187,9 @@ public class ObjectCompiler implements Runnable{
     this.currentUser = new User(system, system.getUserId());
     this.currentUser.loadUserInformation();
 
+    // Migrator
+    this.migrator = new SourceMigrator(system, connection);
+
   }
 
   public void run() {
@@ -196,6 +201,7 @@ public class ObjectCompiler implements Runnable{
     this.odes = new ObjectDescription(
           connection,
           debug,
+          this.migrator,
           //TODO: Maybe i should pass these as the topo key. The Key should uniquely indentify an object
           targetKey,
           sourceLib, // Default to *LIBL

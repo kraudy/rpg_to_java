@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
+import com.github.kraudy.migrator.SourceMigrator;
 
 
 public class CompilationPattern {
@@ -21,6 +22,7 @@ public class CompilationPattern {
   Utilities.ParsedKey targetKey;
   Supplier<String> cmdSupplier; // Resolver map for command builders (functions that build command strings based on spec)
   List<ParamCmd> compilationPattern;
+  private SourceMigrator migrator;
 
   public enum CompCmd { 
     CRTRPGMOD, CRTSQLRPGI, CRTBNDRPG, CRTRPGPGM, CRTCLMOD, CRTBNDCL, CRTCLPGM, RUNSQLSTM, CRTSRVPGM, CRTDSPF, CRTLF, CRTPRTF, CRTMNU, CRTQMQRY, CRTPF;
@@ -758,8 +760,9 @@ public class CompilationPattern {
       opmPgmPattern.addAll(releasePgmParams);
   }
 
-  //public CompilationPattern(ObjectDescription odes){
   public CompilationPattern(ObjectDescription odes){
+
+    this.migrator = odes.migrator;
 
     this.objectType = odes.targetKey.objectType;
     //this.targetKey = odes.targetKey;
@@ -772,7 +775,6 @@ public class CompilationPattern {
     /* Get compilation command */
 
     this.compilationCommand = typeToCmdMap.get(sourceType).get(objectType);
-    //this.compilationPattern = cmdToPatternMap.get(this.compilationCommand); // new ArrayList<>(ileRpgPgmPattern)
     this.compilationPattern = new ArrayList<>(cmdToPatternMap.get(this.compilationCommand));
     /* Command builders */
     
