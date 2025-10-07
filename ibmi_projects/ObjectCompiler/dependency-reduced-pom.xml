@@ -39,6 +39,19 @@
       </plugin>
     </plugins>
   </build>
+  <profiles>
+    <profile>
+      <id>github</id>
+      <repositories>
+        <repository>
+          <snapshots />
+          <id>github</id>
+          <name>GitHub kraudy Apache Maven Packages</name>
+          <url>https://maven.pkg.github.com/kraudy/SourceMigrator</url>
+        </repository>
+      </repositories>
+    </profile>
+  </profiles>
   <dependencies>
     <dependency>
       <groupId>org.junit.jupiter</groupId>

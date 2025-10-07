@@ -103,8 +103,5 @@
       </repositories>
     </profile>
   </profiles>
-  <activeProfiles>
-    <activeProfile>github</activeProfile>
-  </activeProfiles>
-
+  
 </project>
