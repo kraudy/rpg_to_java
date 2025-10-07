@@ -162,11 +162,6 @@ public class ObjectCompiler implements Runnable{
   @Option(names = "--bnddir", description = "Binding directories (space-separated). Defaults to *NONE.")
   private String bndDir = CompilationPattern.ValCmd.NONE.toString(); // "*NONE"
 
-  @Option(names = "--stgmdl", description = "Storage model (*SNGLVL, *TERASPACE, *INHERIT). Defaults to *SNGLVL.")
-  private String stgMdl = CompilationPattern.ValCmd.SNGLVL.toString(); // "*SNGLVL"
-
-  // Add more: --define (for macros), --inline, --sysifcopt, --teraspace, etc.
-
   /* Options */
   @Option(names = "-x", description = "Debug")
   private boolean debug = false;
@@ -290,6 +285,7 @@ public class ObjectCompiler implements Runnable{
       }
       for (AS400Message msg : messages) {
         System.out.println(msg.getID() + ": " + msg.getText());
+        // SQL9010 : Object already exists
       }
     } catch (AS400SecurityException | ErrorCompletingRequestException | IOException | InterruptedException | PropertyVetoException | SQLException e) {
       e.printStackTrace();

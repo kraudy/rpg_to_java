@@ -76,7 +76,7 @@ public class ObjectDescription {
   }
 
   public enum ObjectType { 
-    PGM, SRVPGM, MODULE, TABLE, LF, VIEW, ALIAS, PROCEDURE, FUNCTION, PF, DSPF;
+    PGM, SRVPGM, MODULE, TABLE, LF, INDEX, VIEW, ALIAS, PROCEDURE, FUNCTION, PF, DSPF;
     public String toParam(){
       return "*" + this.name();
     }

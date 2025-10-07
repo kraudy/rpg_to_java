@@ -232,7 +232,7 @@ public class CompilationPattern {
 
     Map<ObjectDescription.ObjectType, CompCmd> sqlMap = new EnumMap<>(ObjectDescription.ObjectType.class);
     sqlMap.put(ObjectDescription.ObjectType.TABLE, CompCmd.RUNSQLSTM);
-    sqlMap.put(ObjectDescription.ObjectType.LF, CompCmd.RUNSQLSTM);
+    sqlMap.put(ObjectDescription.ObjectType.INDEX, CompCmd.RUNSQLSTM);
     sqlMap.put(ObjectDescription.ObjectType.VIEW, CompCmd.RUNSQLSTM);
     sqlMap.put(ObjectDescription.ObjectType.ALIAS, CompCmd.RUNSQLSTM);
     sqlMap.put(ObjectDescription.ObjectType.PROCEDURE, CompCmd.RUNSQLSTM);
@@ -809,6 +809,8 @@ public class CompilationPattern {
         break;
 
       case RUNSQLSTM:
+        ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.SOURCE.toString());
+        ParamCmdSequence.put(ParamCmd.OPTION, ValCmd.LIST.toString());
         break;
 
       case CRTDSPF:

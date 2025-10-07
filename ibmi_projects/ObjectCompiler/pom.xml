@@ -17,6 +17,12 @@
     </dependency>
 
     <dependency>
+      <groupId>com.github.kraudy.migrator</groupId>
+      <artifactId>sourcemigrator</artifactId>  <!-- Lowercase to match -->
+      <version>1.0-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
         <groupId>io.github.theprez</groupId>
         <artifactId>dotenv-java-ibmi</artifactId>
         <version>0.0.2</version>
@@ -81,5 +87,24 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>github</id>
+      <repositories>
+        <repository>
+          <id>github</id>
+          <name>GitHub kraudy Apache Maven Packages</name>
+          <url>https://maven.pkg.github.com/kraudy/SourceMigrator</url>
+          <snapshots>
+            <enabled>true</enabled>
+          </snapshots>
+        </repository>
+      </repositories>
+    </profile>
+  </profiles>
+  <activeProfiles>
+    <activeProfile>github</activeProfile>
+  </activeProfiles>
 
 </project>
