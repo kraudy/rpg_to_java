@@ -762,7 +762,14 @@ public class CompilationPattern {
 
   public CompilationPattern(ObjectDescription odes){
 
-    this.migrator = odes.migrator;
+    //this.migrator = new SourceMigrator(system, connection, targetKey.library, targetKey.);
+
+    //TODO: Add another method to migrator like setParams() to set the library, sourcefile, etc later
+    try {
+      this.migrator = new SourceMigrator(odes.system, odes.connection);
+    } catch (Exception e){
+      e.printStackTrace();
+    }
 
     this.objectType = odes.targetKey.objectType;
     //this.targetKey = odes.targetKey;
@@ -788,6 +795,7 @@ public class CompilationPattern {
         break;
 
       case CRTBNDRPG:
+        
         if (!ParamCmdSequence.containsKey(ParamCmd.DFTACTGRP)) {
           this.compilationPattern.remove(ParamCmd.STGMDL);
         }

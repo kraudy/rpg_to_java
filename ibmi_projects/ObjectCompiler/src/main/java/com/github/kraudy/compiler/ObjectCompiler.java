@@ -187,9 +187,6 @@ public class ObjectCompiler implements Runnable{
     this.currentUser = new User(system, system.getUserId());
     this.currentUser.loadUserInformation();
 
-    // Migrator
-    this.migrator = new SourceMigrator(system, connection);
-
   }
 
   public void run() {
@@ -198,10 +195,14 @@ public class ObjectCompiler implements Runnable{
 
     //TODO: Add --dry-run to just run without executing. Just to generate the command string
 
+    // Migrator
+
+
+
     this.odes = new ObjectDescription(
+          system,
           connection,
           debug,
-          this.migrator,
           //TODO: Maybe i should pass these as the topo key. The Key should uniquely indentify an object
           targetKey,
           sourceLib, // Default to *LIBL

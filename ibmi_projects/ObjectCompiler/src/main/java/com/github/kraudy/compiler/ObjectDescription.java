@@ -7,6 +7,8 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.ibm.as400.access.AS400;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.kraudy.compiler.CompilationPattern.CompCmd;
@@ -16,7 +18,7 @@ import com.github.kraudy.migrator.SourceMigrator;
 
 // Core struct for capturing compilation specs (JSON-friendly via Jackson)
 public class ObjectDescription {
-  private final Connection connection;
+  public final Connection connection;
   private final boolean debug;
   //TODO: Make this private, add set method and move to another file
   //public String targetLibrary;
@@ -28,7 +30,7 @@ public class ObjectDescription {
   public String sourceStmf;
   public SourceType sourceType;
   Utilities.ParsedKey targetKey;
-  SourceMigrator migrator;
+  AS400 system;
 
   public Map<CompilationPattern.ParamCmd, String> ParamCmdSequence = new HashMap<>();
 
@@ -90,9 +92,9 @@ public class ObjectDescription {
 
   @JsonCreator
   public ObjectDescription(
+        AS400 system,
         Connection connection,
         boolean debug,
-        SourceMigrator migrator,
         @JsonProperty("targetKey") Utilities.ParsedKey targetKey,
         @JsonProperty("sourceLibrary") String sourceLibrary,
         @JsonProperty("sourceFile") String sourceFile,
@@ -101,7 +103,7 @@ public class ObjectDescription {
 
     this.connection = connection;
     this.debug = debug;
-    this.migrator = migrator;
+    this.system = system;
 
     this.targetKey = targetKey;
     this.sourceLibrary = sourceLibrary;
