@@ -338,9 +338,14 @@ public class ObjectDescription {
         if (!actgrp.isEmpty()) ParamCmdSequence.put(ParamCmd.ACTGRP, actgrp);
         if ("QILE".equals(actgrp)) ParamCmdSequence.put(ParamCmd.DFTACTGRP, ValCmd.NO.toString());
 
-
+        try {
          retrieveBoundModuleInfo(rsObj.getString("PROGRAM_ENTRY_PROCEDURE_MODULE_LIBRARY").trim(), 
                                          rsObj.getString("PROGRAM_ENTRY_PROCEDURE_MODULE").trim());
+        } catch (IllegalArgumentException e) {
+          if (debug) {
+            System.err.println("Warning: Could not retrieve bound module info: " + e.getMessage() + ". Using defaults.");
+          }
+        }
       }
 
       // For OPM-specific (e.g., SAAFLAG, if in view)
@@ -374,9 +379,9 @@ public class ObjectDescription {
                 "BOUND_MODULE, " +
                 "MODULE_ATTRIBUTE, " +
                 "MODULE_CREATE_TIMESTAMP, " +
-                "SOURCE_FILE_LIBRARY, " +
-                "SOURCE_FILE, " +
-                "SOURCE_FILE_MEMBER, " +
+                "COALESCE(SOURCE_FILE_LIBRARY, '') As SOURCE_FILE_LIBRARY, " +
+                "COALESCE(SOURCE_FILE, '') As SOURCE_FILE, " +
+                "COALESCE(SOURCE_FILE_MEMBER, '') As SOURCE_FILE_MEMBER, " +
                 "COALESCE(SOURCE_STREAM_FILE_PATH, '') As SOURCE_STREAM_FILE_PATH, " +
                 "SOURCE_CHANGE_TIMESTAMP, " +
                 "MODULE_CCSID, " +

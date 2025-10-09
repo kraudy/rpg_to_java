@@ -766,7 +766,7 @@ public class CompilationPattern {
 
     //TODO: Add another method to migrator like setParams() to set the library, sourcefile, etc later
     try {
-      this.migrator = new SourceMigrator(odes.system, odes.connection);
+      this.migrator = new SourceMigrator(odes.system, odes.connection, true, true);
     } catch (Exception e){
       e.printStackTrace();
     }
@@ -797,8 +797,7 @@ public class CompilationPattern {
       case CRTBNDRPG:
         // if SRCSTMF is not specified, then set migration
         if (!ParamCmdSequence.containsKey(ParamCmd.SRCSTMF)) {
-          String sourcePfName =  ParamCmdSequence.get(ParamCmd.SRCFILE).trim().split("/")[1];
-          this.migrator.setParams(odes.targetKey.library, sourcePfName, Arrays.asList(odes.targetKey.objectName), "sources", true, true);
+          this.migrator.setParams(ParamCmdSequence.get(ParamCmd.SRCFILE), odes.targetKey.objectName, "sources");
           this.migrator.api(); // Try to migrate this thing
           System.out.println("After calling migration api");
           

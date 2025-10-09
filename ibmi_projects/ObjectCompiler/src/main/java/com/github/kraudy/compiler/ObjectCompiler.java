@@ -215,7 +215,8 @@ public class ObjectCompiler implements Runnable{
       odes.getObjectInfo();
     } catch (Exception e) {
       //TODO: Change logging for SLF4J or java.util.logging 
-      if (verbose) System.err.println("Object not found; using defaults.");
+      //if (verbose) System.err.println("Object not found; using defaults.");
+      e.printStackTrace();
     }
 
     Map<CompilationPattern.ParamCmd, String> ParamCmdSequence = new HashMap<>();
