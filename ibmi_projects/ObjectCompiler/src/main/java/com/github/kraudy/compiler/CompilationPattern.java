@@ -801,12 +801,8 @@ public class CompilationPattern {
           this.migrator.setParams(odes.targetKey.library, sourcePfName, Arrays.asList(odes.targetKey.objectName), "sources", true, true);
           this.migrator.api(); // Try to migrate this thing
           System.out.println("After calling migration api");
-          // Use the actual resolved outDir path (or compute it consistently; avoid hardcoding /tmp/)
-          // For now, assuming getOutputDirectory("sources") + "/" + library + "/" + sourcePfName + "/" + objectName + ".rpgle"
-          // But to match exactly, the full migrated path from migrator (e.g., return it from api()).
-          // Maybe create a method that returns the path
-          String migratedStmfPath = "/home/ROBKRAUDY/sources/" + odes.targetKey.library + "/" + sourcePfName + "/" + odes.targetKey.objectName + "." + odes.targetKey.sourceType.name();  // Adjust extension if needed (e.g., + ".rpgle")
-          ParamCmdSequence.put(ParamCmd.SRCSTMF, "'" + migratedStmfPath + "'");
+          
+          ParamCmdSequence.put(ParamCmd.SRCSTMF, this.migrator.getFirstPath());
 
           ParamCmdSequence.put(ParamCmd.TGTCCSID, ValCmd.JOB.toString()); // Needed to compile from stream files
 
