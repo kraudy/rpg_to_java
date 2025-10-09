@@ -7,8 +7,6 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.ibm.as400.access.AS400;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.kraudy.compiler.CompilationPattern.CompCmd;
@@ -30,7 +28,7 @@ public class ObjectDescription {
   public String sourceStmf;
   public SourceType sourceType;
   Utilities.ParsedKey targetKey;
-  AS400 system;
+  SourceMigrator migrator;
 
   public Map<CompilationPattern.ParamCmd, String> ParamCmdSequence = new HashMap<>();
 
@@ -92,7 +90,7 @@ public class ObjectDescription {
 
   @JsonCreator
   public ObjectDescription(
-        AS400 system,
+        SourceMigrator migrator,
         Connection connection,
         boolean debug,
         @JsonProperty("targetKey") Utilities.ParsedKey targetKey,
@@ -103,7 +101,7 @@ public class ObjectDescription {
 
     this.connection = connection;
     this.debug = debug;
-    this.system = system;
+    this.migrator = migrator;
 
     this.targetKey = targetKey;
     this.sourceLibrary = sourceLibrary;

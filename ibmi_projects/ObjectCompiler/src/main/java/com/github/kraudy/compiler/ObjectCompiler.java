@@ -196,11 +196,14 @@ public class ObjectCompiler implements Runnable{
     //TODO: Add --dry-run to just run without executing. Just to generate the command string
 
     // Migrator
-
-
+    try {
+      this.migrator = new SourceMigrator(this.system, this.connection, true, true);
+    } catch (Exception e){
+      e.printStackTrace();
+    }
 
     this.odes = new ObjectDescription(
-          system,
+          migrator,
           connection,
           debug,
           //TODO: Maybe i should pass these as the topo key. The Key should uniquely indentify an object

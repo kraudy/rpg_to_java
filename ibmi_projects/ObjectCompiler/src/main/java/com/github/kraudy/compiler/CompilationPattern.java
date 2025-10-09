@@ -760,16 +760,10 @@ public class CompilationPattern {
       opmPgmPattern.addAll(releasePgmParams);
   }
 
+  //TODO: Maybe overload this to only pass the key as parameter or get the data and call with specific values
   public CompilationPattern(ObjectDescription odes){
 
-    //this.migrator = new SourceMigrator(system, connection, targetKey.library, targetKey.);
-
-    //TODO: Add another method to migrator like setParams() to set the library, sourcefile, etc later
-    try {
-      this.migrator = new SourceMigrator(odes.system, odes.connection, true, true);
-    } catch (Exception e){
-      e.printStackTrace();
-    }
+    this.migrator = odes.migrator;
 
     this.objectType = odes.targetKey.objectType;
     //this.targetKey = odes.targetKey;
