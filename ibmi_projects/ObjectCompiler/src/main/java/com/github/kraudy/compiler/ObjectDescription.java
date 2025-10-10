@@ -143,7 +143,15 @@ public class ObjectDescription {
         ParamCmdSequence.put(ParamCmd.SRCMBR, this.sourceName);
         break;
 
+      case CRTDSPF:
+      case CRTPF:
+      case CRTLF:
+        ParamCmdSequence.put(ParamCmd.FILE, this.targetKey.library + "/" + this.targetKey.objectName);
+        ParamCmdSequence.put(ParamCmd.SRCFILE, this.targetKey.library + "/" + this.sourceFile);
+        ParamCmdSequence.put(ParamCmd.SRCMBR, this.sourceName);
+        break;
       
+
 
       default:
         break;
