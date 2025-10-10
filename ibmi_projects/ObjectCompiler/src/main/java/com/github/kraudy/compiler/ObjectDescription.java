@@ -10,6 +10,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.kraudy.compiler.CompilationPattern.CompCmd;
+import static com.github.kraudy.compiler.CompilationPattern.typeToCmdMap;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 import com.github.kraudy.migrator.SourceMigrator;
@@ -29,6 +30,7 @@ public class ObjectDescription {
   public SourceType sourceType;
   Utilities.ParsedKey targetKey;
   SourceMigrator migrator;
+  CompCmd compilationCommand;
 
   public Map<CompilationPattern.ParamCmd, String> ParamCmdSequence = new HashMap<>();
 
@@ -109,34 +111,40 @@ public class ObjectDescription {
     this.sourceName = (sourceName.isEmpty() ? this.targetKey.objectName : sourceName); //TODO: Add logic for stream files / members / default
     this.sourceStmf = sourceStmf;
 
+    this.compilationCommand = CompilationPattern.getCompilationCommand(this.targetKey.sourceType, this.targetKey.objectType);
+
     /* Generate compilation params values from object description */
     //TODO: I'm not sure if these are needed now or maybe add them to the input validation in Utilities
-    // Maybe if something like a library list is provided, these could be set to *LIBL
+    //TODO: Add a library list param so these could be set to *LIBL and we don't need to be dealing
+    // with library names, maybe later they could be resolved if needed
     //if (this.targetLibrary.isEmpty()) this.targetLibrary = ValCmd.LIBL.toString();
     //if (this.sourceName.isEmpty())    this.sourceName = CompCmd.compilationSourceName(compilationCommand);//ValCmd.PGM.toString();
 
-    /* Set default values */
-    //TODO: Condition wich of these are used to not put them all
-    // maybe based on object type?
-    ParamCmdSequence.put(ParamCmd.OBJ, this.targetKey.library + "/" + this.targetKey.objectName);
-    ParamCmdSequence.put(ParamCmd.PGM, this.targetKey.library + "/" + this.targetKey.objectName);
-    ParamCmdSequence.put(ParamCmd.FILE, this.targetKey.library + "/" + this.targetKey.objectName);
-    ParamCmdSequence.put(ParamCmd.SRVPGM, this.targetKey.library + "/" + this.targetKey.objectName);
-    ParamCmdSequence.put(ParamCmd.MODULE, this.targetKey.library + "/" + this.targetKey.objectName);
+    //TODO: Set another switch specifically for SRCFILE, SRCMBR and SRCSTMF
 
-    ParamCmdSequence.put(ParamCmd.OBJTYPE, this.targetKey.objectType.toParam());
+    /* Set default values */
+    switch (this.compilationCommand) {
+      case CRTSQLRPGI:
+        ParamCmdSequence.put(ParamCmd.OBJ, this.targetKey.library + "/" + this.targetKey.objectName);
+        ParamCmdSequence.put(ParamCmd.OBJTYPE, this.targetKey.objectType.toParam());
+        ParamCmdSequence.put(ParamCmd.SRCFILE, this.targetKey.library + "/" + this.sourceFile);
+        ParamCmdSequence.put(ParamCmd.SRCMBR, this.sourceName);
+        ParamCmdSequence.put(ParamCmd.COMMIT, ValCmd.NONE.toString());
+        ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.SOURCE.toString());
+        break;
+    
+
+
+      default:
+        break;
+    }
+
 
     //ParamCmdSequence.put(ParamCmd.SRCFILE, this.sourceLibrary + "/" + this.sourceFile);
     //TODO: Changed it to same target library, could be overwritten later if a param is provided
-    ParamCmdSequence.put(ParamCmd.SRCFILE, this.targetKey.library + "/" + this.sourceFile);
 
-    ParamCmdSequence.put(ParamCmd.SRCMBR, this.sourceName);
 
     //ParamCmdSequence.put(ParamCmd.REPLACE, ValCmd.YES.toString());
-
-    
-    ParamCmdSequence.put(ParamCmd.BNDSRVPGM, ValCmd.NONE.toString());
-    ParamCmdSequence.put(ParamCmd.COMMIT, ValCmd.NONE.toString());
 
     //TODO: Should i move this to ObjectCompiler?
     if (!sourceStmf.isEmpty()) {
@@ -144,7 +152,6 @@ public class ObjectDescription {
       ParamCmdSequence.put(ParamCmd.TGTCCSID, ValCmd.JOB.toString());
     }
 
-    ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.ALL.toString());
 
     ParamCmdSequence.put(ParamCmd.OPTION, ValCmd.EVENTF.toString());
 

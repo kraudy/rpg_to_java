@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
+import com.github.kraudy.compiler.ObjectDescription.ObjectType;
+import com.github.kraudy.compiler.ObjectDescription.SourceType;
 import com.github.kraudy.migrator.SourceMigrator;
 
 
@@ -794,6 +796,7 @@ public class CompilationPattern {
       case CRTSRVPGM:
       case RUNSQLSTM:
         if (!ParamCmdSequence.containsKey(ParamCmd.SRCSTMF)) {
+          System.out.println("SRCFILE data: " + ParamCmdSequence.get(ParamCmd.SRCFILE));
           this.migrator.setParams(ParamCmdSequence.get(ParamCmd.SRCFILE), odes.targetKey.objectName, "sources");
           this.migrator.api(); // Try to migrate this thing
           System.out.println("After calling migration api");
@@ -821,6 +824,8 @@ public class CompilationPattern {
       case CRTQMQRY:
           break;
     }
+
+    /* Pattern logic */
     
     switch (this.compilationCommand){
       case CRTRPGMOD:
@@ -843,9 +848,8 @@ public class CompilationPattern {
         break;
 
       case CRTSQLRPGI:
-        // This command does not accepts *ALL
+        //TODO: Something is putting this to *ALL in object description, find it and remove this
         ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.SOURCE.toString());
-
         if (ParamCmdSequence.containsKey(ParamCmd.SRCSTMF)) {
           ParamCmdSequence.put(ParamCmd.CVTCCSID, ValCmd.JOB.toString());
         }
@@ -859,8 +863,6 @@ public class CompilationPattern {
         break;
 
       case RUNSQLSTM:
-        ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.SOURCE.toString());
-        ParamCmdSequence.put(ParamCmd.OPTION, ValCmd.LIST.toString());
         break;
 
       case CRTDSPF:
@@ -874,6 +876,10 @@ public class CompilationPattern {
       default: throw new IllegalArgumentException("Compilation command builder not found");
     }
     //TODO: Add more builders for other commands
+  }
+
+  public static CompCmd getCompilationCommand(SourceType sourceType, ObjectType objectType){
+    return typeToCmdMap.get(sourceType).get(objectType);
   }
 
   public CompCmd getCompilationCommand(){
