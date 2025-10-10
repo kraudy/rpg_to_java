@@ -133,7 +133,17 @@ public class ObjectDescription {
         ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.SOURCE.toString());
         break;
     
+      case CRTBNDRPG:
+      case CRTBNDCL:
+        ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.ALL.toString());
+      case CRTRPGPGM:
+      case CRTCLPGM:
+        ParamCmdSequence.put(ParamCmd.PGM, this.targetKey.library + "/" + this.targetKey.objectName);
+        ParamCmdSequence.put(ParamCmd.SRCFILE, this.targetKey.library + "/" + this.sourceFile);
+        ParamCmdSequence.put(ParamCmd.SRCMBR, this.sourceName);
+        break;
 
+      
 
       default:
         break;
