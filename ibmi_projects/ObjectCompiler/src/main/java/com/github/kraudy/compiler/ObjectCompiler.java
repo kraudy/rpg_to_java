@@ -228,6 +228,8 @@ public class ObjectCompiler implements Runnable{
     if (!text.isEmpty()) ParamCmdSequence.put(ParamCmd.TEXT, "'" + text +"'");
     if (!actGrp.isEmpty()) ParamCmdSequence.put(ParamCmd.ACTGRP, actGrp);
     if (!modules.isEmpty()) {
+      //TODO: Change these to *LIBL and set object library as curlib then DSPOBJ or something
+      // can be used to resolve the actual library if needed
       StringBuilder sb = new StringBuilder(); 
       for (String mod: modules){
         sb.append(targetKey.library + "/" + mod);
@@ -235,7 +237,7 @@ public class ObjectCompiler implements Runnable{
       }
       ParamCmdSequence.put(ParamCmd.MODULE, sb.toString().trim());
 
-      if (sourceStmf.isEmpty()) ParamCmdSequence.put(ParamCmd.EXPORT, CompilationPattern.ValCmd.ALL.toString());
+      //if (sourceStmf.isEmpty()) ParamCmdSequence.put(ParamCmd.EXPORT, CompilationPattern.ValCmd.ALL.toString());
     }
 
     odes.setParamsSequence(ParamCmdSequence);

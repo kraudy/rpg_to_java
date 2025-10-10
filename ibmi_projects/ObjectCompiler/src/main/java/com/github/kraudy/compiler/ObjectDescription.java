@@ -167,6 +167,8 @@ public class ObjectDescription {
   }
 
   public void getObjectInfo() throws SQLException {
+    //TODO: Here, make a switch or something for different objects
+    // like: PGM, MODULE, SRVPGM, TABLE, TRIGGER, etc
     try (Statement stmt = connection.createStatement();
         ResultSet rsObj = stmt.executeQuery(
           "SELECT PROGRAM_LIBRARY, " + // programLibrary

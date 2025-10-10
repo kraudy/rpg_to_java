@@ -761,6 +761,9 @@ public class CompilationPattern {
   }
 
   //TODO: Maybe overload this to only pass the key as parameter or get the data and call with specific values
+  //public CompilationPattern(targetKey){
+  //public CompilationPattern(objectType, sourceType){
+  //public CompilationPattern(compilationCommand, compilationPattern){
   public CompilationPattern(ObjectDescription odes){
 
     this.migrator = odes.migrator;
@@ -779,17 +782,15 @@ public class CompilationPattern {
     this.compilationPattern = new ArrayList<>(cmdToPatternMap.get(this.compilationCommand));
     /* Command builders */
     
-    switch (compilationCommand){
-      case CRTRPGMOD:
-        if (ParamCmdSequence.containsKey(ParamCmd.SRCSTMF)) {
-          this.compilationPattern.remove(ParamCmd.SRCFILE);
-          this.compilationPattern.remove(ParamCmd.SRCMBR);
-        }
+    /* Migration logic */
+    switch (this.compilationCommand){
       case CRTCLMOD:
         break;
 
+      case CRTRPGMOD:
       case CRTBNDRPG:
-        // if SRCSTMF is not specified, then set migration
+      case CRTBNDCL:
+
         if (!ParamCmdSequence.containsKey(ParamCmd.SRCSTMF)) {
           this.migrator.setParams(ParamCmdSequence.get(ParamCmd.SRCFILE), odes.targetKey.objectName, "sources");
           this.migrator.api(); // Try to migrate this thing
@@ -802,6 +803,33 @@ public class CompilationPattern {
           this.compilationPattern.remove(ParamCmd.SRCFILE);
           this.compilationPattern.remove(ParamCmd.SRCMBR);
         }
+
+      case CRTCLPGM:
+        break;
+        
+      case CRTRPGPGM:
+        //TODO: For these, if stmf is provided, migrate in reverse to a sourcepf in qtemp or something
+        break;
+
+      case CRTDSPF:
+      case CRTPF:
+      case CRTLF:
+      case CRTPRTF:
+      case CRTMNU:
+      case CRTQMQRY:
+          break;
+    }
+    
+    switch (this.compilationCommand){
+      case CRTRPGMOD:
+        if (ParamCmdSequence.containsKey(ParamCmd.SRCSTMF)) {
+          this.compilationPattern.remove(ParamCmd.SRCFILE);
+          this.compilationPattern.remove(ParamCmd.SRCMBR);
+        }
+      case CRTCLMOD:
+        break;
+
+      case CRTBNDRPG:
         if (!ParamCmdSequence.containsKey(ParamCmd.DFTACTGRP)) {
           this.compilationPattern.remove(ParamCmd.STGMDL);
         }
@@ -815,6 +843,10 @@ public class CompilationPattern {
       case CRTSQLRPGI:
         // This command does not accepts *ALL
         ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.SOURCE.toString());
+
+        if (ParamCmdSequence.containsKey(ParamCmd.SRCSTMF)) {
+          ParamCmdSequence.put(ParamCmd.CVTCCSID, ValCmd.JOB.toString());
+        }
         break;
 
       case CRTSRVPGM:
@@ -832,6 +864,9 @@ public class CompilationPattern {
       case CRTDSPF:
       case CRTPF:
       case CRTLF:
+      case CRTPRTF:
+      case CRTMNU:
+      case CRTQMQRY:
           break;
 
       default: throw new IllegalArgumentException("Compilation command builder not found");
