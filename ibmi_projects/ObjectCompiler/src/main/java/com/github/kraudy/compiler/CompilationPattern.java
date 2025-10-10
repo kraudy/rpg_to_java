@@ -790,7 +790,9 @@ public class CompilationPattern {
       case CRTRPGMOD:
       case CRTBNDRPG:
       case CRTBNDCL:
-
+      case CRTSQLRPGI:
+      case CRTSRVPGM:
+      case RUNSQLSTM:
         if (!ParamCmdSequence.containsKey(ParamCmd.SRCSTMF)) {
           this.migrator.setParams(ParamCmdSequence.get(ParamCmd.SRCFILE), odes.targetKey.objectName, "sources");
           this.migrator.api(); // Try to migrate this thing
