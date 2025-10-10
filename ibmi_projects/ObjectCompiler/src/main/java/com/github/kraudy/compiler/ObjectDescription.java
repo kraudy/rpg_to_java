@@ -151,7 +151,29 @@ public class ObjectDescription {
         ParamCmdSequence.put(ParamCmd.SRCMBR, this.sourceName);
         break;
       
+      case CRTSRVPGM:
+        ParamCmdSequence.put(ParamCmd.SRVPGM, this.targetKey.library + "/" + this.targetKey.objectName);
+        ParamCmdSequence.put(ParamCmd.MODULE, this.targetKey.library + "/" + this.targetKey.objectName);
+        ParamCmdSequence.put(ParamCmd.SRCFILE, this.targetKey.library + "/" + this.sourceFile);
+        ParamCmdSequence.put(ParamCmd.SRCMBR, this.sourceName);
+        ParamCmdSequence.put(ParamCmd.BNDSRVPGM, ValCmd.NONE.toString());
+        break; //TODO: I had these two together, check if it is needed or simply add 
 
+      case CRTRPGMOD:
+      case CRTCLMOD:
+        ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.ALL.toString());
+        ParamCmdSequence.put(ParamCmd.MODULE, this.targetKey.library + "/" + this.targetKey.objectName);
+        ParamCmdSequence.put(ParamCmd.SRCFILE, this.targetKey.library + "/" + this.sourceFile);
+        ParamCmdSequence.put(ParamCmd.SRCMBR, this.sourceName);
+        break;
+
+      case RUNSQLSTM:
+        ParamCmdSequence.put(ParamCmd.SRCFILE, this.targetKey.library + "/" + this.sourceFile);
+        ParamCmdSequence.put(ParamCmd.SRCMBR, this.sourceName);
+        ParamCmdSequence.put(ParamCmd.COMMIT, ValCmd.NONE.toString());
+        ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.SOURCE.toString());
+        ParamCmdSequence.put(ParamCmd.OPTION, ValCmd.LIST.toString());
+        break;
 
       default:
         break;
