@@ -7,6 +7,8 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
+import java.util.function.Supplier;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.kraudy.compiler.CompilationPattern.CompCmd;
@@ -29,6 +31,7 @@ public class ObjectDescription {
   Utilities.ParsedKey targetKey;
   SourceMigrator migrator;
   CompCmd compilationCommand;
+  Supplier<Void> getObjInfo;
 
   public Map<CompilationPattern.ParamCmd, String> ParamCmdSequence = new HashMap<>();
 
@@ -113,18 +116,17 @@ public class ObjectDescription {
     //TODO: I'm not sure if these are needed now or maybe add them to the input validation in Utilities
     //TODO: Add a library list param so these could be set to *LIBL and we don't need to be dealing
     // with library names, maybe later they could be resolved if needed
-    //if (this.targetLibrary.isEmpty()) this.targetLibrary = ValCmd.LIBL.toString();
+    //this.targetLibrary = ValCmd.LIBL.toString();
     //if (this.sourceName.isEmpty())    this.sourceName = CompCmd.compilationSourceName(compilationCommand);//ValCmd.PGM.toString();
 
     //TODO: Set another switch specifically for SRCFILE, SRCMBR and SRCSTMF
+    
 
     /* Set default values */
     switch (this.compilationCommand) {
       case CRTSQLRPGI:
         ParamCmdSequence.put(ParamCmd.OBJ, this.targetKey.library + "/" + this.targetKey.objectName);
         ParamCmdSequence.put(ParamCmd.OBJTYPE, this.targetKey.objectType.toParam());
-        ParamCmdSequence.put(ParamCmd.SRCFILE, this.targetKey.library + "/" + this.sourceFile);
-        ParamCmdSequence.put(ParamCmd.SRCMBR, this.sourceName);
         ParamCmdSequence.put(ParamCmd.COMMIT, ValCmd.NONE.toString());
         ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.SOURCE.toString());
         break;
@@ -135,23 +137,17 @@ public class ObjectDescription {
       case CRTRPGPGM:
       case CRTCLPGM:
         ParamCmdSequence.put(ParamCmd.PGM, this.targetKey.library + "/" + this.targetKey.objectName);
-        ParamCmdSequence.put(ParamCmd.SRCFILE, this.targetKey.library + "/" + this.sourceFile);
-        ParamCmdSequence.put(ParamCmd.SRCMBR, this.sourceName);
         break;
 
       case CRTDSPF:
       case CRTPF:
       case CRTLF:
         ParamCmdSequence.put(ParamCmd.FILE, this.targetKey.library + "/" + this.targetKey.objectName);
-        ParamCmdSequence.put(ParamCmd.SRCFILE, this.targetKey.library + "/" + this.sourceFile);
-        ParamCmdSequence.put(ParamCmd.SRCMBR, this.sourceName);
         break;
       
       case CRTSRVPGM:
         ParamCmdSequence.put(ParamCmd.SRVPGM, this.targetKey.library + "/" + this.targetKey.objectName);
         ParamCmdSequence.put(ParamCmd.MODULE, this.targetKey.library + "/" + this.targetKey.objectName);
-        ParamCmdSequence.put(ParamCmd.SRCFILE, this.targetKey.library + "/" + this.sourceFile);
-        ParamCmdSequence.put(ParamCmd.SRCMBR, this.sourceName);
         ParamCmdSequence.put(ParamCmd.BNDSRVPGM, ValCmd.NONE.toString());
         break; //TODO: I had these two together, check if it is needed or simply add 
 
@@ -159,13 +155,9 @@ public class ObjectDescription {
       case CRTCLMOD:
         ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.ALL.toString());
         ParamCmdSequence.put(ParamCmd.MODULE, this.targetKey.library + "/" + this.targetKey.objectName);
-        ParamCmdSequence.put(ParamCmd.SRCFILE, this.targetKey.library + "/" + this.sourceFile);
-        ParamCmdSequence.put(ParamCmd.SRCMBR, this.sourceName);
         break;
 
       case RUNSQLSTM:
-        ParamCmdSequence.put(ParamCmd.SRCFILE, this.targetKey.library + "/" + this.sourceFile);
-        ParamCmdSequence.put(ParamCmd.SRCMBR, this.sourceName);
         ParamCmdSequence.put(ParamCmd.COMMIT, ValCmd.NONE.toString());
         ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.SOURCE.toString());
         ParamCmdSequence.put(ParamCmd.OPTION, ValCmd.LIST.toString());
@@ -175,15 +167,11 @@ public class ObjectDescription {
         break;
     }
 
-
     //ParamCmdSequence.put(ParamCmd.SRCFILE, this.sourceLibrary + "/" + this.sourceFile);
     //TODO: Changed it to same target library, could be overwritten later if a param is provided
-
-
     //ParamCmdSequence.put(ParamCmd.REPLACE, ValCmd.YES.toString());
-
-
     //ParamCmdSequence.put(ParamCmd.OPTION, ValCmd.EVENTF.toString());
+
 
   }
 
@@ -203,9 +191,31 @@ public class ObjectDescription {
     }
   }
 
-  public void getObjectInfo() throws SQLException {
-    //TODO: Here, make a switch or something for different objects
-    // like: PGM, MODULE, SRVPGM, TABLE, TRIGGER, etc
+  public void getObjectInfo () throws SQLException {
+    switch (this.targetKey.objectType) {
+      case PGM : getPgmInfo(this.targetKey.library, this.targetKey.objectName, this.targetKey.objectType); break;
+     
+      case MODULE : getModuleInfo(this.targetKey.library, this.targetKey.objectName); break;
+
+      case SRVPGM :
+      case TABLE :
+      case LF :
+      case INDEX :
+      case VIEW :
+      case ALIAS :
+      case PROCEDURE :
+      case FUNCTION :
+      case PF :
+      case DSPF :
+        break;
+    
+      default:
+        break;
+    }
+  }
+
+  private void getPgmInfo(String library, String objetName, ObjectType objectType) throws SQLException {
+    
     try (Statement stmt = connection.createStatement();
         ResultSet rsObj = stmt.executeQuery(
           "SELECT PROGRAM_LIBRARY, " + // programLibrary
@@ -376,7 +386,7 @@ public class ObjectDescription {
         if ("QILE".equals(actgrp)) ParamCmdSequence.put(ParamCmd.DFTACTGRP, ValCmd.NO.toString());
 
         try {
-         retrieveBoundModuleInfo(rsObj.getString("PROGRAM_ENTRY_PROCEDURE_MODULE_LIBRARY").trim(), 
+         getModuleInfo(rsObj.getString("PROGRAM_ENTRY_PROCEDURE_MODULE_LIBRARY").trim(), 
                                          rsObj.getString("PROGRAM_ENTRY_PROCEDURE_MODULE").trim());
         } catch (IllegalArgumentException e) {
           if (debug) {
@@ -399,12 +409,13 @@ public class ObjectDescription {
       for (CompilationPattern.ParamCmd paramCmd : this.ParamCmdSequence.keySet()){
         System.out.println(paramCmd.name() + ": " + this.ParamCmdSequence.get(paramCmd));
       }
+
       
     }
   }
 
   // NEW: Query BOUND_MODULE_INFO for module-specific fields (e.g., GENLVL, OPTION)
-  public void retrieveBoundModuleInfo(String entryModuleLib, String entryModule) throws SQLException {
+  private void getModuleInfo(String entryModuleLib, String entryModule) throws SQLException {
     if (entryModuleLib == null || entryModule == null) throw new IllegalArgumentException("Entry module or lib are null");;  // Skip if no entry module
 
     try (Statement stmt = connection.createStatement();
@@ -518,6 +529,8 @@ public class ObjectDescription {
     }
   }
 
-  
+  private void getSrvpgmInfo(){
+
+  }
 
 }

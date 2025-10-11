@@ -877,7 +877,7 @@ public class CompilationPattern {
 
       default: throw new IllegalArgumentException("Compilation command builder not found");
     }
-    //TODO: Add more builders for other commands
+    //TODO: Could use odes.setParamsSequence() to set update the odes sequence
   }
 
   public static CompCmd getCompilationCommand(SourceType sourceType, ObjectType objectType){
