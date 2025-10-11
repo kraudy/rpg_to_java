@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
+import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 import com.github.kraudy.migrator.SourceMigrator;
 import com.ibm.as400.access.AS400;
 import com.ibm.as400.access.AS400Message;
@@ -212,8 +213,7 @@ public class ObjectCompiler implements Runnable{
           targetKey,
           sourceLib, // Default to *LIBL
           sourceFile,
-          sourceName,
-          sourceStmf  
+          sourceName
     );
 
     try {
@@ -239,7 +239,12 @@ public class ObjectCompiler implements Runnable{
       }
       ParamCmdSequence.put(ParamCmd.MODULE, sb.toString().trim());
 
+      //TODO: Add this in object description and validate in comp pattern to remove it if srstmf is present
       //if (sourceStmf.isEmpty()) ParamCmdSequence.put(ParamCmd.EXPORT, CompilationPattern.ValCmd.ALL.toString());
+    }
+    if (!this.sourceStmf.isEmpty()) {
+      ParamCmdSequence.put(ParamCmd.SRCSTMF, "'" + this.sourceStmf + "'");
+      ParamCmdSequence.put(ParamCmd.TGTCCSID, ValCmd.JOB.toString());
     }
 
     odes.setParamsSequence(ParamCmdSequence);

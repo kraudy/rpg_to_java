@@ -10,7 +10,6 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.kraudy.compiler.CompilationPattern.CompCmd;
-import static com.github.kraudy.compiler.CompilationPattern.typeToCmdMap;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 import com.github.kraudy.migrator.SourceMigrator;
@@ -26,7 +25,6 @@ public class ObjectDescription {
   public String sourceLibrary;
   public String sourceFile;
   public String sourceName;
-  public String sourceStmf;
   public SourceType sourceType;
   Utilities.ParsedKey targetKey;
   SourceMigrator migrator;
@@ -98,8 +96,7 @@ public class ObjectDescription {
         @JsonProperty("targetKey") Utilities.ParsedKey targetKey,
         @JsonProperty("sourceLibrary") String sourceLibrary,
         @JsonProperty("sourceFile") String sourceFile,
-        @JsonProperty("sourceName") String sourceName,
-        @JsonProperty("sourceStmf") String sourceStmf) {
+        @JsonProperty("sourceName") String sourceName) {
 
     this.connection = connection;
     this.debug = debug;
@@ -109,7 +106,6 @@ public class ObjectDescription {
     this.sourceLibrary = sourceLibrary;
     this.sourceFile = (sourceFile.isEmpty()) ? SourceType.defaultSourcePf(this.targetKey.sourceType, this.targetKey.objectType) : sourceFile; // TODO: Add logic for sourcePF or directory
     this.sourceName = (sourceName.isEmpty() ? this.targetKey.objectName : sourceName); //TODO: Add logic for stream files / members / default
-    this.sourceStmf = sourceStmf;
 
     this.compilationCommand = CompilationPattern.getCompilationCommand(this.targetKey.sourceType, this.targetKey.objectType);
 
@@ -186,14 +182,8 @@ public class ObjectDescription {
 
     //ParamCmdSequence.put(ParamCmd.REPLACE, ValCmd.YES.toString());
 
-    //TODO: Should i move this to ObjectCompiler?
-    if (!sourceStmf.isEmpty()) {
-      ParamCmdSequence.put(ParamCmd.SRCSTMF, "'" + this.sourceStmf + "'");
-      ParamCmdSequence.put(ParamCmd.TGTCCSID, ValCmd.JOB.toString());
-    }
 
-
-    ParamCmdSequence.put(ParamCmd.OPTION, ValCmd.EVENTF.toString());
+    //ParamCmdSequence.put(ParamCmd.OPTION, ValCmd.EVENTF.toString());
 
   }
 
