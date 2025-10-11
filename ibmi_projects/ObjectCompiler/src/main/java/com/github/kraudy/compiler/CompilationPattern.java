@@ -863,6 +863,8 @@ public class CompilationPattern {
         break;
 
       case RUNSQLSTM:
+        //TODO: Something is putting this to *EVENTF in object description, find it and remove this
+        ParamCmdSequence.put(ParamCmd.OPTION, ValCmd.LIST.toString());
         break;
 
       case CRTDSPF:

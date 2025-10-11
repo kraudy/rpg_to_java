@@ -200,6 +200,7 @@ public class ObjectCompiler implements Runnable{
       this.migrator = new SourceMigrator(this.system, this.connection, true, true);
     } catch (Exception e){
       if (debug) e.printStackTrace();
+      if (verbose) System.err.println("Could not initialize migrator");
       throw new RuntimeException("Failed to initialize migrator: " + e.getMessage(), e);
     }
 
