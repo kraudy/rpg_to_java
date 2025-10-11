@@ -120,7 +120,23 @@ public class ObjectDescription {
     //if (this.sourceName.isEmpty())    this.sourceName = CompCmd.compilationSourceName(compilationCommand);//ValCmd.PGM.toString();
 
     //TODO: Set another switch specifically for SRCFILE, SRCMBR and SRCSTMF
-    
+    switch (this.compilationCommand) {
+      case CRTSQLRPGI:
+      case CRTBNDRPG:
+      case CRTBNDCL:
+      case CRTRPGPGM:
+      case CRTCLPGM:
+      case CRTDSPF:
+      case CRTPF:
+      case CRTLF:
+      case CRTSRVPGM:
+      case CRTRPGMOD:
+      case CRTCLMOD:
+      case RUNSQLSTM:
+        ParamCmdSequence.put(ParamCmd.SRCFILE, this.targetKey.library + "/" + this.sourceFile);
+        ParamCmdSequence.put(ParamCmd.SRCMBR, this.sourceName);
+        break;
+    }
 
     /* Set default values */
     switch (this.compilationCommand) {
