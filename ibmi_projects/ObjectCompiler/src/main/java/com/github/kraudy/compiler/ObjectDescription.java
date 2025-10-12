@@ -20,6 +20,7 @@ import com.github.kraudy.migrator.SourceMigrator;
 public class ObjectDescription {
   public final Connection connection;
   private final boolean debug;
+  private final boolean verbose;
   //TODO: Make this private, add set method and move to another file
   //public String targetLibrary;
   // public String objectName;
@@ -96,6 +97,7 @@ public class ObjectDescription {
         SourceMigrator migrator,
         Connection connection,
         boolean debug,
+        boolean verbose,
         @JsonProperty("targetKey") Utilities.ParsedKey targetKey,
         @JsonProperty("sourceLibrary") String sourceLibrary,
         @JsonProperty("sourceFile") String sourceFile,
@@ -103,6 +105,7 @@ public class ObjectDescription {
 
     this.connection = connection;
     this.debug = debug;
+    this.verbose = verbose;
     this.migrator = migrator;
 
     this.targetKey = targetKey;
@@ -209,11 +212,10 @@ public class ObjectDescription {
 
   public void getObjectInfo () throws SQLException {
     switch (this.targetKey.objectType) {
-      case PGM : getPgmInfo(this.targetKey.library, this.targetKey.objectName, this.targetKey.objectType); break;
+
      
       case MODULE : getModuleInfo(this.targetKey.library, this.targetKey.objectName); break;
 
-      case SRVPGM :
       case TABLE :
       case LF :
       case INDEX :
@@ -230,7 +232,7 @@ public class ObjectDescription {
     }
   }
 
-  private void getPgmInfo(String library, String objetName, ObjectType objectType) throws SQLException {
+  private void getPgmInfo(String library, String objectName, ObjectType objectType) throws SQLException {
     
     try (Statement stmt = connection.createStatement();
         ResultSet rsObj = stmt.executeQuery(
@@ -342,16 +344,16 @@ public class ObjectDescription {
               "SQL_PACKAGE, " +
               "SQL_RDB_CONNECTION_METHOD " +
             "FROM QSYS2.PROGRAM_INFO " +
-            "WHERE PROGRAM_LIBRARY = '" + this.targetKey.library + "' " +
-                "AND PROGRAM_NAME = '" + this.targetKey.objectName + "' " +
-                "AND OBJECT_TYPE = '" + this.targetKey.objectType.toParam() + "' "
+            "WHERE PROGRAM_LIBRARY = '" + library + "' " +
+                "AND PROGRAM_NAME = '" + objectName + "' " +
+                "AND OBJECT_TYPE = '" + objectType.toParam() + "' "
           )) {
       if (!rsObj.next()) {
         // TODO: Maybe this should be optional for new objects. Just throw a warning
-        throw new IllegalArgumentException("Could not get object '" + this.targetKey.objectName + "' from library '" + this.targetKey.library + "' type" + "'" + this.targetKey.objectType.toString() + "'");
+        throw new IllegalArgumentException("Could not get object '" + objectName + "' from library '" + library + "' type" + "'" + objectType.toString() + "'");
       }
 
-      System.out.println("Found object '" + this.targetKey.objectName + "' from library '" + this.targetKey.library + "' type " + "'" + this.targetKey.objectType.toParam() + "'");
+      System.out.println("Found object '" + objectName + "' from library '" + library + "' type " + "'" + objectType.toParam() + "'");
 
       String text = rsObj.getString("TEXT_DESCRIPTION").trim();
       if (!text.isEmpty()) ParamCmdSequence.put(ParamCmd.TEXT, "'" + text +"'");
@@ -395,28 +397,25 @@ public class ObjectDescription {
       String programType = rsObj.getString("PROGRAM_TYPE").trim();
       System.out.println("PROGRAM_TYPE " + programType );
 
-      //TODO: Here i could try to migrate the sources for ILE to stream files and adjust the command
-      if ("ILE".equals(programType)) {
-        String actgrp = rsObj.getString("ACTIVATION_GROUP").trim();
-        if (!actgrp.isEmpty()) ParamCmdSequence.put(ParamCmd.ACTGRP, actgrp);
-        if ("QILE".equals(actgrp)) ParamCmdSequence.put(ParamCmd.DFTACTGRP, ValCmd.NO.toString());
+      switch (programType) {
+        case "ILE":
+          String actgrp = rsObj.getString("ACTIVATION_GROUP").trim();
+          if (!actgrp.isEmpty()) ParamCmdSequence.put(ParamCmd.ACTGRP, actgrp);
+          if ("QILE".equals(actgrp)) ParamCmdSequence.put(ParamCmd.DFTACTGRP, ValCmd.NO.toString());
 
-        try {
-         getModuleInfo(rsObj.getString("PROGRAM_ENTRY_PROCEDURE_MODULE_LIBRARY").trim(), 
-                                         rsObj.getString("PROGRAM_ENTRY_PROCEDURE_MODULE").trim());
-        } catch (IllegalArgumentException e) {
-          if (debug) {
-            System.err.println("Warning: Could not retrieve bound module info: " + e.getMessage() + ". Using defaults.");
+          try {
+            getModuleInfo(rsObj.getString("PROGRAM_ENTRY_PROCEDURE_MODULE_LIBRARY").trim(), 
+                                          rsObj.getString("PROGRAM_ENTRY_PROCEDURE_MODULE").trim());
+          } catch (IllegalArgumentException e) {
+            if (verbose) System.err.println("Warning: Could not retrieve bound module info: " + e.getMessage() + ". Using defaults.");
+            if (debug) System.err.println("Warning: Could not retrieve bound module info: " + e.getMessage() + ". Using defaults.");
           }
-        }
-      }
-
-      // For OPM-specific (e.g., SAAFLAG, if in view)
-      if ("OPM".equals(programType)) {
-        // Map OPM fields similarly if present in query
-        // debug params
-        ParamCmdSequence.put(ParamCmd.OPTION, ValCmd.LSTDBG.toString());
-        ParamCmdSequence.put(ParamCmd.GENOPT, ValCmd.LIST.toString());
+          break;
+      
+        case "OPM":
+          ParamCmdSequence.put(ParamCmd.OPTION, ValCmd.LSTDBG.toString());
+          ParamCmdSequence.put(ParamCmd.GENOPT, ValCmd.LIST.toString());
+          break;
       }
 
       if (!debug) return;

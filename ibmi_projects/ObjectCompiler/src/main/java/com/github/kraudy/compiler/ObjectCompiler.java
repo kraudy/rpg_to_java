@@ -209,6 +209,7 @@ public class ObjectCompiler implements Runnable{
           migrator,
           connection,
           debug,
+          verbose,
           //TODO: Maybe i should pass these as the topo key. The Key should uniquely indentify an object
           targetKey,
           sourceLib, // Default to *LIBL
