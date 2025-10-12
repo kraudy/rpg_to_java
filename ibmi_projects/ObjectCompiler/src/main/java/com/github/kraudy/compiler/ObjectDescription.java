@@ -212,7 +212,10 @@ public class ObjectDescription {
 
   public void getObjectInfo () throws SQLException {
     switch (this.targetKey.objectType) {
-
+      case PGM :
+      case SRVPGM :
+        getPgmInfo(this.targetKey.library, this.targetKey.objectName, this.targetKey.objectType);
+        break;
      
       case MODULE : getModuleInfo(this.targetKey.library, this.targetKey.objectName); break;
 
