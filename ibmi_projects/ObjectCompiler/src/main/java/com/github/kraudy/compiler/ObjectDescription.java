@@ -431,11 +431,15 @@ public class ObjectDescription {
           break;
       }
       
-
-      String fixNbr = rsObj.getString("FIX_DECIMAL_DATA").trim();
-      if (!fixNbr.isEmpty()){
-        fixNbr = fixNbr.equals("1") ? ValCmd.YES.toString() : ValCmd.NO.toString();  // Map boolean-ish
-        ParamCmdSequence.put(ParamCmd.FIXNBR, fixNbr);
+      switch (this.compilationCommand) {
+        case CRTBNDRPG:
+        case CRTRPGMOD:
+          String fixNbr = rsObj.getString("FIX_DECIMAL_DATA").trim();
+          if (!fixNbr.isEmpty()){
+            fixNbr = fixNbr.equals("1") ? ValCmd.YES.toString() : ValCmd.NO.toString();
+            ParamCmdSequence.put(ParamCmd.FIXNBR, fixNbr);
+          }
+          break;
       }
 
       String prfDta = rsObj.getString("PROFILING_DATA").trim();
