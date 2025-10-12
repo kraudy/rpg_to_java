@@ -394,12 +394,6 @@ public class ObjectDescription {
         break;
       }
 
-
-
-      String tgtRls = rsObj.getString("TARGET_RELEASE").trim();
-      ParamCmdSequence.put(ParamCmd.TGTRLS, ValCmd.CURRENT.toString());
-      if (!tgtRls.isEmpty()) ParamCmdSequence.put(ParamCmd.TGTRLS, tgtRls);
-
       String usrPrf = rsObj.getString("USER_PROFILE").trim();
       if (!usrPrf.isEmpty()) ParamCmdSequence.put(ParamCmd.USRPRF, usrPrf);
 
