@@ -439,11 +439,12 @@ public class ObjectDescription {
             fixNbr = fixNbr.equals("1") ? ValCmd.YES.toString() : ValCmd.NO.toString();
             ParamCmdSequence.put(ParamCmd.FIXNBR, fixNbr);
           }
+
+          String prfDta = rsObj.getString("PROFILING_DATA").trim();
+          if (!prfDta.isEmpty()) ParamCmdSequence.put(ParamCmd.PRFDTA, prfDta);
           break;
       }
 
-      String prfDta = rsObj.getString("PROFILING_DATA").trim();
-      if (!prfDta.isEmpty()) ParamCmdSequence.put(ParamCmd.PRFDTA, prfDta);
 
       String stgMdl = rsObj.getString("STORAGE_MODEL").trim();
       if (!stgMdl.isEmpty()) ParamCmdSequence.put(ParamCmd.STGMDL, stgMdl);
