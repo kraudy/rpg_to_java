@@ -407,10 +407,24 @@ public class ObjectDescription {
         break;
       }
 
-      String srtLib = rsObj.getString("SORT_SEQUENCE_LIBRARY").trim();
-      if (!srtLib.isEmpty()) ParamCmdSequence.put(ParamCmd.SORTSEQ_LIB, srtLib);  // Custom key if needed
-      String srtSeq = rsObj.getString("SORT_SEQUENCE").trim();
-      if (!srtSeq.isEmpty()) ParamCmdSequence.put(ParamCmd.SRTSEQ, srtSeq + (srtLib.isEmpty() ? "" : " " + srtLib));
+      switch (this.compilationCommand) {
+      case CRTBNDRPG:
+      case CRTBNDCL:
+      case CRTRPGMOD:
+      case CRTCLMOD:
+      case CRTSQLRPGI:
+      case CRTRPGPGM:
+      case CRTCLPGM:
+      case RUNSQLSTM:
+      case CRTDSPF:
+      case CRTPF:
+      case CRTLF:
+        String srtLib = rsObj.getString("SORT_SEQUENCE_LIBRARY").trim();
+        String srtSeq = rsObj.getString("SORT_SEQUENCE").trim();
+        if (!srtSeq.isEmpty()) ParamCmdSequence.put(ParamCmd.SRTSEQ, srtSeq + (srtLib.isEmpty() ? "" : " " + srtLib));
+        break;
+      }
+      
 
       String langId = rsObj.getString("LANGUAGE_ID").trim();
       if (!langId.isEmpty()) ParamCmdSequence.put(ParamCmd.LANGID, langId);
