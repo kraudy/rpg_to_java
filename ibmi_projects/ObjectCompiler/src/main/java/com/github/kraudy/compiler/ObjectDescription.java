@@ -378,7 +378,21 @@ public class ObjectDescription {
         break;
       }
 
-
+      switch (this.compilationCommand) {
+      case CRTSRVPGM:
+      case CRTBNDRPG:
+      case CRTBNDCL:
+      case CRTRPGMOD:
+      case CRTCLMOD:
+      case CRTSQLRPGI:
+      case CRTRPGPGM:
+      case CRTCLPGM:
+      case RUNSQLSTM:
+        String tgtRls = rsObj.getString("TARGET_RELEASE").trim();
+        ParamCmdSequence.put(ParamCmd.TGTRLS, ValCmd.CURRENT.toString());
+        if (!tgtRls.isEmpty()) ParamCmdSequence.put(ParamCmd.TGTRLS, tgtRls);
+        break;
+      }
 
 
 
