@@ -413,6 +413,8 @@ public class ObjectDescription {
         case CRTBNDCL:
         case CRTRPGMOD:
         case CRTCLMOD:
+          String optimize = rsObj.getString("OPTIMIZATION").trim();
+          if (!optimize.isEmpty()) ParamCmdSequence.put(ParamCmd.OPTIMIZE, optimize);
         case CRTSQLRPGI:
         case CRTRPGPGM:
         case CRTCLPGM:
@@ -429,9 +431,6 @@ public class ObjectDescription {
           break;
       }
       
-
-      String optimize = rsObj.getString("OPTIMIZATION").trim();
-      if (!optimize.isEmpty()) ParamCmdSequence.put(ParamCmd.OPTIMIZE, optimize);
 
       String fixNbr = rsObj.getString("FIX_DECIMAL_DATA").trim();
       if (!fixNbr.isEmpty()){
