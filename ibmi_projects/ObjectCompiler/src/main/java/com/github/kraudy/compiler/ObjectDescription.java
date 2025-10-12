@@ -362,72 +362,73 @@ public class ObjectDescription {
 
       //TODO: Could i change this to objectType for less casses?
       switch (this.compilationCommand) {
-      case CRTSRVPGM:
-      case CRTBNDRPG:
-      case CRTBNDCL:
-      case CRTRPGMOD:
-      case CRTCLMOD:
-      case CRTSQLRPGI:
-      case CRTRPGPGM:
-      case CRTCLPGM:
-      case CRTDSPF:
-      case CRTPF:
-      case CRTLF:
-        String text = rsObj.getString("TEXT_DESCRIPTION").trim();
-        if (!text.isEmpty()) ParamCmdSequence.put(ParamCmd.TEXT, "'" + text +"'");
-        break;
+        case CRTSRVPGM:
+        case CRTBNDRPG:
+        case CRTBNDCL:
+        case CRTRPGMOD:
+        case CRTCLMOD:
+        case CRTSQLRPGI:
+        case CRTRPGPGM:
+        case CRTCLPGM:
+        case CRTDSPF:
+        case CRTPF:
+        case CRTLF:
+          String text = rsObj.getString("TEXT_DESCRIPTION").trim();
+          if (!text.isEmpty()) ParamCmdSequence.put(ParamCmd.TEXT, "'" + text +"'");
+          break;
+      }
+
+      //TODO: Take this path as template
+      switch (this.compilationCommand) {
+        case CRTSRVPGM:
+        case CRTBNDRPG:
+        case CRTBNDCL:
+        case CRTRPGMOD:
+        case CRTCLMOD:
+        case CRTSQLRPGI:
+        case CRTRPGPGM:
+        case CRTCLPGM:
+        case RUNSQLSTM:
+          String tgtRls = rsObj.getString("TARGET_RELEASE").trim();
+          ParamCmdSequence.put(ParamCmd.TGTRLS, ValCmd.CURRENT.toString());
+          if (!tgtRls.isEmpty()) ParamCmdSequence.put(ParamCmd.TGTRLS, tgtRls);
+          break;
       }
 
       switch (this.compilationCommand) {
-      case CRTSRVPGM:
-      case CRTBNDRPG:
-      case CRTBNDCL:
-      case CRTRPGMOD:
-      case CRTCLMOD:
-      case CRTSQLRPGI:
-      case CRTRPGPGM:
-      case CRTCLPGM:
-      case RUNSQLSTM:
-        String tgtRls = rsObj.getString("TARGET_RELEASE").trim();
-        ParamCmdSequence.put(ParamCmd.TGTRLS, ValCmd.CURRENT.toString());
-        if (!tgtRls.isEmpty()) ParamCmdSequence.put(ParamCmd.TGTRLS, tgtRls);
-        break;
+        case CRTSRVPGM:
+        case CRTBNDRPG:
+        case CRTBNDCL:
+        case CRTSQLRPGI:
+        case CRTRPGPGM:
+        case CRTCLPGM:
+        case RUNSQLSTM:
+          String usrPrf = rsObj.getString("USER_PROFILE").trim();
+          if (!usrPrf.isEmpty()) ParamCmdSequence.put(ParamCmd.USRPRF, usrPrf);
+          break;
       }
 
       switch (this.compilationCommand) {
-      case CRTSRVPGM:
-      case CRTBNDRPG:
-      case CRTBNDCL:
-      case CRTSQLRPGI:
-      case CRTRPGPGM:
-      case CRTCLPGM:
-      case RUNSQLSTM:
-        String usrPrf = rsObj.getString("USER_PROFILE").trim();
-        if (!usrPrf.isEmpty()) ParamCmdSequence.put(ParamCmd.USRPRF, usrPrf);
-        break;
-      }
+        case CRTBNDRPG:
+        case CRTBNDCL:
+        case CRTRPGMOD:
+        case CRTCLMOD:
+        case CRTSQLRPGI:
+        case CRTRPGPGM:
+        case CRTCLPGM:
+        case RUNSQLSTM:
+        case CRTDSPF:
+        case CRTPF:
+        case CRTLF:
+          String srtLib = rsObj.getString("SORT_SEQUENCE_LIBRARY").trim();
+          String srtSeq = rsObj.getString("SORT_SEQUENCE").trim();
+          if (!srtSeq.isEmpty()) ParamCmdSequence.put(ParamCmd.SRTSEQ, srtSeq + (srtLib.isEmpty() ? "" : " " + srtLib));
 
-      switch (this.compilationCommand) {
-      case CRTBNDRPG:
-      case CRTBNDCL:
-      case CRTRPGMOD:
-      case CRTCLMOD:
-      case CRTSQLRPGI:
-      case CRTRPGPGM:
-      case CRTCLPGM:
-      case RUNSQLSTM:
-      case CRTDSPF:
-      case CRTPF:
-      case CRTLF:
-        String srtLib = rsObj.getString("SORT_SEQUENCE_LIBRARY").trim();
-        String srtSeq = rsObj.getString("SORT_SEQUENCE").trim();
-        if (!srtSeq.isEmpty()) ParamCmdSequence.put(ParamCmd.SRTSEQ, srtSeq + (srtLib.isEmpty() ? "" : " " + srtLib));
-        break;
+          String langId = rsObj.getString("LANGUAGE_ID").trim();
+          if (!langId.isEmpty()) ParamCmdSequence.put(ParamCmd.LANGID, langId);
+          break;
       }
       
-
-      String langId = rsObj.getString("LANGUAGE_ID").trim();
-      if (!langId.isEmpty()) ParamCmdSequence.put(ParamCmd.LANGID, langId);
 
       String optimize = rsObj.getString("OPTIMIZATION").trim();
       if (!optimize.isEmpty()) ParamCmdSequence.put(ParamCmd.OPTIMIZE, optimize);
