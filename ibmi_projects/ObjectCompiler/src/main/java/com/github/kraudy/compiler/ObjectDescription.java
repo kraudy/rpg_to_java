@@ -356,13 +356,35 @@ public class ObjectDescription {
         throw new IllegalArgumentException("Could not get object '" + objectName + "' from library '" + library + "' type" + "'" + objectType.toString() + "'");
       }
 
-      System.out.println("Found object '" + objectName + "' from library '" + library + "' type " + "'" + objectType.toParam() + "'");
+      //TODO: Show method being executed
 
-      String text = rsObj.getString("TEXT_DESCRIPTION").trim();
-      if (!text.isEmpty()) ParamCmdSequence.put(ParamCmd.TEXT, "'" + text +"'");
+      if (verbose) System.out.println("Found object '" + objectName + "' from library '" + library + "' type " + "'" + objectType.toParam() + "'");
+
+      //TODO: Could i change this to objectType for less casses?
+      switch (this.compilationCommand) {
+      case CRTSRVPGM:
+      case CRTBNDRPG:
+      case CRTBNDCL:
+      case CRTRPGMOD:
+      case CRTCLMOD:
+      case CRTSQLRPGI:
+      case CRTRPGPGM:
+      case CRTCLPGM:
+      case CRTDSPF:
+      case CRTPF:
+      case CRTLF:
+        String text = rsObj.getString("TEXT_DESCRIPTION").trim();
+        if (!text.isEmpty()) ParamCmdSequence.put(ParamCmd.TEXT, "'" + text +"'");
+        break;
+      }
+
+
+
+
 
       String tgtRls = rsObj.getString("TARGET_RELEASE").trim();
-      if (!tgtRls.isEmpty()) ParamCmdSequence.put(ParamCmd.TGTRLS, tgtRls); //TODO: Consider ValCmd.CURRENT.toString()
+      ParamCmdSequence.put(ParamCmd.TGTRLS, ValCmd.CURRENT.toString());
+      if (!tgtRls.isEmpty()) ParamCmdSequence.put(ParamCmd.TGTRLS, tgtRls);
 
       String usrPrf = rsObj.getString("USER_PROFILE").trim();
       if (!usrPrf.isEmpty()) ParamCmdSequence.put(ParamCmd.USRPRF, usrPrf);
