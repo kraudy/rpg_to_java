@@ -394,8 +394,18 @@ public class ObjectDescription {
         break;
       }
 
-      String usrPrf = rsObj.getString("USER_PROFILE").trim();
-      if (!usrPrf.isEmpty()) ParamCmdSequence.put(ParamCmd.USRPRF, usrPrf);
+      switch (this.compilationCommand) {
+      case CRTSRVPGM:
+      case CRTBNDRPG:
+      case CRTBNDCL:
+      case CRTSQLRPGI:
+      case CRTRPGPGM:
+      case CRTCLPGM:
+      case RUNSQLSTM:
+        String usrPrf = rsObj.getString("USER_PROFILE").trim();
+        if (!usrPrf.isEmpty()) ParamCmdSequence.put(ParamCmd.USRPRF, usrPrf);
+        break;
+      }
 
       String srtLib = rsObj.getString("SORT_SEQUENCE_LIBRARY").trim();
       if (!srtLib.isEmpty()) ParamCmdSequence.put(ParamCmd.SORTSEQ_LIB, srtLib);  // Custom key if needed
