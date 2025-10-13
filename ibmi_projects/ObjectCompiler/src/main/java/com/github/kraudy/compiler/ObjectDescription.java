@@ -365,6 +365,9 @@ public class ObjectDescription {
         case CRTSRVPGM:
         case CRTBNDRPG:
         case CRTBNDCL:
+          String actgrp = rsObj.getString("ACTIVATION_GROUP").trim();
+          if (!actgrp.isEmpty()) ParamCmdSequence.put(ParamCmd.ACTGRP, actgrp);
+          if ("QILE".equals(actgrp)) ParamCmdSequence.put(ParamCmd.DFTACTGRP, ValCmd.NO.toString());
         case CRTRPGMOD:
           String stgMdl = rsObj.getString("STORAGE_MODEL").trim();
           if (!stgMdl.isEmpty()) ParamCmdSequence.put(ParamCmd.STGMDL, stgMdl);
@@ -456,16 +459,6 @@ public class ObjectDescription {
 
           String alwRtvSrc = rsObj.getString("ALLOW_RTVCLSRC").trim();
           if (!alwRtvSrc.isEmpty()) ParamCmdSequence.put(ParamCmd.ALWRTVSRC, alwRtvSrc.equals("1") ? ValCmd.YES.toString() : ValCmd.NO.toString());
-          break;
-      }
-
-      switch (this.compilationCommand) {
-        case CRTSRVPGM:
-        case CRTBNDRPG:
-        case CRTBNDCL:
-          String actgrp = rsObj.getString("ACTIVATION_GROUP").trim();
-          if (!actgrp.isEmpty()) ParamCmdSequence.put(ParamCmd.ACTGRP, actgrp);
-          if ("QILE".equals(actgrp)) ParamCmdSequence.put(ParamCmd.DFTACTGRP, ValCmd.NO.toString());
           break;
       }
 
