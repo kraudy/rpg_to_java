@@ -445,9 +445,16 @@ public class ObjectDescription {
           break;
       }
 
+      switch (this.compilationCommand) {
+        case CRTSRVPGM:
+        case CRTBNDRPG:
+        case CRTBNDCL:
+        case CRTRPGMOD:
+          String stgMdl = rsObj.getString("STORAGE_MODEL").trim();
+          if (!stgMdl.isEmpty()) ParamCmdSequence.put(ParamCmd.STGMDL, stgMdl);
+          break;
+      }
 
-      String stgMdl = rsObj.getString("STORAGE_MODEL").trim();
-      if (!stgMdl.isEmpty()) ParamCmdSequence.put(ParamCmd.STGMDL, stgMdl);
 
       String logCmds = rsObj.getString("LOG_COMMANDS").trim();
       if (!logCmds.isEmpty()) ParamCmdSequence.put(ParamCmd.LOG, logCmds.equals("1") ? ValCmd.YES.toString() : ValCmd.NO.toString());
