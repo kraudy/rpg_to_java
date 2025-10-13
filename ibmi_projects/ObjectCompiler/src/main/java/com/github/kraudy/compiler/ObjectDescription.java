@@ -455,9 +455,14 @@ public class ObjectDescription {
           break;
       }
 
-
-      String logCmds = rsObj.getString("LOG_COMMANDS").trim();
-      if (!logCmds.isEmpty()) ParamCmdSequence.put(ParamCmd.LOG, logCmds.equals("1") ? ValCmd.YES.toString() : ValCmd.NO.toString());
+      switch (this.compilationCommand) {
+        case CRTBNDCL:
+        case CRTCLMOD:
+        case CRTCLPGM:
+          String logCmds = rsObj.getString("LOG_COMMANDS").trim();
+          if (!logCmds.isEmpty()) ParamCmdSequence.put(ParamCmd.LOG, logCmds.equals("1") ? ValCmd.YES.toString() : ValCmd.NO.toString());
+          break;
+      }
 
       String alwRtvSrc = rsObj.getString("ALLOW_RTVCLSRC").trim();
       if (!alwRtvSrc.isEmpty()) ParamCmdSequence.put(ParamCmd.ALWRTVSRC, alwRtvSrc.equals("1") ? ValCmd.YES.toString() : ValCmd.NO.toString());
