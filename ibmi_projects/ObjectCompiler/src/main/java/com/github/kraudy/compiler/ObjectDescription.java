@@ -461,11 +461,12 @@ public class ObjectDescription {
         case CRTCLPGM:
           String logCmds = rsObj.getString("LOG_COMMANDS").trim();
           if (!logCmds.isEmpty()) ParamCmdSequence.put(ParamCmd.LOG, logCmds.equals("1") ? ValCmd.YES.toString() : ValCmd.NO.toString());
+
+          String alwRtvSrc = rsObj.getString("ALLOW_RTVCLSRC").trim();
+          if (!alwRtvSrc.isEmpty()) ParamCmdSequence.put(ParamCmd.ALWRTVSRC, alwRtvSrc.equals("1") ? ValCmd.YES.toString() : ValCmd.NO.toString());
           break;
       }
 
-      String alwRtvSrc = rsObj.getString("ALLOW_RTVCLSRC").trim();
-      if (!alwRtvSrc.isEmpty()) ParamCmdSequence.put(ParamCmd.ALWRTVSRC, alwRtvSrc.equals("1") ? ValCmd.YES.toString() : ValCmd.NO.toString());
 
       /* Specific program type */
       String programType = rsObj.getString("PROGRAM_TYPE").trim();
