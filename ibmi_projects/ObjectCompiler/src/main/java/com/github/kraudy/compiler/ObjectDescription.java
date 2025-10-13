@@ -467,23 +467,28 @@ public class ObjectDescription {
           break;
       }
 
-
-      /* Specific program type */
-      String programType = rsObj.getString("PROGRAM_TYPE").trim();
-      System.out.println("PROGRAM_TYPE " + programType );
-
-      switch (programType) {
-        case "ILE":
+      switch (this.compilationCommand) {
+        case CRTSRVPGM:
+        case CRTBNDRPG:
+        case CRTBNDCL:
           String actgrp = rsObj.getString("ACTIVATION_GROUP").trim();
           if (!actgrp.isEmpty()) ParamCmdSequence.put(ParamCmd.ACTGRP, actgrp);
           if ("QILE".equals(actgrp)) ParamCmdSequence.put(ParamCmd.DFTACTGRP, ValCmd.NO.toString());
+          break;
+      }
 
+      /* Specific program type */
+      String programType = rsObj.getString("PROGRAM_TYPE").trim();
+      if (debug) System.out.println("PROGRAM_TYPE " + programType );
+
+      switch (programType) {
+        case "ILE":
           try {
             getModuleInfo(rsObj.getString("PROGRAM_ENTRY_PROCEDURE_MODULE_LIBRARY").trim(), 
                                           rsObj.getString("PROGRAM_ENTRY_PROCEDURE_MODULE").trim());
           } catch (IllegalArgumentException e) {
             if (verbose) System.err.println("Warning: Could not retrieve bound module info: " + e.getMessage() + ". Using defaults.");
-            if (debug) System.err.println("Warning: Could not retrieve bound module info: " + e.getMessage() + ". Using defaults.");
+            if (debug) e.printStackTrace();
           }
           break;
       
