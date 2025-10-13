@@ -366,6 +366,8 @@ public class ObjectDescription {
         case CRTBNDRPG:
         case CRTBNDCL:
         case CRTRPGMOD:
+          String stgMdl = rsObj.getString("STORAGE_MODEL").trim();
+          if (!stgMdl.isEmpty()) ParamCmdSequence.put(ParamCmd.STGMDL, stgMdl);
         case CRTCLMOD:
         case CRTSQLRPGI:
         case CRTRPGPGM:
@@ -442,16 +444,6 @@ public class ObjectDescription {
 
           String prfDta = rsObj.getString("PROFILING_DATA").trim();
           if (!prfDta.isEmpty()) ParamCmdSequence.put(ParamCmd.PRFDTA, prfDta);
-          break;
-      }
-
-      switch (this.compilationCommand) {
-        case CRTSRVPGM:
-        case CRTBNDRPG:
-        case CRTBNDCL:
-        case CRTRPGMOD:
-          String stgMdl = rsObj.getString("STORAGE_MODEL").trim();
-          if (!stgMdl.isEmpty()) ParamCmdSequence.put(ParamCmd.STGMDL, stgMdl);
           break;
       }
 
