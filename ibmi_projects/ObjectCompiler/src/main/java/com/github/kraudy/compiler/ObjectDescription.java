@@ -477,6 +477,30 @@ public class ObjectDescription {
           break;
       }
 
+      switch (this.compilationCommand) {
+        case CRTSRVPGM:
+        case CRTBNDRPG:
+        case CRTBNDCL:
+        case CRTRPGMOD:
+        case CRTCLMOD:
+        case CRTSQLRPGI:
+        case CRTRPGPGM:
+        case CRTCLPGM:
+        case RUNSQLSTM:
+        case CRTDSPF:
+        case CRTPF:
+        case CRTLF:
+          ParamCmdSequence.put(ParamCmd.OPTION, ValCmd.LSTDBG.toString());
+          break;
+      }
+
+      switch (this.compilationCommand) {
+        case CRTRPGPGM:
+        case CRTCLPGM:
+          ParamCmdSequence.put(ParamCmd.GENOPT, ValCmd.LIST.toString());
+          break;
+      }
+
       /* Specific program type */
       String programType = rsObj.getString("PROGRAM_TYPE").trim();
       if (debug) System.out.println("PROGRAM_TYPE " + programType );
@@ -493,8 +517,6 @@ public class ObjectDescription {
           break;
       
         case "OPM":
-          ParamCmdSequence.put(ParamCmd.OPTION, ValCmd.LSTDBG.toString());
-          ParamCmdSequence.put(ParamCmd.GENOPT, ValCmd.LIST.toString());
           break;
       }
 
