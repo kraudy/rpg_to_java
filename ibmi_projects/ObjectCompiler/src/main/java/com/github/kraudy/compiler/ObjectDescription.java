@@ -469,19 +469,18 @@ public class ObjectDescription {
         case CRTRPGMOD:
         case CRTCLMOD:
         case CRTSQLRPGI:
-        case CRTRPGPGM:
-        case CRTCLPGM:
         case RUNSQLSTM:
         case CRTDSPF:
         case CRTPF:
         case CRTLF:
-          ParamCmdSequence.put(ParamCmd.OPTION, ValCmd.LSTDBG.toString());
+          ParamCmdSequence.put(ParamCmd.OPTION, ValCmd.EVENTF.toString());
           break;
       }
 
       switch (this.compilationCommand) {
         case CRTRPGPGM:
         case CRTCLPGM:
+          ParamCmdSequence.put(ParamCmd.OPTION, ValCmd.LSTDBG.toString());
           ParamCmdSequence.put(ParamCmd.GENOPT, ValCmd.LIST.toString());
           break;
       }
