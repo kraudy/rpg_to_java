@@ -375,6 +375,9 @@ public class ObjectDescription {
         case CRTSQLRPGI:
         case CRTRPGPGM:
         case CRTCLPGM:
+          String tgtRls = rsObj.getString("TARGET_RELEASE").trim();
+          ParamCmdSequence.put(ParamCmd.TGTRLS, ValCmd.CURRENT.toString());
+          if (!tgtRls.isEmpty()) ParamCmdSequence.put(ParamCmd.TGTRLS, tgtRls);
         case CRTDSPF:
         case CRTPF:
         case CRTLF:
@@ -383,13 +386,10 @@ public class ObjectDescription {
           break;
       }
 
-      //TODO: Take this path as template
       switch (this.compilationCommand) {
         case CRTSRVPGM:
         case CRTBNDRPG:
         case CRTBNDCL:
-        case CRTRPGMOD:
-        case CRTCLMOD:
         case CRTSQLRPGI:
         case CRTRPGPGM:
         case CRTCLPGM:
@@ -397,17 +397,7 @@ public class ObjectDescription {
           String tgtRls = rsObj.getString("TARGET_RELEASE").trim();
           ParamCmdSequence.put(ParamCmd.TGTRLS, ValCmd.CURRENT.toString());
           if (!tgtRls.isEmpty()) ParamCmdSequence.put(ParamCmd.TGTRLS, tgtRls);
-          break;
-      }
 
-      switch (this.compilationCommand) {
-        case CRTSRVPGM:
-        case CRTBNDRPG:
-        case CRTBNDCL:
-        case CRTSQLRPGI:
-        case CRTRPGPGM:
-        case CRTCLPGM:
-        case RUNSQLSTM:
           String usrPrf = rsObj.getString("USER_PROFILE").trim();
           if (!usrPrf.isEmpty()) ParamCmdSequence.put(ParamCmd.USRPRF, usrPrf);
           break;
