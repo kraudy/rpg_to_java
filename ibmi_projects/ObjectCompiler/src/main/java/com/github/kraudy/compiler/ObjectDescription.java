@@ -578,14 +578,6 @@ public class ObjectDescription {
         throw new IllegalArgumentException("Could not get module '" + entryModule + "' from library '" + entryModuleLib + "'");
       }
 
-        /* These are not found in the view 
-        String genLvl = rsMod.getString("GEN_SEVERITY_LEVEL").trim();
-        if (!genLvl.isEmpty()) ParamCmdSequence.put(ParamCmd.GENLVL, genLvl);
-
-        String option = rsMod.getString("COMPILER_OPTIONS").trim();
-        if (!option.isEmpty()) ParamCmdSequence.put(ParamCmd.OPTION, option);
-        */
-
         //TODO: Should i validate the compilation command here?
         String dbgData = rsMod.getString("DEBUG_DATA").trim();
         if ("*YES".equals(dbgData)) ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.ALL.toString());
