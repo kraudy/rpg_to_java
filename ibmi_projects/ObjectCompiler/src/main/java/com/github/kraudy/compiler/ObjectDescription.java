@@ -241,7 +241,7 @@ public class ObjectDescription {
         ResultSet rsObj = stmt.executeQuery(
           "SELECT PROGRAM_LIBRARY, " + // programLibrary
               "PROGRAM_NAME, " + // programName
-              "PROGRAM_TYPE, " +  // [ILE, OPM] 
+              "COALESCE(PROGRAM_TYPE,'') As PROGRAM_TYPE, " +  // [ILE, OPM] 
               "OBJECT_TYPE, " +   // typeOfProgram
               "CREATE_TIMESTAMP, " + // creationDateTime
               "COALESCE(TEXT_DESCRIPTION, '') As TEXT_DESCRIPTION, " + // textDescription
@@ -259,8 +259,8 @@ public class ObjectDescription {
               "CONVERSION_REQUIRED, " +
               "CONVERSION_DETAIL, " +
               //-- These seem to be for ILE objects
-              "PROGRAM_ENTRY_PROCEDURE_MODULE_LIBRARY, " +
-              "PROGRAM_ENTRY_PROCEDURE_MODULE, " +
+              "COALESCE(PROGRAM_ENTRY_PROCEDURE_MODULE_LIBRARY, '') As PROGRAM_ENTRY_PROCEDURE_MODULE_LIBRARY, " +
+              "COALESCE(PROGRAM_ENTRY_PROCEDURE_MODULE, '') As PROGRAM_ENTRY_PROCEDURE_MODULE, " +
               "COALESCE(ACTIVATION_GROUP, '') AS ACTIVATION_GROUP, " + // activationGroupAttribute
               "SHARED_ACTIVATION_GROUP, " +
               "OBSERVABLE_INFO_COMPRESSED, " +
@@ -507,7 +507,7 @@ public class ObjectDescription {
 
   // NEW: Query BOUND_MODULE_INFO for module-specific fields (e.g., GENLVL, OPTION)
   private void getModuleInfo(String entryModuleLib, String entryModule) throws SQLException {
-    if (entryModuleLib == null || entryModule == null) throw new IllegalArgumentException("Entry module or lib are null");;  // Skip if no entry module
+    if (entryModuleLib.isEmpty() || entryModule.isEmpty()) throw new IllegalArgumentException("Entry module or lib are empty");;  // Skip if no entry module
 
     try (Statement stmt = connection.createStatement();
         ResultSet rsMod = stmt.executeQuery(
