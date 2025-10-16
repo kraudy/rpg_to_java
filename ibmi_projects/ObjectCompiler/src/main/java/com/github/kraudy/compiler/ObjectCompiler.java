@@ -283,7 +283,7 @@ public class ObjectCompiler implements Runnable{
   private void compile(String commandStr) {
     //TODO: Use QCMDEXC via JDBC
     CommandCall cc = new CommandCall(system);
-    AS400Message[] messages = cc.getMessageList();
+    AS400Message[] messages = null;
 
     try {
       Timestamp compilationTime = null;
@@ -296,17 +296,15 @@ public class ObjectCompiler implements Runnable{
       if (!cc.run(commandStr)) {
         showCompilationSpool(compilationTime, system.getUserId().trim().toUpperCase(), targetKey.objectName);
         throw new IllegalArgumentException("Compilation failed.");
-      } //else {
-        //System.out.println("Compilation failed.");
-      //}
+      }
 
       System.out.println("Compilation successful.");
 
-
-    } catch (AS400SecurityException | ErrorCompletingRequestException | IOException | InterruptedException | PropertyVetoException | SQLException e) {
+    } catch (AS400SecurityException | ErrorCompletingRequestException | IOException | InterruptedException | PropertyVetoException | SQLException | IllegalArgumentException e) {
       if (verbose) System.err.println("Compilation failed.");
       if (debug) e.printStackTrace();
     } finally {
+      messages = cc.getMessageList();
       for (AS400Message msg : messages) {
         System.out.println(msg.getID() + ": " + msg.getText());
         // SQL9010 : Object already exists
