@@ -263,17 +263,13 @@ public class ObjectCompiler implements Runnable{
     
     if (debug) System.out.println("Full command: " + commandStr);
 
-    // TODO: Integrate with SourceMigrator if source is in member; migrate to IFS and compile from there
-    // For OPM, create temp member if needed
-
-    //TODO: Migration
-    /*
-    String stmfPath = migrateSourceToIfs(odes.getSourceLibrary(), odes.getSourceFile(), odes.getSourceName());
+    /* 
+    For OPM, create temp members if source is IFS (reverse migration).
     ParamCmdSequence.put(ParamCmd.SRCSTMF, stmfPath);
+    migrator.IfsToMember(ParamCmdSequence.get(ParamCmd.SRCSTMF), Library);
     ParamCmdSequence.remove(ParamCmd.SRCFILE);  // Switch to stream file
-     */
-
-    // For OPM, create temp members if source is IFS (reverse migration).
+    ParamCmdSequence.put(ParamCmd.SRCMBR, member);
+    */
 
     // TODO: CHKOBJ OBJ(ROBKRAUDY2/CUSTOMER) OBJTYPE(*FILE)
     // DLTOBJ OBJ(ROBKRAUDY2/CUSTOMER) OBJTYPE(*FILE)
@@ -287,8 +283,9 @@ public class ObjectCompiler implements Runnable{
   private void compile(String commandStr) {
     //TODO: Use QCMDEXC via JDBC
     CommandCall cc = new CommandCall(system);
+    AS400Message[] messages = cc.getMessageList();
+
     try {
-      if (debug) System.out.println("Executing: " + commandStr);
       Timestamp compilationTime = null;
       try (Statement stmt = connection.createStatement();
           ResultSet rsTime = stmt.executeQuery("SELECT CURRENT_TIMESTAMP AS Compilation_Time FROM sysibm.sysdummy1")) {
@@ -296,22 +293,26 @@ public class ObjectCompiler implements Runnable{
           compilationTime = rsTime.getTimestamp("Compilation_Time");
         }
       }
-      boolean success = cc.run(commandStr);
-      AS400Message[] messages = cc.getMessageList();
-      if (success) {
-        System.out.println("Compilation successful.");
-      } else {
-        System.out.println("Compilation failed.");
+      if (!cc.run(commandStr)) {
         showCompilationSpool(compilationTime, system.getUserId().trim().toUpperCase(), targetKey.objectName);
-      }
+        throw new IllegalArgumentException("Compilation failed.");
+      } //else {
+        //System.out.println("Compilation failed.");
+      //}
+
+      System.out.println("Compilation successful.");
+
+
+    } catch (AS400SecurityException | ErrorCompletingRequestException | IOException | InterruptedException | PropertyVetoException | SQLException e) {
+      if (verbose) System.err.println("Compilation failed.");
+      if (debug) e.printStackTrace();
+    } finally {
       for (AS400Message msg : messages) {
         System.out.println(msg.getID() + ": " + msg.getText());
         // SQL9010 : Object already exists
       }
-    } catch (AS400SecurityException | ErrorCompletingRequestException | IOException | InterruptedException | PropertyVetoException | SQLException e) {
-      e.printStackTrace();
+      cleanup();
     }
-    cleanup();
     }
 
   //TODO: This is kinda slow.
