@@ -324,7 +324,34 @@ public class ObjectCompiler implements Runnable{
       //  System.out.println(msg.getID() + ": " + msg.getText());
       //  // SQL9010 : Object already exists
       //}
-      
+      try (Statement stmt = connection.createStatement();
+          ResultSet rsMessages = stmt.executeQuery(
+            "SELECT MESSAGE_TIMESTAMP, MESSAGE_ID, SEVERITY, MESSAGE_TEXT, MESSAGE_SECOND_LEVEL_TEXT " +
+            "FROM TABLE(QSYS2.JOBLOG_INFO('*')) " + 
+            "WHERE FROM_USER = USER " +
+            "AND MESSAGE_TIMESTAMP > '" + compilationTime + "' " +
+            "AND MESSAGE_ID NOT IN ('SQL0443', 'CPC0904', 'CPF2407') " +
+            "ORDER BY MESSAGE_TIMESTAMP DESC "
+          )) {
+        while (rsMessages.next()) {
+          Timestamp messageTime = rsMessages.getTimestamp("MESSAGE_TIMESTAMP");
+          String messageId = rsMessages.getString("MESSAGE_ID").trim();
+          String severity = rsMessages.getString("SEVERITY").trim();
+          String message = rsMessages.getString("MESSAGE_TEXT").trim();
+          String messageSecondLevel = rsMessages.getString("MESSAGE_SECOND_LEVEL_TEXT").trim();
+          // Format the timestamp as a string
+          SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+          String formattedTime = sdf.format(messageTime);
+          
+          // Print in a formatted table-like structure
+          System.out.printf("%-20s | %-10s | %-8s | %s%n", formattedTime, messageId, severity, message);
+        } 
+        System.out.println("-".repeat(80));
+
+      } catch (SQLException e) {
+        System.out.println("Could not get messages.");
+        e.printStackTrace();
+      }
       cleanup();
       }
     }
