@@ -282,34 +282,24 @@ public class ObjectCompiler implements Runnable{
 
 
   private void compile(String commandStr) {
-     // Escape single quotes in commandStr for QCMDEXC
+    // Escape single quotes in commandStr for QCMDEXC
     String escapedCommand = commandStr.replace("'", "''");
-    //String escapedCommand = commandStr.replace("'", "");
 
     if (debug) System.out.println("Sacaped command: " + escapedCommand);
 
-    //TODO: Use QCMDEXC via JDBC
-    CommandCall cc = new CommandCall(system);
     Timestamp compilationTime = null;
 
-    try {
-      try (Statement stmt = connection.createStatement();
-          ResultSet rsTime = stmt.executeQuery("SELECT CURRENT_TIMESTAMP AS Compilation_Time FROM sysibm.sysdummy1")) {
-        if (rsTime.next()) {
-          compilationTime = rsTime.getTimestamp("Compilation_Time");
-        }
+    try (Statement stmt = connection.createStatement();
+        ResultSet rsTime = stmt.executeQuery("SELECT CURRENT_TIMESTAMP AS Compilation_Time FROM sysibm.sysdummy1")) {
+      if (rsTime.next()) {
+        compilationTime = rsTime.getTimestamp("Compilation_Time");
       }
-      try (Statement cmdStmt = connection.createStatement()) { //TODO: Use this to create the UDF function in QTEMP
-        cmdStmt.execute("CALL QSYS2.QCMDEXC('" + escapedCommand + "')");
-      } catch (SQLException e) {
-        System.out.println("Compilation failed.");
-        e.printStackTrace();
-      }
-
-      //if (!cc.run(commandStr)) {
-      //  showCompilationSpool(compilationTime, system.getUserId().trim().toUpperCase(), targetKey.objectName);
-      //  throw new IllegalArgumentException("Compilation failed.");
-      //}
+    try (Statement cmdStmt = connection.createStatement()) { //TODO: Use this to create the UDF function in QTEMP
+      cmdStmt.execute("CALL QSYS2.QCMDEXC('" + escapedCommand + "')");
+    } catch (SQLException e) {
+      System.out.println("Compilation failed.");
+      e.printStackTrace();
+    }
 
       System.out.println("Compilation successful.");
 
