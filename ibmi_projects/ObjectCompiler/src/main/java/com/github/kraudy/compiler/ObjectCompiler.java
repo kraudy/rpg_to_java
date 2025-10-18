@@ -346,7 +346,6 @@ public class ObjectCompiler implements Runnable{
           // Print in a formatted table-like structure
           System.out.printf("%-20s | %-10s | %-8s | %s%n", formattedTime, messageId, severity, message);
         } 
-        System.out.println("-".repeat(80));
 
       } catch (SQLException e) {
         System.out.println("Could not get messages.");
