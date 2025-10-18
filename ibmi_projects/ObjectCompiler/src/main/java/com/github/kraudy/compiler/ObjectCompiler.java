@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -281,36 +282,51 @@ public class ObjectCompiler implements Runnable{
 
 
   private void compile(String commandStr) {
+     // Escape single quotes in commandStr for QCMDEXC
+    String escapedCommand = commandStr.replace("'", "''");
+    //String escapedCommand = commandStr.replace("'", "");
+
+    if (debug) System.out.println("Sacaped command: " + escapedCommand);
+
     //TODO: Use QCMDEXC via JDBC
     CommandCall cc = new CommandCall(system);
     AS400Message[] messages = null;
+    Timestamp compilationTime = null;
 
     try {
-      Timestamp compilationTime = null;
       try (Statement stmt = connection.createStatement();
           ResultSet rsTime = stmt.executeQuery("SELECT CURRENT_TIMESTAMP AS Compilation_Time FROM sysibm.sysdummy1")) {
         if (rsTime.next()) {
           compilationTime = rsTime.getTimestamp("Compilation_Time");
         }
       }
-      if (!cc.run(commandStr)) {
-        showCompilationSpool(compilationTime, system.getUserId().trim().toUpperCase(), targetKey.objectName);
-        throw new IllegalArgumentException("Compilation failed.");
+      try (Statement cmdStmt = connection.createStatement()) { //TODO: Use this to create the UDF function in QTEMP
+        cmdStmt.execute("CALL QSYS2.QCMDEXC('" + escapedCommand + "')");
+      } catch (SQLException e) {
+        System.out.println("Compilation failed.");
+        e.printStackTrace();
       }
+
+      //if (!cc.run(commandStr)) {
+      //  showCompilationSpool(compilationTime, system.getUserId().trim().toUpperCase(), targetKey.objectName);
+      //  throw new IllegalArgumentException("Compilation failed.");
+      //}
 
       System.out.println("Compilation successful.");
 
-    } catch (AS400SecurityException | ErrorCompletingRequestException | IOException | InterruptedException | PropertyVetoException | SQLException | IllegalArgumentException e) {
+    //} catch (AS400SecurityException | ErrorCompletingRequestException | IOException | InterruptedException | PropertyVetoException | SQLException | IllegalArgumentException e) {
+    } catch (SQLException | IllegalArgumentException e) {
       if (verbose) System.err.println("Compilation failed.");
       if (debug) e.printStackTrace();
     } finally {
       messages = cc.getMessageList();
-      for (AS400Message msg : messages) {
-        System.out.println(msg.getID() + ": " + msg.getText());
-        // SQL9010 : Object already exists
-      }
+      //for (AS400Message msg : messages) {
+      //  System.out.println(msg.getID() + ": " + msg.getText());
+      //  // SQL9010 : Object already exists
+      //}
+      
       cleanup();
-    }
+      }
     }
 
   //TODO: This is kinda slow.
