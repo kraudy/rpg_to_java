@@ -290,7 +290,6 @@ public class ObjectCompiler implements Runnable{
 
     //TODO: Use QCMDEXC via JDBC
     CommandCall cc = new CommandCall(system);
-    AS400Message[] messages = null;
     Timestamp compilationTime = null;
 
     try {
@@ -314,16 +313,11 @@ public class ObjectCompiler implements Runnable{
 
       System.out.println("Compilation successful.");
 
-    //} catch (AS400SecurityException | ErrorCompletingRequestException | IOException | InterruptedException | PropertyVetoException | SQLException | IllegalArgumentException e) {
     } catch (SQLException | IllegalArgumentException e) {
       if (verbose) System.err.println("Compilation failed.");
       if (debug) e.printStackTrace();
     } finally {
-      messages = cc.getMessageList();
-      //for (AS400Message msg : messages) {
-      //  System.out.println(msg.getID() + ": " + msg.getText());
-      //  // SQL9010 : Object already exists
-      //}
+      // SQL9010 : Object already exists
       try (Statement stmt = connection.createStatement();
           ResultSet rsMessages = stmt.executeQuery(
             "SELECT MESSAGE_TIMESTAMP, MESSAGE_ID, SEVERITY, MESSAGE_TEXT, MESSAGE_SECOND_LEVEL_TEXT " +
@@ -344,7 +338,7 @@ public class ObjectCompiler implements Runnable{
           String formattedTime = sdf.format(messageTime);
           
           // Print in a formatted table-like structure
-          System.out.printf("%-20s | %-10s | %-8s | %s%n", formattedTime, messageId, severity, message);
+          System.out.printf("%-20s | %-10s | %-4s | %s%n", formattedTime, messageId, severity, message);
         } 
 
       } catch (SQLException e) {
