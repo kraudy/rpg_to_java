@@ -501,12 +501,12 @@ public class ObjectDescription {
           break;
       }
 
-      if (!debug) return;
+      //if (!debug) return;
 
-      System.out.println("All data: ");
-      for (CompilationPattern.ParamCmd paramCmd : this.ParamCmdSequence.keySet()){
-        System.out.println(paramCmd.name() + ": " + this.ParamCmdSequence.get(paramCmd));
-      }
+      //System.out.println("All data: ");
+      //for (CompilationPattern.ParamCmd paramCmd : this.ParamCmdSequence.keySet()){
+      //  System.out.println(paramCmd.name() + ": " + this.ParamCmdSequence.get(paramCmd));
+      //}
 
       
     }

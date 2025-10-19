@@ -227,7 +227,7 @@ public class ObjectCompiler implements Runnable{
     }
 
     //Map<CompilationPattern.ParamCmd, String> ParamCmdSequence = new HashMap<>();
-    ParamMap ParamCmdSequence = new ParamMap(debug);
+    ParamMap ParamCmdSequence = new ParamMap(false); //Set this as false to not duplicated output.
 
     /* Parameters values, if provided, overwrite retrieved values */
     if (!text.isEmpty()) ParamCmdSequence.put(ParamCmd.TEXT, "'" + text +"'");

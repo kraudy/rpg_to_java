@@ -37,10 +37,11 @@ public class ParamMap extends HashMap<ParamCmd, String> {
         String oldValue = super.put(param, value);
 
         if (debug) {
-          if (oldValue != null) {
-            System.out.println("Previous value. " + param.name() + ": " + oldValue);
-          } 
-          System.out.println("Current value. " + param.name() + ": " + value);
+          //if (oldValue != null) {
+          //  System.out.println("Previous value. " + param.name() + ": " + oldValue);
+          //} 
+          //System.out.println("Current value. " + param.name() + ": " + value);
+          System.out.println(param.name() + ": " + (oldValue != null ? oldValue + " => " : "") + value);
         }
 
         return oldValue;
