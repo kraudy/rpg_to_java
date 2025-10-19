@@ -20,7 +20,8 @@ public class CompilationPattern {
   private CompCmd compilationCommand;
   private ObjectDescription.ObjectType objectType;
   private ObjectDescription.SourceType sourceType;
-  private Map<ParamCmd, String> ParamCmdSequence;
+  //private Map<ParamCmd, String> ParamCmdSequence;
+  private ParamMap ParamCmdSequence;
   Utilities.ParsedKey targetKey;
   Supplier<String> cmdSupplier; // Resolver map for command builders (functions that build command strings based on spec)
   List<ParamCmd> compilationPattern;
@@ -891,6 +892,8 @@ public class CompilationPattern {
   public String buildCommand() {
     StringBuilder sb = new StringBuilder(); 
 
+    this.ParamCmdSequence.showChanges(compilationPattern);
+
     for (ParamCmd param : compilationPattern) {
       sb.append(getParamString(param));
     }
@@ -898,7 +901,7 @@ public class CompilationPattern {
     return compilationCommand.name() + sb.toString();
   }
 
-  public  String getParamString(ParamCmd paramCmd){
+  public String getParamString(ParamCmd paramCmd){
     //TODO: Should i update the object desc?
     String val = ParamCmdSequence.getOrDefault(paramCmd, "");  // Retrieved or empty
 
