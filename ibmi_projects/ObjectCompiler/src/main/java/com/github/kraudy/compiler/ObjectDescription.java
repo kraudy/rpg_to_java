@@ -34,7 +34,8 @@ public class ObjectDescription {
   CompCmd compilationCommand;
   Supplier<Void> getObjInfo;
 
-  public Map<CompilationPattern.ParamCmd, String> ParamCmdSequence = new HashMap<>();
+  //public Map<CompilationPattern.ParamCmd, String> ParamCmdSequence = new HashMap<>();
+  public ParamMap ParamCmdSequence;
 
 
   public enum SysCmd { CHGLIBL, DSPPGMREF, DSPOBJD, DSPDBR }
@@ -122,6 +123,8 @@ public class ObjectDescription {
     //this.targetLibrary = ValCmd.LIBL.toString();
     //if (this.sourceName.isEmpty())    this.sourceName = CompCmd.compilationSourceName(compilationCommand);//ValCmd.PGM.toString();
 
+    this.ParamCmdSequence = new ParamMap(this.debug);
+
     //TODO: Set another switch specifically for SRCFILE, SRCMBR and SRCSTMF
     switch (this.compilationCommand) {
       case CRTSQLRPGI:
@@ -202,9 +205,12 @@ public class ObjectDescription {
   public String getSourceFile() { return sourceFile; }
   public String getSourceName() { return sourceName; }
   public SourceType getSourceType() { return this.targetKey.sourceType; }
-  public Map<CompilationPattern.ParamCmd, String> getParamCmdSequence() { return ParamCmdSequence; }
+  //public Map<CompilationPattern.ParamCmd, String> getParamCmdSequence() { return ParamCmdSequence; }
+  public ParamMap getParamCmdSequence() { return ParamCmdSequence; }
 
-  public void setParamsSequence(Map<CompilationPattern.ParamCmd, String> ParamCmdSequence) {
+  //public void setParamsSequence(Map<CompilationPattern.ParamCmd, String> ParamCmdSequence) {
+  //TODO: Maybe add a method to ParamMap to just send the map
+  public void setParamsSequence(ParamMap ParamCmdSequence) {
     for (CompilationPattern.ParamCmd paramCmd : ParamCmdSequence.keySet()){
       this.ParamCmdSequence.put(paramCmd, ParamCmdSequence.get(paramCmd));
     }

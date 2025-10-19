@@ -27,7 +27,7 @@ public class ParamMap extends HashMap<ParamCmd, String> {
 
         switch (param) {
           case TEXT:
-            value = "'" + value + "'";
+            //value = "'" + value + "'";
             break;
         
           default:
@@ -38,9 +38,9 @@ public class ParamMap extends HashMap<ParamCmd, String> {
 
         if (debug) {
           if (oldValue != null) {
-            System.out.println("Previous value. " + param.name() + ": '" + oldValue + "'");
+            System.out.println("Previous value. " + param.name() + ": " + oldValue);
           } 
-          System.out.println("Current value. " + param.name() + ": '" + value + "'");
+          System.out.println("Current value. " + param.name() + ": " + value);
         }
 
         return oldValue;

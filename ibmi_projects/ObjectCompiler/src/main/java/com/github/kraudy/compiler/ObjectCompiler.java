@@ -226,7 +226,8 @@ public class ObjectCompiler implements Runnable{
       if (verbose) System.err.println("Object not found; using defaults.");
     }
 
-    Map<CompilationPattern.ParamCmd, String> ParamCmdSequence = new HashMap<>();
+    //Map<CompilationPattern.ParamCmd, String> ParamCmdSequence = new HashMap<>();
+    ParamMap ParamCmdSequence = new ParamMap(debug);
 
     /* Parameters values, if provided, overwrite retrieved values */
     if (!text.isEmpty()) ParamCmdSequence.put(ParamCmd.TEXT, "'" + text +"'");
