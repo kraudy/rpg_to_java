@@ -307,10 +307,11 @@ public class ObjectCompiler implements Runnable{
       if (verbose) System.err.println("Compilation failed.");
       if (debug) e.printStackTrace();
     } finally {
-      // SQL9010 : Object already exists
+      // SQL0601 : Object already exists
+      // CPF5813 : File CUSTOMER in library ROBKRAUDY2 already exists
       try (Statement stmt = connection.createStatement();
           ResultSet rsMessages = stmt.executeQuery(
-            "SELECT MESSAGE_TIMESTAMP, MESSAGE_ID, SEVERITY, MESSAGE_TEXT, MESSAGE_SECOND_LEVEL_TEXT " +
+            "SELECT MESSAGE_TIMESTAMP, MESSAGE_ID, SEVERITY, MESSAGE_TEXT, COALESCE(MESSAGE_SECOND_LEVEL_TEXT, '') As MESSAGE_SECOND_LEVEL_TEXT " +
             "FROM TABLE(QSYS2.JOBLOG_INFO('*')) " + 
             "WHERE FROM_USER = USER " +
             "AND MESSAGE_TIMESTAMP > '" + compilationTime + "' " +
