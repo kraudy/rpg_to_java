@@ -149,13 +149,13 @@ public class ObjectDescription {
       case CRTSQLRPGI:
         ParamCmdSequence.put(ParamCmd.OBJ, this.targetKey.library + "/" + this.targetKey.objectName);
         ParamCmdSequence.put(ParamCmd.OBJTYPE, this.targetKey.objectType.toParam());
-        ParamCmdSequence.put(ParamCmd.COMMIT, ValCmd.NONE.toString());
-        ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.SOURCE.toString());
+        ParamCmdSequence.put(ParamCmd.COMMIT, ValCmd.NONE);
+        ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.SOURCE);
         break;
     
       case CRTBNDRPG:
       case CRTBNDCL:
-        ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.ALL.toString());
+        ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.ALL);
       case CRTRPGPGM:
       case CRTCLPGM:
         ParamCmdSequence.put(ParamCmd.PGM, this.targetKey.library + "/" + this.targetKey.objectName);
@@ -170,19 +170,19 @@ public class ObjectDescription {
       case CRTSRVPGM:
         ParamCmdSequence.put(ParamCmd.SRVPGM, this.targetKey.library + "/" + this.targetKey.objectName);
         ParamCmdSequence.put(ParamCmd.MODULE, this.targetKey.library + "/" + this.targetKey.objectName);
-        ParamCmdSequence.put(ParamCmd.BNDSRVPGM, ValCmd.NONE.toString());
+        ParamCmdSequence.put(ParamCmd.BNDSRVPGM, ValCmd.NONE);
         break; //TODO: I had these two together, check if it is needed or simply add 
 
       case CRTRPGMOD:
       case CRTCLMOD:
-        ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.ALL.toString());
+        ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.ALL);
         ParamCmdSequence.put(ParamCmd.MODULE, this.targetKey.library + "/" + this.targetKey.objectName);
         break;
 
       case RUNSQLSTM:
-        ParamCmdSequence.put(ParamCmd.COMMIT, ValCmd.NONE.toString());
-        ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.SOURCE.toString());
-        ParamCmdSequence.put(ParamCmd.OPTION, ValCmd.LIST.toString());
+        ParamCmdSequence.put(ParamCmd.COMMIT, ValCmd.NONE);
+        ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.SOURCE);
+        ParamCmdSequence.put(ParamCmd.OPTION, ValCmd.LIST);
         break;
 
       default:
@@ -373,7 +373,7 @@ public class ObjectDescription {
         case CRTBNDCL:
           String actgrp = rsObj.getString("ACTIVATION_GROUP").trim();
           if (!actgrp.isEmpty()) ParamCmdSequence.put(ParamCmd.ACTGRP, actgrp);
-          if ("QILE".equals(actgrp)) ParamCmdSequence.put(ParamCmd.DFTACTGRP, ValCmd.NO.toString());
+          if ("QILE".equals(actgrp)) ParamCmdSequence.put(ParamCmd.DFTACTGRP, ValCmd.NO);
         case CRTRPGMOD:
           String stgMdl = rsObj.getString("STORAGE_MODEL").trim();
           if (!stgMdl.isEmpty()) ParamCmdSequence.put(ParamCmd.STGMDL, stgMdl);
@@ -382,7 +382,7 @@ public class ObjectDescription {
         case CRTRPGPGM:
         case CRTCLPGM:
           String tgtRls = rsObj.getString("TARGET_RELEASE").trim();
-          ParamCmdSequence.put(ParamCmd.TGTRLS, ValCmd.CURRENT.toString());
+          ParamCmdSequence.put(ParamCmd.TGTRLS, ValCmd.CURRENT);
           if (!tgtRls.isEmpty()) ParamCmdSequence.put(ParamCmd.TGTRLS, tgtRls);
         case CRTDSPF:
         case CRTPF:
@@ -402,7 +402,7 @@ public class ObjectDescription {
         case CRTCLPGM:
         case RUNSQLSTM:
           String tgtRls = rsObj.getString("TARGET_RELEASE").trim();
-          ParamCmdSequence.put(ParamCmd.TGTRLS, ValCmd.CURRENT.toString());
+          ParamCmdSequence.put(ParamCmd.TGTRLS, ValCmd.CURRENT);
           if (!tgtRls.isEmpty()) ParamCmdSequence.put(ParamCmd.TGTRLS, tgtRls);
 
           String usrPrf = rsObj.getString("USER_PROFILE").trim();
@@ -438,8 +438,7 @@ public class ObjectDescription {
         case CRTRPGMOD:
           String fixNbr = rsObj.getString("FIX_DECIMAL_DATA").trim();
           if (!fixNbr.isEmpty()){
-            fixNbr = fixNbr.equals("1") ? ValCmd.YES.toString() : ValCmd.NO.toString();
-            ParamCmdSequence.put(ParamCmd.FIXNBR, fixNbr);
+            ParamCmdSequence.put(ParamCmd.FIXNBR, fixNbr.equals("1") ? ValCmd.YES : ValCmd.NO);
           }
 
           String prfDta = rsObj.getString("PROFILING_DATA").trim();
@@ -452,10 +451,10 @@ public class ObjectDescription {
         case CRTCLMOD:
         case CRTCLPGM:
           String logCmds = rsObj.getString("LOG_COMMANDS").trim();
-          if (!logCmds.isEmpty()) ParamCmdSequence.put(ParamCmd.LOG, logCmds.equals("1") ? ValCmd.YES.toString() : ValCmd.NO.toString());
+          if (!logCmds.isEmpty()) ParamCmdSequence.put(ParamCmd.LOG, logCmds.equals("1") ? ValCmd.YES : ValCmd.NO);
 
           String alwRtvSrc = rsObj.getString("ALLOW_RTVCLSRC").trim();
-          if (!alwRtvSrc.isEmpty()) ParamCmdSequence.put(ParamCmd.ALWRTVSRC, alwRtvSrc.equals("1") ? ValCmd.YES.toString() : ValCmd.NO.toString());
+          if (!alwRtvSrc.isEmpty()) ParamCmdSequence.put(ParamCmd.ALWRTVSRC, alwRtvSrc.equals("1") ? ValCmd.YES : ValCmd.NO);
           break;
       }
 
@@ -470,15 +469,15 @@ public class ObjectDescription {
         case CRTDSPF:
         case CRTPF:
         case CRTLF:
-          ParamCmdSequence.put(ParamCmd.OPTION, ValCmd.EVENTF.toString());
+          ParamCmdSequence.put(ParamCmd.OPTION, ValCmd.EVENTF);
           break;
       }
 
       switch (this.compilationCommand) {
         case CRTRPGPGM:
         case CRTCLPGM:
-          ParamCmdSequence.put(ParamCmd.OPTION, ValCmd.LSTDBG.toString());
-          ParamCmdSequence.put(ParamCmd.GENOPT, ValCmd.LIST.toString());
+          ParamCmdSequence.put(ParamCmd.OPTION, ValCmd.LSTDBG);
+          ParamCmdSequence.put(ParamCmd.GENOPT, ValCmd.LIST);
           break;
       }
 
@@ -587,7 +586,7 @@ public class ObjectDescription {
 
         //TODO: Should i validate the compilation command here?
         String dbgData = rsMod.getString("DEBUG_DATA").trim();
-        if ("*YES".equals(dbgData)) ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.ALL.toString());
+        if ("*YES".equals(dbgData)) ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.ALL);
         
 
         // Override OPTIMIZE if more specific here
@@ -595,10 +594,10 @@ public class ObjectDescription {
         String modOptimize = rsMod.getString("OPTIMIZATION_LEVEL").trim();
         if (!modOptimize.isEmpty()) {
           switch (modOptimize) {
-            case "10": ParamCmdSequence.put(ParamCmd.OPTIMIZE, ValCmd.NONE.toString());   break;
-            case "20": ParamCmdSequence.put(ParamCmd.OPTIMIZE, ValCmd.BASIC.toString());  break;
-            case "30": ParamCmdSequence.put(ParamCmd.OPTIMIZE, ValCmd.BASIC.toString());  break;
-            case "40": ParamCmdSequence.put(ParamCmd.OPTIMIZE, ValCmd.FULL.toString());   break;
+            case "10": ParamCmdSequence.put(ParamCmd.OPTIMIZE, ValCmd.NONE);   break;
+            case "20": ParamCmdSequence.put(ParamCmd.OPTIMIZE, ValCmd.BASIC);  break;
+            case "30": ParamCmdSequence.put(ParamCmd.OPTIMIZE, ValCmd.BASIC);  break;
+            case "40": ParamCmdSequence.put(ParamCmd.OPTIMIZE, ValCmd.FULL);   break;
           }
         }
 

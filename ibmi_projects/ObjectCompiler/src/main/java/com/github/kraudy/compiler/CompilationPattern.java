@@ -804,7 +804,7 @@ public class CompilationPattern {
           
           ParamCmdSequence.put(ParamCmd.SRCSTMF, this.migrator.getFirstPath());
 
-          ParamCmdSequence.put(ParamCmd.TGTCCSID, ValCmd.JOB.toString()); // Needed to compile from stream files
+          ParamCmdSequence.put(ParamCmd.TGTCCSID, ValCmd.JOB); // Needed to compile from stream files
 
           this.compilationPattern.remove(ParamCmd.SRCFILE);
           this.compilationPattern.remove(ParamCmd.SRCMBR);
@@ -850,9 +850,9 @@ public class CompilationPattern {
 
       case CRTSQLRPGI:
         //TODO: Something is putting this to *ALL in object description, find it and remove this
-        ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.SOURCE.toString());
+        ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.SOURCE);
         if (ParamCmdSequence.containsKey(ParamCmd.SRCSTMF)) {
-          ParamCmdSequence.put(ParamCmd.CVTCCSID, ValCmd.JOB.toString());
+          ParamCmdSequence.put(ParamCmd.CVTCCSID, ValCmd.JOB);
         }
         break;
 
@@ -865,7 +865,7 @@ public class CompilationPattern {
 
       case RUNSQLSTM:
         //TODO: Something is putting this to *EVENTF in object description, find it and remove this
-        ParamCmdSequence.put(ParamCmd.OPTION, ValCmd.LIST.toString());
+        ParamCmdSequence.put(ParamCmd.OPTION, ValCmd.LIST);
         break;
 
       case CRTDSPF:

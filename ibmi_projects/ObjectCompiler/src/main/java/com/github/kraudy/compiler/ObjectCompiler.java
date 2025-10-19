@@ -247,7 +247,7 @@ public class ObjectCompiler implements Runnable{
     }
     if (!this.sourceStmf.isEmpty()) {
       ParamCmdSequence.put(ParamCmd.SRCSTMF, "'" + this.sourceStmf + "'");
-      ParamCmdSequence.put(ParamCmd.TGTCCSID, ValCmd.JOB.toString());
+      ParamCmdSequence.put(ParamCmd.TGTCCSID, ValCmd.JOB);
     }
 
     odes.setParamsSequence(ParamCmdSequence);
