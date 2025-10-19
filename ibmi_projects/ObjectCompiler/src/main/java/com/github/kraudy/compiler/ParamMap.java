@@ -30,7 +30,7 @@ public class ParamMap extends HashMap<ParamCmd, String> {
 
         switch (param) {
           case TEXT:
-            //value = "'" + value + "'";
+            value = "'" + value + "'";
             break;
         
           default:
@@ -44,21 +44,11 @@ public class ParamMap extends HashMap<ParamCmd, String> {
 
         String currentChain = ParamCmdChanges.getOrDefault(param, "");
         if (currentChain.isEmpty()) {
-            // First insertion
-            currentChain = param.name() + " : " + value;
+          currentChain = param.name() + " : " + value; // First insertion
         } else {
-            // Update: append the new value to the chain
-            currentChain += " => " + value;
+          currentChain += " => " + value; // Update: append the new value to the chain
         }
         ParamCmdChanges.put(param, currentChain);
-
-        if (debug) {
-          //if (oldValue != null) {
-          //  System.out.println("Previous value. " + param.name() + ": " + oldValue);
-          //} 
-          //System.out.println("Current value. " + param.name() + ": " + value);
-          //System.out.println(param.name() + ": " + (oldValue != null ? oldValue + " => " : "") + value);
-        }
 
         return oldValue;
     }

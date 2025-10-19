@@ -388,7 +388,7 @@ public class ObjectDescription {
         case CRTPF:
         case CRTLF:
           String text = rsObj.getString("TEXT_DESCRIPTION").trim();
-          if (!text.isEmpty()) ParamCmdSequence.put(ParamCmd.TEXT, "'" + text +"'");
+          if (!text.isEmpty()) ParamCmdSequence.put(ParamCmd.TEXT, text);
           //if (!text.isEmpty()) ParamCmdSequence.put(ParamCmd.TEXT, text);
           break;
       }
