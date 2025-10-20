@@ -890,24 +890,10 @@ public class CompilationPattern {
   }
 
   public String buildCommand() {
-    StringBuilder sb = new StringBuilder(); 
 
     this.ParamCmdSequence.showChanges(compilationPattern);
 
-    for (ParamCmd param : compilationPattern) {
-      sb.append(getParamString(param));
-    }
-
-    return compilationCommand.name() + sb.toString();
-  }
-
-  public String getParamString(ParamCmd paramCmd){
-    //TODO: Should i update the object desc?
-    String val = ParamCmdSequence.getOrDefault(paramCmd, "");  // Retrieved or empty
-
-    if (val.isEmpty()) return "";
-
-    return " " + paramCmd.name() + "(" + val + ")";
+    return  this.ParamCmdSequence.getParamChain(compilationPattern, compilationCommand.name());
   }
 
 }

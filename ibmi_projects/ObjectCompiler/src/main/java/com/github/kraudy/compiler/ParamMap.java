@@ -70,4 +70,22 @@ public class ParamMap extends HashMap<ParamCmd, String> {
 
       System.out.println(change);
     }
+
+    public String getParamChain(List<ParamCmd> compilationPattern, String command){
+      StringBuilder sb = new StringBuilder(); 
+
+      for (ParamCmd param : compilationPattern) {
+        sb.append(getParamString(param));
+      }
+
+      return command + sb.toString();
+    }
+
+    public String getParamString(ParamCmd paramCmd){
+      String val = this.getOrDefault(paramCmd, "");  // Retrieved or empty
+
+      if (val.isEmpty()) return "";
+
+      return " " + paramCmd.name() + "(" + val + ")";
+    }
 }
