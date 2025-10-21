@@ -206,6 +206,8 @@ public class ObjectCompiler implements Runnable{
       throw new RuntimeException("Failed to initialize migrator: " + e.getMessage(), e);
     }
 
+    setCurLib(targetKey.library);
+
     this.odes = new ObjectDescription(
           migrator,
           connection,
@@ -294,7 +296,7 @@ public class ObjectCompiler implements Runnable{
       if (debug) e.printStackTrace();
       throw new IllegalArgumentException("Could not get command time.");
     }
-    
+
     try (Statement cmdStmt = connection.createStatement()) { //TODO: Use this to create the UDF function in QTEMP
       cmdStmt.execute("CALL QSYS2.QCMDEXC('CHGCURLIB CURLIB(" + library + ")')");
     } catch (SQLException e) {
