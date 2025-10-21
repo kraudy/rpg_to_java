@@ -29,6 +29,7 @@ public class Utilities {
       // if (this.library.equals("*LIBL") || this.library.equals("*CURLIB"))
       if (this.library.isEmpty()) throw new IllegalArgumentException("Library name is required.");
 
+
       this.objectName = parts[1].toUpperCase();
       if (this.objectName.isEmpty()) throw new IllegalArgumentException("Object name is required.");
 

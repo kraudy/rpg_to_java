@@ -218,6 +218,8 @@ public class ObjectCompiler implements Runnable{
           sourceName
     );
 
+    //TODO: Set library as curlib and change value to CURLIB, maybe use put for chain tracking
+
     try {
       odes.getObjectInfo();
     } catch (Exception e) {
@@ -280,7 +282,9 @@ public class ObjectCompiler implements Runnable{
     compile(commandStr);
   }
 
+  private void setCurLib(String library){
 
+  }
 
   private void compile(String commandStr) {
     // Escape single quotes in commandStr for QCMDEXC
@@ -338,6 +342,37 @@ public class ObjectCompiler implements Runnable{
         e.printStackTrace();
       }
       cleanup();
+      }
+    }
+  
+    private void getJoblogMessages(Timestamp commandTime){
+      // SQL0601 : Object already exists
+      // CPF5813 : File CUSTOMER in library ROBKRAUDY2 already exists
+      try (Statement stmt = connection.createStatement();
+          ResultSet rsMessages = stmt.executeQuery(
+            "SELECT MESSAGE_TIMESTAMP, MESSAGE_ID, SEVERITY, MESSAGE_TEXT, COALESCE(MESSAGE_SECOND_LEVEL_TEXT, '') As MESSAGE_SECOND_LEVEL_TEXT " +
+            "FROM TABLE(QSYS2.JOBLOG_INFO('*')) " + 
+            "WHERE FROM_USER = USER " +
+            "AND MESSAGE_TIMESTAMP > '" + commandTime + "' " +
+            "AND MESSAGE_ID NOT IN ('SQL0443', 'CPC0904', 'CPF2407') " +
+            "ORDER BY MESSAGE_TIMESTAMP DESC "
+          )) {
+        while (rsMessages.next()) {
+          Timestamp messageTime = rsMessages.getTimestamp("MESSAGE_TIMESTAMP");
+          String messageId = rsMessages.getString("MESSAGE_ID").trim();
+          String severity = rsMessages.getString("SEVERITY").trim();
+          String message = rsMessages.getString("MESSAGE_TEXT").trim();
+          String messageSecondLevel = rsMessages.getString("MESSAGE_SECOND_LEVEL_TEXT").trim();
+          // Format the timestamp as a string
+          SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+          String formattedTime = sdf.format(messageTime);
+          
+          // Print in a formatted table-like structure
+          System.out.printf("%-20s | %-10s | %-4s | %s%n", formattedTime, messageId, severity, message);
+        } 
+      } catch (SQLException e) {
+        System.out.println("Could not get messages.");
+        e.printStackTrace();
       }
     }
 
