@@ -283,7 +283,28 @@ public class ObjectCompiler implements Runnable{
   }
 
   private void setCurLib(String library){
+    Timestamp commandTime = null;
+    try (Statement stmt = connection.createStatement();
+        ResultSet rsTime = stmt.executeQuery("SELECT CURRENT_TIMESTAMP AS Command_Time FROM sysibm.sysdummy1")) {
+      if (rsTime.next()) {
+        commandTime = rsTime.getTimestamp("Command_Time");
+      }
+    } catch (SQLException e) {
+      if (verbose) System.err.println("Could not get command time.");
+      if (debug) e.printStackTrace();
+      throw new IllegalArgumentException("Could not get command time.");
+    }
+    
+    try (Statement cmdStmt = connection.createStatement()) { //TODO: Use this to create the UDF function in QTEMP
+      cmdStmt.execute("CALL QSYS2.QCMDEXC('CHGCURLIB CURLIB(" + library + ")')");
+    } catch (SQLException e) {
+      System.out.println("Command failed.");
+      e.printStackTrace();
+      throw new IllegalArgumentException("Could not set " + library + " as curlib");
+    }
 
+    System.out.println("Command successful.");
+    getJoblogMessages(commandTime);
   }
 
   private void compile(String commandStr) {
@@ -292,19 +313,19 @@ public class ObjectCompiler implements Runnable{
 
     if (debug) System.out.println("Sacaped command: " + escapedCommand);
 
-    Timestamp compilationTime = null;
+    Timestamp commandTime = null;
 
     try (Statement stmt = connection.createStatement();
         ResultSet rsTime = stmt.executeQuery("SELECT CURRENT_TIMESTAMP AS Compilation_Time FROM sysibm.sysdummy1")) {
       if (rsTime.next()) {
-        compilationTime = rsTime.getTimestamp("Compilation_Time");
+        commandTime = rsTime.getTimestamp("Compilation_Time");
       }
-    try (Statement cmdStmt = connection.createStatement()) { //TODO: Use this to create the UDF function in QTEMP
-      cmdStmt.execute("CALL QSYS2.QCMDEXC('" + escapedCommand + "')");
-    } catch (SQLException e) {
-      System.out.println("Compilation failed.");
-      e.printStackTrace();
-    }
+      try (Statement cmdStmt = connection.createStatement()) { //TODO: Use this to create the UDF function in QTEMP
+        cmdStmt.execute("CALL QSYS2.QCMDEXC('" + escapedCommand + "')");
+      } catch (SQLException e) {
+        System.out.println("Compilation failed.");
+        e.printStackTrace();
+      }
 
       System.out.println("Compilation successful.");
 
@@ -312,7 +333,7 @@ public class ObjectCompiler implements Runnable{
       if (verbose) System.err.println("Compilation failed.");
       if (debug) e.printStackTrace();
     } finally {
-      getJoblogMessages(compilationTime);
+      getJoblogMessages(commandTime);
       cleanup();
       }
     }

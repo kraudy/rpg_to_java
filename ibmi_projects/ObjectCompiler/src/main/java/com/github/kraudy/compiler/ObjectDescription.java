@@ -513,7 +513,7 @@ public class ObjectDescription {
 
   // NEW: Query BOUND_MODULE_INFO for module-specific fields (e.g., GENLVL, OPTION)
   private void getModuleInfo(String entryModuleLib, String entryModule) throws SQLException {
-    if (entryModuleLib.isEmpty() || entryModule.isEmpty()) throw new IllegalArgumentException("Entry module or lib are empty");;  // Skip if no entry module
+    if (entryModuleLib.isEmpty() || entryModule.isEmpty()) throw new IllegalArgumentException("Entry module or lib are empty");  // Skip if no entry module
 
     try (Statement stmt = connection.createStatement();
         ResultSet rsMod = stmt.executeQuery(
