@@ -284,6 +284,32 @@ public class ObjectCompiler implements Runnable{
     compile(commandStr);
   }
 
+  private void executeCommand(String command){
+    Timestamp commandTime = null;
+    try (Statement stmt = connection.createStatement();
+        ResultSet rsTime = stmt.executeQuery("SELECT CURRENT_TIMESTAMP AS Command_Time FROM sysibm.sysdummy1")) {
+      if (rsTime.next()) {
+        commandTime = rsTime.getTimestamp("Command_Time");
+      }
+    } catch (SQLException e) {
+      if (verbose) System.err.println("Could not get command time.");
+      if (debug) e.printStackTrace();
+      throw new IllegalArgumentException("Could not get command time.");
+    }
+
+    try (Statement cmdStmt = connection.createStatement()) {
+      cmdStmt.execute("CALL QSYS2.QCMDEXC('" + command + "')");
+    } catch (SQLException e) {
+      System.out.println("Command failed.");
+      e.printStackTrace();
+      getJoblogMessages(commandTime);
+      throw new IllegalArgumentException("Could not execute command: " + command); //TODO: Catch this and throw the appropiate message
+    }
+
+    System.out.println("Command successful.");
+    getJoblogMessages(commandTime);
+  }
+
   private void setCurLib(String library){
     Timestamp commandTime = null;
     try (Statement stmt = connection.createStatement();
