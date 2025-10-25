@@ -117,7 +117,6 @@ public class ObjectDescription {
     this.compilationCommand = CompilationPattern.getCompilationCommand(this.targetKey.sourceType, this.targetKey.objectType);
 
     /* Generate compilation params values from object description */
-    //TODO: I'm not sure if these are needed now or maybe add them to the input validation in Utilities
     //TODO: Add a library list param so these could be set to *LIBL and we don't need to be dealing
     // with library names, maybe later they could be resolved if needed
     //this.targetLibrary = ValCmd.LIBL.toString();
@@ -211,6 +210,8 @@ public class ObjectDescription {
   //public void setParamsSequence(Map<CompilationPattern.ParamCmd, String> ParamCmdSequence) {
   //TODO: Maybe add a method to ParamMap to just send the map
   public void setParamsSequence(ParamMap ParamCmdSequence) {
+    // TODO: Check this
+    // this.ParamCmdSequence.putAll(odes.getParamCmdSequence());  // Copy from odes (triggers put for each entry)
     for (CompilationPattern.ParamCmd paramCmd : ParamCmdSequence.keySet()){
       this.ParamCmdSequence.put(paramCmd, ParamCmdSequence.get(paramCmd));
     }

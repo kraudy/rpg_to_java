@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.github.kraudy.compiler.CompilationPattern.CompCmd;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 import com.github.kraudy.migrator.SourceMigrator;
@@ -284,6 +285,10 @@ public class ObjectCompiler implements Runnable{
     compile(commandStr);
 
     cleanup();
+  }
+
+  private void executeCommand(CompCmd compilationCommand, String command){
+    
   }
 
   //TODO: Overwrite this with SysCmd and CompCmd, use another map for SysCmd to store the string.
