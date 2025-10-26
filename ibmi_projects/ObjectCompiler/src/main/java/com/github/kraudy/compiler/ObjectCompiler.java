@@ -190,8 +190,6 @@ public class ObjectCompiler implements Runnable{
     //TODO: Add --dry-run to just run without executing. Just to generate the command string
     cleanLibraryList();
 
-    showLibraryList();
-
     // Migrator
     try {
       this.migrator = new SourceMigrator(this.system, this.connection, true, true);
@@ -201,8 +199,9 @@ public class ObjectCompiler implements Runnable{
       throw new RuntimeException("Failed to initialize migrator: " + e.getMessage(), e);
     }
 
-
     setCurLib(targetKey.library);
+
+    showLibraryList();
 
     this.odes = new ObjectDescription(
           migrator,

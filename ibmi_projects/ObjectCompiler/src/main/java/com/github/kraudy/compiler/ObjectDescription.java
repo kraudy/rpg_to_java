@@ -246,6 +246,11 @@ public class ObjectDescription {
     
     try (Statement stmt = connection.createStatement();
         ResultSet rsObj = stmt.executeQuery(
+          "With " +
+          "Libs (Libraries) As ( " +
+              "SELECT DISTINCT(SCHEMA_NAME) FROM QSYS2.LIBRARY_LIST_INFO " + 
+              "WHERE TYPE NOT IN ('SYSTEM','PRODUCT') AND SCHEMA_NAME NOT IN ('QGPL', 'GAMES400') " +
+          ") " +
           "SELECT PROGRAM_LIBRARY, " + // programLibrary
               "PROGRAM_NAME, " + // programName
               "COALESCE(PROGRAM_TYPE,'') As PROGRAM_TYPE, " +  // [ILE, OPM] 
@@ -354,8 +359,10 @@ public class ObjectDescription {
               "SQL_PACKAGE, " +
               "SQL_RDB_CONNECTION_METHOD " +
             "FROM QSYS2.PROGRAM_INFO " +
-            "WHERE PROGRAM_LIBRARY = '" + library + "' " +
-                "AND PROGRAM_NAME = '" + objectName + "' " +
+            "INNER JOIN Libs " +
+            "ON (PROGRAM_LIBRARY = Libs.Libraries) " +
+            "WHERE " + 
+                "PROGRAM_NAME = '" + objectName + "' " +
                 "AND OBJECT_TYPE = '" + objectType.toParam() + "' "
           )) {
       if (!rsObj.next()) {
