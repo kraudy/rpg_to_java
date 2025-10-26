@@ -207,6 +207,8 @@ public class ObjectCompiler implements Runnable{
       throw new RuntimeException("Failed to initialize migrator: " + e.getMessage(), e);
     }
 
+    // chglibl libl()
+
     setCurLib(targetKey.library);
 
     this.odes = new ObjectDescription(
@@ -282,13 +284,33 @@ public class ObjectCompiler implements Runnable{
     // DLTOBJ OBJ(ROBKRAUDY2/CUSTOMER) OBJTYPE(*FILE)
     // Maybe i can put these in another parameter, like, a pre or post pattern of commands using a map   
 
-    compile(commandStr);
+    compile(cpat.getCompilationCommand(), commandStr);
 
     cleanup();
   }
 
+  private void setCurLib(String library){
+    executeCommand("CHGCURLIB CURLIB(" + library + ")"); 
+  }
+
+  private void compile(CompCmd compilationCmd,String commandStr){
+    try {
+      executeCommand(compilationCmd, commandStr); 
+    } catch (IllegalArgumentException e) {
+      if (verbose) System.err.println("Compilation failed.");
+      if (debug) e.printStackTrace();
+    } finally {
+      cleanup();
+    }
+  }
+
   private void executeCommand(CompCmd compilationCommand, String command){
-    
+    // Escape single quotes in commandStr for QCMDEXC
+    String escapedCommand = command.replace("'", "''");
+
+    if (debug) System.out.println("Sacaped command: " + escapedCommand);
+
+    executeCommand(escapedCommand);
   }
 
   //TODO: Overwrite this with SysCmd and CompCmd, use another map for SysCmd to store the string.
@@ -319,57 +341,36 @@ public class ObjectCompiler implements Runnable{
     getJoblogMessages(commandTime);
   }
 
-  private void setCurLib(String library){
-    executeCommand("CHGCURLIB CURLIB(" + library + ")"); 
+  private void getJoblogMessages(Timestamp commandTime){
+    // SQL0601 : Object already exists
+    // CPF5813 : File CUSTOMER in library ROBKRAUDY2 already exists
+    try (Statement stmt = connection.createStatement();
+        ResultSet rsMessages = stmt.executeQuery(
+          "SELECT MESSAGE_TIMESTAMP, MESSAGE_ID, SEVERITY, MESSAGE_TEXT, COALESCE(MESSAGE_SECOND_LEVEL_TEXT, '') As MESSAGE_SECOND_LEVEL_TEXT " +
+          "FROM TABLE(QSYS2.JOBLOG_INFO('*')) " + 
+          "WHERE FROM_USER = USER " +
+          "AND MESSAGE_TIMESTAMP > '" + commandTime + "' " +
+          "AND MESSAGE_ID NOT IN ('SQL0443', 'CPC0904', 'CPF2407') " +
+          "ORDER BY MESSAGE_TIMESTAMP DESC "
+        )) {
+      while (rsMessages.next()) {
+        Timestamp messageTime = rsMessages.getTimestamp("MESSAGE_TIMESTAMP");
+        String messageId = rsMessages.getString("MESSAGE_ID").trim();
+        String severity = rsMessages.getString("SEVERITY").trim();
+        String message = rsMessages.getString("MESSAGE_TEXT").trim();
+        String messageSecondLevel = rsMessages.getString("MESSAGE_SECOND_LEVEL_TEXT").trim();
+        // Format the timestamp as a string
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String formattedTime = sdf.format(messageTime);
+        
+        // Print in a formatted table-like structure
+        System.out.printf("%-20s | %-10s | %-4s | %s%n", formattedTime, messageId, severity, message);
+      } 
+    } catch (SQLException e) {
+      System.out.println("Could not get messages.");
+      e.printStackTrace();
+    }
   }
-
-  private void compile(String commandStr) {
-    // Escape single quotes in commandStr for QCMDEXC
-    String escapedCommand = commandStr.replace("'", "''");
-
-    if (debug) System.out.println("Sacaped command: " + escapedCommand);
-
-    try {
-      executeCommand(escapedCommand); 
-    } catch (IllegalArgumentException e) {
-      if (verbose) System.err.println("Compilation failed.");
-      if (debug) e.printStackTrace();
-    } finally {
-      cleanup();
-    }
-
-    }
-  
-    private void getJoblogMessages(Timestamp commandTime){
-      // SQL0601 : Object already exists
-      // CPF5813 : File CUSTOMER in library ROBKRAUDY2 already exists
-      try (Statement stmt = connection.createStatement();
-          ResultSet rsMessages = stmt.executeQuery(
-            "SELECT MESSAGE_TIMESTAMP, MESSAGE_ID, SEVERITY, MESSAGE_TEXT, COALESCE(MESSAGE_SECOND_LEVEL_TEXT, '') As MESSAGE_SECOND_LEVEL_TEXT " +
-            "FROM TABLE(QSYS2.JOBLOG_INFO('*')) " + 
-            "WHERE FROM_USER = USER " +
-            "AND MESSAGE_TIMESTAMP > '" + commandTime + "' " +
-            "AND MESSAGE_ID NOT IN ('SQL0443', 'CPC0904', 'CPF2407') " +
-            "ORDER BY MESSAGE_TIMESTAMP DESC "
-          )) {
-        while (rsMessages.next()) {
-          Timestamp messageTime = rsMessages.getTimestamp("MESSAGE_TIMESTAMP");
-          String messageId = rsMessages.getString("MESSAGE_ID").trim();
-          String severity = rsMessages.getString("SEVERITY").trim();
-          String message = rsMessages.getString("MESSAGE_TEXT").trim();
-          String messageSecondLevel = rsMessages.getString("MESSAGE_SECOND_LEVEL_TEXT").trim();
-          // Format the timestamp as a string
-          SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-          String formattedTime = sdf.format(messageTime);
-          
-          // Print in a formatted table-like structure
-          System.out.printf("%-20s | %-10s | %-4s | %s%n", formattedTime, messageId, severity, message);
-        } 
-      } catch (SQLException e) {
-        System.out.println("Could not get messages.");
-        e.printStackTrace();
-      }
-    }
 
   //TODO: This is kinda slow.
   // String cpysplfCmd = "CPYSPLF FILE(" + objectName + ") TOFILE(QTEMP/SPLFCPY) JOB(*) SPLNBR(*LAST)";
