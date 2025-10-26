@@ -718,50 +718,7 @@ public class CompilationPattern {
     cmdToPatternMap.put(CompCmd.CRTDSPF, ddsDspfPattern);
     cmdToPatternMap.put(CompCmd.CRTPF, ddsPfPattern);
     cmdToPatternMap.put(CompCmd.CRTLF, ddsLfPattern);
-  }
-
-  public static final List<ParamCmd> reqPgmParams = Arrays.asList(
-      ParamCmd.PGM,       // Required first
-      ParamCmd.SRCFILE,
-      ParamCmd.SRCMBR,
-      ParamCmd.TEXT
-    );
-
-  public static final List<ParamCmd> ilePgmParams = Arrays.asList(
-      // reqPgmParams
-      ParamCmd.DFTACTGRP,
-      ParamCmd.DBGVIEW,
-      ParamCmd.OPTIMIZE
-      // releasePgmParams
-    );
-
-  public static final List<ParamCmd> opmPgmParams = Arrays.asList(
-      // reqPgmParams
-      ParamCmd.OPTION,
-      ParamCmd.GENOPT
-      // releasePgmParams
-    );            
-
-  public static final List<ParamCmd> releasePgmParams = Arrays.asList(
-        ParamCmd.USRPRF,
-        ParamCmd.TGTRLS
-    );          
-    
-  //TODO: Maybe these could be put in a MAP in the future along the suppliers
-  public static final List<ParamCmd> ilePgmPattern;
-  static {
-      ilePgmPattern = new ArrayList<>(reqPgmParams);
-      ilePgmPattern.addAll(ilePgmParams);
-      ilePgmPattern.addAll(releasePgmParams);
-  }
-    
-  public static final List<ParamCmd> opmPgmPattern;
-  static {
-      opmPgmPattern = new ArrayList<>(reqPgmParams);
-      opmPgmPattern.add(ParamCmd.GENLVL); //TODO: Could be added to opmPgmParams
-      opmPgmPattern.addAll(opmPgmParams);
-      opmPgmPattern.addAll(releasePgmParams);
-  }
+  }      
 
   //TODO: Maybe overload this to only pass the key as parameter or get the data and call with specific values
   //public CompilationPattern(targetKey){
