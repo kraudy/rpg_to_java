@@ -508,14 +508,6 @@ public class ObjectDescription {
           break;
       }
 
-      //if (!debug) return;
-
-      //System.out.println("All data: ");
-      //for (CompilationPattern.ParamCmd paramCmd : this.ParamCmdSequence.keySet()){
-      //  System.out.println(paramCmd.name() + ": " + this.ParamCmdSequence.get(paramCmd));
-      //}
-
-      
     }
   }
 
@@ -525,6 +517,11 @@ public class ObjectDescription {
 
     try (Statement stmt = connection.createStatement();
         ResultSet rsMod = stmt.executeQuery(
+          "With " +
+          "Libs (Libraries) As ( " +
+              "SELECT DISTINCT(SCHEMA_NAME) FROM QSYS2.LIBRARY_LIST_INFO " + 
+              "WHERE TYPE NOT IN ('SYSTEM','PRODUCT') AND SCHEMA_NAME NOT IN ('QGPL', 'GAMES400') " +
+          ") " +
           "SELECT PROGRAM_LIBRARY, " +
                 "PROGRAM_NAME, " +
                 "OBJECT_TYPE, " +
@@ -582,14 +579,15 @@ public class ObjectDescription {
                 "SQL_PACKAGE, " +
                 "SQL_RDB_CONNECTION_METHOD " + 
           "FROM QSYS2.BOUND_MODULE_INFO " +
-          "WHERE PROGRAM_LIBRARY = '" + this.targetKey.library + "' " +
-            "AND PROGRAM_NAME = '" + this.targetKey.objectName + "' " +
-            "AND BOUND_MODULE_LIBRARY = '" + entryModuleLib + "' " +
+          "INNER JOIN Libs " +
+            "ON (PROGRAM_LIBRARY = Libs.Libraries " +
+            "AND BOUND_MODULE_LIBRARY = Libs.Libraries) " +
+          "WHERE " +
+            "PROGRAM_NAME = '" + this.targetKey.objectName + "' " +
             "AND BOUND_MODULE = '" + entryModule + "' "
         )) {
       if (!rsMod.next()) {
-        // TODO: Maybe this should be optional for new objects. Just throw a warning
-        throw new IllegalArgumentException("Could not get module '" + entryModule + "' from library '" + entryModuleLib + "'");
+        throw new IllegalArgumentException("Could not found module '" + entryModule + "' in library list");
       }
 
         //TODO: Should i validate the compilation command here?
