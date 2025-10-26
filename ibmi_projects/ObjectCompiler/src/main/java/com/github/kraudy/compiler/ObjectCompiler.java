@@ -1,32 +1,23 @@
 package com.github.kraudy.compiler;
 
-import java.beans.PropertyVetoException;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.github.kraudy.compiler.CompilationPattern.CompCmd;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 import com.github.kraudy.migrator.SourceMigrator;
 import com.ibm.as400.access.AS400;
-import com.ibm.as400.access.AS400Message;
-import com.ibm.as400.access.AS400SecurityException;
-import com.ibm.as400.access.ErrorCompletingRequestException;
 import com.ibm.as400.access.AS400JDBCDataSource;
-import com.ibm.as400.access.CommandCall;
 import com.ibm.as400.access.User;
 
 import io.github.theprez.dotenv_ibmi.IBMiDotEnv;
-
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -199,6 +190,8 @@ public class ObjectCompiler implements Runnable{
     //TODO: Add --dry-run to just run without executing. Just to generate the command string
     cleanLibraryList();
 
+    showLibraryList();
+
     // Migrator
     try {
       this.migrator = new SourceMigrator(this.system, this.connection, true, true);
@@ -289,7 +282,22 @@ public class ObjectCompiler implements Runnable{
     cleanup();
   }
 
-  
+  private void showLibraryList(){
+    System.out.println("Library list: ");
+    try(Statement stmt = connection.createStatement();
+        ResultSet rsLibList = stmt.executeQuery(
+          "SELECT DISTINCT(SCHEMA_NAME) As Libraries FROM QSYS2.LIBRARY_LIST_INFO " + 
+          "WHERE TYPE NOT IN ('SYSTEM','PRODUCT') AND SCHEMA_NAME NOT IN ('QGPL', 'GAMES400')"
+          
+        )){
+      while (rsLibList.next()) {
+        System.out.println(rsLibList.getString("Libraries"));
+      }
+    } catch (SQLException e){
+      System.err.println("Could not get library list.");
+      e.printStackTrace();
+    }
+  }
 
   private void cleanLibraryList(){
     executeCommand("CHGLIBL LIBL()"); 
