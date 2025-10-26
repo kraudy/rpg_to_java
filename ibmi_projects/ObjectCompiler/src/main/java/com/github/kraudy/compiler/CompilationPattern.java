@@ -19,11 +19,8 @@ import com.github.kraudy.migrator.SourceMigrator;
 public class CompilationPattern {
   private CompCmd compilationCommand;
   private ObjectDescription.ObjectType objectType;
-  private ObjectDescription.SourceType sourceType;
-  //private Map<ParamCmd, String> ParamCmdSequence;
   private ParamMap ParamCmdSequence;
   Utilities.ParsedKey targetKey;
-  Supplier<String> cmdSupplier; // Resolver map for command builders (functions that build command strings based on spec)
   List<ParamCmd> compilationPattern;
   private SourceMigrator migrator;
 
@@ -721,16 +718,12 @@ public class CompilationPattern {
   }      
 
   //TODO: Maybe overload this to only pass the key as parameter or get the data and call with specific values
-  //public CompilationPattern(targetKey){
-  //public CompilationPattern(objectType, sourceType){
-  //public CompilationPattern(compilationCommand, compilationPattern){
   public CompilationPattern(ObjectDescription odes){
 
     this.migrator = odes.migrator;
 
     this.objectType = odes.targetKey.objectType;
     //this.targetKey = odes.targetKey;
-    this.sourceType = odes.getSourceType();
 
     /* Get optional params */
     //TODO: I think, only this is necessary.
@@ -738,7 +731,7 @@ public class CompilationPattern {
 
     /* Get compilation command */
 
-    this.compilationCommand = typeToCmdMap.get(sourceType).get(objectType);
+    this.compilationCommand = typeToCmdMap.get(odes.getSourceType()).get(objectType);
     this.compilationPattern = new ArrayList<>(cmdToPatternMap.get(this.compilationCommand));
     /* Command builders */
     
