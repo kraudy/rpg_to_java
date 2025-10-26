@@ -18,7 +18,6 @@ import com.github.kraudy.migrator.SourceMigrator;
 
 public class CompilationPattern {
   private CompCmd compilationCommand;
-  private ObjectDescription.ObjectType objectType;
   private ParamMap ParamCmdSequence;
   Utilities.ParsedKey targetKey;
   List<ParamCmd> compilationPattern;
@@ -722,16 +721,13 @@ public class CompilationPattern {
 
     this.migrator = odes.migrator;
 
-    this.objectType = odes.targetKey.objectType;
-    //this.targetKey = odes.targetKey;
-
     /* Get optional params */
     //TODO: I think, only this is necessary.
     this.ParamCmdSequence = odes.getParamCmdSequence();
 
     /* Get compilation command */
 
-    this.compilationCommand = typeToCmdMap.get(odes.getSourceType()).get(objectType);
+    this.compilationCommand = typeToCmdMap.get(odes.getSourceType()).get(odes.getObjectType());
     this.compilationPattern = new ArrayList<>(cmdToPatternMap.get(this.compilationCommand));
     /* Command builders */
     
