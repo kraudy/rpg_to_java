@@ -197,6 +197,7 @@ public class ObjectCompiler implements Runnable{
     /* Try to get compilation params from object. If it exists. */
 
     //TODO: Add --dry-run to just run without executing. Just to generate the command string
+    cleanLibraryList();
 
     // Migrator
     try {
@@ -207,7 +208,6 @@ public class ObjectCompiler implements Runnable{
       throw new RuntimeException("Failed to initialize migrator: " + e.getMessage(), e);
     }
 
-    // chglibl libl()
 
     setCurLib(targetKey.library);
 
@@ -289,6 +289,13 @@ public class ObjectCompiler implements Runnable{
     cleanup();
   }
 
+  
+
+  private void cleanLibraryList(){
+    executeCommand("CHGLIBL LIBL()"); 
+
+  }
+
   private void setCurLib(String library){
     executeCommand("CHGCURLIB CURLIB(" + library + ")"); 
   }
@@ -337,7 +344,7 @@ public class ObjectCompiler implements Runnable{
       throw new IllegalArgumentException("Could not execute command: " + command); //TODO: Catch this and throw the appropiate message
     }
 
-    System.out.println("Command successful.");
+    System.out.println("Command successful: " + command);
     getJoblogMessages(commandTime);
   }
 
