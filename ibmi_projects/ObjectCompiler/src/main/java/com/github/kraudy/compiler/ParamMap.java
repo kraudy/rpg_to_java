@@ -16,6 +16,33 @@ public class ParamMap extends HashMap<ParamCmd, String> {
         this.debug = debug;
     }
 
+    //TODO: Override remove and add it to the changes like => [REMOVE].
+    @Override
+    //public String remove(ParamCmd param) {
+    public String remove(Object key) {
+
+      System.out.println("Executing remove");
+
+      if (!(key instanceof ParamCmd)) {
+        return super.remove(key); // Handle non-ParamCmd keys (unlikely in this context)
+      }
+
+      ParamCmd param = (ParamCmd) key;
+      String oldValue = super.remove(param);
+
+      if (oldValue != null) { // Only log if the key existed
+        String currentChain = ParamCmdChanges.getOrDefault(param, "");
+        if (currentChain.isEmpty()) {
+          currentChain = param.name() + " : [REMOVED]"; // First entry is a removal
+        } else {
+          currentChain += " => [REMOVED]"; // Append removal to existing chain
+        }
+        ParamCmdChanges.put(param, currentChain);
+      }
+
+      return oldValue;
+    }
+
     @Override
     public String put(ParamCmd param, String value) {
 

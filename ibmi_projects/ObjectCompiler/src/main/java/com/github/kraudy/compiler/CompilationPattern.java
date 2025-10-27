@@ -754,6 +754,8 @@ public class CompilationPattern {
 
           this.compilationPattern.remove(ParamCmd.SRCFILE);
           this.compilationPattern.remove(ParamCmd.SRCMBR);
+
+
         }
 
       case CRTCLPGM:
@@ -837,7 +839,8 @@ public class CompilationPattern {
 
   public String buildCommand() {
 
-    this.ParamCmdSequence.showChanges(compilationPattern);
+    //this.ParamCmdSequence.showChanges(compilationPattern);
+    this.ParamCmdSequence.showChanges(cmdToPatternMap.get(this.compilationCommand));
 
     return  this.ParamCmdSequence.getParamChain(compilationPattern, compilationCommand.name());
   }
