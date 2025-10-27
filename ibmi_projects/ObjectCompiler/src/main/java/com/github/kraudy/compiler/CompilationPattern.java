@@ -752,10 +752,8 @@ public class CompilationPattern {
 
           ParamCmdSequence.put(ParamCmd.TGTCCSID, ValCmd.JOB); // Needed to compile from stream files
 
-          this.compilationPattern.remove(ParamCmd.SRCFILE);
-          this.compilationPattern.remove(ParamCmd.SRCMBR);
-
-
+          ParamCmdSequence.remove(ParamCmd.SRCFILE); 
+          ParamCmdSequence.remove(ParamCmd.SRCMBR); 
         }
 
       case CRTCLPGM:
@@ -779,15 +777,15 @@ public class CompilationPattern {
     switch (this.compilationCommand){
       case CRTRPGMOD:
         if (ParamCmdSequence.containsKey(ParamCmd.SRCSTMF)) {
-          this.compilationPattern.remove(ParamCmd.SRCFILE);
-          this.compilationPattern.remove(ParamCmd.SRCMBR);
+          ParamCmdSequence.remove(ParamCmd.SRCFILE); 
+          ParamCmdSequence.remove(ParamCmd.SRCMBR); 
         }
       case CRTCLMOD:
         break;
 
       case CRTBNDRPG:
         if (!ParamCmdSequence.containsKey(ParamCmd.DFTACTGRP)) {
-          this.compilationPattern.remove(ParamCmd.STGMDL);
+          ParamCmdSequence.remove(ParamCmd.STGMDL); 
         }
       case CRTBNDCL:
       case CRTCLPGM:
@@ -806,8 +804,8 @@ public class CompilationPattern {
 
       case CRTSRVPGM:
         if (ParamCmdSequence.containsKey(ParamCmd.EXPORT)) {
-          this.compilationPattern.remove(ParamCmd.SRCFILE);
-          this.compilationPattern.remove(ParamCmd.SRCMBR);
+          ParamCmdSequence.remove(ParamCmd.SRCFILE); 
+          ParamCmdSequence.remove(ParamCmd.SRCMBR); 
         }
         break;
 
