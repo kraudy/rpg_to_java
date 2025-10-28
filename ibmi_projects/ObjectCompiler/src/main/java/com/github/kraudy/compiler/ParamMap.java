@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 
+import com.github.kraudy.compiler.CompilationPattern.CompCmd;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 
@@ -94,6 +95,10 @@ public class ParamMap extends HashMap<ParamCmd, String> {
       System.out.println(change);
     }
 
+    public String getParamChain(List<ParamCmd> compilationPattern, CompCmd command){
+      return getParamChain(compilationPattern, command.name());
+    }
+
     public String getParamChain(List<ParamCmd> compilationPattern, String command){
       StringBuilder sb = new StringBuilder(); 
 
@@ -104,6 +109,7 @@ public class ParamMap extends HashMap<ParamCmd, String> {
       return command + sb.toString();
     }
 
+    //TODO: Maybe i can do this overriden the get method
     public String getParamString(ParamCmd paramCmd){
       String val = this.getOrDefault(paramCmd, "");  // Retrieved or empty
 

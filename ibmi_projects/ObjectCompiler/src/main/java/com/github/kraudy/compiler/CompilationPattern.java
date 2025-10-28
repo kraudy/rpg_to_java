@@ -20,7 +20,6 @@ public class CompilationPattern {
   private CompCmd compilationCommand;
   private ParamMap ParamCmdSequence;
   Utilities.ParsedKey targetKey;
-  List<ParamCmd> compilationPattern;
   private SourceMigrator migrator;
 
   public enum CompCmd { 
@@ -727,8 +726,8 @@ public class CompilationPattern {
 
     /* Get compilation command */
 
-    this.compilationCommand = typeToCmdMap.get(odes.getSourceType()).get(odes.getObjectType());
-    this.compilationPattern = cmdToPatternMap.get(this.compilationCommand);
+    //this.compilationCommand = typeToCmdMap.get(odes.getSourceType()).get(odes.getObjectType());
+    this.compilationCommand = getCompilationCommand(odes.getSourceType(), odes.getObjectType());
     /* Command builders */
     
     /* Migration logic */
@@ -835,12 +834,19 @@ public class CompilationPattern {
     return this.compilationCommand;
   }
 
+  public List<ParamCmd> getCompilationPattern(CompCmd compilationCommand){
+    return cmdToPatternMap.get(compilationCommand);
+  }
+
+  public List<ParamCmd> getCompilationPattern(){
+    return cmdToPatternMap.get(this.compilationCommand);
+  }
+
   public String buildCommand() {
 
-    //this.ParamCmdSequence.showChanges(compilationPattern);
-    this.ParamCmdSequence.showChanges(cmdToPatternMap.get(this.compilationCommand));
+    this.ParamCmdSequence.showChanges(getCompilationPattern());
 
-    return  this.ParamCmdSequence.getParamChain(compilationPattern, compilationCommand.name());
+    return  this.ParamCmdSequence.getParamChain(getCompilationPattern(), this.compilationCommand);
   }
 
 }

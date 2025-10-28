@@ -262,7 +262,6 @@ public class ObjectCompiler implements Runnable{
 
     String commandStr = cpat.buildCommand();
     
-    if (debug) System.out.println("Full command: " + commandStr);
 
     /* 
     For OPM, create temp members if source is IFS (reverse migration).
