@@ -728,7 +728,7 @@ public class CompilationPattern {
     /* Get compilation command */
 
     this.compilationCommand = typeToCmdMap.get(odes.getSourceType()).get(odes.getObjectType());
-    this.compilationPattern = new ArrayList<>(cmdToPatternMap.get(this.compilationCommand));
+    this.compilationPattern = cmdToPatternMap.get(this.compilationCommand);
     /* Command builders */
     
     /* Migration logic */
