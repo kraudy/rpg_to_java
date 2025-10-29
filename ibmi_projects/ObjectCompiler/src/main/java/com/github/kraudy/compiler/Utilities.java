@@ -42,6 +42,16 @@ public class Utilities {
       this.sourceType = (parts.length == 4) ? SourceType.valueOf(parts[3].toUpperCase()) : null;
     }
 
+    public ParsedKey withLibrary(String newLibrary) {
+      if (newLibrary == null || newLibrary.trim().isEmpty()) {
+        throw new IllegalArgumentException("Library name is required.");
+      }
+      String upperLibrary = newLibrary.toUpperCase();
+      String newKey = upperLibrary + "." + this.objectName + "." + this.objectType.name() +
+                      (this.sourceType != null ? "." + this.sourceType.name() : "");
+      return new ParsedKey(newKey); // Reuse constructor for full validation
+    }
+
     @JsonValue  // Serializes to a JSON string like "MYLIB.HELLO.PGM.RPGLE"
     public String asString() {
         String base = library + "." + objectName + "." + objectType.name();

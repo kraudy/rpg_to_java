@@ -748,7 +748,6 @@ public class CompilationPattern {
           System.out.println("After calling migration api");
           
           ParamCmdSequence.put(ParamCmd.SRCSTMF, this.migrator.getFirstPath());
-
           ParamCmdSequence.put(ParamCmd.TGTCCSID, ValCmd.JOB); // Needed to compile from stream files
 
           ParamCmdSequence.remove(ParamCmd.SRCFILE); 
@@ -840,6 +839,10 @@ public class CompilationPattern {
 
   public List<ParamCmd> getCompilationPattern(){
     return cmdToPatternMap.get(this.compilationCommand);
+  }
+
+  public ParamMap getParamMap(){
+    return this.ParamCmdSequence;
   }
 
   public String buildCommand() {

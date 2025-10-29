@@ -110,6 +110,11 @@ public class ObjectDescription {
     this.migrator = migrator;
 
     this.targetKey = targetKey;
+    //this.targetKey = targetKey.withLibrary(ValCmd.LIBL.toString());
+    // Change key to *LIBL
+    //String newKeyStr = ValCmd.LIBL.toString() + "." + this.targetKey.objectName + "." + this.targetKey.objectType.name() + (this.targetKey.sourceType != null ? "." + this.targetKey.sourceType.name() : "");
+    //this.targetKey = new Utilities.ParsedKey(newKeyStr);
+
     this.sourceLibrary = sourceLibrary;
     this.sourceFile = (sourceFile.isEmpty()) ? SourceType.defaultSourcePf(this.targetKey.sourceType, this.targetKey.objectType) : sourceFile; // TODO: Add logic for sourcePF or directory
     this.sourceName = (sourceName.isEmpty() ? this.targetKey.objectName : sourceName); //TODO: Add logic for stream files / members / default
@@ -117,9 +122,7 @@ public class ObjectDescription {
     this.compilationCommand = CompilationPattern.getCompilationCommand(this.targetKey.sourceType, this.targetKey.objectType);
 
     /* Generate compilation params values from object description */
-    //TODO: Add a library list param so these could be set to *LIBL and we don't need to be dealing
-    // with library names, maybe later they could be resolved if needed
-    //this.targetLibrary = ValCmd.LIBL.toString();
+
     //if (this.sourceName.isEmpty())    this.sourceName = CompCmd.compilationSourceName(compilationCommand);//ValCmd.PGM.toString();
 
     this.ParamCmdSequence = new ParamMap(this.debug);
