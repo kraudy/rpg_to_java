@@ -127,7 +127,7 @@ public class ObjectDescription {
 
     this.ParamCmdSequence = new ParamMap(this.debug);
 
-    //TODO: Set another switch specifically for SRCFILE, SRCMBR and SRCSTMF
+    //TODO: Set another switch specifically for SRCSTMF
     switch (this.compilationCommand) {
       case CRTSQLRPGI:
       case CRTBNDRPG:
@@ -161,6 +161,7 @@ public class ObjectDescription {
       case CRTRPGPGM:
       case CRTCLPGM:
         ParamCmdSequence.put(ParamCmd.PGM, this.targetKey.library + "/" + this.targetKey.objectName);
+        ParamCmdSequence.put(ParamCmd.PGM, ValCmd.CURLIB.toString() + "/" + this.targetKey.objectName);
         break;
 
       case CRTDSPF:

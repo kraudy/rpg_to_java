@@ -321,15 +321,17 @@ public class ObjectCompiler implements Runnable{
 
   private void executeCommand(CompCmd compilationCommand, String command){
     // Escape single quotes in commandStr for QCMDEXC
-    String escapedCommand = command.replace("'", "''");
+    if (debug) System.out.println("Formed command: " + command);
 
-    if (debug) System.out.println("Sacaped command: " + escapedCommand);
+    String escapedCommand = command.replace("'", "''");
 
     executeCommand(escapedCommand);
   }
 
   //TODO: Overwrite this with SysCmd and CompCmd, use another map for SysCmd to store the string.
   // to just call it with the Enum.
+  //TODO: Add another map for this to show the list of executed commands with their value at the end
+  // similar to the compilation params
   private void executeCommand(String command){
     Timestamp commandTime = null;
     try (Statement stmt = connection.createStatement();
