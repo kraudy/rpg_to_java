@@ -125,6 +125,8 @@ public class ObjectDescription {
 
     //if (this.sourceName.isEmpty())    this.sourceName = CompCmd.compilationSourceName(compilationCommand);//ValCmd.PGM.toString();
 
+    //TODO: Add something like [DEFAULT] for default value of params
+
     this.ParamCmdSequence = new ParamMap(this.debug);
 
     //TODO: Set another switch specifically for SRCSTMF
@@ -141,6 +143,7 @@ public class ObjectDescription {
       case CRTRPGMOD:
       case CRTCLMOD:
       case RUNSQLSTM:
+        //TODO: SRCFILE could be set to *LIBL,etc until the migrators works with the library list
         ParamCmdSequence.put(ParamCmd.SRCFILE, this.targetKey.library + "/" + this.sourceFile);
         ParamCmdSequence.put(ParamCmd.SRCMBR, this.sourceName);
         break;
@@ -150,6 +153,7 @@ public class ObjectDescription {
     switch (this.compilationCommand) {
       case CRTSQLRPGI:
         ParamCmdSequence.put(ParamCmd.OBJ, this.targetKey.library + "/" + this.targetKey.objectName);
+        ParamCmdSequence.put(ParamCmd.OBJ, ValCmd.CURLIB.toString() + "/" + this.targetKey.objectName);
         ParamCmdSequence.put(ParamCmd.OBJTYPE, this.targetKey.objectType.toParam());
         ParamCmdSequence.put(ParamCmd.COMMIT, ValCmd.NONE);
         ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.SOURCE);
@@ -168,11 +172,14 @@ public class ObjectDescription {
       case CRTPF:
       case CRTLF:
         ParamCmdSequence.put(ParamCmd.FILE, this.targetKey.library + "/" + this.targetKey.objectName);
+        ParamCmdSequence.put(ParamCmd.FILE, ValCmd.CURLIB.toString() + "/" + this.targetKey.objectName);
         break;
       
       case CRTSRVPGM:
         ParamCmdSequence.put(ParamCmd.SRVPGM, this.targetKey.library + "/" + this.targetKey.objectName);
+        ParamCmdSequence.put(ParamCmd.SRVPGM, ValCmd.CURLIB.toString() + "/" + this.targetKey.objectName);
         ParamCmdSequence.put(ParamCmd.MODULE, this.targetKey.library + "/" + this.targetKey.objectName);
+        ParamCmdSequence.put(ParamCmd.MODULE, ValCmd.LIBL.toString() + "/" + this.targetKey.objectName);
         ParamCmdSequence.put(ParamCmd.BNDSRVPGM, ValCmd.NONE);
         break; //TODO: I had these two together, check if it is needed or simply add 
 
@@ -180,6 +187,7 @@ public class ObjectDescription {
       case CRTCLMOD:
         ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.ALL);
         ParamCmdSequence.put(ParamCmd.MODULE, this.targetKey.library + "/" + this.targetKey.objectName);
+        ParamCmdSequence.put(ParamCmd.MODULE, ValCmd.CURLIB.toString() + "/" + this.targetKey.objectName);
         break;
 
       case RUNSQLSTM:

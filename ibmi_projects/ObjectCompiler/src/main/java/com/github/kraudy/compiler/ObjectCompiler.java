@@ -331,7 +331,8 @@ public class ObjectCompiler implements Runnable{
   //TODO: Overwrite this with SysCmd and CompCmd, use another map for SysCmd to store the string.
   // to just call it with the Enum.
   //TODO: Add another map for this to show the list of executed commands with their value at the end
-  // similar to the compilation params
+  // similar to the compilation params like CommandMap (even this could leverage ParamMap and use
+  // a list of parameter and all that to form the param)
   private void executeCommand(String command){
     Timestamp commandTime = null;
     try (Statement stmt = connection.createStatement();
@@ -349,6 +350,10 @@ public class ObjectCompiler implements Runnable{
       cmdStmt.execute("CALL QSYS2.QCMDEXC('" + command + "')");
     } catch (SQLException e) {
       System.out.println("Command failed.");
+      //TODO: Add a class filed that stores the messages and is updated with each compilation command
+      // but make the massages ENUM to just do something like .contains(CPF5813) and then the delete
+      // like DLTOBJ OBJ() OBJTYPE()
+      //if ("CPF5813".equals(e.getMessage()))
       e.printStackTrace();
       getJoblogMessages(commandTime);
       throw new IllegalArgumentException("Could not execute command: " + command); //TODO: Catch this and throw the appropiate message
