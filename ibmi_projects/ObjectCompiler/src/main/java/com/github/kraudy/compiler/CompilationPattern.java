@@ -373,15 +373,6 @@ public class CompilationPattern {
     return this.compilationCommand;
   }
 
-  /* 
-  public List<ParamCmd> getCompilationPattern(CompCmd compilationCommand){
-    return cmdToPatternMap.get(compilationCommand);
-  }
-
-  public List<ParamCmd> getCompilationPattern(){
-    return cmdToPatternMap.get(this.compilationCommand);
-  }
-  */
 
   public ParamMap getParamMap(){
     return this.ParamCmdSequence;
@@ -390,8 +381,6 @@ public class CompilationPattern {
   public String buildCommand() {
 
     this.ParamCmdSequence.showChanges(this.compilationCommand);
-
-    //return  this.ParamCmdSequence.getParamChain(getCompilationPattern(), this.compilationCommand);
 
     return  this.ParamCmdSequence.getParamChain(this.compilationCommand);
   }

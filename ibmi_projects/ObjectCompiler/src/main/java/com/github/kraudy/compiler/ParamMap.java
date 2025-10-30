@@ -10,7 +10,11 @@ import com.github.kraudy.compiler.CompilationPattern.CompCmd;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 
+import com.github.kraudy.compiler.ObjectDescription.ObjectType;
+import com.github.kraudy.compiler.ObjectDescription.SourceType;
+
 public class ParamMap extends HashMap<ParamCmd, String> {
+    
     private Map<ParamCmd, String> ParamCmdChanges = new HashMap<>();
     private final boolean debug;
     //private final boolean verbose;
