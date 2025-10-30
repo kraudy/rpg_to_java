@@ -14,7 +14,12 @@ import com.github.kraudy.compiler.ObjectDescription.ObjectType;
 import com.github.kraudy.compiler.ObjectDescription.SourceType;
 
 public class ParamMap extends HashMap<ParamCmd, String> {
-    
+    //TODO: Add another map like 
+    // The problem is that it needs to be able to store other commands besides the compilation ones.
+    // I would like to just send the compilation cmd to this thing and let it form the string and compile it.
+    // But i need a way to deal with the general Enum of SysCmd and CompCmd, maybe with a SET or a MAP using .contains() to know if it
+    // is a compilation command, maybe Overriding the PUT method
+    public static final Map<CompCmd, Map<ParamCmd, String>> typeToCmdMap = new EnumMap<>(CompCmd.class);
     private Map<ParamCmd, String> ParamCmdChanges = new HashMap<>();
     private final boolean debug;
     //private final boolean verbose;
