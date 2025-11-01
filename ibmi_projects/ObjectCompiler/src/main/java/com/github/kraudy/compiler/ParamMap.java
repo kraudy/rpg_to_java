@@ -21,7 +21,7 @@ public class ParamMap extends HashMap<ParamCmd, String> {
     // But i need a way to deal with the general Enum of SysCmd and CompCmd, maybe with a SET or a MAP using .contains() to know if it
     // is a compilation command, maybe Overriding the PUT method
     //TODO: (if command instanceof CompCmd) could me useful
-    public static final Map<SysCmd, Map<ParamCmd, String>> typeToCmdMap = new EnumMap<>(SysCmd.class);
+    public static final Map<SysCmd, Map<ParamCmd, String>> SysCmdMap = new EnumMap<>(SysCmd.class);
     private Map<ParamCmd, String> ParamCmdChanges = new HashMap<>();
     private final boolean debug;
     //private final boolean verbose;
@@ -539,6 +539,8 @@ public class ParamMap extends HashMap<ParamCmd, String> {
         }
         */
 
+        //TODO: Validate value with .contains() using the patterns list
+
         switch (param) {
           case TEXT:
             value = "'" + value + "'";
@@ -565,7 +567,20 @@ public class ParamMap extends HashMap<ParamCmd, String> {
     }
 
     public String put(ParamCmd param, ValCmd value) {
-        return put(param, value.toString());
+      return put(param, value.toString());
+    }
+
+    //TODO: Maybe i can do the same for the CmpCmd without using extending the class
+    public String put(SysCmd cmd, ParamCmd param, ValCmd value) {
+      return put(cmd, param, value.toString());
+    }
+
+    public String put(SysCmd cmd, ParamCmd param, String value) {
+      Map<ParamCmd, String> innerMap = SysCmdMap.getOrDefault(cmd, new HashMap<>());
+
+      String oldValue = innerMap.put(param, value);
+      SysCmdMap.put(cmd, innerMap);  // Re-put the (possibly new) inner map
+      return oldValue;  // Calls the overridden put(ParamCmd, String); no .toString() needed
     }
 
     public void showChanges(CompCmd command) {
