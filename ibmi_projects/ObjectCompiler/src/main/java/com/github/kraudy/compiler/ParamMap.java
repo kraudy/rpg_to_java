@@ -20,7 +20,8 @@ public class ParamMap extends HashMap<ParamCmd, String> {
     // I would like to just send the compilation cmd to this thing and let it form the string and compile it.
     // But i need a way to deal with the general Enum of SysCmd and CompCmd, maybe with a SET or a MAP using .contains() to know if it
     // is a compilation command, maybe Overriding the PUT method
-
+    //TODO: (if command instanceof CompCmd) could me useful
+    public static final Map<SysCmd, Map<ParamCmd, String>> typeToCmdMap = new EnumMap<>(SysCmd.class);
     private Map<ParamCmd, String> ParamCmdChanges = new HashMap<>();
     private final boolean debug;
     //private final boolean verbose;
