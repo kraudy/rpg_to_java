@@ -72,7 +72,9 @@ public class CompilationPattern {
     DLTPCT, REUSEDLT, CCSID, ALWDLT, NODGRP, PTNKEY,
 
     // CRTLF
-    DTAMBRS, FMTSLR
+    DTAMBRS, FMTSLR,
+    // CHGLIBL, CURLIB
+    CURLIB
     ;
 
     public static ParamCmd fromString(String value) {

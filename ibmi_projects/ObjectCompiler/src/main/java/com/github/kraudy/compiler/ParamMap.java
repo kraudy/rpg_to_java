@@ -10,6 +10,7 @@ import com.github.kraudy.compiler.CompilationPattern.CompCmd;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 
+import com.github.kraudy.compiler.ObjectDescription.SysCmd;
 import com.github.kraudy.compiler.ObjectDescription.ObjectType;
 import com.github.kraudy.compiler.ObjectDescription.SourceType;
 
@@ -19,10 +20,20 @@ public class ParamMap extends HashMap<ParamCmd, String> {
     // I would like to just send the compilation cmd to this thing and let it form the string and compile it.
     // But i need a way to deal with the general Enum of SysCmd and CompCmd, maybe with a SET or a MAP using .contains() to know if it
     // is a compilation command, maybe Overriding the PUT method
-    public static final Map<CompCmd, Map<ParamCmd, String>> typeToCmdMap = new EnumMap<>(CompCmd.class);
+
     private Map<ParamCmd, String> ParamCmdChanges = new HashMap<>();
     private final boolean debug;
     //private final boolean verbose;
+
+    /* System command patterns */
+    public static final List<ParamCmd> ChgLibLPattern = Arrays.asList(
+      ParamCmd.LIBL,
+      ParamCmd.CURLIB // Add USRLIBL if needed and added to ParamCmd
+    );
+
+    public static final List<ParamCmd> ChgCurLibPattern = Arrays.asList(
+      ParamCmd.CURLIB
+    );
 
     /* ILE Patterns */
   

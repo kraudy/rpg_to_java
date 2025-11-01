@@ -38,7 +38,13 @@ public class ObjectDescription {
   public ParamMap ParamCmdSequence;
 
 
-  public enum SysCmd { CHGLIBL, DSPPGMREF, DSPOBJD, DSPDBR }
+  public enum SysCmd { 
+    // Library commands
+    CHGLIBL, CHGCURLIB, 
+    // Dependency commands
+    DSPPGMREF, DSPOBJD, DSPDBR 
+  
+  }
 
   public enum SourceType { 
     RPG, RPGLE, SQLRPGLE, CLP, CLLE, SQL, BND, DDS;
