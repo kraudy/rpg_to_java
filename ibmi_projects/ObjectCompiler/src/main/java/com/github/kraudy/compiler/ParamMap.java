@@ -21,7 +21,9 @@ public class ParamMap extends HashMap<ParamCmd, String> {
     // But i need a way to deal with the general Enum of SysCmd and CompCmd, maybe with a SET or a MAP using .contains() to know if it
     // is a compilation command, maybe Overriding the PUT method
     //TODO: (if command instanceof CompCmd) could me useful
-    public static final Map<SysCmd, Map<ParamCmd, String>> SysCmdMap = new EnumMap<>(SysCmd.class);
+    private Map<SysCmd, Map<ParamCmd, String>> SysCmdMap = new EnumMap<>(SysCmd.class);
+    //private List<Object> CmdExecutionChain;
+    private String CmdExecutionChain = "";
     private Map<ParamCmd, String> ParamCmdChanges = new HashMap<>();
     private final boolean debug;
     //private final boolean verbose;
@@ -35,6 +37,15 @@ public class ParamMap extends HashMap<ParamCmd, String> {
     public static final List<ParamCmd> ChgCurLibPattern = Arrays.asList(
       ParamCmd.CURLIB
     );
+
+    
+    /* Maps compilation command to its pattern */
+    public static final Map<SysCmd, List<ParamCmd>> SysCmdToPatternMap = new EnumMap<>(SysCmd.class);
+    static{
+      /* Libraries */
+      SysCmdToPatternMap.put(SysCmd.CHGLIBL, ChgLibLPattern);
+      SysCmdToPatternMap.put(SysCmd.CHGCURLIB, ChgCurLibPattern);
+    }
 
     /* ILE Patterns */
   
@@ -601,12 +612,12 @@ public class ParamMap extends HashMap<ParamCmd, String> {
       System.out.println(change);
     }
 
-    public String getParamChain(CompCmd command){
-      return getParamChain(cmdToPatternMap.get(command), command);
+    public String getParamChain(SysCmd command){
+      return getParamChain(SysCmdToPatternMap.get(command), command.name());
     }
 
-    public String getParamChain(List<ParamCmd> compilationPattern, CompCmd command){
-      return getParamChain(compilationPattern, command.name());
+    public String getParamChain(CompCmd command){
+      return getParamChain(cmdToPatternMap.get(command), command.name());
     }
 
     public String getParamChain(List<ParamCmd> compilationPattern, String command){
