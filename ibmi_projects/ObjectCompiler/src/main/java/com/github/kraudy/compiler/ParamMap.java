@@ -21,6 +21,7 @@ public class ParamMap extends HashMap<ParamCmd, String> {
     // But i need a way to deal with the general Enum of SysCmd and CompCmd, maybe with a SET or a MAP using .contains() to know if it
     // is a compilation command, maybe Overriding the PUT method
     //TODO: (if command instanceof CompCmd) could me useful
+    //private Map<Object, Map<ParamCmd, String>> GeneralCmdMap = new EnumMap<>(Object.class);
     private Map<SysCmd, Map<ParamCmd, String>> SysCmdMap = new EnumMap<>(SysCmd.class);
     private Map<CompCmd, Map<ParamCmd, String>> CompCmdMap = new EnumMap<>(CompCmd.class);
     //private List<Object> CmdExecutionChain;
@@ -541,41 +542,32 @@ public class ParamMap extends HashMap<ParamCmd, String> {
 
     @Override
     public String put(ParamCmd param, String value) {
+      //TODO: Validate value with .contains() using the patterns list to know if an option is
+      // valid for a command
 
-        // Validation: Ensure value is a valid ValCmd option if it matches a known pattern
-        //TODO: Add validation here for params with defined values
-        /* 
-        if (value.startsWith("*")) {
-            ValCmd valCmd = ValCmd.valueOf(value.substring(1).toUpperCase());
-            value = ParamCmd.paramValue(param, valCmd);  // Re-validate and normalize
-        }
-        */
+      switch (param) {
+        case TEXT:
+          value = "'" + value + "'";
+          break;
+      
+        default:
+          break;
+      }
 
-        //TODO: Validate value with .contains() using the patterns list
+      String oldValue = super.put(param, value);
 
-        switch (param) {
-          case TEXT:
-            value = "'" + value + "'";
-            break;
-        
-          default:
-            break;
-        }
+      //TODO: Add extra values like REMOVE or (RETREIVED) to the change chain
+      // to be more transparent
 
-        String oldValue = super.put(param, value);
+      String currentChain = ParamCmdChanges.getOrDefault(param, "");
+      if (currentChain.isEmpty()) {
+        currentChain = param.name() + " : " + value; // First insertion
+      } else {
+        currentChain += " => " + value; // Update: append the new value to the chain
+      }
+      ParamCmdChanges.put(param, currentChain);
 
-        //TODO: Add extra values like REMOVE or (RETREIVED) to the change chain
-        // to be more transparent
-
-        String currentChain = ParamCmdChanges.getOrDefault(param, "");
-        if (currentChain.isEmpty()) {
-          currentChain = param.name() + " : " + value; // First insertion
-        } else {
-          currentChain += " => " + value; // Update: append the new value to the chain
-        }
-        ParamCmdChanges.put(param, currentChain);
-
-        return oldValue;
+      return oldValue;
     }
 
     public String put(ParamCmd param, ValCmd value) {
