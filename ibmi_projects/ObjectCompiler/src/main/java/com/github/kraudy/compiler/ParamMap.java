@@ -613,25 +613,8 @@ public class ParamMap extends HashMap<ParamCmd, String> {
       System.out.println(change);
     }
 
-    public String getSysParamChain(SysCmd command){
-      return getSysParamChain(SysCmdToPatternMap.get(command), SysCmdMap.getOrDefault(command, new HashMap<ParamCmd, String>()), command.name());
-    }
-
-    //TODO: Could get the param list by param
-    public String getSysParamChain(List<ParamCmd> compilationPattern, Map<ParamCmd, String> paramMap, String command){
-      StringBuilder sb = new StringBuilder(); 
-
-      for (ParamCmd param : compilationPattern) {
-        sb.append(getSysParamString(paramMap.getOrDefault(param, ""), param));
-      }
-
-      return command + sb.toString();
-    }
-
-    public String getSysParamString(String val, ParamCmd paramCmd){
-      if (val.isEmpty()) return "";
-
-      return " " + paramCmd.name() + "(" + val + ")";
+    public String getParamChain(SysCmd command){
+      return getParamChain(SysCmdToPatternMap.get(command), SysCmdMap.getOrDefault(command, new HashMap<ParamCmd, String>()), command.name());
     }
 
     public String getParamChain(CompCmd command){
@@ -642,16 +625,16 @@ public class ParamMap extends HashMap<ParamCmd, String> {
       StringBuilder sb = new StringBuilder(); 
 
       for (ParamCmd param : compilationPattern) {
-        sb.append(getParamString(param));
+        //TODO: Change this.getOrDefault for paramMap.getOrDefault
+        // sb.append(getSysParamString(paramMap.getOrDefault(param, ""), param));
+        sb.append(getParamString(this.getOrDefault(param, ""), param));
       }
 
       return command + sb.toString();
     }
 
     //TODO: Maybe i can do this overriden the get method
-    public String getParamString(ParamCmd paramCmd){
-      String val = this.getOrDefault(paramCmd, "");  // Retrieved or empty
-
+    public String getParamString(String val, ParamCmd paramCmd){
       if (val.isEmpty()) return "";
 
       return " " + paramCmd.name() + "(" + val + ")";
