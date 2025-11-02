@@ -612,9 +612,27 @@ public class ParamMap extends HashMap<ParamCmd, String> {
       System.out.println(change);
     }
 
-    public String getParamChain(SysCmd command){
-      return getParamChain(SysCmdToPatternMap.get(command), command.name());
+    public String getSysParamChain(SysCmd command){
+      return getSysParamChain(SysCmdToPatternMap.get(command), SysCmdMap.getOrDefault(command, new HashMap<ParamCmd, String>()), command);
     }
+
+    //TODO: Could get the param list by param
+    public String getSysParamChain(List<ParamCmd> compilationPattern, Map<ParamCmd, String> paramMap, SysCmd command){
+      StringBuilder sb = new StringBuilder(); 
+
+      for (ParamCmd param : compilationPattern) {
+        sb.append(getSysParamString(paramMap.getOrDefault(param, ""), param));
+      }
+
+      return command.name() + sb.toString();
+    }
+
+    public String getSysParamString(String val, ParamCmd paramCmd){
+      if (val.isEmpty()) return "";
+
+      return " " + paramCmd.name() + "(" + val + ")";
+    }
+
 
     public String getParamChain(CompCmd command){
       return getParamChain(cmdToPatternMap.get(command), command.name());
