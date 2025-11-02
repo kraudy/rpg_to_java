@@ -22,6 +22,7 @@ public class ParamMap extends HashMap<ParamCmd, String> {
     // is a compilation command, maybe Overriding the PUT method
     //TODO: (if command instanceof CompCmd) could me useful
     private Map<SysCmd, Map<ParamCmd, String>> SysCmdMap = new EnumMap<>(SysCmd.class);
+    private Map<CompCmd, Map<ParamCmd, String>> CompCmdMap = new EnumMap<>(CompCmd.class);
     //private List<Object> CmdExecutionChain;
     private String CmdExecutionChain = "";
     private Map<ParamCmd, String> ParamCmdChanges = new HashMap<>();
@@ -613,18 +614,18 @@ public class ParamMap extends HashMap<ParamCmd, String> {
     }
 
     public String getSysParamChain(SysCmd command){
-      return getSysParamChain(SysCmdToPatternMap.get(command), SysCmdMap.getOrDefault(command, new HashMap<ParamCmd, String>()), command);
+      return getSysParamChain(SysCmdToPatternMap.get(command), SysCmdMap.getOrDefault(command, new HashMap<ParamCmd, String>()), command.name());
     }
 
     //TODO: Could get the param list by param
-    public String getSysParamChain(List<ParamCmd> compilationPattern, Map<ParamCmd, String> paramMap, SysCmd command){
+    public String getSysParamChain(List<ParamCmd> compilationPattern, Map<ParamCmd, String> paramMap, String command){
       StringBuilder sb = new StringBuilder(); 
 
       for (ParamCmd param : compilationPattern) {
         sb.append(getSysParamString(paramMap.getOrDefault(param, ""), param));
       }
 
-      return command.name() + sb.toString();
+      return command + sb.toString();
     }
 
     public String getSysParamString(String val, ParamCmd paramCmd){
@@ -633,12 +634,11 @@ public class ParamMap extends HashMap<ParamCmd, String> {
       return " " + paramCmd.name() + "(" + val + ")";
     }
 
-
     public String getParamChain(CompCmd command){
-      return getParamChain(cmdToPatternMap.get(command), command.name());
+      return getParamChain(cmdToPatternMap.get(command), CompCmdMap.getOrDefault(command, new HashMap<ParamCmd, String>()), command.name());
     }
 
-    public String getParamChain(List<ParamCmd> compilationPattern, String command){
+    public String getParamChain(List<ParamCmd> compilationPattern, Map<ParamCmd, String> paramMap, String command){
       StringBuilder sb = new StringBuilder(); 
 
       for (ParamCmd param : compilationPattern) {
