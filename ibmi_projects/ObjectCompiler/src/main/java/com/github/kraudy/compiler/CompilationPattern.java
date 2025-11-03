@@ -375,13 +375,11 @@ public class CompilationPattern {
     return this.compilationCommand;
   }
 
-
   public ParamMap getParamMap(){
     return this.ParamCmdSequence;
   }
 
   public String buildCommand() {
-
     this.ParamCmdSequence.showChanges(this.compilationCommand);
 
     return  this.ParamCmdSequence.getParamChain(this.compilationCommand);

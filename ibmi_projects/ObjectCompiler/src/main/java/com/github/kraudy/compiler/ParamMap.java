@@ -574,7 +574,16 @@ public class ParamMap extends HashMap<ParamCmd, String> {
       return put(param, value.toString());
     }
 
-    //TODO: Maybe i can do the same for the CmpCmd without using extending the class
+    
+
+    public String put(CompCmd cmd, Map<ParamCmd, String> paramMap, ParamCmd param, String value) {
+      Map<ParamCmd, String> innerMap = CompCmdMap.getOrDefault(cmd, new HashMap<>());
+
+      String oldValue = innerMap.put(param, value);
+      CompCmdMap.put(cmd, innerMap);  // Re-put the (possibly new) inner map
+      return oldValue;  // Calls the overridden put(ParamCmd, String); no .toString() needed
+    }
+
     public String put(SysCmd cmd, ParamCmd param, ValCmd value) {
       return put(cmd, param, value.toString());
     }
