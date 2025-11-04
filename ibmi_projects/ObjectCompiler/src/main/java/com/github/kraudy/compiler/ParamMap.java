@@ -688,7 +688,6 @@ public class ParamMap {
       }
       return "";
     }
-
     
     public String getParamChain(Object command){
       return getParamChain(getPattern(command), get(command), getCommandName(command));
@@ -704,7 +703,6 @@ public class ParamMap {
       return command + sb.toString();
     }
 
-    //TODO: Maybe i can do this overriden the get method
     public String getParamString(String val, ParamCmd paramCmd){
       if (val.isEmpty()) return "";
 
