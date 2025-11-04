@@ -580,22 +580,31 @@ public class ParamMap extends HashMap<ParamCmd, String> {
     }
 
     public String put(CompCmd cmd, Map<ParamCmd, String> paramMap, ParamCmd param, String value) {
-      Map<ParamCmd, String> innerMap = CompCmdMap.getOrDefault(cmd, new HashMap<>());
 
-      String oldValue = innerMap.put(param, value);
-      CompCmdMap.put(cmd, innerMap);  // Re-put the (possibly new) inner map
+      switch (param) {
+        case TEXT:
+          value = "'" + value + "'";
+          break;
+      
+        default:
+          break;
+      }
+
+      String oldValue = paramMap.put(param, value);
+      CompCmdMap.put(cmd, paramMap);  // Re-put the (possibly new) inner map
+
+      //TODO: Add param change tracking
+
       return oldValue;  // Calls the overridden put(ParamCmd, String); no .toString() needed
     }
 
     public String put(SysCmd cmd, ParamCmd param, ValCmd value) {
-      return put(cmd, param, value.toString());
+      return put(cmd, SysCmdMap.getOrDefault(cmd, new HashMap<ParamCmd, String>()), param, value.toString());
     }
 
-    public String put(SysCmd cmd, ParamCmd param, String value) {
-      Map<ParamCmd, String> innerMap = SysCmdMap.getOrDefault(cmd, new HashMap<>());
-
-      String oldValue = innerMap.put(param, value);
-      SysCmdMap.put(cmd, innerMap);  // Re-put the (possibly new) inner map
+    public String put(SysCmd cmd, Map<ParamCmd, String> paramMap, ParamCmd param, String value) {
+      String oldValue = paramMap.put(param, value);
+      SysCmdMap.put(cmd, paramMap);  // Re-put the (possibly new) inner map
       return oldValue;  // Calls the overridden put(ParamCmd, String); no .toString() needed
     }
 
