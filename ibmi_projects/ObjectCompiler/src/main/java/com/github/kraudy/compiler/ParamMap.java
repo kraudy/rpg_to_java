@@ -534,8 +534,20 @@ public class ParamMap {
       return paramMap.containsKey(param);
     }
 
+    public Map<ParamCmd, String> get(Object cmd) {
+      if (cmd instanceof CompCmd) {
+        CompCmd compCmd  = (CompCmd) cmd;
+        return CompCmdMap.getOrDefault(compCmd, new HashMap<ParamCmd, String>());
+      }
+      if (cmd instanceof SysCmd) {
+        SysCmd sysCmd  = (SysCmd) cmd;
+        return SysCmdMap.getOrDefault(sysCmd, new HashMap<ParamCmd, String>());
+      }
+      //TODO: Throw exception
+      return null;
+    }
+
     public String get(Object cmd, ParamCmd param) {
-      System.out.println("Inside get");
       if (cmd instanceof CompCmd) {
         CompCmd compCmd  = (CompCmd) cmd;
         return get(param, CompCmdMap.getOrDefault(compCmd, new HashMap<ParamCmd, String>()));

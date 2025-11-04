@@ -230,16 +230,16 @@ public class ObjectDescription {
   //TODO: Maybe add a method to ParamMap to just send the map
   //TODO: This should be inside ParamMap
   public void setParamsSequence(ParamMap ParamCmdSequence) {
-    System.out.println("Inside setParamsSequence");
     // TODO: Check this
     // this.ParamCmdSequence.putAll(odes.getParamCmdSequence());  // Copy from odes (triggers put for each entry)
 
-    Map<ParamCmd, String> incomingMap = ParamCmdSequence.CompCmdMap.get(this.compilationCommand);
+    Map<ParamCmd, String> incomingMap = ParamCmdSequence.get(this.compilationCommand);
     if(incomingMap == null){
       System.err.println("incomingMap is null");
       return;
     }
 
+    //TODO: Add keySet() to ParamMap
     for (CompilationPattern.ParamCmd paramCmd : incomingMap.keySet()){
       this.ParamCmdSequence.put(this.compilationCommand, paramCmd, ParamCmdSequence.get(this.compilationCommand, paramCmd));
     }

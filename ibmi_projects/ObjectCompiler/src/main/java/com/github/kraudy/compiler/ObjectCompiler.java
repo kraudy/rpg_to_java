@@ -252,7 +252,6 @@ public class ObjectCompiler implements Runnable{
       ParamCmdSequence.put(compilationCommand, ParamCmd.TGTCCSID, ValCmd.JOB);
     }
 
-    System.out.println("========== Before setParamsSequence");
     odes.setParamsSequence(ParamCmdSequence);
 
     if (odes.getSourceType() == null) {
