@@ -542,6 +542,19 @@ public class ParamMap {
       return null;
     }
 
+    public List<ParamCmd> getPattern(Object cmd) {
+      if (cmd instanceof CompCmd) {
+        CompCmd compCmd  = (CompCmd) cmd;
+        return cmdToPatternMap.get(compCmd);
+      }
+      if (cmd instanceof SysCmd) {
+        SysCmd sysCmd  = (SysCmd) cmd;
+        return SysCmdToPatternMap.get(sysCmd);
+      }
+      //TODO: Throw exception
+      return null;
+    }
+
     public Map<ParamCmd, String> getChanges(Object cmd) {
       if (cmd instanceof CompCmd) {
         CompCmd compCmd  = (CompCmd) cmd;
@@ -664,21 +677,28 @@ public class ParamMap {
       System.out.println(change);
     }
 
-    public String getParamChain(SysCmd command){
-      return getParamChain(SysCmdToPatternMap.get(command), SysCmdMap.getOrDefault(command, new HashMap<ParamCmd, String>()), command.name());
+    public String getCommandName(Object cmd){
+      if (cmd instanceof CompCmd) {
+        CompCmd compCmd  = (CompCmd) cmd;
+        return compCmd.name();
+      }
+      if (cmd instanceof SysCmd) {
+        SysCmd sysCmd  = (SysCmd) cmd;
+        return sysCmd.name();
+      }
+      return "";
     }
 
-    public String getParamChain(CompCmd command){
-      return getParamChain(cmdToPatternMap.get(command), CompCmdMap.getOrDefault(command, new HashMap<ParamCmd, String>()), command.name());
+    
+    public String getParamChain(Object command){
+      return getParamChain(getPattern(command), get(command), getCommandName(command));
     }
 
     public String getParamChain(List<ParamCmd> compilationPattern, Map<ParamCmd, String> paramMap, String command){
       StringBuilder sb = new StringBuilder(); 
 
       for (ParamCmd param : compilationPattern) {
-        //TODO: Change this.getOrDefault for paramMap.getOrDefault
         sb.append(getParamString(paramMap.getOrDefault(param, ""), param));
-        //sb.append(getParamString(this.getOrDefault(param, ""), param));
       }
 
       return command + sb.toString();
