@@ -24,7 +24,7 @@ public class ParamMap extends HashMap<ParamCmd, String> {
     //private Map<Object, Map<ParamCmd, String>> GeneralCmdMap = new EnumMap<>(Object.class);
     private Map<SysCmd, Map<ParamCmd, String>> SysCmdMap = new EnumMap<>(SysCmd.class);
 
-    private Map<CompCmd, Map<ParamCmd, String>> CompCmdMap = new EnumMap<>(CompCmd.class);
+    public Map<CompCmd, Map<ParamCmd, String>> CompCmdMap = new EnumMap<>(CompCmd.class);
     private Map<CompCmd, Map<ParamCmd, String>> CompCmdChanges = new EnumMap<>(CompCmd.class);
     //private List<Object> CmdExecutionChain;
     private String CmdExecutionChain = "";
@@ -542,6 +542,36 @@ public class ParamMap extends HashMap<ParamCmd, String> {
       return oldValue;
     }
 
+    public boolean containsKey(Object cmd, ParamCmd param) {
+      if (cmd instanceof CompCmd) {
+        CompCmd compCmd  = (CompCmd) cmd;
+        return containsKey(param, CompCmdMap.getOrDefault(compCmd, new HashMap<ParamCmd, String>()));
+      }
+      if (cmd instanceof SysCmd) {
+        return false;
+      }
+      return false;
+    }
+
+    public boolean containsKey(ParamCmd param, Map<ParamCmd, String> paramMap) {
+      return paramMap.containsKey(param);
+    }
+
+    public String get(Object cmd, ParamCmd param) {
+      if (cmd instanceof CompCmd) {
+        CompCmd compCmd  = (CompCmd) cmd;
+        return get(param, CompCmdMap.getOrDefault(compCmd, new HashMap<ParamCmd, String>()));
+      }
+      if (cmd instanceof SysCmd) {
+        return "";
+      }
+      return "";
+    }
+
+    public String get(ParamCmd param, Map<ParamCmd, String> paramMap) {
+      return paramMap.getOrDefault(param, "");
+    }
+
     @Override
     public String put(ParamCmd param, String value) {
       //TODO: Validate value with .contains() using the patterns list to know if an option is
@@ -609,6 +639,10 @@ public class ParamMap extends HashMap<ParamCmd, String> {
       return "";
     }
 
+    public String put(CompCmd cmd, ParamCmd param, ValCmd value) {
+      return put(cmd, param, value.toString());
+    }
+
     public String put(CompCmd cmd, ParamCmd param, String value) {
       return put(cmd, CompCmdMap.getOrDefault(cmd, new HashMap<ParamCmd, String>()), CompCmdChanges.getOrDefault(cmd, new HashMap<ParamCmd, String>()), param, value);
     }
@@ -651,18 +685,16 @@ public class ParamMap extends HashMap<ParamCmd, String> {
     }
 
     public void showChanges(CompCmd command) {
-      showChanges(cmdToPatternMap.get(command));
+      showChanges(cmdToPatternMap.get(command), CompCmdChanges.getOrDefault(command, new HashMap<ParamCmd, String>()));
     }
 
-    public void showChanges(List<ParamCmd> compilationPattern) {
+    public void showChanges(List<ParamCmd> compilationPattern, Map<ParamCmd, String> paramChanges) {
       for (ParamCmd param : compilationPattern) {
-        getChangeString(param);
+        getChangeString(paramChanges.getOrDefault(param, ""), param);
       }
     }
 
-    public void getChangeString(ParamCmd paramCmd){
-      String change = this.ParamCmdChanges.getOrDefault(paramCmd, "");  // Retrieved or empty
-
+    public void getChangeString(String change, ParamCmd paramCmd){
       if (change.isEmpty()) return;
 
       System.out.println(change);
@@ -681,8 +713,8 @@ public class ParamMap extends HashMap<ParamCmd, String> {
 
       for (ParamCmd param : compilationPattern) {
         //TODO: Change this.getOrDefault for paramMap.getOrDefault
-        // sb.append(getSysParamString(paramMap.getOrDefault(param, ""), param));
-        sb.append(getParamString(this.getOrDefault(param, ""), param));
+        sb.append(getParamString(paramMap.getOrDefault(param, ""), param));
+        //sb.append(getParamString(this.getOrDefault(param, ""), param));
       }
 
       return command + sb.toString();

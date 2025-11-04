@@ -283,17 +283,17 @@ public class CompilationPattern {
       case CRTSQLRPGI:
       case CRTSRVPGM:
       case RUNSQLSTM:
-        if (!ParamCmdSequence.containsKey(ParamCmd.SRCSTMF)) {
-          System.out.println("SRCFILE data: " + ParamCmdSequence.get(ParamCmd.SRCFILE));
-          this.migrator.setParams(ParamCmdSequence.get(ParamCmd.SRCFILE), odes.targetKey.objectName, "sources");
+        if (!ParamCmdSequence.containsKey(this.compilationCommand, ParamCmd.SRCSTMF)) {
+          System.out.println("SRCFILE data: " + ParamCmdSequence.get(this.compilationCommand, ParamCmd.SRCFILE));
+          this.migrator.setParams(ParamCmdSequence.get(this.compilationCommand, ParamCmd.SRCFILE), odes.targetKey.objectName, "sources");
           this.migrator.api(); // Try to migrate this thing
           System.out.println("After calling migration api");
           
-          ParamCmdSequence.put(ParamCmd.SRCSTMF, this.migrator.getFirstPath());
-          ParamCmdSequence.put(ParamCmd.TGTCCSID, ValCmd.JOB); // Needed to compile from stream files
+          ParamCmdSequence.put(this.compilationCommand, ParamCmd.SRCSTMF, this.migrator.getFirstPath());
+          ParamCmdSequence.put(this.compilationCommand, ParamCmd.TGTCCSID, ValCmd.JOB); // Needed to compile from stream files
 
-          ParamCmdSequence.remove(ParamCmd.SRCFILE); 
-          ParamCmdSequence.remove(ParamCmd.SRCMBR); 
+          ParamCmdSequence.remove(this.compilationCommand, ParamCmd.SRCFILE); 
+          ParamCmdSequence.remove(this.compilationCommand, ParamCmd.SRCMBR); 
         }
 
       case CRTCLPGM:
@@ -316,16 +316,16 @@ public class CompilationPattern {
     
     switch (this.compilationCommand){
       case CRTRPGMOD:
-        if (ParamCmdSequence.containsKey(ParamCmd.SRCSTMF)) {
-          ParamCmdSequence.remove(ParamCmd.SRCFILE); 
-          ParamCmdSequence.remove(ParamCmd.SRCMBR); 
+        if (ParamCmdSequence.containsKey(this.compilationCommand, ParamCmd.SRCSTMF)) {
+          ParamCmdSequence.remove(this.compilationCommand, ParamCmd.SRCFILE); 
+          ParamCmdSequence.remove(this.compilationCommand, ParamCmd.SRCMBR); 
         }
       case CRTCLMOD:
         break;
 
       case CRTBNDRPG:
-        if (!ParamCmdSequence.containsKey(ParamCmd.DFTACTGRP)) {
-          ParamCmdSequence.remove(ParamCmd.STGMDL); 
+        if (!ParamCmdSequence.containsKey(this.compilationCommand, ParamCmd.DFTACTGRP)) {
+          ParamCmdSequence.remove(this.compilationCommand, ParamCmd.STGMDL); 
         }
       case CRTBNDCL:
       case CRTCLPGM:
@@ -336,22 +336,22 @@ public class CompilationPattern {
 
       case CRTSQLRPGI:
         //TODO: Something is putting this to *ALL in object description, find it and remove this
-        ParamCmdSequence.put(ParamCmd.DBGVIEW, ValCmd.SOURCE);
-        if (ParamCmdSequence.containsKey(ParamCmd.SRCSTMF)) {
-          ParamCmdSequence.put(ParamCmd.CVTCCSID, ValCmd.JOB);
+        ParamCmdSequence.put(this.compilationCommand, ParamCmd.DBGVIEW, ValCmd.SOURCE);
+        if (ParamCmdSequence.containsKey(this.compilationCommand, ParamCmd.SRCSTMF)) {
+          ParamCmdSequence.put(this.compilationCommand, ParamCmd.CVTCCSID, ValCmd.JOB);
         }
         break;
 
       case CRTSRVPGM:
-        if (ParamCmdSequence.containsKey(ParamCmd.EXPORT)) {
-          ParamCmdSequence.remove(ParamCmd.SRCFILE); 
-          ParamCmdSequence.remove(ParamCmd.SRCMBR); 
+        if (ParamCmdSequence.containsKey(this.compilationCommand, ParamCmd.EXPORT)) {
+          ParamCmdSequence.remove(this.compilationCommand, ParamCmd.SRCFILE); 
+          ParamCmdSequence.remove(this.compilationCommand, ParamCmd.SRCMBR); 
         }
         break;
 
       case RUNSQLSTM:
         //TODO: Something is putting this to *EVENTF in object description, find it and remove this
-        ParamCmdSequence.put(ParamCmd.OPTION, ValCmd.LIST);
+        ParamCmdSequence.put(this.compilationCommand, ParamCmd.OPTION, ValCmd.LIST);
         break;
 
       case CRTDSPF:

@@ -228,11 +228,12 @@ public class ObjectCompiler implements Runnable{
     }
 
     //Map<CompilationPattern.ParamCmd, String> ParamCmdSequence = new HashMap<>();
+    CompCmd compilationCommand = CompilationPattern.getCompilationCommand(this.targetKey.sourceType, this.targetKey.objectType);
     ParamMap ParamCmdSequence = new ParamMap(false); //Set this as false to not duplicated output.
 
     /* Parameters values, if provided, overwrite retrieved values */
-    if (!text.isEmpty()) ParamCmdSequence.put(ParamCmd.TEXT, text);
-    if (!actGrp.isEmpty()) ParamCmdSequence.put(ParamCmd.ACTGRP, actGrp);
+    if (!text.isEmpty()) ParamCmdSequence.put(compilationCommand, ParamCmd.TEXT, text);
+    if (!actGrp.isEmpty()) ParamCmdSequence.put(compilationCommand, ParamCmd.ACTGRP, actGrp);
     if (!modules.isEmpty()) {
       //TODO: Change these to *LIBL and set object library as curlib then DSPOBJ or something
       // can be used to resolve the actual library if needed
@@ -241,14 +242,14 @@ public class ObjectCompiler implements Runnable{
         sb.append(targetKey.library + "/" + mod);
         sb.append(" ");
       }
-      ParamCmdSequence.put(ParamCmd.MODULE, sb.toString().trim());
+      ParamCmdSequence.put(compilationCommand, ParamCmd.MODULE, sb.toString().trim());
 
       //TODO: Add this in object description and validate in comp pattern to remove it if srstmf is present
-      //if (sourceStmf.isEmpty()) ParamCmdSequence.put(ParamCmd.EXPORT, CompilationPattern.ValCmd.ALL.toString());
+      //if (sourceStmf.isEmpty()) ParamCmdSequence.put(compilationCommand, ParamCmd.EXPORT, CompilationPattern.ValCmd.ALL.toString());
     }
     if (!this.sourceStmf.isEmpty()) {
-      ParamCmdSequence.put(ParamCmd.SRCSTMF, "'" + this.sourceStmf + "'");
-      ParamCmdSequence.put(ParamCmd.TGTCCSID, ValCmd.JOB);
+      ParamCmdSequence.put(compilationCommand, ParamCmd.SRCSTMF, "'" + this.sourceStmf + "'");
+      ParamCmdSequence.put(compilationCommand, ParamCmd.TGTCCSID, ValCmd.JOB);
     }
 
     odes.setParamsSequence(ParamCmdSequence);
@@ -267,10 +268,10 @@ public class ObjectCompiler implements Runnable{
 
     /* 
     For OPM, create temp members if source is IFS (reverse migration).
-    ParamCmdSequence.put(ParamCmd.SRCSTMF, stmfPath);
+    ParamCmdSequence.put(compilationCommand, ParamCmd.SRCSTMF, stmfPath);
     migrator.IfsToMember(ParamCmdSequence.get(ParamCmd.SRCSTMF), Library);
     ParamCmdSequence.remove(ParamCmd.SRCFILE);  // Switch to stream file
-    ParamCmdSequence.put(ParamCmd.SRCMBR, member);
+    ParamCmdSequence.put(compilationCommand, ParamCmd.SRCMBR, member);
     */
 
     // TODO: CHKOBJ OBJ(ROBKRAUDY2/CUSTOMER) OBJTYPE(*FILE)
