@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.List;
 
 import com.github.kraudy.compiler.CompilationPattern.CompCmd;
@@ -520,18 +521,11 @@ public class ParamMap {
     }
 
     public boolean containsKey(Object cmd, ParamCmd param) {
-      if (cmd instanceof CompCmd) {
-        CompCmd compCmd  = (CompCmd) cmd;
-        return containsKey(param, CompCmdMap.getOrDefault(compCmd, new HashMap<ParamCmd, String>()));
-      }
-      if (cmd instanceof SysCmd) {
-        return false;
-      }
-      return false;
+      return get(cmd).containsKey(param);
     }
 
-    public boolean containsKey(ParamCmd param, Map<ParamCmd, String> paramMap) {
-      return paramMap.containsKey(param);
+    public Set<ParamCmd> keySet(Object cmd){
+      return get(cmd).keySet();
     }
 
     public Map<ParamCmd, String> get(Object cmd) {
