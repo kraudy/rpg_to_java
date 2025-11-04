@@ -24,6 +24,7 @@ public class ParamMap {
     //TODO: (if command instanceof CompCmd) could me useful
     //private Map<Object, Map<ParamCmd, String>> GeneralCmdMap = new EnumMap<>(Object.class);
     private Map<SysCmd, Map<ParamCmd, String>> SysCmdMap = new EnumMap<>(SysCmd.class);
+    private Map<SysCmd, Map<ParamCmd, String>> SysCmdChanges = new EnumMap<>(SysCmd.class);
 
     public Map<CompCmd, Map<ParamCmd, String>> CompCmdMap = new EnumMap<>(CompCmd.class);
     private Map<CompCmd, Map<ParamCmd, String>> CompCmdChanges = new EnumMap<>(CompCmd.class);
@@ -541,6 +542,19 @@ public class ParamMap {
       return null;
     }
 
+    public Map<ParamCmd, String> getChanges(Object cmd) {
+      if (cmd instanceof CompCmd) {
+        CompCmd compCmd  = (CompCmd) cmd;
+        return CompCmdChanges.getOrDefault(compCmd, new HashMap<ParamCmd, String>());
+      }
+      if (cmd instanceof SysCmd) {
+        SysCmd sysCmd  = (SysCmd) cmd;
+        return SysCmdChanges.getOrDefault(sysCmd, new HashMap<ParamCmd, String>());
+      }
+      //TODO: Throw exception
+      return null;
+    }
+
     public String get(Object cmd, ParamCmd param) {
       if (cmd instanceof CompCmd) {
         CompCmd compCmd  = (CompCmd) cmd;
@@ -559,7 +573,7 @@ public class ParamMap {
     public String remove(Object cmd, ParamCmd param) {
       if (cmd instanceof CompCmd) {
         CompCmd compCmd  = (CompCmd) cmd;
-        return remove(compCmd, param, CompCmdMap.getOrDefault(compCmd, new HashMap<ParamCmd, String>()), CompCmdChanges.getOrDefault(compCmd, new HashMap<ParamCmd, String>()));
+        return remove(compCmd, param, get(cmd), getChanges(cmd));
       }
       if (cmd instanceof SysCmd) {
         return "";
