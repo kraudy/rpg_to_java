@@ -576,7 +576,39 @@ public class ParamMap extends HashMap<ParamCmd, String> {
       return put(param, value.toString());
     }
 
-    //TODO: Maybe i can do the same for the CmpCmd without using extending the class
+    public String remove(Object cmd, ParamCmd param) {
+      if (cmd instanceof CompCmd) {
+        CompCmd compCmd  = (CompCmd) cmd;
+        return remove(compCmd, param, CompCmdMap.getOrDefault(compCmd, new HashMap<ParamCmd, String>()), CompCmdChanges.getOrDefault(compCmd, new HashMap<ParamCmd, String>()));
+      }
+      if (cmd instanceof SysCmd) {
+        return "";
+      }
+      return "";
+    }
+
+    public String remove(CompCmd cmd, ParamCmd param, Map<ParamCmd, String> paramMap, Map<ParamCmd, String> paramChanges) {
+      String oldValue = paramMap.remove(param);
+      CompCmdMap.put(cmd, paramMap);
+
+      if (oldValue != null) { // Only log if the key existed
+        String currentChain = paramChanges.getOrDefault(param, "");
+        if (currentChain.isEmpty()) {
+          currentChain = param.name() + " : [REMOVED]"; // First entry is a removal
+        } else {
+          currentChain += " => [REMOVED]"; // Append removal to existing chain
+        }
+        paramChanges.put(param, currentChain);
+        CompCmdChanges.put(cmd, paramChanges);
+      }
+
+      return oldValue;
+    }
+
+    public String remove(SysCmd cmd, ParamCmd key) {
+      return "";
+    }
+
     public String put(CompCmd cmd, ParamCmd param, String value) {
       return put(cmd, CompCmdMap.getOrDefault(cmd, new HashMap<ParamCmd, String>()), CompCmdChanges.getOrDefault(cmd, new HashMap<ParamCmd, String>()), param, value);
     }
