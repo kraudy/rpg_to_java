@@ -23,7 +23,9 @@ public class ParamMap extends HashMap<ParamCmd, String> {
     //TODO: (if command instanceof CompCmd) could me useful
     //private Map<Object, Map<ParamCmd, String>> GeneralCmdMap = new EnumMap<>(Object.class);
     private Map<SysCmd, Map<ParamCmd, String>> SysCmdMap = new EnumMap<>(SysCmd.class);
+
     private Map<CompCmd, Map<ParamCmd, String>> CompCmdMap = new EnumMap<>(CompCmd.class);
+    private Map<CompCmd, Map<ParamCmd, String>> CompCmdChanges = new EnumMap<>(CompCmd.class);
     //private List<Object> CmdExecutionChain;
     private String CmdExecutionChain = "";
     private Map<ParamCmd, String> ParamCmdChanges = new HashMap<>();
@@ -576,10 +578,10 @@ public class ParamMap extends HashMap<ParamCmd, String> {
 
     //TODO: Maybe i can do the same for the CmpCmd without using extending the class
     public String put(CompCmd cmd, ParamCmd param, String value) {
-      return put(cmd, CompCmdMap.getOrDefault(cmd, new HashMap<ParamCmd, String>()), param, value);
+      return put(cmd, CompCmdMap.getOrDefault(cmd, new HashMap<ParamCmd, String>()), CompCmdChanges.getOrDefault(cmd, new HashMap<ParamCmd, String>()), param, value);
     }
 
-    public String put(CompCmd cmd, Map<ParamCmd, String> paramMap, ParamCmd param, String value) {
+    public String put(CompCmd cmd, Map<ParamCmd, String> paramMap, Map<ParamCmd, String> paramChanges, ParamCmd param, String value) {
 
       switch (param) {
         case TEXT:
@@ -594,6 +596,14 @@ public class ParamMap extends HashMap<ParamCmd, String> {
       CompCmdMap.put(cmd, paramMap);  // Re-put the (possibly new) inner map
 
       //TODO: Add param change tracking
+      String currentChain = paramChanges.getOrDefault(param, "");
+      if (currentChain.isEmpty()) {
+        currentChain = param.name() + " : " + value; // First insertion
+      } else {
+        currentChain += " => " + value; // Update: append the new value to the chain
+      }
+      paramChanges.put(param, currentChain);
+      CompCmdChanges.put(cmd, paramChanges);
 
       return oldValue;  // Calls the overridden put(ParamCmd, String); no .toString() needed
     }
