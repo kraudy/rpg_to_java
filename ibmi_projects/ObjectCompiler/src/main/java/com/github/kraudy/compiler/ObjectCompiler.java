@@ -229,7 +229,8 @@ public class ObjectCompiler implements Runnable{
 
     //Map<CompilationPattern.ParamCmd, String> ParamCmdSequence = new HashMap<>();
     CompCmd compilationCommand = CompilationPattern.getCompilationCommand(this.targetKey.sourceType, this.targetKey.objectType);
-    ParamMap ParamCmdSequence = new ParamMap(false); //Set this as false to not duplicated output.
+    //ParamMap ParamCmdSequence = new ParamMap(false); //Set this as false to not duplicated output.
+    ParamMap ParamCmdSequence = odes.getParamCmdSequence();
 
     /* Parameters values, if provided, overwrite retrieved values */
     if (!text.isEmpty()) ParamCmdSequence.put(compilationCommand, ParamCmd.TEXT, text);
@@ -252,14 +253,14 @@ public class ObjectCompiler implements Runnable{
       ParamCmdSequence.put(compilationCommand, ParamCmd.TGTCCSID, ValCmd.JOB);
     }
 
-    odes.setParamsSequence(ParamCmdSequence);
+    //odes.setParamsSequence(ParamCmdSequence);
 
     if (odes.getSourceType() == null) {
       throw new IllegalArgumentException("Source type is required for new or unresolvable objects.");
     }
     if (debug) System.err.println("Source type: " + odes.getSourceType());
 
-    cpat = new CompilationPattern(odes);
+    cpat = new CompilationPattern(odes, ParamCmdSequence);
 
     if (debug) System.out.println("Compilation command: " + cpat.getCompilationCommand().name());
 

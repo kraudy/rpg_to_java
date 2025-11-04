@@ -258,13 +258,13 @@ public class CompilationPattern {
    
 
   //TODO: Maybe overload this to only pass the key as parameter or get the data and call with specific values
-  public CompilationPattern(ObjectDescription odes){
+  public CompilationPattern(ObjectDescription odes, ParamMap ParamCmdSequence){
 
     this.migrator = odes.migrator;
 
     /* Get optional params */
     //TODO: I think, only this is necessary.
-    this.ParamCmdSequence = odes.getParamCmdSequence();
+    this.ParamCmdSequence = ParamCmdSequence;
 
     /* Get compilation command */
 
