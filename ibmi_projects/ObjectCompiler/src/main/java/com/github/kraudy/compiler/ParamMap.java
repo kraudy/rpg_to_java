@@ -572,36 +572,6 @@ public class ParamMap extends HashMap<ParamCmd, String> {
       return paramMap.getOrDefault(param, "");
     }
 
-    @Override
-    public String put(ParamCmd param, String value) {
-      //TODO: Validate value with .contains() using the patterns list to know if an option is
-      // valid for a command
-
-      switch (param) {
-        case TEXT:
-          value = "'" + value + "'";
-          break;
-      
-        default:
-          break;
-      }
-
-      String oldValue = super.put(param, value);
-
-      //TODO: Add extra values like REMOVE or (RETREIVED) to the change chain
-      // to be more transparent
-
-      String currentChain = ParamCmdChanges.getOrDefault(param, "");
-      if (currentChain.isEmpty()) {
-        currentChain = param.name() + " : " + value; // First insertion
-      } else {
-        currentChain += " => " + value; // Update: append the new value to the chain
-      }
-      ParamCmdChanges.put(param, currentChain);
-
-      return oldValue;
-    }
-
     public String put(ParamCmd param, ValCmd value) {
       return put(param, value.toString());
     }
