@@ -616,6 +616,50 @@ public class ParamMap {
       return "";
     }
 
+    public String put(Object cmd, ParamCmd param, String value) {
+      return put(cmd, get(cmd), getChanges(cmd), param, value);
+    }
+
+    public String put(Object cmd, Map<ParamCmd, String> paramMap, Map<ParamCmd, String> paramChanges, ParamCmd param, String value) {
+
+      switch (param) {
+        case TEXT:
+          value = "'" + value + "'";
+          break;
+      
+        default:
+          break;
+      }
+
+      String oldValue = paramMap.put(param, value);
+
+      //TODO: Add param change tracking
+      String currentChain = paramChanges.getOrDefault(param, "");
+      if (currentChain.isEmpty()) {
+        currentChain = param.name() + " : " + value; // First insertion
+      } else {
+        currentChain += " => " + value; // Update: append the new value to the chain
+      }
+      paramChanges.put(param, currentChain);
+
+      put(cmd, paramMap, paramChanges);
+
+      return oldValue;  // Calls the overridden put(ParamCmd, String); no .toString() needed
+    }
+
+    public void put(Object cmd, Map<ParamCmd, String> paramMap, Map<ParamCmd, String> paramChanges) {
+      if (cmd instanceof CompCmd) {
+        CompCmd compCmd  = (CompCmd) cmd;
+        CompCmdMap.put(compCmd, paramMap);  // Re-put the (possibly new) inner map
+        CompCmdChanges.put(compCmd, paramChanges);
+      }
+      if (cmd instanceof SysCmd) {
+        SysCmd sysCmd  = (SysCmd) cmd;
+        SysCmdMap.put(sysCmd, paramMap);
+        SysCmdChanges.put(sysCmd, paramChanges);
+      }
+    }
+
     public String put(CompCmd cmd, ParamCmd param, ValCmd value) {
       return put(cmd, param, value.toString());
     }
