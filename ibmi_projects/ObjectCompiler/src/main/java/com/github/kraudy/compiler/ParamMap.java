@@ -661,8 +661,8 @@ public class ParamMap {
       return oldValue;  // Calls the overridden put(ParamCmd, String); no .toString() needed
     }
 
-    public void showChanges(CompCmd command) {
-      showChanges(cmdToPatternMap.get(command), CompCmdChanges.getOrDefault(command, new HashMap<ParamCmd, String>()));
+    public void showChanges(Object command) {
+      showChanges(getPattern(command), getChanges(command));
     }
 
     public void showChanges(List<ParamCmd> compilationPattern, Map<ParamCmd, String> paramChanges) {
