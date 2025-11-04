@@ -14,7 +14,7 @@ import com.github.kraudy.compiler.ObjectDescription.SysCmd;
 import com.github.kraudy.compiler.ObjectDescription.ObjectType;
 import com.github.kraudy.compiler.ObjectDescription.SourceType;
 
-public class ParamMap extends HashMap<ParamCmd, String> {
+public class ParamMap {
     //TODO: Add another map like 
     // The problem is that it needs to be able to store other commands besides the compilation ones.
     // I would like to just send the compilation cmd to this thing and let it form the string and compile it.
@@ -535,6 +535,7 @@ public class ParamMap extends HashMap<ParamCmd, String> {
     }
 
     public String get(Object cmd, ParamCmd param) {
+      System.out.println("Inside get");
       if (cmd instanceof CompCmd) {
         CompCmd compCmd  = (CompCmd) cmd;
         return get(param, CompCmdMap.getOrDefault(compCmd, new HashMap<ParamCmd, String>()));
@@ -547,10 +548,6 @@ public class ParamMap extends HashMap<ParamCmd, String> {
 
     public String get(ParamCmd param, Map<ParamCmd, String> paramMap) {
       return paramMap.getOrDefault(param, "");
-    }
-
-    public String put(ParamCmd param, ValCmd value) {
-      return put(param, value.toString());
     }
 
     public String remove(Object cmd, ParamCmd param) {

@@ -228,10 +228,19 @@ public class ObjectDescription {
 
   //public void setParamsSequence(Map<CompilationPattern.ParamCmd, String> ParamCmdSequence) {
   //TODO: Maybe add a method to ParamMap to just send the map
+  //TODO: This should be inside ParamMap
   public void setParamsSequence(ParamMap ParamCmdSequence) {
+    System.out.println("Inside setParamsSequence");
     // TODO: Check this
     // this.ParamCmdSequence.putAll(odes.getParamCmdSequence());  // Copy from odes (triggers put for each entry)
-    for (CompilationPattern.ParamCmd paramCmd : ParamCmdSequence.CompCmdMap.get(this.compilationCommand).keySet()){
+
+    Map<ParamCmd, String> incomingMap = ParamCmdSequence.CompCmdMap.get(this.compilationCommand);
+    if(incomingMap == null){
+      System.err.println("incomingMap is null");
+      return;
+    }
+
+    for (CompilationPattern.ParamCmd paramCmd : incomingMap.keySet()){
       this.ParamCmdSequence.put(this.compilationCommand, paramCmd, ParamCmdSequence.get(this.compilationCommand, paramCmd));
     }
   }
@@ -606,7 +615,9 @@ public class ObjectDescription {
             "AND BOUND_MODULE = '" + entryModule + "' "
         )) {
       if (!rsMod.next()) {
-        throw new IllegalArgumentException("Could not found module '" + entryModule + "' in library list");
+        System.err.println("Could not found module '" + entryModule + "' in library list");
+        return;
+        //throw new IllegalArgumentException("Could not found module '" + entryModule + "' in library list");
       }
 
         //TODO: Should i validate the compilation command here?
