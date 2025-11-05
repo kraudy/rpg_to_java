@@ -572,11 +572,6 @@ public class ParamMap {
       return get(cmd).getOrDefault(param, "");
     }
 
-    //TODO: Is this needed?
-    public String get(ParamCmd param, Map<ParamCmd, String> paramMap) {
-      return paramMap.getOrDefault(param, "");
-    }
-
     public String remove(Object cmd, ParamCmd param) {
       return remove(cmd, param, get(cmd), getChanges(cmd));
     }
