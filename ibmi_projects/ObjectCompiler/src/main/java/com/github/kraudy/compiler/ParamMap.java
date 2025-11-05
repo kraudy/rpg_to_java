@@ -569,16 +569,10 @@ public class ParamMap {
     }
 
     public String get(Object cmd, ParamCmd param) {
-      if (cmd instanceof CompCmd) {
-        CompCmd compCmd  = (CompCmd) cmd;
-        return get(param, CompCmdMap.getOrDefault(compCmd, new HashMap<ParamCmd, String>()));
-      }
-      if (cmd instanceof SysCmd) {
-        return "";
-      }
-      return "";
+      return get(cmd).getOrDefault(param, "");
     }
 
+    //TODO: Is this needed?
     public String get(ParamCmd param, Map<ParamCmd, String> paramMap) {
       return paramMap.getOrDefault(param, "");
     }
