@@ -590,7 +590,6 @@ public class ParamMap {
     public String remove(Object cmd, ParamCmd param, Map<ParamCmd, String> paramMap, Map<ParamCmd, String> paramChanges) {
       String oldValue = paramMap.remove(param);
 
-      //if (oldValue != null) { // Only log if the key existed
       String currentChain = paramChanges.getOrDefault(param, "");
       if (currentChain.isEmpty()) {
         currentChain = param.name() + " : [REMOVED]"; // First entry is a removal
@@ -599,10 +598,7 @@ public class ParamMap {
       }
       paramChanges.put(param, currentChain);
 
-      //CompCmdMap.put(cmd, paramMap);
-      //CompCmdChanges.put(cmd, paramChanges);
       put(cmd, paramMap, paramChanges);
-      //}
 
       return oldValue;
     }
