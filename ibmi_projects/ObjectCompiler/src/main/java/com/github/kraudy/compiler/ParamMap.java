@@ -603,26 +603,6 @@ public class ParamMap {
       return oldValue;
     }
 
-    /* 
-    public String remove(CompCmd cmd, ParamCmd param, Map<ParamCmd, String> paramMap, Map<ParamCmd, String> paramChanges) {
-      String oldValue = paramMap.remove(param);
-      CompCmdMap.put(cmd, paramMap);
-
-      if (oldValue != null) { // Only log if the key existed
-        String currentChain = paramChanges.getOrDefault(param, "");
-        if (currentChain.isEmpty()) {
-          currentChain = param.name() + " : [REMOVED]"; // First entry is a removal
-        } else {
-          currentChain += " => [REMOVED]"; // Append removal to existing chain
-        }
-        paramChanges.put(param, currentChain);
-        CompCmdChanges.put(cmd, paramChanges);
-      }
-
-      return oldValue;
-    }
-    */
-
     public String put(Object cmd, ParamCmd param, ValCmd value) {
       return put(cmd, param, value.toString());
     }
