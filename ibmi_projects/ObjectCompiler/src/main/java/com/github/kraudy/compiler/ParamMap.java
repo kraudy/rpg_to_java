@@ -584,18 +584,7 @@ public class ParamMap {
     }
 
     public String remove(Object cmd, ParamCmd param) {
-      /* */
-      if (cmd instanceof CompCmd) {
-        CompCmd compCmd  = (CompCmd) cmd;
-        return remove(compCmd, param, get(cmd), getChanges(cmd));
-      }
-      if (cmd instanceof SysCmd) {
-        return "";
-      }
-      return "";
-
-      //return remove(cmd, param, get(cmd), getChanges(cmd));
-
+      return remove(cmd, param, get(cmd), getChanges(cmd));
     }
 
     public String remove(Object cmd, ParamCmd param, Map<ParamCmd, String> paramMap, Map<ParamCmd, String> paramChanges) {
@@ -618,6 +607,7 @@ public class ParamMap {
       return oldValue;
     }
 
+    /* 
     public String remove(CompCmd cmd, ParamCmd param, Map<ParamCmd, String> paramMap, Map<ParamCmd, String> paramChanges) {
       String oldValue = paramMap.remove(param);
       CompCmdMap.put(cmd, paramMap);
@@ -635,6 +625,7 @@ public class ParamMap {
 
       return oldValue;
     }
+    */
 
     public String put(Object cmd, ParamCmd param, ValCmd value) {
       return put(cmd, param, value.toString());
