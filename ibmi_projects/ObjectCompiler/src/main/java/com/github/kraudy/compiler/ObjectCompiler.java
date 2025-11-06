@@ -262,9 +262,13 @@ public class ObjectCompiler implements Runnable{
 
     cpat = new CompilationPattern(odes, ParamCmdSequence);
 
-    if (debug) System.out.println("Compilation command: " + cpat.getCompilationCommand().name());
+    ParamCmdSequence = cpat.getParamCmdSequence();
 
-    String commandStr = cpat.buildCommand();
+    //if (debug) System.out.println("Compilation command: " + cpat.getCompilationCommand().name());
+
+    //String commandStr = cpat.buildCommand();
+
+    ParamCmdSequence.executeCommand(cpat.getCompilationCommand());
     
 
     /* 
@@ -279,7 +283,7 @@ public class ObjectCompiler implements Runnable{
     // DLTOBJ OBJ(ROBKRAUDY2/CUSTOMER) OBJTYPE(*FILE)
     // Maybe i can put these in another parameter, like, a pre or post pattern of commands using a map   
 
-    compile(cpat.getCompilationCommand(), commandStr);
+    //compile(cpat.getCompilationCommand(), commandStr);
 
     cleanup();
   }

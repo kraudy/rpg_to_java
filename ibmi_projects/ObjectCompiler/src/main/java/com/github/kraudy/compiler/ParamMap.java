@@ -616,6 +616,10 @@ public class ParamMap {
           value = "'" + value + "'";
           break;
       
+        case SRCSTMF:
+          value = "'" + value + "'";
+          break;
+      
         default:
           break;
       }
@@ -653,6 +657,7 @@ public class ParamMap {
     }
 
     public void showChanges(Object command) {
+      System.out.println(getCommandName(command));
       showChanges(getPattern(command), getChanges(command));
     }
 
@@ -701,6 +706,7 @@ public class ParamMap {
     }
 
     public void executeCommand(Object cmd){
+      showChanges(cmd);
       executeCommand(getParamChain(cmd));
     }
 
