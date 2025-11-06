@@ -314,41 +314,6 @@ public class ObjectCompiler implements Runnable{
     this.ParamCmdSequence.executeCommand(SysCmd.CHGCURLIB);
   }
 
-  //TODO: Overwrite this with SysCmd and CompCmd, use another map for SysCmd to store the string.
-  // to just call it with the Enum.
-  //TODO: Add another map for this to show the list of executed commands with their value at the end
-  // similar to the compilation params like CommandMap (even this could leverage ParamMap and use
-  // a list of parameter and all that to form the param)
-  private void executeCommand(String command){
-    Timestamp commandTime = null;
-    try (Statement stmt = connection.createStatement();
-        ResultSet rsTime = stmt.executeQuery("SELECT CURRENT_TIMESTAMP AS Command_Time FROM sysibm.sysdummy1")) {
-      if (rsTime.next()) {
-        commandTime = rsTime.getTimestamp("Command_Time");
-      }
-    } catch (SQLException e) {
-      if (verbose) System.err.println("Could not get command time.");
-      if (debug) e.printStackTrace();
-      throw new IllegalArgumentException("Could not get command time.");
-    }
-
-    try (Statement cmdStmt = connection.createStatement()) {
-      cmdStmt.execute("CALL QSYS2.QCMDEXC('" + command + "')");
-    } catch (SQLException e) {
-      System.out.println("Command failed.");
-      //TODO: Add a class filed that stores the messages and is updated with each compilation command
-      // but make the massages ENUM to just do something like .contains(CPF5813) and then the delete
-      // like DLTOBJ OBJ() OBJTYPE()
-      //if ("CPF5813".equals(e.getMessage()))
-      e.printStackTrace();
-      getJoblogMessages(commandTime);
-      throw new IllegalArgumentException("Could not execute command: " + command); //TODO: Catch this and throw the appropiate message
-    }
-
-    System.out.println("Command successful: " + command);
-    getJoblogMessages(commandTime);
-  }
-
   //TODO: This is kinda slow.
   // String cpysplfCmd = "CPYSPLF FILE(" + objectName + ") TOFILE(QTEMP/SPLFCPY) JOB(*) SPLNBR(*LAST)";
   // Or send it to a stream file
