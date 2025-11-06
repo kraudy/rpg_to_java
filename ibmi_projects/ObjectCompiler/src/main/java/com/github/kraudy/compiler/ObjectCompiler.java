@@ -283,8 +283,6 @@ public class ObjectCompiler implements Runnable{
     // DLTOBJ OBJ(ROBKRAUDY2/CUSTOMER) OBJTYPE(*FILE)
     // Maybe i can put these in another parameter, like, a pre or post pattern of commands using a map   
 
-    //compile(cpat.getCompilationCommand(), commandStr);
-
     cleanup();
   }
 
@@ -312,17 +310,6 @@ public class ObjectCompiler implements Runnable{
 
   private void setCurLib(String library){
     executeCommand("CHGCURLIB CURLIB(" + library + ")"); 
-  }
-
-  private void compile(CompCmd compilationCmd,String commandStr){
-    try {
-      executeCommand(compilationCmd, commandStr); 
-    } catch (IllegalArgumentException e) {
-      if (verbose) System.err.println("Compilation failed.");
-      if (debug) e.printStackTrace();
-    } finally {
-      cleanup();
-    }
   }
 
   private void executeCommand(CompCmd compilationCommand, String command){
