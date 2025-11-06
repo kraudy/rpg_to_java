@@ -304,7 +304,6 @@ public class ObjectCompiler implements Runnable{
   }
 
   private void cleanLibraryList(){
-    //executeCommand("CHGLIBL LIBL()"); 
     this.ParamCmdSequence.put(SysCmd.CHGLIBL, ParamCmd.LIBL, "");
     this.ParamCmdSequence.executeCommand(SysCmd.CHGLIBL);
 

@@ -693,14 +693,14 @@ public class ParamMap {
       StringBuilder sb = new StringBuilder(); 
 
       for (ParamCmd param : compilationPattern) {
-        sb.append(getParamString(paramMap.getOrDefault(param, ""), param));
+        sb.append(getParamString(paramMap.getOrDefault(param, "NULL"), param));
       }
 
       return command + sb.toString();
     }
 
     public String getParamString(String val, ParamCmd paramCmd){
-      if (val.isEmpty()) return "";
+      if ("NULL".equals(val)) return "";
 
       return " " + paramCmd.name() + "(" + val + ")";
     }
