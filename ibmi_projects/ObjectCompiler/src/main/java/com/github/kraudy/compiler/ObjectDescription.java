@@ -133,7 +133,7 @@ public class ObjectDescription {
 
     //TODO: Add something like [DEFAULT] for default value of params
 
-    this.ParamCmdSequence = new ParamMap(this.debug);
+    this.ParamCmdSequence = new ParamMap(this.debug, this.verbose, this.connection);
 
     //TODO: Set another switch specifically for SRCSTMF
     switch (this.compilationCommand) {

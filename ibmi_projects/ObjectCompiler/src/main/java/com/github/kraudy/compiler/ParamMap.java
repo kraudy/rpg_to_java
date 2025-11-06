@@ -1,5 +1,11 @@
 package com.github.kraudy.compiler;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -31,8 +37,9 @@ public class ParamMap {
     //private List<Object> CmdExecutionChain;
     private String CmdExecutionChain = "";
     private Map<ParamCmd, String> ParamCmdChanges = new HashMap<>();
+    public final Connection connection;
     private final boolean debug;
-    //private final boolean verbose;
+    private final boolean verbose;
 
     /* System command patterns */
     public static final List<ParamCmd> ChgLibLPattern = Arrays.asList(
@@ -517,8 +524,10 @@ public class ParamMap {
       cmdToPatternMap.put(CompCmd.CRTLF, ddsLfPattern);
     }     
 
-    public ParamMap(boolean debug) {
+    public ParamMap(boolean debug, boolean verbose, Connection connection) {
         this.debug = debug;
+        this.verbose = verbose;
+        this.connection = connection;
     }
 
     public boolean containsKey(Object cmd, ParamCmd param) {
@@ -689,5 +698,70 @@ public class ParamMap {
       if (val.isEmpty()) return "";
 
       return " " + paramCmd.name() + "(" + val + ")";
+    }
+
+    public void executeCommand(Object cmd){
+      executeCommand(getParamChain(cmd));
+    }
+
+    public void executeCommand(String command){
+      Timestamp commandTime = null;
+      try (Statement stmt = connection.createStatement();
+          ResultSet rsTime = stmt.executeQuery("SELECT CURRENT_TIMESTAMP AS Command_Time FROM sysibm.sysdummy1")) {
+        if (rsTime.next()) {
+          commandTime = rsTime.getTimestamp("Command_Time");
+        }
+      } catch (SQLException e) {
+        if (verbose) System.err.println("Could not get command time.");
+        if (debug) e.printStackTrace();
+        throw new IllegalArgumentException("Could not get command time.");
+      }
+
+      try (Statement cmdStmt = connection.createStatement()) {
+        cmdStmt.execute("CALL QSYS2.QCMDEXC('" + command + "')");
+      } catch (SQLException e) {
+        System.out.println("Command failed.");
+        //TODO: Add a class filed that stores the messages and is updated with each compilation command
+        // but make the massages ENUM to just do something like .contains(CPF5813) and then the delete
+        // like DLTOBJ OBJ() OBJTYPE()
+        //if ("CPF5813".equals(e.getMessage()))
+        e.printStackTrace();
+        getJoblogMessages(commandTime);
+        throw new IllegalArgumentException("Could not execute command: " + command); //TODO: Catch this and throw the appropiate message
+      }
+
+      System.out.println("Command successful: " + command);
+      getJoblogMessages(commandTime);
+    }
+
+    public void getJoblogMessages(Timestamp commandTime){
+      // SQL0601 : Object already exists
+      // CPF5813 : File CUSTOMER in library ROBKRAUDY2 already exists
+      try (Statement stmt = connection.createStatement();
+          ResultSet rsMessages = stmt.executeQuery(
+            "SELECT MESSAGE_TIMESTAMP, MESSAGE_ID, SEVERITY, MESSAGE_TEXT, COALESCE(MESSAGE_SECOND_LEVEL_TEXT, '') As MESSAGE_SECOND_LEVEL_TEXT " +
+            "FROM TABLE(QSYS2.JOBLOG_INFO('*')) " + 
+            "WHERE FROM_USER = USER " +
+            "AND MESSAGE_TIMESTAMP > '" + commandTime + "' " +
+            "AND MESSAGE_ID NOT IN ('SQL0443', 'CPC0904', 'CPF2407') " +
+            "ORDER BY MESSAGE_TIMESTAMP DESC "
+          )) {
+        while (rsMessages.next()) {
+          Timestamp messageTime = rsMessages.getTimestamp("MESSAGE_TIMESTAMP");
+          String messageId = rsMessages.getString("MESSAGE_ID").trim();
+          String severity = rsMessages.getString("SEVERITY").trim();
+          String message = rsMessages.getString("MESSAGE_TEXT").trim();
+          String messageSecondLevel = rsMessages.getString("MESSAGE_SECOND_LEVEL_TEXT").trim();
+          // Format the timestamp as a string
+          SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+          String formattedTime = sdf.format(messageTime);
+          
+          // Print in a formatted table-like structure
+          System.out.printf("%-20s | %-10s | %-4s | %s%n", formattedTime, messageId, severity, message);
+        } 
+      } catch (SQLException e) {
+        System.out.println("Could not get messages.");
+        e.printStackTrace();
+      }
     }
 }
