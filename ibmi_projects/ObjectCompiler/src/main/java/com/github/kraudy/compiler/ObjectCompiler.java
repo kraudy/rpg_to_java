@@ -312,15 +312,6 @@ public class ObjectCompiler implements Runnable{
     executeCommand("CHGCURLIB CURLIB(" + library + ")"); 
   }
 
-  private void executeCommand(CompCmd compilationCommand, String command){
-    // Escape single quotes in commandStr for QCMDEXC
-    if (debug) System.out.println("Formed command: " + command);
-
-    String escapedCommand = command.replace("'", "''");
-
-    executeCommand(escapedCommand);
-  }
-
   //TODO: Overwrite this with SysCmd and CompCmd, use another map for SysCmd to store the string.
   // to just call it with the Enum.
   //TODO: Add another map for this to show the list of executed commands with their value at the end
