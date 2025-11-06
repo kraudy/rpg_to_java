@@ -12,6 +12,7 @@ import java.util.List;
 import com.github.kraudy.compiler.CompilationPattern.CompCmd;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
+import com.github.kraudy.compiler.ObjectDescription.SysCmd;
 import com.github.kraudy.migrator.SourceMigrator;
 import com.ibm.as400.access.AS400;
 import com.ibm.as400.access.AS400JDBCDataSource;
@@ -31,6 +32,7 @@ public class ObjectCompiler implements Runnable{
   private ObjectDescription odes;
   private CompilationPattern cpat;
   private SourceMigrator migrator;
+  public ParamMap ParamCmdSequence;
 
 
   static class LibraryConverter implements CommandLine.ITypeConverter<String> {
@@ -188,6 +190,7 @@ public class ObjectCompiler implements Runnable{
     /* Try to get compilation params from object. If it exists. */
 
     //TODO: Add --dry-run to just run without executing. Just to generate the command string
+    this.ParamCmdSequence = new ParamMap(this.debug, this.verbose, this.connection);
     cleanLibraryList();
 
     // Migrator
@@ -266,10 +269,7 @@ public class ObjectCompiler implements Runnable{
 
     //if (debug) System.out.println("Compilation command: " + cpat.getCompilationCommand().name());
 
-    //String commandStr = cpat.buildCommand();
-
-    ParamCmdSequence.executeCommand(cpat.getCompilationCommand());
-    
+    ParamCmdSequence.executeCommand(cpat.getCompilationCommand());    
 
     /* 
     For OPM, create temp members if source is IFS (reverse migration).
@@ -304,7 +304,9 @@ public class ObjectCompiler implements Runnable{
   }
 
   private void cleanLibraryList(){
-    executeCommand("CHGLIBL LIBL()"); 
+    //executeCommand("CHGLIBL LIBL()"); 
+    this.ParamCmdSequence.put(SysCmd.CHGLIBL, ParamCmd.LIBL, "");
+    this.ParamCmdSequence.executeCommand(SysCmd.CHGLIBL);
 
   }
 
