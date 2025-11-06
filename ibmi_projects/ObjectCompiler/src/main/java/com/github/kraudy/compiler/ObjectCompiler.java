@@ -310,7 +310,8 @@ public class ObjectCompiler implements Runnable{
   }
 
   private void setCurLib(String library){
-    executeCommand("CHGCURLIB CURLIB(" + library + ")"); 
+    this.ParamCmdSequence.put(SysCmd.CHGCURLIB, ParamCmd.CURLIB, library);
+    this.ParamCmdSequence.executeCommand(SysCmd.CHGCURLIB);
   }
 
   //TODO: Overwrite this with SysCmd and CompCmd, use another map for SysCmd to store the string.
