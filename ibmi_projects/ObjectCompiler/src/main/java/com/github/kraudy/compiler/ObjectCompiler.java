@@ -213,6 +213,7 @@ public class ObjectCompiler implements Runnable{
           connection,
           debug,
           verbose,
+          ParamCmdSequence,
           //TODO: Maybe i should pass these as the topo key. The Key should uniquely indentify an object
           targetKey,
           sourceLib, // Default to *LIBL
@@ -256,20 +257,18 @@ public class ObjectCompiler implements Runnable{
       ParamCmdSequence.put(compilationCommand, ParamCmd.TGTCCSID, ValCmd.JOB);
     }
 
-    //odes.setParamsSequence(ParamCmdSequence);
-
     if (odes.getSourceType() == null) {
       throw new IllegalArgumentException("Source type is required for new or unresolvable objects.");
     }
     if (debug) System.err.println("Source type: " + odes.getSourceType());
 
-    cpat = new CompilationPattern(odes, ParamCmdSequence);
+    cpat = new CompilationPattern(odes, ParamCmdSequence, compilationCommand);
 
     ParamCmdSequence = cpat.getParamCmdSequence();
 
     //if (debug) System.out.println("Compilation command: " + cpat.getCompilationCommand().name());
 
-    ParamCmdSequence.executeCommand(cpat.getCompilationCommand());    
+    ParamCmdSequence.executeCommand(compilationCommand);    
 
     /* 
     For OPM, create temp members if source is IFS (reverse migration).
@@ -279,6 +278,7 @@ public class ObjectCompiler implements Runnable{
     ParamCmdSequence.put(compilationCommand, ParamCmd.SRCMBR, member);
     */
 
+    //TODO: Idea: Crete a cursor of library list and iter over it to execute this command. Sound interesting, i don't know if it is useful.
     // TODO: CHKOBJ OBJ(ROBKRAUDY2/CUSTOMER) OBJTYPE(*FILE)
     // DLTOBJ OBJ(ROBKRAUDY2/CUSTOMER) OBJTYPE(*FILE)
     // Maybe i can put these in another parameter, like, a pre or post pattern of commands using a map   

@@ -105,6 +105,7 @@ public class ObjectDescription {
         Connection connection,
         boolean debug,
         boolean verbose,
+        ParamMap ParamCmdSequence,
         @JsonProperty("targetKey") Utilities.ParsedKey targetKey,
         @JsonProperty("sourceLibrary") String sourceLibrary,
         @JsonProperty("sourceFile") String sourceFile,
@@ -133,7 +134,7 @@ public class ObjectDescription {
 
     //TODO: Add something like [DEFAULT] for default value of params
 
-    this.ParamCmdSequence = new ParamMap(this.debug, this.verbose, this.connection);
+    this.ParamCmdSequence = ParamCmdSequence;
 
     //TODO: Set another switch specifically for SRCSTMF
     switch (this.compilationCommand) {

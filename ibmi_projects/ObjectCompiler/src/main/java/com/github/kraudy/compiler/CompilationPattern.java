@@ -258,7 +258,7 @@ public class CompilationPattern {
    
 
   //TODO: Maybe overload this to only pass the key as parameter or get the data and call with specific values
-  public CompilationPattern(ObjectDescription odes, ParamMap ParamCmdSequence){
+  public CompilationPattern(ObjectDescription odes, ParamMap ParamCmdSequence, CompCmd compilationCommand){
 
     this.migrator = odes.migrator;
 
@@ -269,7 +269,8 @@ public class CompilationPattern {
     /* Get compilation command */
 
     //this.compilationCommand = typeToCmdMap.get(odes.getSourceType()).get(odes.getObjectType());
-    this.compilationCommand = getCompilationCommand(odes.getSourceType(), odes.getObjectType());
+    //this.compilationCommand = getCompilationCommand(odes.getSourceType(), odes.getObjectType());
+    this.compilationCommand = compilationCommand;
     /* Command builders */
     
     /* Migration logic */
@@ -364,7 +365,6 @@ public class CompilationPattern {
 
       default: throw new IllegalArgumentException("Compilation command builder not found");
     }
-    //odes.setParamsSequence(this.ParamCmdSequence);
   }
 
   public static CompCmd getCompilationCommand(SourceType sourceType, ObjectType objectType){
