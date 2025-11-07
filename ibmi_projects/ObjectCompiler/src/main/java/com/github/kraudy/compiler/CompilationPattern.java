@@ -252,9 +252,6 @@ public class CompilationPattern {
     //TODO: Maybe i could extend this to being also like a standard command executor. We'll see.
 
   }  
-
-  
-
    
 
   //TODO: Maybe overload this to only pass the key as parameter or get the data and call with specific values
@@ -293,8 +290,6 @@ public class CompilationPattern {
         }
 
       case CRTCLPGM:
-        break;
-        
       case CRTRPGPGM:
         //TODO: For these, if stmf is provided, migrate in reverse to a sourcepf in qtemp or something
         break;
