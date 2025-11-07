@@ -326,8 +326,6 @@ public class CompilationPattern {
         break;
 
       case CRTSQLRPGI:
-        //TODO: Something is putting this to *ALL in object description, find it and remove this
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.DBGVIEW, ValCmd.SOURCE);
         if (ParamCmdSequence.containsKey(this.compilationCommand, ParamCmd.SRCSTMF)) {
           ParamCmdSequence.put(this.compilationCommand, ParamCmd.CVTCCSID, ValCmd.JOB);
         }

@@ -416,7 +416,7 @@ public class ObjectDescription {
         case CRTPF:
         case CRTLF:
           String text = rsObj.getString("TEXT_DESCRIPTION").trim();
-          if (!text.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.TEXT, text);
+          if (!text.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.TEXT, "'" + text + "'");
           //if (!text.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.TEXT, text);
           break;
       }
@@ -613,8 +613,8 @@ public class ObjectDescription {
       }
 
         //TODO: Should i validate the compilation command here?
-        String dbgData = rsMod.getString("DEBUG_DATA").trim();
-        if ("*YES".equals(dbgData)) ParamCmdSequence.put(this.compilationCommand, ParamCmd.DBGVIEW, ValCmd.ALL);
+        //String dbgData = rsMod.getString("DEBUG_DATA").trim();
+        //if ("*YES".equals(dbgData)) ParamCmdSequence.put(this.compilationCommand, ParamCmd.DBGVIEW, ValCmd.ALL);
         
 
         // Override OPTIMIZE if more specific here
