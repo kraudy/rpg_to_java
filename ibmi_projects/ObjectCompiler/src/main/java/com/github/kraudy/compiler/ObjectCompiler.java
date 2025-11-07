@@ -206,13 +206,14 @@ public class ObjectCompiler implements Runnable{
 
     showLibraryList();
 
-    //this.targetKey = this.targetKey.withLibrary(ValCmd.LIBL.toString());
+    CompCmd compilationCommand = CompilationPattern.getCompilationCommand(this.targetKey.sourceType, this.targetKey.objectType);
 
     this.odes = new ObjectDescription(
           connection,
           debug,
           verbose,
           ParamCmdSequence,
+          compilationCommand,
           //TODO: Maybe i should pass these as the topo key. The Key should uniquely indentify an object
           targetKey,
           sourceLib, // Default to *LIBL
@@ -230,9 +231,6 @@ public class ObjectCompiler implements Runnable{
       if (verbose) System.err.println("Object not found; using defaults.");
     }
 
-    //Map<CompilationPattern.ParamCmd, String> ParamCmdSequence = new HashMap<>();
-    CompCmd compilationCommand = CompilationPattern.getCompilationCommand(this.targetKey.sourceType, this.targetKey.objectType);
-    //ParamMap ParamCmdSequence = new ParamMap(false); //Set this as false to not duplicated output.
     ParamMap ParamCmdSequence = odes.getParamCmdSequence();
 
     /* Parameters values, if provided, overwrite retrieved values */

@@ -103,6 +103,7 @@ public class ObjectDescription {
         boolean debug,
         boolean verbose,
         ParamMap ParamCmdSequence,
+        CompCmd compilationCommand,
         @JsonProperty("targetKey") Utilities.ParsedKey targetKey,
         @JsonProperty("sourceLibrary") String sourceLibrary,
         @JsonProperty("sourceFile") String sourceFile,
@@ -118,7 +119,7 @@ public class ObjectDescription {
     this.sourceFile = (sourceFile.isEmpty()) ? SourceType.defaultSourcePf(this.targetKey.sourceType, this.targetKey.objectType) : sourceFile; // TODO: Add logic for sourcePF or directory
     this.sourceName = (sourceName.isEmpty() ? this.targetKey.objectName : sourceName); //TODO: Add logic for stream files / members / default
 
-    this.compilationCommand = CompilationPattern.getCompilationCommand(this.targetKey.sourceType, this.targetKey.objectType);
+    this.compilationCommand = compilationCommand;
 
     /* Generate compilation params values from object description */
 
@@ -528,7 +529,7 @@ public class ObjectDescription {
 
   // NEW: Query BOUND_MODULE_INFO for module-specific fields (e.g., GENLVL, OPTION)
   private void getModuleInfo(String entryModuleLib, String entryModule) throws SQLException {
-    if (entryModuleLib.isEmpty() || entryModule.isEmpty()) throw new IllegalArgumentException("Entry module or lib are empty");  // Skip if no entry module
+    if (entryModuleLib.isEmpty() || entryModule.isEmpty()) System.err.println("Entry module or lib are empty");  // Skip if no entry module
 
     try (Statement stmt = connection.createStatement();
         ResultSet rsMod = stmt.executeQuery(
