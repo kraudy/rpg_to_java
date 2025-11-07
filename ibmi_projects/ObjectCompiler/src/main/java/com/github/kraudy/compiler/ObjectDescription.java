@@ -206,7 +206,6 @@ public class ObjectDescription {
     //ParamCmdSequence.put(this.compilationCommand, ParamCmd.SRCFILE, this.sourceLibrary + "/" + this.sourceFile);
     //TODO: Changed it to same target library, could be overwritten later if a param is provided
     //ParamCmdSequence.put(this.compilationCommand, ParamCmd.REPLACE, ValCmd.YES.toString());
-    //ParamCmdSequence.put(this.compilationCommand, ParamCmd.OPTION, ValCmd.EVENTF.toString());
 
 
   }
