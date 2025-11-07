@@ -258,20 +258,15 @@ public class CompilationPattern {
    
 
   //TODO: Maybe overload this to only pass the key as parameter or get the data and call with specific values
-  public CompilationPattern(ObjectDescription odes, ParamMap ParamCmdSequence, CompCmd compilationCommand){
+  public CompilationPattern(SourceMigrator migrator, ParamMap ParamCmdSequence, CompCmd compilationCommand, String objectName){
 
-    this.migrator = odes.migrator;
+    this.migrator = migrator;
 
     /* Get optional params */
     //TODO: I think, only this is necessary.
     this.ParamCmdSequence = ParamCmdSequence;
 
-    /* Get compilation command */
-
-    //this.compilationCommand = typeToCmdMap.get(odes.getSourceType()).get(odes.getObjectType());
-    //this.compilationCommand = getCompilationCommand(odes.getSourceType(), odes.getObjectType());
     this.compilationCommand = compilationCommand;
-    /* Command builders */
     
     /* Migration logic */
     switch (this.compilationCommand){
@@ -286,7 +281,7 @@ public class CompilationPattern {
       case RUNSQLSTM:
         if (!ParamCmdSequence.containsKey(this.compilationCommand, ParamCmd.SRCSTMF)) {
           System.out.println("SRCFILE data: " + ParamCmdSequence.get(this.compilationCommand, ParamCmd.SRCFILE));
-          this.migrator.setParams(ParamCmdSequence.get(this.compilationCommand, ParamCmd.SRCFILE), odes.targetKey.objectName, "sources");
+          this.migrator.setParams(ParamCmdSequence.get(this.compilationCommand, ParamCmd.SRCFILE), objectName, "sources");
           this.migrator.api(); // Try to migrate this thing
           System.out.println("After calling migration api");
           
