@@ -265,17 +265,7 @@ public class ObjectCompiler implements Runnable{
 
     ParamCmdSequence = cpat.getParamCmdSequence();
 
-    //if (debug) System.out.println("Compilation command: " + cpat.getCompilationCommand().name());
-
     ParamCmdSequence.executeCommand(compilationCommand);    
-
-    /* 
-    For OPM, create temp members if source is IFS (reverse migration).
-    ParamCmdSequence.put(compilationCommand, ParamCmd.SRCSTMF, stmfPath);
-    migrator.IfsToMember(ParamCmdSequence.get(ParamCmd.SRCSTMF), Library);
-    ParamCmdSequence.remove(ParamCmd.SRCFILE);  // Switch to stream file
-    ParamCmdSequence.put(compilationCommand, ParamCmd.SRCMBR, member);
-    */
 
     //TODO: Idea: Crete a cursor of library list and iter over it to execute this command. Sound interesting, i don't know if it is useful.
     // TODO: CHKOBJ OBJ(ROBKRAUDY2/CUSTOMER) OBJTYPE(*FILE)

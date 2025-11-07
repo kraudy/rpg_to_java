@@ -291,7 +291,13 @@ public class CompilationPattern {
 
       case CRTCLPGM:
       case CRTRPGPGM:
-        //TODO: For these, if stmf is provided, migrate in reverse to a sourcepf in qtemp or something
+        /* 
+        For OPM, create temp members if source is IFS (reverse migration).
+        ParamCmdSequence.put(compilationCommand, ParamCmd.SRCSTMF, stmfPath);
+        migrator.IfsToMember(ParamCmdSequence.get(ParamCmd.SRCSTMF), Library);
+        ParamCmdSequence.remove(ParamCmd.SRCFILE);  // Switch to stream file
+        ParamCmdSequence.put(compilationCommand, ParamCmd.SRCMBR, member);
+        */
         break;
 
       case CRTDSPF:
@@ -303,7 +309,7 @@ public class CompilationPattern {
           break;
     }
 
-    /* Pattern logic */
+    /* Resolve params conflicts */
     
     switch (this.compilationCommand){
       case CRTRPGMOD:

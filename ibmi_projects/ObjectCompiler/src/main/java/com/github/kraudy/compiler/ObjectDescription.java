@@ -113,10 +113,6 @@ public class ObjectDescription {
     this.verbose = verbose;
 
     this.targetKey = targetKey;
-    //this.targetKey = targetKey.withLibrary(ValCmd.LIBL.toString());
-    // Change key to *LIBL
-    //String newKeyStr = ValCmd.LIBL.toString() + "." + this.targetKey.objectName + "." + this.targetKey.objectType.name() + (this.targetKey.sourceType != null ? "." + this.targetKey.sourceType.name() : "");
-    //this.targetKey = new Utilities.ParsedKey(newKeyStr);
 
     this.sourceLibrary = sourceLibrary;
     this.sourceFile = (sourceFile.isEmpty()) ? SourceType.defaultSourcePf(this.targetKey.sourceType, this.targetKey.objectType) : sourceFile; // TODO: Add logic for sourcePF or directory
