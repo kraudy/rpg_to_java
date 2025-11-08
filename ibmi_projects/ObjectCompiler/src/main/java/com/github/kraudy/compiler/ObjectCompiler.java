@@ -12,6 +12,7 @@ import java.util.List;
 import com.github.kraudy.compiler.CompilationPattern.CompCmd;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
+import com.github.kraudy.compiler.ObjectDescription.SourceType;
 import com.github.kraudy.compiler.ObjectDescription.SysCmd;
 import com.github.kraudy.migrator.SourceMigrator;
 import com.ibm.as400.access.AS400;
@@ -217,8 +218,9 @@ public class ObjectCompiler implements Runnable{
           //TODO: Maybe i should pass these as the topo key. The Key should uniquely indentify an object
           targetKey,
           sourceLib, // Default to *LIBL
-          sourceFile,
-          sourceName
+          //TODO: Remove these and change it in the key
+          (sourceFile.isEmpty()) ? SourceType.defaultSourcePf(this.targetKey.sourceType, this.targetKey.objectType) : sourceFile,
+          (sourceName.isEmpty() ? this.targetKey.objectName : sourceName)
     );
 
     //TODO: Set library as curlib and change value to CURLIB, maybe use put for chain tracking
@@ -231,6 +233,7 @@ public class ObjectCompiler implements Runnable{
       if (verbose) System.err.println("Object not found; using defaults.");
     }
 
+    //TODO: Fix this
     ParamMap ParamCmdSequence = odes.getParamCmdSequence();
 
     /* Parameters values, if provided, overwrite retrieved values */

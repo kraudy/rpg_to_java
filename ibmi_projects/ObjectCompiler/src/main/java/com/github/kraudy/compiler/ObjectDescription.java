@@ -116,14 +116,12 @@ public class ObjectDescription {
     this.targetKey = targetKey;
 
     this.sourceLibrary = sourceLibrary;
-    this.sourceFile = (sourceFile.isEmpty()) ? SourceType.defaultSourcePf(this.targetKey.sourceType, this.targetKey.objectType) : sourceFile; // TODO: Add logic for sourcePF or directory
-    this.sourceName = (sourceName.isEmpty() ? this.targetKey.objectName : sourceName); //TODO: Add logic for stream files / members / default
+    this.sourceFile = sourceFile;
+    this.sourceName = sourceName;
 
     this.compilationCommand = compilationCommand;
 
     /* Generate compilation params values from object description */
-
-    //if (this.sourceName.isEmpty())    this.sourceName = CompCmd.compilationSourceName(compilationCommand);//ValCmd.PGM.toString();
 
     //TODO: Add something like [DEFAULT] for default value of params
 
@@ -200,7 +198,6 @@ public class ObjectDescription {
         break;
     }
 
-    //ParamCmdSequence.put(this.compilationCommand, ParamCmd.SRCFILE, this.sourceLibrary + "/" + this.sourceFile);
     //TODO: Changed it to same target library, could be overwritten later if a param is provided
     //ParamCmdSequence.put(this.compilationCommand, ParamCmd.REPLACE, ValCmd.YES.toString());
 

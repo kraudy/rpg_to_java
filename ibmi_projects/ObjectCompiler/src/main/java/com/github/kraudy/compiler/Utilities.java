@@ -13,10 +13,10 @@ public class Utilities {
   }
 
   public static class ParsedKey {
-    public final String library;
-    public final String objectName;
-    public final ObjectType objectType;
-    public final SourceType sourceType; // null if absent
+    public String library;
+    public String objectName;
+    public ObjectType objectType;
+    public SourceType sourceType; // null if absent
 
     @JsonCreator  // Enables deserialization from a JSON string like "MYLIB.HELLO.PGM.RPGLE"
     public ParsedKey(String key) {
