@@ -209,6 +209,9 @@ public class ObjectCompiler implements Runnable{
 
     CompCmd compilationCommand = CompilationPattern.getCompilationCommand(this.targetKey.sourceType, this.targetKey.objectType);
 
+    sourceFile = sourceFile.isEmpty() ? SourceType.defaultSourcePf(this.targetKey.sourceType, this.targetKey.objectType) : sourceFile;
+    sourceName = sourceName.isEmpty() ? this.targetKey.objectName : sourceName;
+
     this.odes = new ObjectDescription(
           connection,
           debug,
@@ -217,10 +220,10 @@ public class ObjectCompiler implements Runnable{
           compilationCommand,
           //TODO: Maybe i should pass these as the topo key. The Key should uniquely indentify an object
           targetKey,
-          sourceLib, // Default to *LIBL
+          sourceLib,
           //TODO: Remove these and change it in the key
-          (sourceFile.isEmpty()) ? SourceType.defaultSourcePf(this.targetKey.sourceType, this.targetKey.objectType) : sourceFile,
-          (sourceName.isEmpty() ? this.targetKey.objectName : sourceName)
+          sourceFile,
+          sourceName
     );
 
     //TODO: Set library as curlib and change value to CURLIB, maybe use put for chain tracking
