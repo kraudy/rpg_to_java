@@ -90,30 +90,18 @@ public class ObjectCompiler implements Runnable{
     }
   }
 
+  /* Object attributes. Required params */
   @Option(names = {"-tk","--target-key"}, required = true, description = "Target key: library.objectName.objectType[.sourceType] (e.g., MYLIB.HELLO.PGM.RPGLE)", converter = TargetKeyConverter.class)
   private Utilities.ParsedKey targetKey;
-
-  /* Object attributes. Required params */
-  /*
-  //TODO: Change to target library
-  @Option(names = { "-l", "--lib" }, required = true, description = "Target library for object", converter = LibraryConverter.class)
-  private String library;
-
-  //TODO: --obj, -t and -st could be made in one: hello.pgm.rpgle and just parse it. Maybe the last could be optional if the object is found.
-  // format: objLibrary.objectName.objectType.sourceType?, This will match the toposort keys.
-  @Option(names = "--obj", required = true, description = "Object name", converter = ObjectNameConverter.class)
-  private String objectName;
-
-   */
 
   /* Source-related params. Good to have */
   @Option(names = { "-sf", "--source-file" }, description = "Source physical file (defaults based on source type or retrieved from object)")
   private String sourceFile = "";
 
-  @Option(names = { "-sn", "--source-name" }, description = "Source member name (defaults to object name, command-specific *SPECIAL, or retrieved from object)")
+  @Option(names = { "-sn", "--source-name" }, description = "Source member name (defaults to object name)")
   private String sourceName = "";
 
-  @Option(names = { "-stmf", "--source-stmf" }, description = "Source stream file path in IFS (e.g., /home/sources/hello.rpgle). Overrides source-lib/file/name if provided.")
+  @Option(names = { "-stmf", "--source-stmf" }, description = "Source stream file path in IFS (e.g., /home/sources/hello.rpgle). Overrides lib/sourceFile/name if provided.")
   private String sourceStmf = "";
 
   @Option(names = { "-mods","--modules"}, arity = "0..*", description = "Space-separated list of modules for SRVPGM (e.g., *CURLIB/HELLO2NENT *CURLIB/HELLO2BYE). Defaults to retrieved from existing object.")
@@ -128,15 +116,6 @@ public class ObjectCompiler implements Runnable{
 
   @Option(names = "--dbgview", description = "Debug view (e.g., *ALL, *SOURCE, *LIST, *NONE). Defaults to *ALL.")
   private String dbgView = CompilationPattern.ValCmd.ALL.toString(); //"*ALL"
-
-  @Option(names = "--optimize", description = "Optimization level (e.g., *NONE, 10, 20, 30, 40). Defaults to 10.")
-  private String optimize = "10";
-
-  @Option(names = "--tgtrls", description = "Target release (e.g., *CURRENT, V7R4M0). Defaults to retrieved or *CURRENT.")
-  private String tgtRls = CompilationPattern.ValCmd.CURRENT.toString();  //"*CURRENT"
-
-  @Option(names = "--option", description = "Compile options (e.g., *EVENTF, *SRCDBG). Defaults based on type.")
-  private String option = "";
 
   @Option(names = "--bnddir", description = "Binding directories (space-separated). Defaults to *NONE.")
   private String bndDir = CompilationPattern.ValCmd.NONE.toString(); // "*NONE"
