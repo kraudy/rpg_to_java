@@ -288,6 +288,11 @@ public class CompilationPattern {
           ParamCmdSequence.remove(this.compilationCommand, ParamCmd.SRCFILE); 
           ParamCmdSequence.remove(this.compilationCommand, ParamCmd.SRCMBR); 
         }
+        if(ParamCmdSequence.containsKey(this.compilationCommand, ParamCmd.SRCSTMF) &&
+            ParamCmdSequence.containsKey(this.compilationCommand, ParamCmd.SRCFILE)){
+          ParamCmdSequence.remove(this.compilationCommand, ParamCmd.SRCFILE); 
+          ParamCmdSequence.remove(this.compilationCommand, ParamCmd.SRCMBR); 
+        }
 
       case CRTCLPGM:
       case CRTRPGPGM:
