@@ -119,10 +119,6 @@ public class ObjectCompiler implements Runnable{
   @Option(names = { "-mods","--modules"}, arity = "0..*", description = "Space-separated list of modules for SRVPGM (e.g., *CURLIB/HELLO2NENT *CURLIB/HELLO2BYE). Defaults to retrieved from existing object.")
   private List<String> modules = new ArrayList<>();
 
-  //TODO: Should this be part of the key?
-  @Option(names = {"-st","--source-type"}, description = "Source type (e.g., RPGLE, CLLE) (defaults to retrieved from object if possible)", converter = SourceTypeConverter.class)
-  private ObjectDescription.SourceType sourceType;
-
   /* Compilation flags. Optionals */
   @Option(names = { "--text" }, description = "Object text description (defaults to retrieved from object if possible)")
   private String text = "";
