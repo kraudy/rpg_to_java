@@ -162,6 +162,7 @@ public class ObjectCompiler implements Runnable{
       throw new RuntimeException("Failed to initialize migrator: " + e.getMessage(), e);
     }
 
+    //TODO: Should i do ADDLIBLE library *FIRST too?
     setCurLib(targetKey.library);
 
     showLibraryList();
@@ -205,7 +206,7 @@ public class ObjectCompiler implements Runnable{
       // can be used to resolve the actual library if needed
       StringBuilder sb = new StringBuilder(); 
       for (String mod: modules){
-        sb.append(targetKey.library + "/" + mod);
+        sb.append(ValCmd.LIBL.toString() + "/" + mod);
         sb.append(" ");
       }
       ParamCmdSequence.put(compilationCommand, ParamCmd.MODULE, sb.toString().trim());
