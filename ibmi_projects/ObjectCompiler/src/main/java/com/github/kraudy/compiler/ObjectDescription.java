@@ -24,7 +24,7 @@ public class ObjectDescription {
   //public String targetLibrary;
   // public String objectName;
   //public ObjectType objectType;
-  public String sourceLibrary;
+  // public String sourceLibrary;
   public String sourceFile;
   public String sourceName;
   public SourceType sourceType;
@@ -105,7 +105,6 @@ public class ObjectDescription {
         ParamMap ParamCmdSequence,
         CompCmd compilationCommand,
         @JsonProperty("targetKey") Utilities.ParsedKey targetKey,
-        @JsonProperty("sourceLibrary") String sourceLibrary,
         @JsonProperty("sourceFile") String sourceFile,
         @JsonProperty("sourceName") String sourceName) {
 
@@ -115,7 +114,6 @@ public class ObjectDescription {
 
     this.targetKey = targetKey;
 
-    this.sourceLibrary = sourceLibrary;
     this.sourceFile = sourceFile;
     this.sourceName = sourceName;
 
@@ -208,7 +206,7 @@ public class ObjectDescription {
   //public String getTargetLibrary() { return targetLibrary; }
   //public String getObjectName() { return objectName; }
   //public ObjectType getObjectType() { return objectType; }
-  public String getSourceLibrary() { return sourceLibrary; }
+  // public String getSourceLibrary() { return sourceLibrary; }
   public String getSourceFile() { return sourceFile; }
   public String getSourceName() { return sourceName; }
   public SourceType getSourceType() { return this.targetKey.sourceType; }
@@ -624,8 +622,9 @@ public class ObjectDescription {
         // Update source if more accurate
         String modSrcLib = rsMod.getString("SOURCE_FILE_LIBRARY").trim();
         if (!modSrcLib.isEmpty()) {
-            sourceLibrary = modSrcLib.toUpperCase();
-            ParamCmdSequence.put(this.compilationCommand, ParamCmd.SRCFILE, sourceLibrary + "/" + sourceFile);  // Update
+          //TODO: I'm not sure if this will work the first time.
+          String sourceLibrary = modSrcLib.toUpperCase();
+          ParamCmdSequence.put(this.compilationCommand, ParamCmd.SRCFILE, sourceLibrary + "/" + sourceFile);  // Update
         }
         String modSrcFil = rsMod.getString("SOURCE_FILE").trim();
         String modSrcMbr = rsMod.getString("SOURCE_FILE_MEMBER").trim();

@@ -68,17 +68,6 @@ public class ObjectCompiler implements Runnable{
     }
   }  
 
-  static class ObjectTypeConverter implements CommandLine.ITypeConverter<ObjectDescription.ObjectType> {
-    @Override
-    public ObjectDescription.ObjectType convert(String value) throws Exception {
-      try {
-        return ObjectDescription.ObjectType.valueOf(value.trim().toUpperCase());
-      } catch (IllegalArgumentException e) {
-        throw new Exception("Invalid object type: " + value);
-      }
-    }
-  }  
-
   static class SourceTypeConverter implements CommandLine.ITypeConverter<ObjectDescription.SourceType> {
     @Override
     public ObjectDescription.SourceType convert(String value) throws Exception {
@@ -115,8 +104,6 @@ public class ObjectCompiler implements Runnable{
   @Option(names = "--obj", required = true, description = "Object name", converter = ObjectNameConverter.class)
   private String objectName;
 
-  @Option(names = {"-t","--type"}, required = true, description = "Object type (e.g., PGM, SRVPGM)", converter = ObjectTypeConverter.class)
-  private ObjectDescription.ObjectType objectType;
    */
 
   /* Source-related params. Good to have */
@@ -220,7 +207,6 @@ public class ObjectCompiler implements Runnable{
           compilationCommand,
           //TODO: Maybe i should pass these as the topo key. The Key should uniquely indentify an object
           targetKey,
-          sourceLib,
           //TODO: Remove these and change it in the key
           sourceFile,
           sourceName
