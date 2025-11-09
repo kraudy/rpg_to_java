@@ -107,9 +107,6 @@ public class ObjectCompiler implements Runnable{
    */
 
   /* Source-related params. Good to have */
-  @Option(names = { "-sl", "--source-lib" }, description = "Source library (defaults to *LIBL or retrieved from object)", converter = LibraryConverter.class)
-  private String sourceLib = CompilationPattern.ValCmd.LIBL.toString(); //"*LIBL"
-
   @Option(names = { "-sf", "--source-file" }, description = "Source physical file (defaults based on source type or retrieved from object)")
   private String sourceFile = "";
 
