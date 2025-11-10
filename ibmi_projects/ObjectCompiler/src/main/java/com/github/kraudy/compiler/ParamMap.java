@@ -582,9 +582,21 @@ public class ParamMap {
       ParamCmd.REPLACE
     );
 
-    //TODO: Missing: CRTCMD
+    // CRTCMD
+    public static final List<ParamCmd> CmdPattern = Arrays.asList(
+      ParamCmd.CMD,
+      ParamCmd.PGM,        
+      ParamCmd.SRCFILE,    
+      ParamCmd.SRCMBR,     
+      ParamCmd.SRCSTMF,    
+      ParamCmd.REXSRCFILE, 
+      ParamCmd.REXSRCMBR,  
+      ParamCmd.REXCMDENV,  
+      ParamCmd.REXEXITPGM,
+      ParamCmd.THDSAFE
+    );
 
-    //TODO: Add config file support like YAML
+    //TODO: Add config file support like YAML. This will allow specific patterns to be specify.
 
     /* Maps compilation command to its pattern */
     public static final Map<CompCmd, List<ParamCmd>> cmdToPatternMap = new EnumMap<>(CompCmd.class);
@@ -606,6 +618,10 @@ public class ParamMap {
       cmdToPatternMap.put(CompCmd.CRTDSPF, ddsDspfPattern);
       cmdToPatternMap.put(CompCmd.CRTPF, ddsPfPattern);
       cmdToPatternMap.put(CompCmd.CRTLF, ddsLfPattern);
+
+      cmdToPatternMap.put(CompCmd.CRTPRTF, ddsPrtfPattern);
+      /* CMD */
+      cmdToPatternMap.put(CompCmd.CRTCMD, CmdPattern);
     }     
 
     public ParamMap(boolean debug, boolean verbose, Connection connection) {
