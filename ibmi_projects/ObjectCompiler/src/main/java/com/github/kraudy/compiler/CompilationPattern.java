@@ -17,7 +17,6 @@ import com.github.kraudy.migrator.SourceMigrator;
 
 
 public class CompilationPattern {
-  private CompCmd compilationCommand;
   private ParamMap ParamCmdSequence;
   Utilities.ParsedKey targetKey;
   private SourceMigrator migrator;
@@ -273,10 +272,9 @@ public class CompilationPattern {
     //TODO: I think, only this is necessary.
     this.ParamCmdSequence = ParamCmdSequence;
 
-    this.compilationCommand = compilationCommand;
     
     /* Migration logic */
-    switch (this.compilationCommand){
+    switch (compilationCommand){
       case CRTCLMOD:
         break;
 
@@ -286,22 +284,22 @@ public class CompilationPattern {
       case CRTSQLRPGI:
       case CRTSRVPGM:
       case RUNSQLSTM:
-        if (!ParamCmdSequence.containsKey(this.compilationCommand, ParamCmd.SRCSTMF)) {
-          System.out.println("SRCFILE data: " + ParamCmdSequence.get(this.compilationCommand, ParamCmd.SRCFILE));
-          this.migrator.setParams(ParamCmdSequence.get(this.compilationCommand, ParamCmd.SRCFILE), objectName, "sources");
+        if (!ParamCmdSequence.containsKey(compilationCommand, ParamCmd.SRCSTMF)) {
+          System.out.println("SRCFILE data: " + ParamCmdSequence.get(compilationCommand, ParamCmd.SRCFILE));
+          this.migrator.setParams(ParamCmdSequence.get(compilationCommand, ParamCmd.SRCFILE), objectName, "sources");
           this.migrator.api(); // Try to migrate this thing
           System.out.println("After calling migration api");
           
-          ParamCmdSequence.put(this.compilationCommand, ParamCmd.SRCSTMF, this.migrator.getFirstPath());
-          ParamCmdSequence.put(this.compilationCommand, ParamCmd.TGTCCSID, ValCmd.JOB); // Needed to compile from stream files
+          ParamCmdSequence.put(compilationCommand, ParamCmd.SRCSTMF, this.migrator.getFirstPath());
+          ParamCmdSequence.put(compilationCommand, ParamCmd.TGTCCSID, ValCmd.JOB); // Needed to compile from stream files
 
-          ParamCmdSequence.remove(this.compilationCommand, ParamCmd.SRCFILE); 
-          ParamCmdSequence.remove(this.compilationCommand, ParamCmd.SRCMBR); 
+          ParamCmdSequence.remove(compilationCommand, ParamCmd.SRCFILE); 
+          ParamCmdSequence.remove(compilationCommand, ParamCmd.SRCMBR); 
         }
-        if(ParamCmdSequence.containsKey(this.compilationCommand, ParamCmd.SRCSTMF) &&
-            ParamCmdSequence.containsKey(this.compilationCommand, ParamCmd.SRCFILE)){
-          ParamCmdSequence.remove(this.compilationCommand, ParamCmd.SRCFILE); 
-          ParamCmdSequence.remove(this.compilationCommand, ParamCmd.SRCMBR); 
+        if(ParamCmdSequence.containsKey(compilationCommand, ParamCmd.SRCSTMF) &&
+            ParamCmdSequence.containsKey(compilationCommand, ParamCmd.SRCFILE)){
+          ParamCmdSequence.remove(compilationCommand, ParamCmd.SRCFILE); 
+          ParamCmdSequence.remove(compilationCommand, ParamCmd.SRCMBR); 
         }
 
       case CRTCLPGM:
@@ -326,18 +324,18 @@ public class CompilationPattern {
 
     /* Resolve params conflicts */
     
-    switch (this.compilationCommand){
+    switch (compilationCommand){
       case CRTRPGMOD:
-        if (ParamCmdSequence.containsKey(this.compilationCommand, ParamCmd.SRCSTMF)) {
-          ParamCmdSequence.remove(this.compilationCommand, ParamCmd.SRCFILE); 
-          ParamCmdSequence.remove(this.compilationCommand, ParamCmd.SRCMBR); 
+        if (ParamCmdSequence.containsKey(compilationCommand, ParamCmd.SRCSTMF)) {
+          ParamCmdSequence.remove(compilationCommand, ParamCmd.SRCFILE); 
+          ParamCmdSequence.remove(compilationCommand, ParamCmd.SRCMBR); 
         }
       case CRTCLMOD:
         break;
 
       case CRTBNDRPG:
-        if (!ParamCmdSequence.containsKey(this.compilationCommand, ParamCmd.DFTACTGRP)) {
-          ParamCmdSequence.remove(this.compilationCommand, ParamCmd.STGMDL); 
+        if (!ParamCmdSequence.containsKey(compilationCommand, ParamCmd.DFTACTGRP)) {
+          ParamCmdSequence.remove(compilationCommand, ParamCmd.STGMDL); 
         }
       case CRTBNDCL:
       case CRTCLPGM:
@@ -347,15 +345,15 @@ public class CompilationPattern {
         break;
 
       case CRTSQLRPGI:
-        if (ParamCmdSequence.containsKey(this.compilationCommand, ParamCmd.SRCSTMF)) {
-          ParamCmdSequence.put(this.compilationCommand, ParamCmd.CVTCCSID, ValCmd.JOB);
+        if (ParamCmdSequence.containsKey(compilationCommand, ParamCmd.SRCSTMF)) {
+          ParamCmdSequence.put(compilationCommand, ParamCmd.CVTCCSID, ValCmd.JOB);
         }
         break;
 
       case CRTSRVPGM:
-        if (ParamCmdSequence.containsKey(this.compilationCommand, ParamCmd.SRCSTMF) && 
-            ParamCmdSequence.containsKey(this.compilationCommand, ParamCmd.EXPORT)) {
-          ParamCmdSequence.remove(this.compilationCommand, ParamCmd.EXPORT); 
+        if (ParamCmdSequence.containsKey(compilationCommand, ParamCmd.SRCSTMF) && 
+            ParamCmdSequence.containsKey(compilationCommand, ParamCmd.EXPORT)) {
+          ParamCmdSequence.remove(compilationCommand, ParamCmd.EXPORT); 
         }
         break;
 
