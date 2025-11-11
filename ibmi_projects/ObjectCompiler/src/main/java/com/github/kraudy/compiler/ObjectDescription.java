@@ -30,10 +30,6 @@ public class ObjectDescription {
   public SourceType sourceType;
   Utilities.ParsedKey targetKey;
   CompCmd compilationCommand;
-  Supplier<Void> getObjInfo;
-
-  //public Map<CompilationPattern.ParamCmd, String> ParamCmdSequence = new HashMap<>();
-  public ParamMap ParamCmdSequence;
 
 
   public enum SysCmd { 
@@ -102,7 +98,6 @@ public class ObjectDescription {
         Connection connection,
         boolean debug,
         boolean verbose,
-        ParamMap ParamCmdSequence,
         CompCmd compilationCommand,
         @JsonProperty("targetKey") Utilities.ParsedKey targetKey,
         @JsonProperty("sourceFile") String sourceFile,
@@ -119,11 +114,14 @@ public class ObjectDescription {
 
     this.compilationCommand = compilationCommand;
 
+
+  }
+
+  public ParamMap SetCompilationParams(ParamMap ParamCmdSequence) {
+
     /* Generate compilation params values from object description */
 
     //TODO: Add something like [DEFAULT] for default value of params
-
-    this.ParamCmdSequence = ParamCmdSequence;
 
     //TODO: Set another switch specifically for SRCSTMF
     switch (this.compilationCommand) {
@@ -198,7 +196,7 @@ public class ObjectDescription {
 
     //TODO: Changed it to same target library, could be overwritten later if a param is provided
     //ParamCmdSequence.put(this.compilationCommand, ParamCmd.REPLACE, ValCmd.YES.toString());
-
+    return ParamCmdSequence;
 
   }
 
@@ -212,30 +210,32 @@ public class ObjectDescription {
   public SourceType getSourceType() { return this.targetKey.sourceType; }
   public ObjectType getObjectType() { return this.targetKey.objectType; }
   //public Map<CompilationPattern.ParamCmd, String> getParamCmdSequence() { return ParamCmdSequence; }
-  public ParamMap getParamCmdSequence() { return ParamCmdSequence; }
+  //public ParamMap getParamCmdSequence() { return ParamCmdSequence; }
 
   //public void setParamsSequence(Map<CompilationPattern.ParamCmd, String> ParamCmdSequence) {
   //TODO: Maybe add a method to ParamMap to just send the map
   //TODO: This should be inside ParamMap
   //TODO: overrideParams()
-  public void setParamsSequence(ParamMap ParamCmdSequence) {
+  //public void setParamsSequence(ParamMap ParamCmdSequence) {
     // TODO: Check this
     // this.ParamCmdSequence.putAll(odes.getParamCmdSequence());  // Copy from odes (triggers put for each entry)
 
     //this.ParamCmdSequence.overrideParams(this.compilationCommand, ParamCmdSequence)
-    for (CompilationPattern.ParamCmd paramCmd : ParamCmdSequence.keySet(this.compilationCommand)){
-      this.ParamCmdSequence.put(this.compilationCommand, paramCmd, ParamCmdSequence.get(this.compilationCommand, paramCmd));
-    }
-  }
+    //for (CompilationPattern.ParamCmd paramCmd : ParamCmdSequence.keySet(this.compilationCommand)){
+    //  this.ParamCmdSequence.put(this.compilationCommand, paramCmd, ParamCmdSequence.get(this.compilationCommand, paramCmd));
+    //}
+  //}
 
-  public void getObjectInfo () throws SQLException {
+  public ParamMap getObjectInfo (ParamMap ParamCmdSequence) throws SQLException {
     switch (this.targetKey.objectType) {
       case PGM :
       case SRVPGM :
-        getPgmInfo(this.targetKey.library, this.targetKey.objectName, this.targetKey.objectType);
+        ParamCmdSequence = getPgmInfo(ParamCmdSequence, this.targetKey.library, this.targetKey.objectName, this.targetKey.objectType);
         break;
      
-      case MODULE : getModuleInfo(this.targetKey.library, this.targetKey.objectName); break;
+      case MODULE : 
+        ParamCmdSequence = getModuleInfo(ParamCmdSequence, this.targetKey.library, this.targetKey.objectName); 
+        break;
 
       case TABLE :
       case LF :
@@ -251,9 +251,11 @@ public class ObjectDescription {
       default:
         break;
     }
+
+    return ParamCmdSequence;
   }
 
-  private void getPgmInfo(String library, String objectName, ObjectType objectType) throws SQLException {
+  private ParamMap getPgmInfo(ParamMap ParamCmdSequence, String library, String objectName, ObjectType objectType) throws SQLException {
     
     try (Statement stmt = connection.createStatement();
         ResultSet rsObj = stmt.executeQuery(
@@ -378,7 +380,9 @@ public class ObjectDescription {
           )) {
       if (!rsObj.next()) {
         // TODO: Maybe this should be optional for new objects. Just throw a warning
-        throw new IllegalArgumentException("Could not get object '" + objectName + "' from library '" + library + "' type" + "'" + objectType.toString() + "'");
+        System.err.println(("Could not get object '" + objectName + "' from library '" + library + "' type" + "'" + objectType.toString() + "'"));
+        return ParamCmdSequence;
+        //throw new IllegalArgumentException("Could not get object '" + objectName + "' from library '" + library + "' type" + "'" + objectType.toString() + "'");
       }
 
       //TODO: Show method being executed
@@ -503,10 +507,11 @@ public class ObjectDescription {
       String programType = rsObj.getString("PROGRAM_TYPE").trim();
       if (debug) System.out.println("PROGRAM_TYPE " + programType );
 
+      //TODO: Remove this
       switch (programType) {
         case "ILE":
           try {
-            getModuleInfo(rsObj.getString("PROGRAM_ENTRY_PROCEDURE_MODULE_LIBRARY").trim(), 
+            ParamCmdSequence = getModuleInfo(ParamCmdSequence, rsObj.getString("PROGRAM_ENTRY_PROCEDURE_MODULE_LIBRARY").trim(), 
                                           rsObj.getString("PROGRAM_ENTRY_PROCEDURE_MODULE").trim());
           } catch (IllegalArgumentException e) {
             if (verbose) System.err.println("Warning: Could not retrieve bound module info: " + e.getMessage() + ". Using defaults.");
@@ -518,12 +523,17 @@ public class ObjectDescription {
           break;
       }
 
+      return ParamCmdSequence;
+
     }
   }
 
   // NEW: Query BOUND_MODULE_INFO for module-specific fields (e.g., GENLVL, OPTION)
-  private void getModuleInfo(String entryModuleLib, String entryModule) throws SQLException {
-    if (entryModuleLib.isEmpty() || entryModule.isEmpty()) System.err.println("Entry module or lib are empty");  // Skip if no entry module
+  private ParamMap getModuleInfo(ParamMap ParamCmdSequence, String entryModuleLib, String entryModule) throws SQLException {
+    if (entryModuleLib.isEmpty() || entryModule.isEmpty()) {
+      System.err.println("Entry module or lib are empty");  // Skip if no entry module
+      return ParamCmdSequence;
+    } 
 
     try (Statement stmt = connection.createStatement();
         ResultSet rsMod = stmt.executeQuery(
@@ -598,11 +608,11 @@ public class ObjectDescription {
         )) {
       if (!rsMod.next()) {
         System.err.println("Could not found module '" + entryModule + "' in library list");
-        return;
+        return ParamCmdSequence;
         //throw new IllegalArgumentException("Could not found module '" + entryModule + "' in library list");
       }
 
-        //TODO: Should i validate the compilation command here?
+        //TODO: Validate the compilation command here
         //String dbgData = rsMod.getString("DEBUG_DATA").trim();
         //if ("*YES".equals(dbgData)) ParamCmdSequence.put(this.compilationCommand, ParamCmd.DBGVIEW, ValCmd.ALL);
         
@@ -633,6 +643,7 @@ public class ObjectDescription {
         String modCCSID = rsMod.getString("MODULE_CCSID").trim();
 
         // Add more mappings (e.g., DEFINE, INCDIR, PPGENOPT)
+        return ParamCmdSequence;
       
     }
   }

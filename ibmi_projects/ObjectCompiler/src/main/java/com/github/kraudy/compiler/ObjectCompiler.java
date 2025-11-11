@@ -176,7 +176,6 @@ public class ObjectCompiler implements Runnable{
           connection,
           debug,
           verbose,
-          ParamCmdSequence,
           compilationCommand,
           //TODO: Maybe i should pass these as the topo key. The Key should uniquely indentify an object
           targetKey,
@@ -185,10 +184,10 @@ public class ObjectCompiler implements Runnable{
           sourceName
     );
 
-    //TODO: Set library as curlib and change value to CURLIB, maybe use put for chain tracking
+    this.ParamCmdSequence = this.odes.SetCompilationParams(this.ParamCmdSequence);
 
     try {
-      odes.getObjectInfo();
+      this.ParamCmdSequence = odes.getObjectInfo(this.ParamCmdSequence);
     } catch (Exception e) {
       //TODO: Change logging for SLF4J or java.util.logging 
       if (debug) e.printStackTrace();
@@ -196,7 +195,7 @@ public class ObjectCompiler implements Runnable{
     }
 
     //TODO: Fix this
-    ParamMap ParamCmdSequence = odes.getParamCmdSequence();
+    //ParamMap ParamCmdSequence = odes.getParamCmdSequence();
 
     /* Parameters values, if provided, overwrite retrieved values */
     if (!text.isEmpty()) ParamCmdSequence.put(compilationCommand, ParamCmd.TEXT, text);
