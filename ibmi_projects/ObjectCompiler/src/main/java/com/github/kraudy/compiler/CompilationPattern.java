@@ -353,9 +353,9 @@ public class CompilationPattern {
         break;
 
       case CRTSRVPGM:
-        if (ParamCmdSequence.containsKey(this.compilationCommand, ParamCmd.EXPORT)) {
-          ParamCmdSequence.remove(this.compilationCommand, ParamCmd.SRCFILE); 
-          ParamCmdSequence.remove(this.compilationCommand, ParamCmd.SRCMBR); 
+        if (ParamCmdSequence.containsKey(this.compilationCommand, ParamCmd.SRCSTMF) && 
+            ParamCmdSequence.containsKey(this.compilationCommand, ParamCmd.EXPORT)) {
+          ParamCmdSequence.remove(this.compilationCommand, ParamCmd.EXPORT); 
         }
         break;
 
@@ -368,9 +368,10 @@ public class CompilationPattern {
       case CRTPRTF:
       case CRTMNU:
       case CRTQMQRY:
-          break;
+        break;
 
-      default: throw new IllegalArgumentException("Compilation command builder not found");
+      default: 
+        break;
     }
   }
 

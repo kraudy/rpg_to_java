@@ -175,6 +175,7 @@ public class ObjectDescription {
         ParamCmdSequence.put(this.compilationCommand, ParamCmd.MODULE, this.targetKey.library + "/" + this.targetKey.objectName);
         ParamCmdSequence.put(this.compilationCommand, ParamCmd.MODULE, ValCmd.LIBL.toString() + "/" + this.targetKey.objectName);
         ParamCmdSequence.put(this.compilationCommand, ParamCmd.BNDSRVPGM, ValCmd.NONE);
+        ParamCmdSequence.put(this.compilationCommand, ParamCmd.EXPORT, ValCmd.ALL);
         break; //TODO: I had these two together, check if it is needed or simply add 
 
       case CRTRPGMOD:
