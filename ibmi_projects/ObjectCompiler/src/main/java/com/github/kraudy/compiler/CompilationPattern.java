@@ -264,13 +264,13 @@ public class CompilationPattern {
    
 
   //TODO: Maybe overload this to only pass the key as parameter or get the data and call with specific values
-  public CompilationPattern(SourceMigrator migrator, ParamMap ParamCmdSequence, CompCmd compilationCommand, String objectName){
-
+  public CompilationPattern(SourceMigrator migrator){
     this.migrator = migrator;
+  }
 
+  public ParamMap ResolveCompilationParams(ParamMap ParamCmdSequence, CompCmd compilationCommand, String objectName){
     /* Get optional params */
     //TODO: I think, only this is necessary.
-    this.ParamCmdSequence = ParamCmdSequence;
 
     
     /* Migration logic */
@@ -371,6 +371,9 @@ public class CompilationPattern {
       default: 
         break;
     }
+
+    return ParamCmdSequence;
+
   }
 
   public static CompCmd getCompilationCommand(SourceType sourceType, ObjectType objectType){

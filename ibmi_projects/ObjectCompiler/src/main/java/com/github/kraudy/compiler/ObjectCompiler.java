@@ -223,9 +223,11 @@ public class ObjectCompiler implements Runnable{
     }
     if (debug) System.err.println("Source type: " + odes.getSourceType());
 
-    cpat = new CompilationPattern(this.migrator, ParamCmdSequence, compilationCommand, targetKey.objectName);
+    cpat = new CompilationPattern(this.migrator);
 
-    ParamCmdSequence = cpat.getParamCmdSequence();
+    ParamCmdSequence = cpat.ResolveCompilationParams(ParamCmdSequence, compilationCommand, targetKey.objectName);
+
+    //ParamCmdSequence = cpat.getParamCmdSequence();
 
     ParamCmdSequence.executeCommand(compilationCommand);    
 
