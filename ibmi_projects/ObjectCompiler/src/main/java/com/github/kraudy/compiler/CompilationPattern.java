@@ -379,14 +379,6 @@ public class CompilationPattern {
     return typeToCmdMap.get(sourceType).get(objectType);
   }
 
-  public CompCmd getCompilationCommand(){
-    return this.compilationCommand;
-  }
-
-  public ParamMap getParamMap(){
-    return this.ParamCmdSequence;
-  }
-
   public ParamMap getParamCmdSequence() { return this.ParamCmdSequence; }
 
 }
