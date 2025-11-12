@@ -380,6 +380,4 @@ public class CompilationPattern {
     return typeToCmdMap.get(sourceType).get(objectType);
   }
 
-  public ParamMap getParamCmdSequence() { return this.ParamCmdSequence; }
-
 }

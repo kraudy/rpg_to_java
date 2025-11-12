@@ -184,6 +184,8 @@ public class ObjectCompiler implements Runnable{
           sourceName
     );
 
+    cpat = new CompilationPattern(this.migrator);
+
     this.ParamCmdSequence = this.odes.SetCompilationParams(this.ParamCmdSequence);
 
     try {
@@ -223,11 +225,8 @@ public class ObjectCompiler implements Runnable{
     }
     if (debug) System.err.println("Source type: " + odes.getSourceType());
 
-    cpat = new CompilationPattern(this.migrator);
 
     ParamCmdSequence = cpat.ResolveCompilationParams(ParamCmdSequence, compilationCommand, targetKey.objectName);
-
-    //ParamCmdSequence = cpat.getParamCmdSequence();
 
     ParamCmdSequence.executeCommand(compilationCommand);    
 
