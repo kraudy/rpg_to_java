@@ -227,26 +227,42 @@ public class ObjectDescription {
     //}
   //}
 
-  public ParamMap getObjectInfo (ParamMap ParamCmdSequence) throws SQLException {
-    switch (this.targetKey.objectType) {
-      case PGM :
-      case SRVPGM :
+  public ParamMap getObjectInfo (ParamMap ParamCmdSequence, CompCmd compilationCommand) throws SQLException {
+    /* Get PGM info */
+    switch (compilationCommand) {
+      case CRTSQLRPGI: //TODO: This could be pgm or module
+      case CRTBNDRPG :
+      case CRTBNDCL :
+      case CRTRPGPGM :
+      case CRTCLPGM :
+      case CRTSRVPGM : //TODO: Should this be here?
         ParamCmdSequence = getPgmInfo(ParamCmdSequence, this.targetKey.library, this.targetKey.objectName, this.targetKey.objectType);
         break;
      
-      case MODULE : 
+      case RUNSQLSTM :
+
+      case CRTDSPF : 
+      case CRTPF :
+      case CRTLF :
+
+      case CRTPRTF :
+      case CRTCMD :
+        break;
+    
+      default:
+        break;
+    }
+
+    /* Get module info */
+    switch (compilationCommand) {
+      case CRTSRVPGM : //TODO: Do I need to get the module info?
         ParamCmdSequence = getModuleInfo(ParamCmdSequence, this.targetKey.library, this.targetKey.objectName); 
         break;
 
-      case TABLE :
-      case LF :
-      case INDEX :
-      case VIEW :
-      case ALIAS :
-      case PROCEDURE :
-      case FUNCTION :
-      case PF :
-      case DSPF :
+      case CRTSQLRPGI: //TODO: This could be pgm or module
+      case CRTRPGMOD :
+      case CRTCLMOD :
+        ParamCmdSequence = getModuleInfo(ParamCmdSequence, this.targetKey.library, this.targetKey.objectName); 
         break;
     
       default:
