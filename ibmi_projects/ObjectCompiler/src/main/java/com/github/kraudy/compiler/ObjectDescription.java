@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.github.kraudy.compiler.CompilationPattern.CompCmd;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
@@ -228,6 +229,8 @@ public class ObjectDescription {
   //}
 
   public ParamMap getObjectInfo (ParamMap ParamCmdSequence, CompCmd compilationCommand) throws SQLException {
+    //TODO: Check if the object exists.
+    
     /* Get PGM info */
     switch (compilationCommand) {
       case CRTSQLRPGI: //TODO: This could be pgm or module
@@ -246,7 +249,10 @@ public class ObjectDescription {
       case CRTLF :
 
       case CRTPRTF :
+        break;
+
       case CRTCMD :
+        ParamCmdSequence = getCmdInfo(ParamCmdSequence, this.targetKey.library, this.targetKey.objectName);
         break;
     
       default:
@@ -662,6 +668,46 @@ public class ObjectDescription {
         // Add more mappings (e.g., DEFINE, INCDIR, PPGENOPT)
         return ParamCmdSequence;
       
+    }
+  }
+
+  private ParamMap getCmdInfo(ParamMap ParamCmdSequence, String library, String objectName) throws SQLException {
+    
+    try (Statement stmt = connection.createStatement();
+        ResultSet rsCmdInfo = stmt.executeQuery(
+          "With " + //TODO: Put this lib CTE in a String
+          "Libs (Libraries) As ( " +
+              "SELECT DISTINCT(SCHEMA_NAME) FROM QSYS2.LIBRARY_LIST_INFO " + 
+              "WHERE TYPE NOT IN ('SYSTEM','PRODUCT') AND SCHEMA_NAME NOT IN ('QGPL', 'GAMES400') " +
+          ") " +
+          "SELECT " +
+            "(TRIM(COMMAND_LIBRARY) || '/' || TRIM(COMMAND_NAME)) As CMD, " +
+            "TEXT_DESCRIPTION, " +
+            "(TRIM(COMMAND_PROCESSING_PROGRAM_LIBRARY) || '/' || TRIM(COMMAND_PROCESSING_PROGRAM)) As PGM, " +
+            "(TRIM(SOURCE_FILE_LIBRARY) || '/' || TRIM(SOURCE_FILE)) As SRCFILE, " +
+            "SOURCE_FILE_MEMBER As SRCMBR, " +
+            "THREADSAFE As THDSAFE " +
+            "FROM QSYS2.COMMAND_INFO " +
+            "INNER JOIN Libs " +
+            "ON (COMMAND_LIBRARY = Libs.Libraries) " +
+            "WHERE " + 
+                "COMMAND_NAME = '" + objectName + "' "
+          )) {
+      if (!rsCmdInfo.next()) {
+        //TODO: Check if object exist before getting the info.
+        System.err.println(("Could not get command '" + objectName + "' from library list"));
+        return ParamCmdSequence;
+        //throw new IllegalArgumentException("Could not get object '" + objectName + "' from library '" + library + "' type" + "'" + objectType.toString() + "'");
+      }
+
+      //TODO: Show method being executed
+
+      if (verbose) System.out.println("Found command '" + objectName + "' in library list");
+
+      
+
+      return ParamCmdSequence;
+
     }
   }
 
