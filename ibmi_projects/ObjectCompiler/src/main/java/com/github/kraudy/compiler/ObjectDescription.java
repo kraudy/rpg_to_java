@@ -230,7 +230,7 @@ public class ObjectDescription {
 
   public ParamMap getObjectInfo (ParamMap ParamCmdSequence, CompCmd compilationCommand) throws SQLException {
     //TODO: Check if the object exists.
-    
+
     /* Get PGM info */
     switch (compilationCommand) {
       case CRTSQLRPGI: //TODO: This could be pgm or module
@@ -675,6 +675,8 @@ public class ObjectDescription {
     
     try (Statement stmt = connection.createStatement();
         ResultSet rsCmdInfo = stmt.executeQuery(
+          //TODO: I could make this cursor filter params and just iter over it like a Key/Value pair to automatically PUT the compilation params
+          // but for that i would need something like a pivot so i don't know if it is worth it.
           "With " + //TODO: Put this lib CTE in a String
           "Libs (Libraries) As ( " +
               "SELECT DISTINCT(SCHEMA_NAME) FROM QSYS2.LIBRARY_LIST_INFO " + 
@@ -700,9 +702,22 @@ public class ObjectDescription {
         //throw new IllegalArgumentException("Could not get object '" + objectName + "' from library '" + library + "' type" + "'" + objectType.toString() + "'");
       }
 
-      //TODO: Show method being executed
-
       if (verbose) System.out.println("Found command '" + objectName + "' in library list");
+      
+      String cmd = rsCmdInfo.getString("CMD").trim();
+      if(!cmd.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.CMD, cmd); 
+
+      String pgm = rsCmdInfo.getString("PGM").trim();
+      if(!pgm.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.PGM, pgm); 
+
+      String srcfile = rsCmdInfo.getString("SRCFILE").trim();
+      if(!srcfile.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.SRCFILE, srcfile); 
+
+      String srcmbr = rsCmdInfo.getString("SRCMBR").trim();
+      if(!srcmbr.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.SRCMBR, srcmbr); 
+
+      ValCmd threadsafe = ValCmd.fromString(rsCmdInfo.getString("THDSAFE").trim());
+      ParamCmdSequence.put(this.compilationCommand, ParamCmd.THDSAFE, threadsafe); 
 
       
 
