@@ -118,47 +118,45 @@ public class CompilationPattern {
     }  
   }
 
-  /* Maps source type to its compilation command */
+  /* Maps Source Type => Object Type => Compilation command */
   public static final Map<SourceType, Map<ObjectType, CompCmd>> typeToCmdMap = new EnumMap<>(SourceType.class);
 
   static{
-    /*
-     * Populate mapping from (SourceType, ObjectType) to CompCmd
-    */
 
+    /* Source type: BND */
     Map<ObjectType, CompCmd> bndMap = new EnumMap<>(ObjectType.class);
     bndMap.put(ObjectType.SRVPGM, CompCmd.CRTSRVPGM);
     typeToCmdMap.put(SourceType.BND, bndMap);
 
+    /* Source type: RPG */
     Map<ObjectType, CompCmd> rpgMap = new EnumMap<>(ObjectType.class);
     rpgMap.put(ObjectType.PGM, CompCmd.CRTRPGPGM);
     typeToCmdMap.put(SourceType.RPG, rpgMap);
 
-    // TODO: Maybe add another sourc type BND to map SRVPGM to CRTSRVPGM
+    /* Source type: RPGLE */
     Map<ObjectType, CompCmd> rpgLeMap = new EnumMap<>(ObjectType.class);
     rpgLeMap.put(ObjectType.MODULE, CompCmd.CRTRPGMOD);
     rpgLeMap.put(ObjectType.PGM, CompCmd.CRTBNDRPG);
-    //rpgLeMap.put(ObjectType.SRVPGM, CompCmd.CRTSRVPGM);
     typeToCmdMap.put(SourceType.RPGLE, rpgLeMap);
 
+    /* Source type: SQLRPGLE */
     Map<ObjectType, CompCmd> sqlRpgLeMap = new EnumMap<>(ObjectType.class);
     sqlRpgLeMap.put(ObjectType.MODULE, CompCmd.CRTSQLRPGI);
     sqlRpgLeMap.put(ObjectType.PGM, CompCmd.CRTSQLRPGI);
-    //sqlRpgLeMap.put(ObjectType.SRVPGM, CompCmd.CRTSRVPGM);
     typeToCmdMap.put(SourceType.SQLRPGLE, sqlRpgLeMap);
 
+    /* Source type: CLP */
     Map<ObjectType, CompCmd> clpMap = new EnumMap<>(ObjectType.class);
     clpMap.put(ObjectType.PGM, CompCmd.CRTCLPGM);
     typeToCmdMap.put(SourceType.CLP, clpMap);
 
+    /* Source type: CLLE */
     Map<ObjectType, CompCmd> clleMap = new EnumMap<>(ObjectType.class);
     clleMap.put(ObjectType.MODULE, CompCmd.CRTCLMOD);
     clleMap.put(ObjectType.PGM, CompCmd.CRTBNDCL);
-    //clleMap.put(ObjectType.SRVPGM, CompCmd.CRTSRVPGM);
     typeToCmdMap.put(SourceType.CLLE, clleMap);
 
-    /* Sql maps */
-
+    /* Source type: SQL */
     Map<ObjectType, CompCmd> sqlMap = new EnumMap<>(ObjectType.class);
     sqlMap.put(ObjectType.TABLE, CompCmd.RUNSQLSTM);
     sqlMap.put(ObjectType.INDEX, CompCmd.RUNSQLSTM);
@@ -168,16 +166,12 @@ public class CompilationPattern {
     sqlMap.put(ObjectType.FUNCTION, CompCmd.RUNSQLSTM);
     typeToCmdMap.put(SourceType.SQL, sqlMap);
 
-    /* Dds maps */
-
+    /* Source type: DDS */
     Map<ObjectType, CompCmd> ddsMap = new EnumMap<>(ObjectType.class);
     ddsMap.put(ObjectType.PF, CompCmd.CRTPF);
     ddsMap.put(ObjectType.DSPF, CompCmd.CRTDSPF);
     ddsMap.put(ObjectType.LF, CompCmd.CRTLF);
     typeToCmdMap.put(SourceType.DDS, ddsMap);
-
-    //TODO: Maybe i could extend this to being also like a standard command executor. We'll see.
-
   }  
    
 
