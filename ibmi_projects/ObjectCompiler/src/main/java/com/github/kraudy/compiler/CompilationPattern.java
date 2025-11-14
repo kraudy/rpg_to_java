@@ -119,62 +119,62 @@ public class CompilationPattern {
   }
 
   /* Maps source type to its compilation command */
-  public static final Map<ObjectDescription.SourceType, Map<ObjectDescription.ObjectType, CompCmd>> typeToCmdMap = new EnumMap<>(ObjectDescription.SourceType.class);
+  public static final Map<SourceType, Map<ObjectType, CompCmd>> typeToCmdMap = new EnumMap<>(SourceType.class);
 
   static{
     /*
-     * Populate mapping from (ObjectDescription.SourceType, ObjectDescription.ObjectType) to CompCmd
+     * Populate mapping from (SourceType, ObjectType) to CompCmd
     */
 
-    Map<ObjectDescription.ObjectType, CompCmd> bndMap = new EnumMap<>(ObjectDescription.ObjectType.class);
-    bndMap.put(ObjectDescription.ObjectType.SRVPGM, CompCmd.CRTSRVPGM);
-    typeToCmdMap.put(ObjectDescription.SourceType.BND, bndMap);
+    Map<ObjectType, CompCmd> bndMap = new EnumMap<>(ObjectType.class);
+    bndMap.put(ObjectType.SRVPGM, CompCmd.CRTSRVPGM);
+    typeToCmdMap.put(SourceType.BND, bndMap);
 
-    Map<ObjectDescription.ObjectType, CompCmd> rpgMap = new EnumMap<>(ObjectDescription.ObjectType.class);
-    rpgMap.put(ObjectDescription.ObjectType.PGM, CompCmd.CRTRPGPGM);
-    typeToCmdMap.put(ObjectDescription.SourceType.RPG, rpgMap);
+    Map<ObjectType, CompCmd> rpgMap = new EnumMap<>(ObjectType.class);
+    rpgMap.put(ObjectType.PGM, CompCmd.CRTRPGPGM);
+    typeToCmdMap.put(SourceType.RPG, rpgMap);
 
     // TODO: Maybe add another sourc type BND to map SRVPGM to CRTSRVPGM
-    Map<ObjectDescription.ObjectType, CompCmd> rpgLeMap = new EnumMap<>(ObjectDescription.ObjectType.class);
-    rpgLeMap.put(ObjectDescription.ObjectType.MODULE, CompCmd.CRTRPGMOD);
-    rpgLeMap.put(ObjectDescription.ObjectType.PGM, CompCmd.CRTBNDRPG);
-    //rpgLeMap.put(ObjectDescription.ObjectType.SRVPGM, CompCmd.CRTSRVPGM);
-    typeToCmdMap.put(ObjectDescription.SourceType.RPGLE, rpgLeMap);
+    Map<ObjectType, CompCmd> rpgLeMap = new EnumMap<>(ObjectType.class);
+    rpgLeMap.put(ObjectType.MODULE, CompCmd.CRTRPGMOD);
+    rpgLeMap.put(ObjectType.PGM, CompCmd.CRTBNDRPG);
+    //rpgLeMap.put(ObjectType.SRVPGM, CompCmd.CRTSRVPGM);
+    typeToCmdMap.put(SourceType.RPGLE, rpgLeMap);
 
-    Map<ObjectDescription.ObjectType, CompCmd> sqlRpgLeMap = new EnumMap<>(ObjectDescription.ObjectType.class);
-    sqlRpgLeMap.put(ObjectDescription.ObjectType.MODULE, CompCmd.CRTSQLRPGI);
-    sqlRpgLeMap.put(ObjectDescription.ObjectType.PGM, CompCmd.CRTSQLRPGI);
-    //sqlRpgLeMap.put(ObjectDescription.ObjectType.SRVPGM, CompCmd.CRTSRVPGM);
-    typeToCmdMap.put(ObjectDescription.SourceType.SQLRPGLE, sqlRpgLeMap);
+    Map<ObjectType, CompCmd> sqlRpgLeMap = new EnumMap<>(ObjectType.class);
+    sqlRpgLeMap.put(ObjectType.MODULE, CompCmd.CRTSQLRPGI);
+    sqlRpgLeMap.put(ObjectType.PGM, CompCmd.CRTSQLRPGI);
+    //sqlRpgLeMap.put(ObjectType.SRVPGM, CompCmd.CRTSRVPGM);
+    typeToCmdMap.put(SourceType.SQLRPGLE, sqlRpgLeMap);
 
-    Map<ObjectDescription.ObjectType, CompCmd> clpMap = new EnumMap<>(ObjectDescription.ObjectType.class);
-    clpMap.put(ObjectDescription.ObjectType.PGM, CompCmd.CRTCLPGM);
-    typeToCmdMap.put(ObjectDescription.SourceType.CLP, clpMap);
+    Map<ObjectType, CompCmd> clpMap = new EnumMap<>(ObjectType.class);
+    clpMap.put(ObjectType.PGM, CompCmd.CRTCLPGM);
+    typeToCmdMap.put(SourceType.CLP, clpMap);
 
-    Map<ObjectDescription.ObjectType, CompCmd> clleMap = new EnumMap<>(ObjectDescription.ObjectType.class);
-    clleMap.put(ObjectDescription.ObjectType.MODULE, CompCmd.CRTCLMOD);
-    clleMap.put(ObjectDescription.ObjectType.PGM, CompCmd.CRTBNDCL);
-    //clleMap.put(ObjectDescription.ObjectType.SRVPGM, CompCmd.CRTSRVPGM);
-    typeToCmdMap.put(ObjectDescription.SourceType.CLLE, clleMap);
+    Map<ObjectType, CompCmd> clleMap = new EnumMap<>(ObjectType.class);
+    clleMap.put(ObjectType.MODULE, CompCmd.CRTCLMOD);
+    clleMap.put(ObjectType.PGM, CompCmd.CRTBNDCL);
+    //clleMap.put(ObjectType.SRVPGM, CompCmd.CRTSRVPGM);
+    typeToCmdMap.put(SourceType.CLLE, clleMap);
 
     /* Sql maps */
 
-    Map<ObjectDescription.ObjectType, CompCmd> sqlMap = new EnumMap<>(ObjectDescription.ObjectType.class);
-    sqlMap.put(ObjectDescription.ObjectType.TABLE, CompCmd.RUNSQLSTM);
-    sqlMap.put(ObjectDescription.ObjectType.INDEX, CompCmd.RUNSQLSTM);
-    sqlMap.put(ObjectDescription.ObjectType.VIEW, CompCmd.RUNSQLSTM);
-    sqlMap.put(ObjectDescription.ObjectType.ALIAS, CompCmd.RUNSQLSTM);
-    sqlMap.put(ObjectDescription.ObjectType.PROCEDURE, CompCmd.RUNSQLSTM);
-    sqlMap.put(ObjectDescription.ObjectType.FUNCTION, CompCmd.RUNSQLSTM);
-    typeToCmdMap.put(ObjectDescription.SourceType.SQL, sqlMap);
+    Map<ObjectType, CompCmd> sqlMap = new EnumMap<>(ObjectType.class);
+    sqlMap.put(ObjectType.TABLE, CompCmd.RUNSQLSTM);
+    sqlMap.put(ObjectType.INDEX, CompCmd.RUNSQLSTM);
+    sqlMap.put(ObjectType.VIEW, CompCmd.RUNSQLSTM);
+    sqlMap.put(ObjectType.ALIAS, CompCmd.RUNSQLSTM);
+    sqlMap.put(ObjectType.PROCEDURE, CompCmd.RUNSQLSTM);
+    sqlMap.put(ObjectType.FUNCTION, CompCmd.RUNSQLSTM);
+    typeToCmdMap.put(SourceType.SQL, sqlMap);
 
     /* Dds maps */
 
-    Map<ObjectDescription.ObjectType, CompCmd> ddsMap = new EnumMap<>(ObjectDescription.ObjectType.class);
-    ddsMap.put(ObjectDescription.ObjectType.PF, CompCmd.CRTPF);
-    ddsMap.put(ObjectDescription.ObjectType.DSPF, CompCmd.CRTDSPF);
-    ddsMap.put(ObjectDescription.ObjectType.LF, CompCmd.CRTLF);
-    typeToCmdMap.put(ObjectDescription.SourceType.DDS, ddsMap);
+    Map<ObjectType, CompCmd> ddsMap = new EnumMap<>(ObjectType.class);
+    ddsMap.put(ObjectType.PF, CompCmd.CRTPF);
+    ddsMap.put(ObjectType.DSPF, CompCmd.CRTDSPF);
+    ddsMap.put(ObjectType.LF, CompCmd.CRTLF);
+    typeToCmdMap.put(SourceType.DDS, ddsMap);
 
     //TODO: Maybe i could extend this to being also like a standard command executor. We'll see.
 
