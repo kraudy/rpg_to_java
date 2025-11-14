@@ -704,6 +704,7 @@ public class ObjectDescription {
 
       if (verbose) System.out.println("Found command '" + objectName + "' in library list");
       
+      // -- Missing: REXSRCFILE, REXSRCMBR, REXCMDENV, REXEXITPGM
       String cmd = rsCmdInfo.getString("CMD").trim();
       if(!cmd.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.CMD, cmd); 
 
@@ -723,7 +724,7 @@ public class ObjectDescription {
 
       return ParamCmdSequence;
 
-    }
+      }
   }
 
   private void getSrvpgmInfo(){
