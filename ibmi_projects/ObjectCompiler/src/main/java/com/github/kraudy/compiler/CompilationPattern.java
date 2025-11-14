@@ -17,8 +17,6 @@ import com.github.kraudy.migrator.SourceMigrator;
 
 
 public class CompilationPattern {
-  private ParamMap ParamCmdSequence;
-  Utilities.ParsedKey targetKey;
   private SourceMigrator migrator;
 
   public enum CompCmd { 
@@ -119,7 +117,7 @@ public class CompilationPattern {
   }
 
   /* Maps Source Type => Object Type => Compilation command */
-  public static final Map<SourceType, Map<ObjectType, CompCmd>> typeToCmdMap = new EnumMap<>(SourceType.class);
+  private static final Map<SourceType, Map<ObjectType, CompCmd>> typeToCmdMap = new EnumMap<>(SourceType.class);
 
   static{
 
