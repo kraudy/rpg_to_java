@@ -1,16 +1,8 @@
 package com.github.kraudy.compiler;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.ObjectDescription.ObjectType;
 import com.github.kraudy.compiler.ObjectDescription.SourceType;
 import com.github.kraudy.migrator.SourceMigrator;
@@ -196,6 +188,7 @@ public class CompilationPattern {
       case RUNSQLSTM:
         if (!ParamCmdSequence.containsKey(compilationCommand, ParamCmd.SRCSTMF)) {
           System.out.println("SRCFILE data: " + ParamCmdSequence.get(compilationCommand, ParamCmd.SRCFILE));
+          //TODO: This could be done directly in ObjectCompiler
           this.migrator.setParams(ParamCmdSequence.get(compilationCommand, ParamCmd.SRCFILE), objectName, "sources");
           this.migrator.api(); // Try to migrate this thing
           System.out.println("After calling migration api");
