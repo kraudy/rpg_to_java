@@ -13,26 +13,6 @@ public class CompilationPattern {
 
   public enum CompCmd { 
     CRTRPGMOD, CRTSQLRPGI, CRTBNDRPG, CRTRPGPGM, CRTCLMOD, CRTBNDCL, CRTCLPGM, RUNSQLSTM, CRTSRVPGM, CRTDSPF, CRTLF, CRTPRTF, CRTMNU, CRTQMQRY, CRTPF, CRTCMD;
-
-    //TODO: This could be done with a MAP. or a non static method.
-    public static String compilationSourceName(CompCmd cmd){
-      switch (cmd) {
-        case CRTBNDRPG:
-        case CRTBNDCL:
-        case CRTRPGPGM:
-        case CRTCLPGM:
-          return ValCmd.PGM.toString(); //"*PGM";
-        case CRTRPGMOD:
-        case CRTCLMOD:
-          return ValCmd.MODULE.toString();
-        case CRTSQLRPGI:
-          return ValCmd.OBJ.toString();
-        // TODO: Add SQL Types
-        //case RUNSQLSTM:
-        default:
-          throw new IllegalArgumentException("Could not found compilation source name and no default value defined for Cmd: " + cmd.name());
-      }
-    }
   }
 
   public enum ParamCmd { 
