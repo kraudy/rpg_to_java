@@ -63,8 +63,6 @@ public class CompilationPattern {
         throw new IllegalArgumentException("Could not get compilation command param from string: '" + value + "'");
       }
     } 
-
-    //TODO: Maybe i could add a method here that does the same as getParamString()
     
   }
 
