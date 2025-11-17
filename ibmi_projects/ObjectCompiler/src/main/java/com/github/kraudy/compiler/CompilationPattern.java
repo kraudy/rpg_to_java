@@ -11,6 +11,10 @@ import com.github.kraudy.migrator.SourceMigrator;
 public class CompilationPattern {
   private SourceMigrator migrator;
 
+  public CompilationPattern(SourceMigrator migrator){
+    this.migrator = migrator;
+  }
+
   public enum CompCmd { 
     CRTRPGMOD, CRTSQLRPGI, CRTBNDRPG, CRTRPGPGM, CRTCLMOD, CRTBNDCL, CRTCLPGM, RUNSQLSTM, CRTSRVPGM, CRTDSPF, CRTLF, CRTPRTF, CRTMNU, CRTQMQRY, CRTPF, CRTCMD;
   }
@@ -141,12 +145,6 @@ public class CompilationPattern {
     ddsMap.put(ObjectType.LF, CompCmd.CRTLF);
     typeToCmdMap.put(SourceType.DDS, ddsMap);
   }  
-   
-
-  //TODO: Maybe overload this to only pass the key as parameter or get the data and call with specific values
-  public CompilationPattern(SourceMigrator migrator){
-    this.migrator = migrator;
-  }
 
   public ParamMap ResolveCompilationParams(ParamMap ParamCmdSequence, CompCmd compilationCommand, String objectName){
     /* Get optional params */
