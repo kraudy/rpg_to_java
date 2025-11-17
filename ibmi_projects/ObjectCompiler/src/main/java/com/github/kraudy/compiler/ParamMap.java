@@ -807,9 +807,13 @@ public class ParamMap {
     }
 
     public void executeCommand(Object cmd){
-      //TODO: Do here the ResolveConflicts()
+      ResolveConflicts(cmd);
       showChanges(cmd);
       executeCommand(getParamChain(cmd));
+    }
+
+    public void ResolveConflicts(Object cmd){
+
     }
 
     public void executeCommand(String command){
