@@ -596,7 +596,8 @@ public class ParamMap {
       ParamCmd.THDSAFE
     );
 
-    //TODO: Add config file support like YAML. This will allow specific patterns to be specify.
+    //TODO: Add config file support like YAML. This will allow specific patterns to be provided.
+    // So, you would try to load the file with the param patter or use the default one.
 
     /* Maps compilation command to its pattern */
     public static final Map<CompCmd, List<ParamCmd>> cmdToPatternMap = new EnumMap<>(CompCmd.class);
@@ -806,6 +807,7 @@ public class ParamMap {
     }
 
     public void executeCommand(Object cmd){
+      //TODO: Do here the ResolveConflicts()
       showChanges(cmd);
       executeCommand(getParamChain(cmd));
     }

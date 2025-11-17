@@ -147,10 +147,7 @@ public class CompilationPattern {
   }  
 
   public ParamMap ResolveCompilationParams(ParamMap ParamCmdSequence, CompCmd compilationCommand, String objectName){
-    /* Get optional params */
-    //TODO: I think, only this is necessary.
 
-    
     /* Migration logic */
     switch (compilationCommand){
       case CRTCLMOD:
