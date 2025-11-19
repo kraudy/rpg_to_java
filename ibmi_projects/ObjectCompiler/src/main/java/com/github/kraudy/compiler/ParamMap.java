@@ -826,7 +826,53 @@ public class ParamMap {
     }
 
     public void ResolveConflicts(CompCmd cmd){
+      switch (cmd){
+        case CRTRPGMOD:
+          if (this.containsKey(cmd, ParamCmd.SRCSTMF)) {
+            this.remove(cmd, ParamCmd.SRCFILE); 
+            this.remove(cmd, ParamCmd.SRCMBR); 
+          }
+        case CRTCLMOD:
+          break;
 
+        case CRTBNDRPG:
+          if (!this.containsKey(cmd, ParamCmd.DFTACTGRP)) {
+            this.remove(cmd, ParamCmd.STGMDL); 
+          }
+        case CRTBNDCL:
+        case CRTCLPGM:
+          break;
+          
+        case CRTRPGPGM:
+          break;
+
+        case CRTSQLRPGI:
+          if (this.containsKey(cmd, ParamCmd.SRCSTMF)) {
+            this.put(cmd, ParamCmd.CVTCCSID, ValCmd.JOB);
+          }
+          break;
+
+        case CRTSRVPGM:
+          if (this.containsKey(cmd, ParamCmd.SRCSTMF) && 
+              this.containsKey(cmd, ParamCmd.EXPORT)) {
+            this.remove(cmd, ParamCmd.EXPORT); 
+          }
+          break;
+
+        case RUNSQLSTM:
+          break;
+
+        case CRTDSPF:
+        case CRTPF:
+        case CRTLF:
+        case CRTPRTF:
+        case CRTMNU:
+        case CRTQMQRY:
+          break;
+
+        default: 
+          break;
+      }
     }
 
     public void ResolveConflicts(SysCmd cmd){
