@@ -873,6 +873,25 @@ public class ParamMap {
         default: 
           break;
       }
+
+      /* Migration logic */
+      switch (cmd){
+        case CRTRPGMOD:
+        case CRTBNDRPG:
+        case CRTBNDCL:
+        case CRTSQLRPGI:
+        case CRTSRVPGM:
+        case RUNSQLSTM:
+          if(this.containsKey(cmd, ParamCmd.SRCSTMF) &&
+              this.containsKey(cmd, ParamCmd.SRCFILE)){
+            this.remove(cmd, ParamCmd.SRCFILE); 
+            this.remove(cmd, ParamCmd.SRCMBR); 
+          }
+          break;
+
+        default:
+            break;
+      }
     }
 
     public void ResolveConflicts(SysCmd cmd){
