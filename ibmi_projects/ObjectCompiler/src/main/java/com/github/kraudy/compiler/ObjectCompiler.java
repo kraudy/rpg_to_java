@@ -226,7 +226,49 @@ public class ObjectCompiler implements Runnable{
     if (debug) System.err.println("Source type: " + odes.getSourceType());
 
 
-    ParamCmdSequence = cpat.ResolveCompilationParams(ParamCmdSequence, compilationCommand, targetKey.objectName);
+    switch (compilationCommand){
+      case CRTCLMOD:
+        break;
+
+      case CRTRPGMOD:
+      case CRTBNDRPG:
+      case CRTBNDCL:
+      case CRTSQLRPGI:
+      case CRTSRVPGM:
+      case RUNSQLSTM:
+        if (!ParamCmdSequence.containsKey(compilationCommand, ParamCmd.SRCSTMF)) {
+          System.out.println("SRCFILE data: " + ParamCmdSequence.get(compilationCommand, ParamCmd.SRCFILE));
+          //TODO: This could be done directly in ObjectCompiler
+          this.migrator.setParams(ParamCmdSequence.get(compilationCommand, ParamCmd.SRCFILE), targetKey.objectName, "sources");
+          this.migrator.api(); // Try to migrate this thing
+          System.out.println("After calling migration api");
+          
+          ParamCmdSequence.put(compilationCommand, ParamCmd.SRCSTMF, this.migrator.getFirstPath());
+          ParamCmdSequence.put(compilationCommand, ParamCmd.TGTCCSID, ValCmd.JOB); // Needed to compile from stream files
+
+          ParamCmdSequence.remove(compilationCommand, ParamCmd.SRCFILE); 
+          ParamCmdSequence.remove(compilationCommand, ParamCmd.SRCMBR); 
+        }
+
+      case CRTCLPGM:
+      case CRTRPGPGM:
+        /* 
+        For OPM, create temp members if source is IFS (reverse migration).
+        ParamCmdSequence.put(compilationCommand, ParamCmd.SRCSTMF, stmfPath);
+        migrator.IfsToMember(ParamCmdSequence.get(ParamCmd.SRCSTMF), Library);
+        ParamCmdSequence.remove(ParamCmd.SRCFILE);  // Switch to stream file
+        ParamCmdSequence.put(compilationCommand, ParamCmd.SRCMBR, member);
+        */
+        break;
+
+      case CRTDSPF:
+      case CRTPF:
+      case CRTLF:
+      case CRTPRTF:
+      case CRTMNU:
+      case CRTQMQRY:
+          break;
+    }
 
     ParamCmdSequence.executeCommand(compilationCommand);    
 
