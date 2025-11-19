@@ -198,56 +198,6 @@ public class CompilationPattern {
           break;
     }
 
-    /* Resolve params conflicts */
-    
-    switch (compilationCommand){
-      case CRTRPGMOD:
-        if (ParamCmdSequence.containsKey(compilationCommand, ParamCmd.SRCSTMF)) {
-          ParamCmdSequence.remove(compilationCommand, ParamCmd.SRCFILE); 
-          ParamCmdSequence.remove(compilationCommand, ParamCmd.SRCMBR); 
-        }
-      case CRTCLMOD:
-        break;
-
-      case CRTBNDRPG:
-        if (!ParamCmdSequence.containsKey(compilationCommand, ParamCmd.DFTACTGRP)) {
-          ParamCmdSequence.remove(compilationCommand, ParamCmd.STGMDL); 
-        }
-      case CRTBNDCL:
-      case CRTCLPGM:
-        break;
-        
-      case CRTRPGPGM:
-        break;
-
-      case CRTSQLRPGI:
-        if (ParamCmdSequence.containsKey(compilationCommand, ParamCmd.SRCSTMF)) {
-          ParamCmdSequence.put(compilationCommand, ParamCmd.CVTCCSID, ValCmd.JOB);
-        }
-        break;
-
-      case CRTSRVPGM:
-        if (ParamCmdSequence.containsKey(compilationCommand, ParamCmd.SRCSTMF) && 
-            ParamCmdSequence.containsKey(compilationCommand, ParamCmd.EXPORT)) {
-          ParamCmdSequence.remove(compilationCommand, ParamCmd.EXPORT); 
-        }
-        break;
-
-      case RUNSQLSTM:
-        break;
-
-      case CRTDSPF:
-      case CRTPF:
-      case CRTLF:
-      case CRTPRTF:
-      case CRTMNU:
-      case CRTQMQRY:
-        break;
-
-      default: 
-        break;
-    }
-
     return ParamCmdSequence;
 
   }
