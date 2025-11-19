@@ -813,6 +813,23 @@ public class ParamMap {
     }
 
     public void ResolveConflicts(Object cmd){
+      if (cmd instanceof CompCmd) {
+        CompCmd compCmd  = (CompCmd) cmd;
+        ResolveConflicts(compCmd);
+        return;
+      }
+      if (cmd instanceof SysCmd) {
+        SysCmd sysCmd  = (SysCmd) cmd;
+        ResolveConflicts(sysCmd);
+        return;
+      }
+    }
+
+    public void ResolveConflicts(CompCmd cmd){
+
+    }
+
+    public void ResolveConflicts(SysCmd cmd){
 
     }
 
