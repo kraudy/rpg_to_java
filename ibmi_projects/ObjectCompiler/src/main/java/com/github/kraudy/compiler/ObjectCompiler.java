@@ -31,7 +31,6 @@ public class ObjectCompiler implements Runnable{
   private final Connection connection;
   private final User currentUser;
   private ObjectDescription odes;
-  private CompilationPattern cpat;
   private SourceMigrator migrator;
   public ParamMap ParamCmdSequence;
 
@@ -183,8 +182,6 @@ public class ObjectCompiler implements Runnable{
           sourceFile,
           sourceName
     );
-
-    cpat = new CompilationPattern(this.migrator);
 
     this.ParamCmdSequence = this.odes.SetCompilationParams(this.ParamCmdSequence);
 

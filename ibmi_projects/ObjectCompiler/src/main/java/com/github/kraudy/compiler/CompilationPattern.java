@@ -8,15 +8,9 @@ import java.util.Map;
 import com.github.kraudy.compiler.ObjectDescription.ObjectType;
 import com.github.kraudy.compiler.ObjectDescription.SourceType;
 import com.github.kraudy.compiler.ObjectDescription.SysCmd;
-import com.github.kraudy.migrator.SourceMigrator;
 
 
 public class CompilationPattern {
-  private SourceMigrator migrator;
-
-  public CompilationPattern(SourceMigrator migrator){
-    this.migrator = migrator;
-  }
 
   public enum CompCmd { 
     CRTRPGMOD, CRTSQLRPGI, CRTBNDRPG, CRTRPGPGM, CRTCLMOD, CRTBNDCL, CRTCLPGM, RUNSQLSTM, CRTSRVPGM, CRTDSPF, CRTLF, CRTPRTF, CRTMNU, CRTQMQRY, CRTPF, CRTCMD;
