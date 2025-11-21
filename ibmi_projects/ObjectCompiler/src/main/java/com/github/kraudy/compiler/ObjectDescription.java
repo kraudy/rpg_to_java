@@ -12,6 +12,9 @@ import com.github.kraudy.compiler.CompilationPattern.CompCmd;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 
+import com.github.kraudy.compiler.CompilationPattern.ObjectType;
+import com.github.kraudy.compiler.CompilationPattern.SourceType;
+
 // Core struct for capturing compilation specs (JSON-friendly via Jackson)
 public class ObjectDescription {
   public final Connection connection;
@@ -28,67 +31,7 @@ public class ObjectDescription {
   Utilities.ParsedKey targetKey;
   CompCmd compilationCommand;
 
-
-  public enum SysCmd { 
-    // Library commands
-    CHGLIBL, CHGCURLIB, 
-    // Dependency commands
-    DSPPGMREF, DSPOBJD, DSPDBR 
   
-  }
-
-  public enum SourceType { 
-    RPG, RPGLE, SQLRPGLE, CLP, CLLE, SQL, BND, DDS;
-
-    public static SourceType fromString(String value) {
-      try {
-        return SourceType.valueOf(value);
-      } catch (IllegalArgumentException e) {
-        throw new IllegalArgumentException("Could not get source type from object attribute '" + value + "'");
-      }
-    } 
-
-    public static String defaultSourcePf (SourceType sourceType, ObjectType objectType){
-      switch (sourceType){
-        case RPG:
-          return DftSrc.QRPGSRC.name(); //TODO: Add .name()? and return string?
-        case RPGLE:
-          return DftSrc.QRPGLESRC.name();
-        case SQLRPGLE:
-          return DftSrc.QSQLRPGSRC.name();
-        case BND:
-          return DftSrc.QSRVSRC.name(); 
-        case CLP:
-        case CLLE:
-          return DftSrc.QCLSRC.name();
-        case DDS: //TODO: This need to be fixed for DSPF, PF and LF, maybe add objectType as param
-          switch (objectType) {
-            case DSPF:
-              return DftSrc.QDSPFSRC.name();
-            case PF:
-              return DftSrc.QPFSRC.name();
-            case LF:
-              return DftSrc.QLFSRC.name();
-          }
-          
-        case SQL:
-          return DftSrc.QSQLSRC.name();
-        default:
-          throw new IllegalArgumentException("Could not get default sourcePf for '" + sourceType + "'");
-      }
-    }
-  }
-
-  public enum ObjectType { 
-    PGM, SRVPGM, MODULE, TABLE, LF, INDEX, VIEW, ALIAS, PROCEDURE, FUNCTION, PF, DSPF;
-    public String toParam(){
-      return "*" + this.name();
-    }
-  } // Add more as needed
-
-  public enum PostCmpCmd { CHGOBJD }
-
-  public enum DftSrc { QRPGLESRC, QRPGSRC, QCLSRC, QSQLSRC, QSRVSRC, QDSPFSRC, QPFSRC, QLFSRC, QSQLRPGSRC, QSQLMODSRC }
 
   @JsonCreator
   public ObjectDescription(

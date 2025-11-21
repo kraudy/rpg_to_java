@@ -17,11 +17,7 @@ import com.github.kraudy.compiler.CompilationPattern.CompCmd;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 
-import com.github.kraudy.compiler.ObjectDescription.SysCmd;
-import com.github.kraudy.compiler.ObjectDescription.ObjectType;
-import com.github.kraudy.compiler.ObjectDescription.SourceType;
-
-import com.github.kraudy.compiler.CompilationPattern;
+import com.github.kraudy.compiler.CompilationPattern.SysCmd;
 
 public class ParamMap {
     //TODO: Add another map like 
@@ -37,8 +33,7 @@ public class ParamMap {
     public Map<CompCmd, Map<ParamCmd, String>> CompCmdMap = new EnumMap<>(CompCmd.class);
     private Map<CompCmd, Map<ParamCmd, String>> CompCmdChanges = new EnumMap<>(CompCmd.class);
     //private List<Object> CmdExecutionChain;
-    private String CmdExecutionChain = "";
-    private Map<ParamCmd, String> ParamCmdChanges = new HashMap<>();
+    private final StringBuilder CmdExecutionChain = new StringBuilder();
     public final Connection connection;
     private final boolean debug;
     private final boolean verbose;
@@ -330,6 +325,7 @@ public class ParamMap {
         throw new IllegalArgumentException("Could not get command time.");
       }
 
+
       try (Statement cmdStmt = connection.createStatement()) {
         cmdStmt.execute("CALL QSYS2.QCMDEXC('" + command + "')");
       } catch (SQLException e) {
@@ -376,5 +372,9 @@ public class ParamMap {
         System.out.println("Could not get messages.");
         e.printStackTrace();
       }
+    }
+
+    public String getExecutionChain() {
+      return CmdExecutionChain.toString();
     }
 }

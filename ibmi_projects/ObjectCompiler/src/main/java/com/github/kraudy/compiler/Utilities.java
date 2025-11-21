@@ -3,8 +3,8 @@ package com.github.kraudy.compiler;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-import com.github.kraudy.compiler.ObjectDescription.ObjectType;
-import com.github.kraudy.compiler.ObjectDescription.SourceType;
+import com.github.kraudy.compiler.CompilationPattern.ObjectType;
+import com.github.kraudy.compiler.CompilationPattern.SourceType;
 
 public class Utilities {
   public static String buildKey(String library, String objectName, ObjectType objectType, SourceType sourceType) {

@@ -12,8 +12,10 @@ import java.util.List;
 import com.github.kraudy.compiler.CompilationPattern.CompCmd;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
-import com.github.kraudy.compiler.ObjectDescription.SourceType;
-import com.github.kraudy.compiler.ObjectDescription.SysCmd;
+
+import com.github.kraudy.compiler.CompilationPattern.SourceType;
+import com.github.kraudy.compiler.CompilationPattern.SysCmd;
+
 import com.github.kraudy.migrator.SourceMigrator;
 import com.ibm.as400.access.AS400;
 import com.ibm.as400.access.AS400JDBCDataSource;
@@ -67,11 +69,11 @@ public class ObjectCompiler implements Runnable{
     }
   }  
 
-  static class SourceTypeConverter implements CommandLine.ITypeConverter<ObjectDescription.SourceType> {
+  static class SourceTypeConverter implements CommandLine.ITypeConverter<SourceType> {
     @Override
-    public ObjectDescription.SourceType convert(String value) throws Exception {
+    public SourceType convert(String value) throws Exception {
       try {
-        return ObjectDescription.SourceType.valueOf(value.trim().toUpperCase());
+        return SourceType.valueOf(value.trim().toUpperCase());
       } catch (IllegalArgumentException e) {
         throw new Exception("Invalid source type: " + value);
       }
@@ -273,6 +275,8 @@ public class ObjectCompiler implements Runnable{
     // TODO: CHKOBJ OBJ(ROBKRAUDY2/CUSTOMER) OBJTYPE(*FILE)
     // DLTOBJ OBJ(ROBKRAUDY2/CUSTOMER) OBJTYPE(*FILE)
     // Maybe i can put these in another parameter, like, a pre or post pattern of commands using a map   
+
+    System.out.println(ParamCmdSequence.getExecutionChain());
 
     cleanup();
   }
