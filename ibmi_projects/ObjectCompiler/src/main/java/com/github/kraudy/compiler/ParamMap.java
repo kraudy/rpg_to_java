@@ -325,6 +325,10 @@ public class ParamMap {
         throw new IllegalArgumentException("Could not get command time.");
       }
 
+      if (this.CmdExecutionChain.length() > 0) {
+        this.CmdExecutionChain.append(" => ");
+      }
+      this.CmdExecutionChain.append(command);
 
       try (Statement cmdStmt = connection.createStatement()) {
         cmdStmt.execute("CALL QSYS2.QCMDEXC('" + command + "')");
