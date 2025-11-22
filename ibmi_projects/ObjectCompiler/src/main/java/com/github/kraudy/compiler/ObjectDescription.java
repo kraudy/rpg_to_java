@@ -159,8 +159,6 @@ public class ObjectDescription {
 
   }
 
-  public SourceType getSourceType() { return this.targetKey.sourceType; }
-  public ObjectType getObjectType() { return this.targetKey.objectType; }
   //public Map<CompilationPattern.ParamCmd, String> getParamCmdSequence() { return ParamCmdSequence; }
   //public ParamMap getParamCmdSequence() { return ParamCmdSequence; }
 

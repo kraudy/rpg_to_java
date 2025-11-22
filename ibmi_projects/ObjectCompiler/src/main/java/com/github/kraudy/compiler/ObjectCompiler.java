@@ -218,11 +218,6 @@ public class ObjectCompiler implements Runnable{
       ParamCmdSequence.put(compilationCommand, ParamCmd.TGTCCSID, ValCmd.JOB);
     }
 
-    if (odes.getSourceType() == null) {
-      throw new IllegalArgumentException("Source type is required for new or unresolvable objects.");
-    }
-    if (debug) System.err.println("Source type: " + odes.getSourceType());
-
 
     switch (compilationCommand){
       case CRTCLMOD:
