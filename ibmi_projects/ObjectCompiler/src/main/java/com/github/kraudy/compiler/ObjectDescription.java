@@ -135,8 +135,26 @@ public class ObjectDescription {
         break;
     }
 
-    //TODO: Changed it to same target library, could be overwritten later if a param is provided
-    //ParamCmdSequence.put(this.compilationCommand, ParamCmd.REPLACE, ValCmd.YES.toString());
+    /* Set override value */
+    switch (this.compilationCommand) {
+      case CRTSRVPGM:
+      case CRTBNDRPG:
+      case CRTBNDCL:
+      case CRTRPGMOD:
+      case CRTCLMOD:
+      case CRTSQLRPGI:
+      case CRTRPGPGM:
+      case CRTCLPGM:
+      case CRTDSPF:
+      case CRTPRTF:
+        ParamCmdSequence.put(this.compilationCommand, ParamCmd.REPLACE, ValCmd.YES);
+        break;
+    
+      default:
+        break;
+    }
+
+    //TODO: If i set the values directly in ParamMap this return won't be needed
     return ParamCmdSequence;
 
   }
