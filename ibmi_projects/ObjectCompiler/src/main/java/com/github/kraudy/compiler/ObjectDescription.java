@@ -141,11 +141,6 @@ public class ObjectDescription {
 
   }
 
-  // Getters for Jackson serialization
-  //public String getTargetLibrary() { return targetLibrary; }
-  //public String getObjectName() { return objectName; }
-  //public ObjectType getObjectType() { return objectType; }
-  // public String getSourceLibrary() { return sourceLibrary; }
   public String getSourceFile() { return sourceFile; }
   public String getSourceName() { return sourceName; }
   public SourceType getSourceType() { return this.targetKey.sourceType; }
