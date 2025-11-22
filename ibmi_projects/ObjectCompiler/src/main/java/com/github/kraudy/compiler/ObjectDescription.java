@@ -159,8 +159,6 @@ public class ObjectDescription {
 
   }
 
-  public String getSourceFile() { return sourceFile; }
-  public String getSourceName() { return sourceName; }
   public SourceType getSourceType() { return this.targetKey.sourceType; }
   public ObjectType getObjectType() { return this.targetKey.objectType; }
   //public Map<CompilationPattern.ParamCmd, String> getParamCmdSequence() { return ParamCmdSequence; }
