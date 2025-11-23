@@ -130,7 +130,13 @@ public class CompilationPattern {
       } catch (IllegalArgumentException e) {
         throw new IllegalArgumentException("Could not get compilation command param from string: '" + value + "'");
       }
-    } 
+    }
+
+    public String paramString(String val){
+      if ("NULL".equals(val)) return "";
+
+      return " " + this.name() + "(" + val + ")";
+    }
     
   }
 

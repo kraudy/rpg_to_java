@@ -124,7 +124,7 @@ public class ParamMap {
   }
 
   public void showChanges(Command command) {
-    System.out.println(getCommandName(command));
+    System.out.println(command.name());
     showChanges(getPattern(command), getChanges(command));
   }
 
@@ -139,29 +139,21 @@ public class ParamMap {
 
     System.out.println(change);
   }
-
-  public String getCommandName(Command cmd){
-    return cmd.name();
-  }
   
   public String getParamChain(Command command){
-    return getParamChain(getPattern(command), get(command), getCommandName(command));
+    return getParamChain(getPattern(command), get(command), command.name());
   }
 
   public String getParamChain(List<ParamCmd> compilationPattern, Map<ParamCmd, String> paramMap, String command){
     StringBuilder sb = new StringBuilder(); 
 
+    sb.append(command);
+
     for (ParamCmd param : compilationPattern) {
-      sb.append(getParamString(paramMap.getOrDefault(param, "NULL"), param));
+      sb.append(param.paramString(paramMap.getOrDefault(param, "NULL")));
     }
 
-    return command + sb.toString();
-  }
-
-  public String getParamString(String val, ParamCmd paramCmd){
-    if ("NULL".equals(val)) return "";
-
-    return " " + paramCmd.name() + "(" + val + ")";
+    return sb.toString();
   }
 
   public void executeCommand(Command cmd){
