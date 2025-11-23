@@ -194,15 +194,10 @@ public class ObjectCompiler implements Runnable{
       if (verbose) System.err.println("Object not found; using defaults.");
     }
 
-    //TODO: Fix this
-    //ParamMap ParamCmdSequence = odes.getParamCmdSequence();
-
     /* Parameters values, if provided, overwrite retrieved values */
     if (!text.isEmpty()) ParamCmdSequence.put(compilationCommand, ParamCmd.TEXT, text);
     if (!actGrp.isEmpty()) ParamCmdSequence.put(compilationCommand, ParamCmd.ACTGRP, actGrp);
     if (!modules.isEmpty()) {
-      //TODO: Change these to *LIBL and set object library as curlib then DSPOBJ or something
-      // can be used to resolve the actual library if needed
       StringBuilder sb = new StringBuilder(); 
       for (String mod: modules){
         sb.append(ValCmd.LIBL.toString() + "/" + mod);
@@ -210,8 +205,6 @@ public class ObjectCompiler implements Runnable{
       }
       ParamCmdSequence.put(compilationCommand, ParamCmd.MODULE, sb.toString().trim());
 
-      //TODO: Add this in object description and validate in comp pattern to remove it if srstmf is present
-      //if (sourceStmf.isEmpty()) ParamCmdSequence.put(compilationCommand, ParamCmd.EXPORT, CompilationPattern.ValCmd.ALL.toString());
     }
     if (!this.sourceStmf.isEmpty()) {
       ParamCmdSequence.put(compilationCommand, ParamCmd.SRCSTMF, "'" + this.sourceStmf + "'");
@@ -239,6 +232,7 @@ public class ObjectCompiler implements Runnable{
           ParamCmdSequence.put(compilationCommand, ParamCmd.SRCSTMF, this.migrator.getFirstPath());
           ParamCmdSequence.put(compilationCommand, ParamCmd.TGTCCSID, ValCmd.JOB); // Needed to compile from stream files
         }
+        break;
 
       case CRTCLPGM:
       case CRTRPGPGM:
