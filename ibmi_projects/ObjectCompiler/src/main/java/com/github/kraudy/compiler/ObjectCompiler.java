@@ -238,9 +238,6 @@ public class ObjectCompiler implements Runnable{
           
           ParamCmdSequence.put(compilationCommand, ParamCmd.SRCSTMF, this.migrator.getFirstPath());
           ParamCmdSequence.put(compilationCommand, ParamCmd.TGTCCSID, ValCmd.JOB); // Needed to compile from stream files
-
-          ParamCmdSequence.remove(compilationCommand, ParamCmd.SRCFILE); 
-          ParamCmdSequence.remove(compilationCommand, ParamCmd.SRCMBR); 
         }
 
       case CRTCLPGM:
