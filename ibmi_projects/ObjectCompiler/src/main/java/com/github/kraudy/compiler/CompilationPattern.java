@@ -228,14 +228,6 @@ public class CompilationPattern {
   );
   
   /* Maps compilation command to its pattern */
-  public static final Map<SysCmd, List<ParamCmd>> SysCmdToPatternMap = new EnumMap<>(SysCmd.class);
-  static{
-    /* Libraries */
-    SysCmdToPatternMap.put(SysCmd.CHGLIBL, ChgLibLPattern);
-    SysCmdToPatternMap.put(SysCmd.CHGCURLIB, ChgCurLibPattern);
-    /* Bind dir */
-    SysCmdToPatternMap.put(SysCmd.CRTBNDDIR, BndDirPattern);
-  }
 
   /* ILE Patterns */
 
