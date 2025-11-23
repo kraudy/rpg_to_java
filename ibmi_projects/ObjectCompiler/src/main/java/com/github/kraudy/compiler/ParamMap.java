@@ -32,12 +32,6 @@ public class ParamMap {
     private final Map<Command, Map<ParamCmd, String>> paramMap = new HashMap<>();
     private final Map<Command, Map<ParamCmd, String>> paramChanges = new HashMap<>();
 
-    private Map<SysCmd, Map<ParamCmd, String>> SysCmdMap = new EnumMap<>(SysCmd.class);
-    private Map<SysCmd, Map<ParamCmd, String>> SysCmdChanges = new EnumMap<>(SysCmd.class);
-
-    public Map<CompCmd, Map<ParamCmd, String>> CompCmdMap = new EnumMap<>(CompCmd.class);
-    private Map<CompCmd, Map<ParamCmd, String>> CompCmdChanges = new EnumMap<>(CompCmd.class);
-    //private List<Object> CmdExecutionChain;
     private final StringBuilder CmdExecutionChain = new StringBuilder();
     public final Connection connection;
     private final boolean debug;
@@ -186,7 +180,7 @@ public class ParamMap {
       executeCommand(getParamChain(cmd));
     }
 
-    public void ResolveConflicts(Object cmd){
+    public void ResolveConflicts(Command cmd){
       if (cmd instanceof CompCmd) {
         CompCmd compCmd  = (CompCmd) cmd;
         ResolveConflicts(compCmd);
