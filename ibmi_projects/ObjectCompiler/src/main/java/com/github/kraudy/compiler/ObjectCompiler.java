@@ -177,7 +177,6 @@ public class ObjectCompiler implements Runnable{
           debug,
           verbose,
           compilationCommand,
-          //TODO: Maybe i should pass these as the topo key. The Key should uniquely indentify an object
           targetKey,
           //TODO: Remove these and change it in the key
           sourceFile,

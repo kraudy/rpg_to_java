@@ -754,6 +754,15 @@ public class CompilationPattern {
     ParamCmd.THDSAFE
   );
 
+  // CRTBNDDIR
+  public static final List<ParamCmd> BndDirPattern = Arrays.asList(
+    ParamCmd.BNDDIR,
+    ParamCmd.AUT,   
+    ParamCmd.TEXT
+  );
+
+  // CRTMNU
+
   //TODO: Add config file support like YAML. This will allow specific patterns to be provided.
   // So, you would try to load the file with the param patter or use the default one.
 
