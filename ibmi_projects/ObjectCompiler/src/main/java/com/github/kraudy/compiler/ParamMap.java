@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
@@ -49,62 +50,36 @@ public class ParamMap {
         this.connection = connection;
     }
 
-    public boolean containsKey(Object cmd, ParamCmd param) {
+    
+    public boolean containsKey(Command cmd, ParamCmd param) {
       return get(cmd).containsKey(param);
     }
 
-    public Set<ParamCmd> keySet(Object cmd){
+    public Set<ParamCmd> keySet(Command cmd){
       return get(cmd).keySet();
     }
 
-    public Map<ParamCmd, String> get(Object cmd) {
-      if (cmd instanceof CompCmd) {
-        CompCmd compCmd  = (CompCmd) cmd;
-        return CompCmdMap.getOrDefault(compCmd, new HashMap<ParamCmd, String>());
-      }
-      if (cmd instanceof SysCmd) {
-        SysCmd sysCmd  = (SysCmd) cmd;
-        return SysCmdMap.getOrDefault(sysCmd, new HashMap<ParamCmd, String>());
-      }
-      //TODO: Throw exception
-      return null;
+    public Map<ParamCmd, String> get(Command cmd) {
+      return paramMap.computeIfAbsent(cmd, k -> new HashMap<>());
     }
 
-    public List<ParamCmd> getPattern(Object cmd) {
-      if (cmd instanceof CompCmd) {
-        CompCmd compCmd  = (CompCmd) cmd;
-        return CompilationPattern.cmdToPatternMap.get(compCmd);
-      }
-      if (cmd instanceof SysCmd) {
-        SysCmd sysCmd  = (SysCmd) cmd;
-        return CompilationPattern.SysCmdToPatternMap.get(sysCmd);
-      }
-      //TODO: Throw exception
-      return null;
+    public List<ParamCmd> getPattern(Command cmd) {
+      return CompilationPattern.commandToPatternMap.getOrDefault(cmd, Collections.emptyList());
     }
 
-    public Map<ParamCmd, String> getChanges(Object cmd) {
-      if (cmd instanceof CompCmd) {
-        CompCmd compCmd  = (CompCmd) cmd;
-        return CompCmdChanges.getOrDefault(compCmd, new HashMap<ParamCmd, String>());
-      }
-      if (cmd instanceof SysCmd) {
-        SysCmd sysCmd  = (SysCmd) cmd;
-        return SysCmdChanges.getOrDefault(sysCmd, new HashMap<ParamCmd, String>());
-      }
-      //TODO: Throw exception
-      return null;
+    public Map<ParamCmd, String> getChanges(Command cmd) {
+      return paramChanges.computeIfAbsent(cmd, k -> new HashMap<>());
     }
 
-    public String get(Object cmd, ParamCmd param) {
+    public String get(Command cmd, ParamCmd param) {
       return get(cmd).getOrDefault(param, "");
     }
 
-    public String remove(Object cmd, ParamCmd param) {
+    public String remove(Command cmd, ParamCmd param) {
       return remove(cmd, param, get(cmd), getChanges(cmd));
     }
 
-    public String remove(Object cmd, ParamCmd param, Map<ParamCmd, String> paramMap, Map<ParamCmd, String> paramChanges) {
+    public String remove(Command cmd, ParamCmd param, Map<ParamCmd, String> paramMap, Map<ParamCmd, String> paramChanges) {
       String oldValue = paramMap.remove(param);
 
       String currentChain = paramChanges.getOrDefault(param, "");
@@ -120,15 +95,15 @@ public class ParamMap {
       return oldValue;
     }
 
-    public String put(Object cmd, ParamCmd param, ValCmd value) {
+    public String put(Command cmd, ParamCmd param, ValCmd value) {
       return put(cmd, param, value.toString());
     }
 
-    public String put(Object cmd, ParamCmd param, String value) {
+    public String put(Command cmd, ParamCmd param, String value) {
       return put(cmd, get(cmd), getChanges(cmd), param, value);
     }
 
-    public String put(Object cmd, Map<ParamCmd, String> paramMap, Map<ParamCmd, String> paramChanges, ParamCmd param, String value) {
+    public String put(Command cmd, Map<ParamCmd, String> paramMap, Map<ParamCmd, String> paramChanges, ParamCmd param, String value) {
 
       switch (param) {
         case TEXT:
@@ -159,23 +134,12 @@ public class ParamMap {
       return oldValue;  // Calls the overridden put(ParamCmd, String); no .toString() needed
     }
 
-    public void put(Object cmd, Map<ParamCmd, String> paramMap, Map<ParamCmd, String> paramChanges) {
-      if (cmd instanceof CompCmd) {
-        CompCmd compCmd  = (CompCmd) cmd;
-        CompCmdMap.put(compCmd, paramMap);  // Re-put the (possibly new) inner map
-        CompCmdChanges.put(compCmd, paramChanges);
-        return;
-      }
-      if (cmd instanceof SysCmd) {
-        SysCmd sysCmd  = (SysCmd) cmd;
-        SysCmdMap.put(sysCmd, paramMap);
-        SysCmdChanges.put(sysCmd, paramChanges);
-        return;
-      }
-      return;
+    public void put(Command cmd, Map<ParamCmd, String> innerParamMap, Map<ParamCmd, String> innerChanges) {
+      paramMap.put(cmd, innerParamMap);
+      paramChanges.put(cmd, innerChanges);
     }
 
-    public void showChanges(Object command) {
+    public void showChanges(Command command) {
       System.out.println(getCommandName(command));
       showChanges(getPattern(command), getChanges(command));
     }
@@ -192,19 +156,11 @@ public class ParamMap {
       System.out.println(change);
     }
 
-    public String getCommandName(Object cmd){
-      if (cmd instanceof CompCmd) {
-        CompCmd compCmd  = (CompCmd) cmd;
-        return compCmd.name();
-      }
-      if (cmd instanceof SysCmd) {
-        SysCmd sysCmd  = (SysCmd) cmd;
-        return sysCmd.name();
-      }
-      return "";
+    public String getCommandName(Command cmd){
+      return cmd.name();
     }
     
-    public String getParamChain(Object command){
+    public String getParamChain(Command command){
       return getParamChain(getPattern(command), get(command), getCommandName(command));
     }
 
@@ -224,7 +180,7 @@ public class ParamMap {
       return " " + paramCmd.name() + "(" + val + ")";
     }
 
-    public void executeCommand(Object cmd){
+    public void executeCommand(Command cmd){
       ResolveConflicts(cmd);
       showChanges(cmd);
       executeCommand(getParamChain(cmd));
