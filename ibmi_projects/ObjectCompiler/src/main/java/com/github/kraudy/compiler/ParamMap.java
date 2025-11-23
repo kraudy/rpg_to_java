@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.List;
 
+import com.github.kraudy.compiler.CompilationPattern.Command;
 import com.github.kraudy.compiler.CompilationPattern.CompCmd;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
@@ -26,6 +27,10 @@ public class ParamMap {
     // is a compilation command, maybe Overriding the PUT method
     //TODO: (if command instanceof CompCmd) could me useful
     //private Map<Object, Map<ParamCmd, String>> GeneralCmdMap = new EnumMap<>(Object.class);
+
+    private final Map<Command, Map<ParamCmd, String>> paramMap = new HashMap<>();
+    private final Map<Command, Map<ParamCmd, String>> paramChanges = new HashMap<>();
+
     private Map<SysCmd, Map<ParamCmd, String>> SysCmdMap = new EnumMap<>(SysCmd.class);
     private Map<SysCmd, Map<ParamCmd, String>> SysCmdChanges = new EnumMap<>(SysCmd.class);
 

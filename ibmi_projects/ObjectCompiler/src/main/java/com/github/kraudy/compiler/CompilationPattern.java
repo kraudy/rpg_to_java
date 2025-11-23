@@ -2,17 +2,28 @@ package com.github.kraudy.compiler;
 
 import java.util.Arrays;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class CompilationPattern {
 
-  public enum SysCmd { 
+  public interface Command {
+    String name();  // Mirrors Enum.name() for consistency
+  }
+
+  public enum SysCmd implements Command { 
     // Library commands
     CHGLIBL, CHGCURLIB, 
     // Dependency commands
-    DSPPGMREF, DSPOBJD, DSPDBR 
+    DSPPGMREF, DSPOBJD, DSPDBR ,
+    // 
+    CRTBNDDIR
   
+  }
+
+  public enum CompCmd implements Command { 
+    CRTRPGMOD, CRTSQLRPGI, CRTBNDRPG, CRTRPGPGM, CRTCLMOD, CRTBNDCL, CRTCLPGM, RUNSQLSTM, CRTSRVPGM, CRTDSPF, CRTLF, CRTPRTF, CRTMNU, CRTQMQRY, CRTPF, CRTCMD;
   }
 
   public enum SourceType { 
@@ -67,10 +78,6 @@ public class CompilationPattern {
   public enum PostCmpCmd { CHGOBJD }
 
   public enum DftSrc { QRPGLESRC, QRPGSRC, QCLSRC, QSQLSRC, QSRVSRC, QDSPFSRC, QPFSRC, QLFSRC, QSQLRPGSRC, QSQLMODSRC }
-
-  public enum CompCmd { 
-    CRTRPGMOD, CRTSQLRPGI, CRTBNDRPG, CRTRPGPGM, CRTCLMOD, CRTBNDCL, CRTCLPGM, RUNSQLSTM, CRTSRVPGM, CRTDSPF, CRTLF, CRTPRTF, CRTMNU, CRTQMQRY, CRTPF, CRTCMD;
-  }
 
   public enum ParamCmd { 
     PGM, MODULE, OBJ, OBJTYPE, OUTPUT, OUTMBR, SRVPGM, BNDSRVPGM, LIBL, SRCFILE, SRCMBR, ACTGRP, DFTACTGRP, BNDDIR, COMMIT, TEXT, TGTCCSID, CRTFRMSTMF,
@@ -213,6 +220,12 @@ public class CompilationPattern {
     ParamCmd.CURLIB
   );
 
+    // CRTBNDDIR
+  public static final List<ParamCmd> BndDirPattern = Arrays.asList(
+    ParamCmd.BNDDIR,
+    ParamCmd.AUT,   
+    ParamCmd.TEXT
+  );
   
   /* Maps compilation command to its pattern */
   public static final Map<SysCmd, List<ParamCmd>> SysCmdToPatternMap = new EnumMap<>(SysCmd.class);
@@ -220,6 +233,8 @@ public class CompilationPattern {
     /* Libraries */
     SysCmdToPatternMap.put(SysCmd.CHGLIBL, ChgLibLPattern);
     SysCmdToPatternMap.put(SysCmd.CHGCURLIB, ChgCurLibPattern);
+    /* Bind dir */
+    SysCmdToPatternMap.put(SysCmd.CRTBNDDIR, BndDirPattern);
   }
 
   /* ILE Patterns */
@@ -758,12 +773,6 @@ public class CompilationPattern {
     ParamCmd.THDSAFE
   );
 
-  // CRTBNDDIR
-  public static final List<ParamCmd> BndDirPattern = Arrays.asList(
-    ParamCmd.BNDDIR,
-    ParamCmd.AUT,   
-    ParamCmd.TEXT
-  );
 
   // CRTMNU
   public static final List<ParamCmd> MnuPattern = Arrays.asList(
@@ -814,6 +823,39 @@ public class CompilationPattern {
     /* CMD */
     cmdToPatternMap.put(CompCmd.CRTCMD, CmdPattern);
   }     
+
+  public static final Map<Command, List<ParamCmd>> commandToPatternMap = new HashMap<>();
+
+  static {
+    /* Libraries */
+    commandToPatternMap.put(SysCmd.CHGLIBL, ChgLibLPattern);
+    commandToPatternMap.put(SysCmd.CHGCURLIB, ChgCurLibPattern);
+    /* Bind dir */
+    commandToPatternMap.put(SysCmd.CRTBNDDIR, BndDirPattern);
+
+    /* Compilation commands */
+
+    /* ILE */
+    commandToPatternMap.put(CompCmd.CRTSRVPGM, SrvpgmPattern);
+    commandToPatternMap.put(CompCmd.CRTBNDRPG, ileRpgPgmPattern);
+    commandToPatternMap.put(CompCmd.CRTBNDCL, ileClPgmPattern);
+    commandToPatternMap.put(CompCmd.CRTRPGMOD, RpgModulePattern);
+    commandToPatternMap.put(CompCmd.CRTCLMOD, ClleModulePattern);
+    commandToPatternMap.put(CompCmd.CRTSQLRPGI, SqlRpgPgmPattern);
+    /* OPM */
+    commandToPatternMap.put(CompCmd.CRTRPGPGM, opmRpgPgmPattern);
+    commandToPatternMap.put(CompCmd.CRTCLPGM, opmClPgmPattern);
+    /* SQL */
+    commandToPatternMap.put(CompCmd.RUNSQLSTM, SqlPattern);
+    /* DDS */
+    commandToPatternMap.put(CompCmd.CRTDSPF, ddsDspfPattern);
+    commandToPatternMap.put(CompCmd.CRTPF, ddsPfPattern);
+    commandToPatternMap.put(CompCmd.CRTLF, ddsLfPattern);
+
+    commandToPatternMap.put(CompCmd.CRTPRTF, ddsPrtfPattern);
+    /* CMD */
+    commandToPatternMap.put(CompCmd.CRTCMD, CmdPattern);
+  }
 
   public static CompCmd getCompilationCommand(SourceType sourceType, ObjectType objectType){
     return typeToCmdMap.get(sourceType).get(objectType);
