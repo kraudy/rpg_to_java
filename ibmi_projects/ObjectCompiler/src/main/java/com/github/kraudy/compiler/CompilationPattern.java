@@ -798,32 +798,6 @@ public class CompilationPattern {
   //TODO: Add config file support like YAML. This will allow specific patterns to be provided.
   // So, you would try to load the file with the param patter or use the default one.
 
-  /* Maps compilation command to its pattern */
-  public static final Map<CompCmd, List<ParamCmd>> cmdToPatternMap = new EnumMap<>(CompCmd.class);
-
-  static{
-    /* ILE */
-    cmdToPatternMap.put(CompCmd.CRTSRVPGM, SrvpgmPattern);
-    cmdToPatternMap.put(CompCmd.CRTBNDRPG, ileRpgPgmPattern);
-    cmdToPatternMap.put(CompCmd.CRTBNDCL, ileClPgmPattern);
-    cmdToPatternMap.put(CompCmd.CRTRPGMOD, RpgModulePattern);
-    cmdToPatternMap.put(CompCmd.CRTCLMOD, ClleModulePattern);
-    cmdToPatternMap.put(CompCmd.CRTSQLRPGI, SqlRpgPgmPattern);
-    /* OPM */
-    cmdToPatternMap.put(CompCmd.CRTRPGPGM, opmRpgPgmPattern);
-    cmdToPatternMap.put(CompCmd.CRTCLPGM, opmClPgmPattern);
-    /* SQL */
-    cmdToPatternMap.put(CompCmd.RUNSQLSTM, SqlPattern);
-    /* DDS */
-    cmdToPatternMap.put(CompCmd.CRTDSPF, ddsDspfPattern);
-    cmdToPatternMap.put(CompCmd.CRTPF, ddsPfPattern);
-    cmdToPatternMap.put(CompCmd.CRTLF, ddsLfPattern);
-
-    cmdToPatternMap.put(CompCmd.CRTPRTF, ddsPrtfPattern);
-    /* CMD */
-    cmdToPatternMap.put(CompCmd.CRTCMD, CmdPattern);
-  }     
-
   public static final Map<Command, List<ParamCmd>> commandToPatternMap = new HashMap<>();
 
   static {
@@ -833,7 +807,7 @@ public class CompilationPattern {
     /* Bind dir */
     commandToPatternMap.put(SysCmd.CRTBNDDIR, BndDirPattern);
 
-    /* Compilation commands */
+    /* Maps compilation command to its pattern */ 
 
     /* ILE */
     commandToPatternMap.put(CompCmd.CRTSRVPGM, SrvpgmPattern);
