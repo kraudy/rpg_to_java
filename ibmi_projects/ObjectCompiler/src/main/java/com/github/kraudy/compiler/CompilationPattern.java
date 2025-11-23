@@ -110,7 +110,11 @@ public class CompilationPattern {
     HOLD, SAVE, OUTPTY, USRDTA, SPLFOWN, USRDFNOPT, USRDFNDTA, USRDFNOBJ, TOSTMF, WSCST,
 
     // CRTCMD
-    CMD, REXSRCFILE, REXSRCMBR, REXCMDENV, REXEXITPGM, THDSAFE
+    CMD, REXSRCFILE, REXSRCMBR, REXCMDENV, REXEXITPGM, THDSAFE,
+
+    // CRTMNU
+    MENU, TYPE, DSPF, MSGF, CMDLIN, DSPKEY, PRDLIB
+
     ;
 
     public static ParamCmd fromString(String value) {
@@ -762,6 +766,25 @@ public class CompilationPattern {
   );
 
   // CRTMNU
+  public static final List<ParamCmd> MnuPattern = Arrays.asList(
+    ParamCmd.MENU,   
+    ParamCmd.TYPE,   
+    ParamCmd.DSPF,   
+    ParamCmd.MSGF,   
+    ParamCmd.CMDLIN, 
+    ParamCmd.DSPKEY, 
+    ParamCmd.PGM,    
+    ParamCmd.SRCFILE,
+    ParamCmd.SRCMBR, 
+    ParamCmd.OPTION, 
+    ParamCmd.INCFILE,
+    ParamCmd.CURLIB, 
+    ParamCmd.PRDLIB, 
+    ParamCmd.CHRID,  
+    ParamCmd.REPLACE,
+    ParamCmd.TEXT,   
+    ParamCmd.AUT
+  );
 
   //TODO: Add config file support like YAML. This will allow specific patterns to be provided.
   // So, you would try to load the file with the param patter or use the default one.
