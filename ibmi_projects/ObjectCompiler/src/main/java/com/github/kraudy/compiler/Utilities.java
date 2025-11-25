@@ -18,6 +18,10 @@ public class Utilities {
     public ObjectType objectType;
     public SourceType sourceType; // null if absent
 
+    public String getQualifiedObject(){
+      return this.library + "/" + this.objectName;
+    }
+
     @JsonCreator  // Enables deserialization from a JSON string like "MYLIB.HELLO.PGM.RPGLE"
     public ParsedKey(String key) {
       String[] parts = key.split("\\.");
