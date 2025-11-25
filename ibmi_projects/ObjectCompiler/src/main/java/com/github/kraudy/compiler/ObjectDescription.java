@@ -87,7 +87,7 @@ public class ObjectDescription {
     switch (this.compilationCommand) {
       case CRTSQLRPGI:
         ParamCmdSequence.put(this.compilationCommand, ParamCmd.OBJ, this.targetKey.getQualifiedObject());
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.OBJ, ValCmd.CURLIB.toString() + "/" + this.targetKey.objectName);
+        ParamCmdSequence.put(this.compilationCommand, ParamCmd.OBJ, this.targetKey.getQualifiedObject(ValCmd.CURLIB));
         ParamCmdSequence.put(this.compilationCommand, ParamCmd.OBJTYPE, this.targetKey.objectType.toParam());
         ParamCmdSequence.put(this.compilationCommand, ParamCmd.COMMIT, ValCmd.NONE);
         ParamCmdSequence.put(this.compilationCommand, ParamCmd.DBGVIEW, ValCmd.SOURCE);
@@ -99,30 +99,30 @@ public class ObjectDescription {
       case CRTRPGPGM:
       case CRTCLPGM:
         ParamCmdSequence.put(this.compilationCommand, ParamCmd.PGM, this.targetKey.getQualifiedObject());
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.PGM, ValCmd.CURLIB.toString() + "/" + this.targetKey.objectName);
+        ParamCmdSequence.put(this.compilationCommand, ParamCmd.PGM, this.targetKey.getQualifiedObject(ValCmd.CURLIB));
         break;
 
       case CRTDSPF:
       case CRTPF:
       case CRTLF:
         ParamCmdSequence.put(this.compilationCommand, ParamCmd.FILE, this.targetKey.getQualifiedObject());
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.FILE, ValCmd.CURLIB.toString() + "/" + this.targetKey.objectName);
+        ParamCmdSequence.put(this.compilationCommand, ParamCmd.FILE, this.targetKey.getQualifiedObject(ValCmd.CURLIB));
         break;
       
       case CRTSRVPGM:
         ParamCmdSequence.put(this.compilationCommand, ParamCmd.SRVPGM, this.targetKey.getQualifiedObject());
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.SRVPGM, ValCmd.CURLIB.toString() + "/" + this.targetKey.objectName);
+        ParamCmdSequence.put(this.compilationCommand, ParamCmd.SRVPGM, this.targetKey.getQualifiedObject(ValCmd.CURLIB));
         ParamCmdSequence.put(this.compilationCommand, ParamCmd.MODULE, this.targetKey.getQualifiedObject());
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.MODULE, ValCmd.LIBL.toString() + "/" + this.targetKey.objectName);
+        ParamCmdSequence.put(this.compilationCommand, ParamCmd.MODULE, this.targetKey.getQualifiedObject(ValCmd.LIBL));
         ParamCmdSequence.put(this.compilationCommand, ParamCmd.BNDSRVPGM, ValCmd.NONE);
         ParamCmdSequence.put(this.compilationCommand, ParamCmd.EXPORT, ValCmd.ALL);
-        break; //TODO: I had these two together, check if it is needed or simply add 
+        break;
 
       case CRTRPGMOD:
       case CRTCLMOD:
         ParamCmdSequence.put(this.compilationCommand, ParamCmd.DBGVIEW, ValCmd.ALL);
         ParamCmdSequence.put(this.compilationCommand, ParamCmd.MODULE, this.targetKey.getQualifiedObject());
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.MODULE, ValCmd.CURLIB.toString() + "/" + this.targetKey.objectName);
+        ParamCmdSequence.put(this.compilationCommand, ParamCmd.MODULE, this.targetKey.getQualifiedObject(ValCmd.CURLIB));
         break;
 
       case RUNSQLSTM:

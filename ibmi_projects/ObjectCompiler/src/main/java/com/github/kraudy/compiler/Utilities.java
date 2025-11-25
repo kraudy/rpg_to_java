@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 import com.github.kraudy.compiler.CompilationPattern.ObjectType;
 import com.github.kraudy.compiler.CompilationPattern.SourceType;
+import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 
 public class Utilities {
   public static String buildKey(String library, String objectName, ObjectType objectType, SourceType sourceType) {
@@ -20,6 +21,10 @@ public class Utilities {
 
     public String getQualifiedObject(){
       return this.library + "/" + this.objectName;
+    }
+
+    public String getQualifiedObject(ValCmd valcmd){
+      return valcmd.toString() + "/" + this.objectName;
     }
 
     @JsonCreator  // Enables deserialization from a JSON string like "MYLIB.HELLO.PGM.RPGLE"
