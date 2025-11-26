@@ -120,6 +120,13 @@ public class ObjectCompiler implements Runnable{
   @Option(names = "--bnddir", description = "Binding directories (space-separated). Defaults to *NONE.")
   private String bndDir = CompilationPattern.ValCmd.NONE.toString(); // "*NONE"
 
+  /* yaml */
+  @Option(names = {"-f", "--file"}, description = "YAML build file (instead of --target-key)")
+  private String yamlFile;
+
+  @Option(names = {"--dry-run"}, description = "Show commands without executing")
+  private boolean dryRun = false;
+
   /* Options */
   @Option(names = "-x", description = "Debug")
   private boolean debug = false;
