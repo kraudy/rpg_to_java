@@ -1,12 +1,15 @@
 package com.github.kraudy.compiler;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -160,6 +163,34 @@ public class ObjectCompiler implements Runnable{
     /* Try to get compilation params from object. If it exists. */
 
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    BuildSpec spec = null;
+
+    if (yamlFile != null) {
+      File f = new File(yamlFile);
+      if (!f.exists()) throw new RuntimeException("YAML file not found: " + yamlFile);
+      try{
+        spec = mapper.readValue(f, BuildSpec.class);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    } else if (targetKey != null) {
+      // backward compatibility: single object mode
+      spec = new BuildSpec();
+      spec.targets.put(targetKey.asString(), new BuildSpec.TargetSpec());
+    }
+
+    /* This is intended for a YAML file with multiple objects in toposort order */
+    for (Map.Entry<String, BuildSpec.TargetSpec> entry : spec.targets.entrySet()) {
+      String keyStr = entry.getKey();
+      BuildSpec.TargetSpec target = entry.getValue();
+
+      Utilities.ParsedKey key = new Utilities.ParsedKey(keyStr);
+      
+      // Apply defaults + target overrides
+      //TODO: Do this after defaults
+      applySpecToCompiler(spec.defaults, target);
+
+    }
 
     //TODO: Add --dry-run to just run without executing. Just to generate the command string
     this.ParamCmdSequence = new ParamMap(this.debug, this.verbose, this.connection);
@@ -303,6 +334,18 @@ public class ObjectCompiler implements Runnable{
   private void setCurLib(String library){
     this.ParamCmdSequence.put(SysCmd.CHGCURLIB, ParamCmd.CURLIB, library);
     this.ParamCmdSequence.executeCommand(SysCmd.CHGCURLIB);
+  }
+
+  private void applySpecToCompiler(Map<String,Object> defaults, BuildSpec.TargetSpec t) {
+    // Merge defaults → target (target wins)
+    Map<String, Object> merged = new HashMap<>(defaults);
+    if (t != null && t.extra != null) merged.putAll(t.extra);
+
+    if (t.dbgview != null) this.dbgView = t.dbgview;
+    if (t.actgrp != null) this.actGrp = t.actgrp;
+    if (t.text != null) this.text = t.text;
+    if (t.modules != null) this.modules = t.modules;
+    // ... etc
   }
 
   //TODO: This is kinda slow.

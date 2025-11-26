@@ -7,9 +7,12 @@ import java.util.Map;
 
 public class BuildSpec {
   public Map<String, Object> defaults = new HashMap<>();
+  // This allows a linked spec for yamls with many objects or just a compilation pipeline
+  // This could also be a simple list like List<Map<>>
   public LinkedHashMap<String, TargetSpec> targets = new LinkedHashMap<>();
 
   public static class TargetSpec {
+      //TODO: This should be a simple map of Param: Value and just add it to the linked list
       public String dbgview;
       public String actgrp;
       public String text;
