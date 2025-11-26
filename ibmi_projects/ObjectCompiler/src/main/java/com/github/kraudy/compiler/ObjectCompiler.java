@@ -187,123 +187,124 @@ public class ObjectCompiler implements Runnable{
       Utilities.ParsedKey key = new Utilities.ParsedKey(keyStr);
       
       // Apply defaults + target overrides
+
+      //TODO: Add --dry-run to just run without executing. Just to generate the command string
+      this.ParamCmdSequence = new ParamMap(this.debug, this.verbose, this.connection);
+      cleanLibraryList();
+
+      // Migrator
+      try {
+        this.migrator = new SourceMigrator(this.system, this.connection, true, true);
+      } catch (Exception e){
+        if (debug) e.printStackTrace();
+        if (verbose) System.err.println("Could not initialize migrator");
+        throw new RuntimeException("Failed to initialize migrator: " + e.getMessage(), e);
+      }
+
+      //TODO: Should i do ADDLIBLE library *FIRST too?
+      setCurLib(key.library);
+
+      showLibraryList();
+
+      CompCmd compilationCommand = CompilationPattern.getCompilationCommand(key.sourceType, key.objectType);
+
+      sourceFile = sourceFile.isEmpty() ? SourceType.defaultSourcePf(key.sourceType, key.objectType) : sourceFile;
+      sourceName = sourceName.isEmpty() ? key.objectName : sourceName;
+
+      this.odes = new ObjectDescription(
+            connection,
+            debug,
+            verbose,
+            compilationCommand,
+            key,
+            //TODO: Remove these and change it in the key
+            sourceFile,
+            sourceName
+      );
+
+      this.ParamCmdSequence = this.odes.SetCompilationParams(this.ParamCmdSequence);
+
+      try {
+        this.ParamCmdSequence = odes.getObjectInfo(this.ParamCmdSequence, compilationCommand);
+      } catch (Exception e) {
+        //TODO: Change logging for SLF4J or java.util.logging 
+        if (debug) e.printStackTrace();
+        if (verbose) System.err.println("Object not found; using defaults.");
+      }
+
+      /* Parameters values, if provided, overwrite retrieved values */
+      if (!text.isEmpty()) ParamCmdSequence.put(compilationCommand, ParamCmd.TEXT, text);
+      if (!actGrp.isEmpty()) ParamCmdSequence.put(compilationCommand, ParamCmd.ACTGRP, actGrp);
+      if (!modules.isEmpty()) {
+        StringBuilder sb = new StringBuilder(); 
+        for (String mod: modules){
+          sb.append(ValCmd.LIBL.toString() + "/" + mod);
+          sb.append(" ");
+        }
+        ParamCmdSequence.put(compilationCommand, ParamCmd.MODULE, sb.toString().trim());
+
+      }
+      if (!this.sourceStmf.isEmpty()) {
+        ParamCmdSequence.put(compilationCommand, ParamCmd.SRCSTMF, "'" + this.sourceStmf + "'");
+        ParamCmdSequence.put(compilationCommand, ParamCmd.TGTCCSID, ValCmd.JOB);
+      }
+
+
+      switch (compilationCommand){
+        case CRTCLMOD:
+          break;
+
+        case CRTRPGMOD:
+        case CRTBNDRPG:
+        case CRTBNDCL:
+        case CRTSQLRPGI:
+        case CRTSRVPGM:
+        case RUNSQLSTM:
+          if (!ParamCmdSequence.containsKey(compilationCommand, ParamCmd.SRCSTMF)) {
+            System.out.println("SRCFILE data: " + ParamCmdSequence.get(compilationCommand, ParamCmd.SRCFILE));
+            //TODO: This could be done directly in ObjectCompiler
+            this.migrator.setParams(ParamCmdSequence.get(compilationCommand, ParamCmd.SRCFILE), key.objectName, "sources");
+            this.migrator.api(); // Try to migrate this thing
+            System.out.println("After calling migration api");
+            
+            ParamCmdSequence.put(compilationCommand, ParamCmd.SRCSTMF, this.migrator.getFirstPath());
+            ParamCmdSequence.put(compilationCommand, ParamCmd.TGTCCSID, ValCmd.JOB); // Needed to compile from stream files
+          }
+          break;
+
+        case CRTCLPGM:
+        case CRTRPGPGM:
+          /* 
+          For OPM, create temp members if source is IFS (reverse migration).
+          ParamCmdSequence.put(compilationCommand, ParamCmd.SRCSTMF, stmfPath);
+          migrator.IfsToMember(ParamCmdSequence.get(ParamCmd.SRCSTMF), Library);
+          ParamCmdSequence.remove(ParamCmd.SRCFILE);  // Switch to stream file
+          ParamCmdSequence.put(compilationCommand, ParamCmd.SRCMBR, member);
+          */
+          break;
+
+        case CRTDSPF:
+        case CRTPF:
+        case CRTLF:
+        case CRTPRTF:
+        case CRTMNU:
+        case CRTQMQRY:
+            break;
+      }
+
+      ParamCmdSequence.executeCommand(compilationCommand);    
+
+      //TODO: Idea: Crete a cursor of library list and iter over it to execute this command. Sound interesting, i don't know if it is useful.
+      // TODO: CHKOBJ OBJ(ROBKRAUDY2/CUSTOMER) OBJTYPE(*FILE)
+      // DLTOBJ OBJ(ROBKRAUDY2/CUSTOMER) OBJTYPE(*FILE)
+      // Maybe i can put these in another parameter, like, a pre or post pattern of commands using a map   
+
+      System.out.println(ParamCmdSequence.getExecutionChain());
+
       //TODO: Do this after defaults
       applySpecToCompiler(spec.defaults, target);
 
     }
-
-    //TODO: Add --dry-run to just run without executing. Just to generate the command string
-    this.ParamCmdSequence = new ParamMap(this.debug, this.verbose, this.connection);
-    cleanLibraryList();
-
-    // Migrator
-    try {
-      this.migrator = new SourceMigrator(this.system, this.connection, true, true);
-    } catch (Exception e){
-      if (debug) e.printStackTrace();
-      if (verbose) System.err.println("Could not initialize migrator");
-      throw new RuntimeException("Failed to initialize migrator: " + e.getMessage(), e);
-    }
-
-    //TODO: Should i do ADDLIBLE library *FIRST too?
-    setCurLib(targetKey.library);
-
-    showLibraryList();
-
-    CompCmd compilationCommand = CompilationPattern.getCompilationCommand(this.targetKey.sourceType, this.targetKey.objectType);
-
-    sourceFile = sourceFile.isEmpty() ? SourceType.defaultSourcePf(this.targetKey.sourceType, this.targetKey.objectType) : sourceFile;
-    sourceName = sourceName.isEmpty() ? this.targetKey.objectName : sourceName;
-
-    this.odes = new ObjectDescription(
-          connection,
-          debug,
-          verbose,
-          compilationCommand,
-          targetKey,
-          //TODO: Remove these and change it in the key
-          sourceFile,
-          sourceName
-    );
-
-    this.ParamCmdSequence = this.odes.SetCompilationParams(this.ParamCmdSequence);
-
-    try {
-      this.ParamCmdSequence = odes.getObjectInfo(this.ParamCmdSequence, compilationCommand);
-    } catch (Exception e) {
-      //TODO: Change logging for SLF4J or java.util.logging 
-      if (debug) e.printStackTrace();
-      if (verbose) System.err.println("Object not found; using defaults.");
-    }
-
-    /* Parameters values, if provided, overwrite retrieved values */
-    if (!text.isEmpty()) ParamCmdSequence.put(compilationCommand, ParamCmd.TEXT, text);
-    if (!actGrp.isEmpty()) ParamCmdSequence.put(compilationCommand, ParamCmd.ACTGRP, actGrp);
-    if (!modules.isEmpty()) {
-      StringBuilder sb = new StringBuilder(); 
-      for (String mod: modules){
-        sb.append(ValCmd.LIBL.toString() + "/" + mod);
-        sb.append(" ");
-      }
-      ParamCmdSequence.put(compilationCommand, ParamCmd.MODULE, sb.toString().trim());
-
-    }
-    if (!this.sourceStmf.isEmpty()) {
-      ParamCmdSequence.put(compilationCommand, ParamCmd.SRCSTMF, "'" + this.sourceStmf + "'");
-      ParamCmdSequence.put(compilationCommand, ParamCmd.TGTCCSID, ValCmd.JOB);
-    }
-
-
-    switch (compilationCommand){
-      case CRTCLMOD:
-        break;
-
-      case CRTRPGMOD:
-      case CRTBNDRPG:
-      case CRTBNDCL:
-      case CRTSQLRPGI:
-      case CRTSRVPGM:
-      case RUNSQLSTM:
-        if (!ParamCmdSequence.containsKey(compilationCommand, ParamCmd.SRCSTMF)) {
-          System.out.println("SRCFILE data: " + ParamCmdSequence.get(compilationCommand, ParamCmd.SRCFILE));
-          //TODO: This could be done directly in ObjectCompiler
-          this.migrator.setParams(ParamCmdSequence.get(compilationCommand, ParamCmd.SRCFILE), targetKey.objectName, "sources");
-          this.migrator.api(); // Try to migrate this thing
-          System.out.println("After calling migration api");
-          
-          ParamCmdSequence.put(compilationCommand, ParamCmd.SRCSTMF, this.migrator.getFirstPath());
-          ParamCmdSequence.put(compilationCommand, ParamCmd.TGTCCSID, ValCmd.JOB); // Needed to compile from stream files
-        }
-        break;
-
-      case CRTCLPGM:
-      case CRTRPGPGM:
-        /* 
-        For OPM, create temp members if source is IFS (reverse migration).
-        ParamCmdSequence.put(compilationCommand, ParamCmd.SRCSTMF, stmfPath);
-        migrator.IfsToMember(ParamCmdSequence.get(ParamCmd.SRCSTMF), Library);
-        ParamCmdSequence.remove(ParamCmd.SRCFILE);  // Switch to stream file
-        ParamCmdSequence.put(compilationCommand, ParamCmd.SRCMBR, member);
-        */
-        break;
-
-      case CRTDSPF:
-      case CRTPF:
-      case CRTLF:
-      case CRTPRTF:
-      case CRTMNU:
-      case CRTQMQRY:
-          break;
-    }
-
-    ParamCmdSequence.executeCommand(compilationCommand);    
-
-    //TODO: Idea: Crete a cursor of library list and iter over it to execute this command. Sound interesting, i don't know if it is useful.
-    // TODO: CHKOBJ OBJ(ROBKRAUDY2/CUSTOMER) OBJTYPE(*FILE)
-    // DLTOBJ OBJ(ROBKRAUDY2/CUSTOMER) OBJTYPE(*FILE)
-    // Maybe i can put these in another parameter, like, a pre or post pattern of commands using a map   
-
-    System.out.println(ParamCmdSequence.getExecutionChain());
 
     cleanup();
   }
