@@ -146,9 +146,10 @@ public class CompilationPattern {
 
     YES, NO, STMT, SOURCE, LIST, HEX, JOBRUN, USER, LIBCRTAUT, PEP, NOCOL, PRINT, SNGLVL; 
 
+    //TODO: should i remove this?
     public static ValCmd fromString(String value) {
       try {
-          return ValCmd.valueOf(value.substring(1)); // Remove the leading "*" and convert to enum
+          return ValCmd.valueOf(value.replace("*", "")); // Remove the leading "*" and convert to enum
       } catch (IllegalArgumentException e) {
           throw new IllegalArgumentException("Could not convert '" + value + "' to ValCmd. Unknown value: '" + value + "'");
       }

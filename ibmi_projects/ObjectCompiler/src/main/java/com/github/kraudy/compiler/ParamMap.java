@@ -123,12 +123,12 @@ public class ParamMap {
     paramChanges.put(cmd, innerChanges);
   }
 
-  public void showChanges(Command command) {
+  public void getChangesSummary(Command command) {
     System.out.println(command.name());
-    showChanges(getPattern(command), getChanges(command));
+    getChangesSummary(getPattern(command), getChanges(command));
   }
 
-  public void showChanges(List<ParamCmd> compilationPattern, Map<ParamCmd, String> paramChanges) {
+  public void getChangesSummary(List<ParamCmd> compilationPattern, Map<ParamCmd, String> paramChanges) {
     for (ParamCmd param : compilationPattern) {
       getChangeString(paramChanges.getOrDefault(param, ""), param);
     }
@@ -140,11 +140,11 @@ public class ParamMap {
     System.out.println(change);
   }
   
-  public String getParamChain(Command command){
-    return getParamChain(getPattern(command), get(command), command.name());
+  public String getCommandString(Command command){
+    return getCommandString(getPattern(command), get(command), command.name());
   }
 
-  public String getParamChain(List<ParamCmd> compilationPattern, Map<ParamCmd, String> paramMap, String command){
+  public String getCommandString(List<ParamCmd> compilationPattern, Map<ParamCmd, String> paramMap, String command){
     StringBuilder sb = new StringBuilder(); 
 
     sb.append(command);
@@ -158,8 +158,8 @@ public class ParamMap {
 
   public void executeCommand(Command cmd){
     ResolveConflicts(cmd);
-    showChanges(cmd);
-    executeCommand(getParamChain(cmd));
+    getChangesSummary(cmd);
+    executeCommand(getCommandString(cmd));
   }
 
   public void ResolveConflicts(Command cmd){
