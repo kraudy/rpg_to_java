@@ -12,7 +12,7 @@ public class BuildSpec {
   public LinkedHashMap<String, TargetSpec> targets = new LinkedHashMap<>();
 
   public static class TargetSpec {
-      //TODO: This should be a simple map of Param: Value and just add it to the linked list
+      //TODO: This should be a simple ParamMap: Value and just add it to the linked list
       public String dbgview;
       public String actgrp;
       public String text;
