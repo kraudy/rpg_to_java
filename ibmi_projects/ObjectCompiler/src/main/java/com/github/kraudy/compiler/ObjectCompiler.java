@@ -8,6 +8,9 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 import com.github.kraudy.compiler.CompilationPattern.CompCmd;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
@@ -155,6 +158,8 @@ public class ObjectCompiler implements Runnable{
   public void run() {
     
     /* Try to get compilation params from object. If it exists. */
+
+    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
     //TODO: Add --dry-run to just run without executing. Just to generate the command string
     this.ParamCmdSequence = new ParamMap(this.debug, this.verbose, this.connection);
