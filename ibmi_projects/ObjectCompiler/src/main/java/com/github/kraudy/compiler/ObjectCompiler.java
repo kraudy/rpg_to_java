@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -334,18 +335,52 @@ public class ObjectCompiler implements Runnable{
     this.ParamCmdSequence.executeCommand(SysCmd.CHGCURLIB);
   }
 
-  private void applySpecToCompiler(CompCmd compilationCommand, Map<String,Object> defaults, BuildSpec.TargetSpec t) {
-    // Merge defaults → target (target wins)
-    //TODO: Maybe all this can be just a putAll
-    Map<String, Object> merged = new HashMap<>(defaults);
-    if (t != null && t.extra != null) merged.putAll(t.extra);
+  private void applySpecToCompiler(CompCmd cmd, Map<ParamCmd, Object> defaults, BuildSpec.TargetSpec target) {
+    // Apply defaults first
+    if (defaults != null) {
+        defaults.forEach((param, value) -> putParam(cmd, param, value));
+    }
 
-    if (t.dbgview != null) ParamCmdSequence.put(compilationCommand, ParamCmd.DBGVIEW, ValCmd.fromString(t.dbgview));
-    if (t.actgrp != null) ParamCmdSequence.put(compilationCommand, ParamCmd.ACTGRP, t.actgrp);
-    if (t.text != null) ParamCmdSequence.put(compilationCommand, ParamCmd.TEXT, "'" + t.text + "'");
-    //TODO: Maybe add an override for a list like modules to build the string
-    //if (t.modules != null) ParamCmdSequence.put(compilationCommand, ParamCmd.MODULE, t.modules);
-    // ... etc
+    // Then target-specific overrides
+    if (target != null && target.params != null) {
+        target.params.forEach((param, value) -> putParam(cmd, param, value));
+    }
+  }
+
+  //TODO: Maybe i could add this putParam logic directly to the paramMap to just use putAll
+  private void putParam(CompCmd cmd, ParamCmd param, Object value) {
+    if (value == null) return;
+
+    String strValue = value.toString().trim();
+
+    // Auto-handle ValCmd enum values
+    if (value instanceof ValCmd) {
+      ValCmd valCmd = (ValCmd) value;
+      ParamCmdSequence.put(cmd, param, valCmd);
+    }
+    // Handle booleans: yes/no → *YES/*NO
+    else if ("yes".equalsIgnoreCase(strValue) || "true".equalsIgnoreCase(strValue)) {
+        ParamCmdSequence.put(cmd, param, ValCmd.YES);
+    }
+    else if ("no".equalsIgnoreCase(strValue) || "false".equalsIgnoreCase(strValue)) {
+        ParamCmdSequence.put(cmd, param, ValCmd.NO);
+    }
+    // Handle quoted text
+    else if (param == ParamCmd.TEXT) {
+        ParamCmdSequence.put(cmd, param, "'" + strValue.replace("'", "''") + "'");
+    }
+    // Handle modules list
+    else if (param == ParamCmd.MODULE && value instanceof List<?>) {
+        List<String> list = (List<String>) value;
+        String joined = list.stream()
+            .map(Object::toString)
+            .map(s -> "*LIBL/" + s)
+            .collect(Collectors.joining(" "));
+        ParamCmdSequence.put(cmd, param, joined);
+    }
+    else {
+        ParamCmdSequence.put(cmd, param, strValue);
+    }
   }
 
   //TODO: This is kinda slow.
