@@ -97,7 +97,7 @@ public class ObjectCompiler implements Runnable{
   }
 
   /* Object attributes. Required params */
-  @Option(names = {"-tk","--target-key"}, required = true, description = "Target key: library.objectName.objectType[.sourceType] (e.g., MYLIB.HELLO.PGM.RPGLE)", converter = TargetKeyConverter.class)
+  @Option(names = {"-tk","--target-key"}, description = "Target key: library.objectName.objectType[.sourceType] (e.g., MYLIB.HELLO.PGM.RPGLE)", converter = TargetKeyConverter.class)
   private Utilities.ParsedKey targetKey;
 
   /* Source-related params. Good to have */
@@ -186,13 +186,12 @@ public class ObjectCompiler implements Runnable{
 
       Utilities.ParsedKey key = new Utilities.ParsedKey(keyStr);
       
-      // Apply defaults + target overrides
+      // *** Reset per-target fields ***
+      this.sourceFile = "";
+      this.sourceName = "";
+      this.sourceStmf = "";
 
-      //TODO: Add --dry-run to just run without executing. Just to generate the command string
-      this.ParamCmdSequence = new ParamMap(this.debug, this.verbose, this.connection);
-      cleanLibraryList();
-
-      // Migrator
+      // Re-create migrator fresh for every target (safest)
       try {
         this.migrator = new SourceMigrator(this.system, this.connection, true, true);
       } catch (Exception e){
@@ -201,7 +200,9 @@ public class ObjectCompiler implements Runnable{
         throw new RuntimeException("Failed to initialize migrator: " + e.getMessage(), e);
       }
 
-      //TODO: Should i do ADDLIBLE library *FIRST too?
+      //TODO: Add --dry-run to just run without executing. Just to generate the command string
+      this.ParamCmdSequence = new ParamMap(this.debug, this.verbose, this.connection);
+      cleanLibraryList();
       setCurLib(key.library);
 
       showLibraryList();
@@ -212,14 +213,9 @@ public class ObjectCompiler implements Runnable{
       sourceName = sourceName.isEmpty() ? key.objectName : sourceName;
 
       this.odes = new ObjectDescription(
-            connection,
-            debug,
-            verbose,
-            compilationCommand,
-            key,
+            connection, debug, verbose, compilationCommand, key,
             //TODO: Remove these and change it in the key
-            sourceFile,
-            sourceName
+            sourceFile, sourceName
       );
 
       this.ParamCmdSequence = this.odes.SetCompilationParams(this.ParamCmdSequence);
@@ -244,6 +240,9 @@ public class ObjectCompiler implements Runnable{
         ParamCmdSequence.put(compilationCommand, ParamCmd.MODULE, sb.toString().trim());
 
       }
+      //TODO: Do this after defaults
+      applySpecToCompiler(compilationCommand, spec.defaults, target);
+
       if (!this.sourceStmf.isEmpty()) {
         ParamCmdSequence.put(compilationCommand, ParamCmd.SRCSTMF, "'" + this.sourceStmf + "'");
         ParamCmdSequence.put(compilationCommand, ParamCmd.TGTCCSID, ValCmd.JOB);
@@ -301,9 +300,6 @@ public class ObjectCompiler implements Runnable{
 
       System.out.println(ParamCmdSequence.getExecutionChain());
 
-      //TODO: Do this after defaults
-      applySpecToCompiler(spec.defaults, target);
-
     }
 
     cleanup();
@@ -332,20 +328,23 @@ public class ObjectCompiler implements Runnable{
 
   }
 
+  //TODO: Should i do ADDLIBLE library *FIRST too?
   private void setCurLib(String library){
     this.ParamCmdSequence.put(SysCmd.CHGCURLIB, ParamCmd.CURLIB, library);
     this.ParamCmdSequence.executeCommand(SysCmd.CHGCURLIB);
   }
 
-  private void applySpecToCompiler(Map<String,Object> defaults, BuildSpec.TargetSpec t) {
+  private void applySpecToCompiler(CompCmd compilationCommand, Map<String,Object> defaults, BuildSpec.TargetSpec t) {
     // Merge defaults → target (target wins)
+    //TODO: Maybe all this can be just a putAll
     Map<String, Object> merged = new HashMap<>(defaults);
     if (t != null && t.extra != null) merged.putAll(t.extra);
 
-    if (t.dbgview != null) this.dbgView = t.dbgview;
-    if (t.actgrp != null) this.actGrp = t.actgrp;
-    if (t.text != null) this.text = t.text;
-    if (t.modules != null) this.modules = t.modules;
+    if (t.dbgview != null) ParamCmdSequence.put(compilationCommand, ParamCmd.DBGVIEW, ValCmd.fromString(t.dbgview));
+    if (t.actgrp != null) ParamCmdSequence.put(compilationCommand, ParamCmd.ACTGRP, t.actgrp);
+    if (t.text != null) ParamCmdSequence.put(compilationCommand, ParamCmd.TEXT, "'" + t.text + "'");
+    //TODO: Maybe add an override for a list like modules to build the string
+    //if (t.modules != null) ParamCmdSequence.put(compilationCommand, ParamCmd.MODULE, t.modules);
     // ... etc
   }
 
