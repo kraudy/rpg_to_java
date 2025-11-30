@@ -268,6 +268,11 @@ public class ParamMap {
     }
     this.CmdExecutionChain.append(command);
 
+    /* Dry run just returns before executing the command */
+    if(dryRun){
+      return;
+    }
+
     try (Statement cmdStmt = connection.createStatement()) {
       cmdStmt.execute("CALL QSYS2.QCMDEXC('" + command + "')");
     } catch (SQLException e) {
