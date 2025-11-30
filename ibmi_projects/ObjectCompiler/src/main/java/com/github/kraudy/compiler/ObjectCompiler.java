@@ -170,6 +170,7 @@ public class ObjectCompiler implements Runnable{
       File f = new File(yamlFile);
       if (!f.exists()) throw new RuntimeException("YAML file not found: " + yamlFile);
       try{
+        /* Diserialize yaml file */
         spec = mapper.readValue(f, BuildSpec.class);
       } catch (Exception e) {
         e.printStackTrace();
@@ -202,7 +203,7 @@ public class ObjectCompiler implements Runnable{
       }
 
       //TODO: Add --dry-run to just run without executing. Just to generate the command string
-      this.ParamCmdSequence = new ParamMap(this.debug, this.verbose, this.connection);
+      this.ParamCmdSequence = new ParamMap(this.debug, this.verbose, this.connection, this.dryRun);
       cleanLibraryList();
       setCurLib(key.library);
 

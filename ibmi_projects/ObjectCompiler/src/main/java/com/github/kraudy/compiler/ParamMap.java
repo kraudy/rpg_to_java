@@ -23,16 +23,18 @@ public class ParamMap {
   public final Connection connection;
   private final boolean debug;
   private final boolean verbose;
+  private boolean dryRun;
 
   private final Map<Command, Map<ParamCmd, String>> paramMap = new HashMap<>();
   private final Map<Command, Map<ParamCmd, String>> paramChanges = new HashMap<>();
   private final StringBuilder CmdExecutionChain = new StringBuilder();
   
 
-  public ParamMap(boolean debug, boolean verbose, Connection connection) {
+  public ParamMap(boolean debug, boolean verbose, Connection connection, boolean dryRun) {
     this.debug = debug;
     this.verbose = verbose;
     this.connection = connection;
+    this.dryRun = dryRun;
   }
 
   public boolean containsKey(Command cmd, ParamCmd param) {

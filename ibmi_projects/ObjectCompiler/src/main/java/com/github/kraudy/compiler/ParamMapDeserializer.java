@@ -27,7 +27,9 @@ public class ParamMapDeserializer extends JsonDeserializer<Map<ParamCmd, Object>
       String key = field.getKey();
       JsonNode valueNode = field.getValue();
 
+      /* This validates if the YAML node has a valid param name */
       ParamCmd param = safeValueOf(key);
+      /* Get param value */
       Object value = valueNode.isTextual() ? valueNode.asText() :
                       valueNode.isBoolean() ? valueNode.asBoolean() :
                       valueNode.isInt() ? valueNode.asInt() :
