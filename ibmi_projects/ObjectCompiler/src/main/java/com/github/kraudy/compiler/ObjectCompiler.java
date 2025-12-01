@@ -300,11 +300,6 @@ public class ObjectCompiler implements Runnable{
         }
 
         ParamCmdSequence.executeCommand(compilationCommand);    
-
-        //TODO: Idea: Crete a cursor of library list and iter over it to execute this command. Sound interesting, i don't know if it is useful.
-        // TODO: CHKOBJ OBJ(ROBKRAUDY2/CUSTOMER) OBJTYPE(*FILE)
-        // DLTOBJ OBJ(ROBKRAUDY2/CUSTOMER) OBJTYPE(*FILE)
-        // Maybe i can put these in another parameter, like, a pre or post pattern of commands using a map  
         
         // Per-target success hook
         ParamCmdSequence.executeRawCommands(target.onSuccess, "onSuccess (target: " + keyStr + ")");
