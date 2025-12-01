@@ -158,6 +158,28 @@ public class ParamMap {
     return sb.toString();
   }
 
+  //TODO: Fix this to just use executeCommand
+  public void executeRawCommands(List<String> commands, String phase) {
+    if (commands == null || commands.isEmpty()) return;
+
+    System.out.println("=== " + phase.toUpperCase() + " COMMANDS ===");
+    for (String cmd : commands) {
+      if (cmd == null || cmd.trim().isEmpty()) continue;
+
+      String trimmed = cmd.trim();
+      if (trimmed.startsWith("#") || trimmed.startsWith("//")) {
+        // Allow comments
+        System.out.println("# " + trimmed.substring(1).trim());
+        continue;
+      }
+
+      System.out.println("Executing: " + trimmed);
+      executeCommand(trimmed);
+
+    }
+    System.out.println("=== END " + phase.toUpperCase() + " ===\n");
+  }
+
   public void executeCommand(Command cmd){
     ResolveConflicts(cmd);
     getChangesSummary(cmd);

@@ -17,6 +17,10 @@ public class BuildSpec {
   // Ordered targets
   public final LinkedHashMap<String, TargetSpec> targets = new LinkedHashMap<>();
 
+  // NEW: Global pre/post compilation commands
+  public List<String> before;
+  public List<String> after;
+
   // Required no-arg constructor (Jackson uses this)
   public BuildSpec() {
       // everything is already initialized
@@ -26,6 +30,9 @@ public class BuildSpec {
     @JsonDeserialize(using = ParamMapDeserializer.class)
     public final Map<ParamCmd, Object> params = new HashMap<>();
 
+    public List<String> before;   // optional per-target
+    public List<String> after;    // optional per-target
+    
     public List<String> onSuccess;
     public List<String> onFailure;
 
