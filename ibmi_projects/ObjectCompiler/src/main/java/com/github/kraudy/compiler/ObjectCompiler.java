@@ -238,7 +238,6 @@ public class ObjectCompiler implements Runnable{
           if (verbose) System.err.println("Object not found; using defaults.");
         }
 
-        //TODO: Move these to applySpecToCompiler
         /* Parameters values, if provided, overwrite retrieved values */
         if (!text.isEmpty()) ParamCmdSequence.put(compilationCommand, ParamCmd.TEXT, text);
         if (!actGrp.isEmpty()) ParamCmdSequence.put(compilationCommand, ParamCmd.ACTGRP, actGrp);
@@ -251,8 +250,7 @@ public class ObjectCompiler implements Runnable{
           ParamCmdSequence.put(compilationCommand, ParamCmd.MODULE, sb.toString().trim());
 
         }
-        //TODO: Do this after defaults
-        applySpecToCompiler(compilationCommand, spec.defaults, target);
+
         /* Set global defaults params */
         ParamCmdSequence.put(compilationCommand, spec.defaults);
         /* Set specific target params */
@@ -354,18 +352,6 @@ public class ObjectCompiler implements Runnable{
   private void setCurLib(String library){
     this.ParamCmdSequence.put(SysCmd.CHGCURLIB, ParamCmd.CURLIB, library);
     this.ParamCmdSequence.executeCommand(SysCmd.CHGCURLIB);
-  }
-
-  private void applySpecToCompiler(CompCmd cmd, Map<ParamCmd, Object> defaults, BuildSpec.TargetSpec target) {
-    // Apply defaults first
-    if (defaults != null) {
-        defaults.forEach((param, value) -> putParam(cmd, param, value));
-    }
-
-    // Then target-specific overrides
-    if (target != null && target.params != null) {
-        target.params.forEach((param, value) -> putParam(cmd, param, value));
-    }
   }
 
 
