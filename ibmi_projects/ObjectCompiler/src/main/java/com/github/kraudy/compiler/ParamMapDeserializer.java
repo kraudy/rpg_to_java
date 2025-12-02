@@ -18,18 +18,22 @@ public class ParamMapDeserializer extends JsonDeserializer<Map<ParamCmd, Object>
   public Map<ParamCmd, Object> deserialize(JsonParser p, DeserializationContext ctxt)
         throws IOException, JacksonException {
 
+    /* Get tree */
     ObjectNode node = p.getCodec().readTree(p);
+    /* New map to store Param: Value */
     Map<ParamCmd, Object> result = new HashMap<>();
 
     Iterator<Map.Entry<String, JsonNode>> fields = node.fields();
     while (fields.hasNext()) {
       Map.Entry<String, JsonNode> field = fields.next();
+      /* Get param */
       String key = field.getKey();
+      /* Get param value */
       JsonNode valueNode = field.getValue();
 
       /* This validates if the YAML node has a valid param name */
       ParamCmd param = safeValueOf(key);
-      /* Get param value */
+      /* Get param value from json node */
       Object value = valueNode.isTextual() ? valueNode.asText() :
                       valueNode.isBoolean() ? valueNode.asBoolean() :
                       valueNode.isInt() ? valueNode.asInt() :
@@ -45,6 +49,7 @@ public class ParamMapDeserializer extends JsonDeserializer<Map<ParamCmd, Object>
 
       result.put(param, value);
     }
+    
     return result;
   }
 

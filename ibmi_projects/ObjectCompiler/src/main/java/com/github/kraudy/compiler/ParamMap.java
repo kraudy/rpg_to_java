@@ -82,11 +82,11 @@ public class ParamMap {
     return oldValue;
   }
 
-  public void put(Command cmd, Map<ParamCmd, Object> defaults) {
-    if (defaults == null) return;
+  public void put(Command cmd, Map<ParamCmd, Object> params) {
+    if (params == null) return;
 
 
-    defaults.forEach((param, value) -> put(cmd, param, value));
+    params.forEach((param, value) -> put(cmd, param, value));
 
   }
 
