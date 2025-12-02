@@ -188,8 +188,6 @@ public class ObjectCompiler implements Runnable{
 
       try{
         // Per-target before (optional)
-        //TODO: Only add them using .put and then call the execution command
-        ParamCmdSequence.executeRawCommands(target.before, "before (target: " + keyStr + ")");
 
         Utilities.ParsedKey key = new Utilities.ParsedKey(keyStr);
         
@@ -209,6 +207,11 @@ public class ObjectCompiler implements Runnable{
 
         //TODO: Add --dry-run to just run without executing. Just to generate the command string
         this.ParamCmdSequence = new ParamMap(this.debug, this.verbose, this.connection, this.dryRun);
+
+        //TODO: Only add them using .put and then call the execution command
+        //ParamCmdSequence.executeRawCommands(target.before, "before (target: " + keyStr + ")");
+        //ParamCmdSequence.put(spec.before);
+
         cleanLibraryList();
         setCurLib(key.library);
 
@@ -250,6 +253,10 @@ public class ObjectCompiler implements Runnable{
         }
         //TODO: Do this after defaults
         applySpecToCompiler(compilationCommand, spec.defaults, target);
+        /* Set global defaults params */
+        ParamCmdSequence.put(compilationCommand, spec.defaults);
+        /* Set specific target params */
+        ParamCmdSequence.put(compilationCommand, target.params);
 
         if (!this.sourceStmf.isEmpty()) {
           ParamCmdSequence.put(compilationCommand, ParamCmd.SRCSTMF, "'" + this.sourceStmf + "'");

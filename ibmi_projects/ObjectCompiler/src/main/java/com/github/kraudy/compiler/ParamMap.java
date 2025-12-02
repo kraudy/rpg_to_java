@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.List;
 
 import com.github.kraudy.compiler.CompilationPattern.Command;
@@ -79,6 +80,51 @@ public class ParamMap {
     put(cmd, paramMap, paramChanges);
 
     return oldValue;
+  }
+
+  public void put(Command cmd, Map<ParamCmd, Object> defaults) {
+    if (defaults == null) return;
+
+
+    defaults.forEach((param, value) -> put(cmd, param, value));
+
+  }
+
+  public String put(Command cmd, ParamCmd param, Object value) {
+    //TODO: toString() should work on any case
+    if (value instanceof String) {
+      String strValue = value.toString().trim();  
+      
+      if ("yes".equalsIgnoreCase(strValue) || "true".equalsIgnoreCase(strValue)) {
+        return this.put(cmd, param, ValCmd.YES);
+      }
+        
+      if ("no".equalsIgnoreCase(strValue) || "false".equalsIgnoreCase(strValue)) {
+        return this.put(cmd, param, ValCmd.NO);
+      }
+        
+      return this.put(cmd, param, strValue);
+    }
+
+    if (value instanceof ValCmd) {
+      ValCmd valCmd = (ValCmd) value;
+      return this.put(cmd, param, valCmd);
+    }
+
+    // Handle modules list
+    if (value instanceof List<?>) {
+      if(param != ParamCmd.MODULE){
+        return "";
+      } 
+      List<String> list = (List<String>) value;
+      String joined = list.stream()
+          .map(Object::toString)
+          .map(s -> "*LIBL/" + s)
+          .collect(Collectors.joining(" "));
+      return this.put(cmd, param, joined);
+    }
+    
+    return put(cmd, param, value.toString());
   }
 
   public String put(Command cmd, ParamCmd param, ValCmd value) {

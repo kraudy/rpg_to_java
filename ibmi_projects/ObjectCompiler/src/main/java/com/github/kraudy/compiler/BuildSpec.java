@@ -17,6 +17,10 @@ public class BuildSpec {
   // Ordered targets
   public final LinkedHashMap<String, TargetSpec> targets = new LinkedHashMap<>();
 
+  //TODO: Change the list for these maps
+  //public Map<SysCmd, Object> before;
+  //public Map<SysCmd, Object> after;
+
   // NEW: Global pre/post compilation commands
   public List<String> before;
   public List<String> after;
