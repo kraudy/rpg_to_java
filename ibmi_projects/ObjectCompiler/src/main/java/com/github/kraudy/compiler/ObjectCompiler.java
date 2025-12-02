@@ -177,8 +177,9 @@ public class ObjectCompiler implements Runnable{
       }
     } else if (targetKey != null) {
       // backward compatibility: single object mode
-      spec = new BuildSpec();
-      spec.targets.put(targetKey.asString(), new BuildSpec.TargetSpec());
+      //TODO: Maybe i should add a param here to override values or just create a new
+      // paramMap for input ci values
+      spec = new BuildSpec(targetKey);
     }
 
     /* This is intended for a YAML file with multiple objects in toposort order */

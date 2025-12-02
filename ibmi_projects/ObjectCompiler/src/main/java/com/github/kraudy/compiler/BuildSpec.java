@@ -2,7 +2,9 @@ package com.github.kraudy.compiler;
 
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.github.kraudy.compiler.BuildSpec.TargetSpec;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
+import com.github.kraudy.compiler.Utilities.ParsedKey;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -25,9 +27,10 @@ public class BuildSpec {
   public List<String> before;
   public List<String> after;
 
-  // Required no-arg constructor (Jackson uses this)
-  public BuildSpec() {
-      // everything is already initialized
+  public BuildSpec(ParsedKey targetKey) {
+    TargetSpec spec = new TargetSpec();
+    //TODO: Add specific spec params here
+    this.targets.put(targetKey.asString(),  spec);
   }
 
   public static class TargetSpec {
