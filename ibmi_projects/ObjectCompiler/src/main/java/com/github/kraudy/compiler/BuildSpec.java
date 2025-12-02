@@ -6,12 +6,19 @@ import com.github.kraudy.compiler.BuildSpec.TargetSpec;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.Utilities.ParsedKey;
 
+import java.sql.Connection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/* This class represents the pattern of the YAML file */
 public class BuildSpec {
+  public final Connection connection;
+  private final boolean debug;
+  private final boolean verbose;
+  private boolean dryRun;
+  
   // Global defaults – deserialized by our custom deserializer
   @JsonDeserialize(using = ParamMapDeserializer.class)
   public final Map<ParamCmd, Object> defaults = new HashMap<>();
@@ -27,10 +34,21 @@ public class BuildSpec {
   public List<String> before;
   public List<String> after;
 
-  public BuildSpec(ParsedKey targetKey) {
+  public BuildSpec(boolean debug, boolean verbose, Connection connection, boolean dryRun) {
+    this.debug = debug;
+    this.verbose = verbose;
+    this.connection = connection;
+    this.dryRun = dryRun;
+  }
+
+  public BuildSpec(ParsedKey targetKey, boolean debug, boolean verbose, Connection connection, boolean dryRun) {
     TargetSpec spec = new TargetSpec();
     //TODO: Add specific spec params here
     this.targets.put(targetKey.asString(),  spec);
+    this.debug = debug;
+    this.verbose = verbose;
+    this.connection = connection;
+    this.dryRun = dryRun;
   }
 
   public static class TargetSpec {

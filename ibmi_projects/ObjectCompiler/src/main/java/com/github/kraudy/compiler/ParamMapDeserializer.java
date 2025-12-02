@@ -23,6 +23,7 @@ public class ParamMapDeserializer extends JsonDeserializer<Map<ParamCmd, Object>
     /* New map to store Param: Value */
     Map<ParamCmd, Object> result = new HashMap<>();
 
+    /* TODO: Maybe i could add the JsonNode method directly to the ParamMap put method */
     Iterator<Map.Entry<String, JsonNode>> fields = node.fields();
     while (fields.hasNext()) {
       Map.Entry<String, JsonNode> field = fields.next();
