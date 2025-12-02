@@ -368,57 +368,6 @@ public class ObjectCompiler implements Runnable{
     }
   }
 
-  //TODO: Maybe i could add this putParam logic directly to the paramMap to just use putAll
-  private void putParam(CompCmd cmd, ParamCmd param, Object value) {
-    if (value == null) return;
-
-    //String strValue = value.toString().trim();
-
-    // Auto-handle ValCmd enum values
-    if (value instanceof String) {
-      String strValue = value.toString().trim();   
-
-     if ("yes".equalsIgnoreCase(strValue) || "true".equalsIgnoreCase(strValue)) {
-        ParamCmdSequence.put(cmd, param, ValCmd.YES);
-        return;
-      }
-      
-      if ("no".equalsIgnoreCase(strValue) || "false".equalsIgnoreCase(strValue)) {
-        ParamCmdSequence.put(cmd, param, ValCmd.NO);
-        return;
-      }
-      // Handle quoted text
-      if (param == ParamCmd.TEXT) {
-        ParamCmdSequence.put(cmd, param, "'" + strValue.replace("'", "''") + "'");
-        return;
-      }
-      
-      ParamCmdSequence.put(cmd, param, strValue);
-      return;
-    }
-
-    // Auto-handle ValCmd enum values
-    if (value instanceof ValCmd) {
-      ValCmd valCmd = (ValCmd) value;
-      ParamCmdSequence.put(cmd, param, valCmd);
-      return;
-    }
-
-    // Handle booleans: yes/no → *YES/*NO
-    // Handle modules list
-    if (value instanceof List<?>) {
-      if(param != ParamCmd.MODULE){
-        return;
-      } 
-      List<String> list = (List<String>) value;
-      String joined = list.stream()
-          .map(Object::toString)
-          .map(s -> "*LIBL/" + s)
-          .collect(Collectors.joining(" "));
-      ParamCmdSequence.put(cmd, param, joined);
-      return;
-    }
-  }
 
   //TODO: This is kinda slow.
   // String cpysplfCmd = "CPYSPLF FILE(" + objectName + ") TOFILE(QTEMP/SPLFCPY) JOB(*) SPLNBR(*LAST)";
