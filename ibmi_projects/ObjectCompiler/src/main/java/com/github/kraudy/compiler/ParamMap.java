@@ -94,15 +94,6 @@ public class ParamMap {
     //TODO: toString() should work on any case
     if (value instanceof String) {
       String strValue = value.toString().trim();  
-      
-      if ("yes".equalsIgnoreCase(strValue) || "true".equalsIgnoreCase(strValue)) {
-        return this.put(cmd, param, ValCmd.YES);
-      }
-        
-      if ("no".equalsIgnoreCase(strValue) || "false".equalsIgnoreCase(strValue)) {
-        return this.put(cmd, param, ValCmd.NO);
-      }
-        
       return this.put(cmd, param, strValue);
     }
 
