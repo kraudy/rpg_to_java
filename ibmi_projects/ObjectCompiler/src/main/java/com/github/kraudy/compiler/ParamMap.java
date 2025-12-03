@@ -309,6 +309,14 @@ public class ParamMap {
 
   }
 
+  //TODO: Maybe i need to separate the executor from the ParamMap
+  // Maybe move it back to ObjectCompiler
+  public void executeCommand(List<String> commandList){
+    for(String command: commandList){
+      executeCommand(command);
+    }
+  }
+
   public void executeCommand(String command){
     Timestamp commandTime = null;
     try (Statement stmt = connection.createStatement();

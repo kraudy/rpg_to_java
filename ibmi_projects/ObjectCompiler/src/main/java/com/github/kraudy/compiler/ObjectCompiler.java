@@ -183,7 +183,15 @@ public class ObjectCompiler implements Runnable{
       spec = new BuildSpec(targetKey, this.debug, this.verbose, this.connection, this.dryRun);
     }
 
-    /* This is intended for a YAML file with multiple objects in toposort order */
+    /* Global before */
+    //Make this better
+    this.ParamCmdSequence = new ParamMap(this.debug, this.verbose, this.connection, this.dryRun);
+
+    if(!spec.before.isEmpty()){
+      this.ParamCmdSequence.executeCommand(spec.before);
+    }
+
+    /* This is intended for a YAML file with multiple objects in a toposort order */
     for (Map.Entry<String, BuildSpec.TargetSpec> entry : spec.targets.entrySet()) {
       String keyStr = entry.getKey();
       BuildSpec.TargetSpec target = entry.getValue();
@@ -321,9 +329,10 @@ public class ObjectCompiler implements Runnable{
         //ParamCmdSequence.executeRawCommands(target.onFailure, "onFailure (target: " + keyStr + ")");
 
       } finally {
-        // Always run per-target after
-        //ParamCmdSequence.executeRawCommands(target.after, "after (target: " + keyStr + ")");
-        
+        /* Execute global after */
+        if(!spec.after.isEmpty()){
+          this.ParamCmdSequence.executeCommand(spec.after);
+        }
       }
     }
     cleanup();

@@ -8,6 +8,7 @@ import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.Utilities.ParsedKey;
 
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -28,11 +29,11 @@ public class BuildSpec {
   // Global system commands (before/after everything)
   @JsonProperty("before")
   @JsonDeserialize(using = CommandMapDeserializer.class)
-  public final ParamMap before = new ParamMap(false, false, null, false);
+  public final List<String> before = new ArrayList<>();
 
   @JsonProperty("after")
   @JsonDeserialize(using = CommandMapDeserializer.class)
-  public final ParamMap after = new ParamMap(false, false, null, false);
+  public final List<String> after = new ArrayList<>();
 
   //TODO: This could also be used to get a linked list of comand: params
   // Ordered targets
@@ -74,11 +75,11 @@ public class BuildSpec {
     // Per-target system commands
     @JsonProperty("before")
     @JsonDeserialize(using = ParamMapDeserializer.class)
-    public final ParamMap before = new ParamMap(false, false, null, false);
+    public final List<String> before = new ArrayList<>();
 
     @JsonProperty("after")
     @JsonDeserialize(using = ParamMapDeserializer.class)
-    public final ParamMap after = new ParamMap(false, false, null, false);
+    public final List<String> after = new ArrayList<>();
     
     public List<String> onSuccess;
     public List<String> onFailure;

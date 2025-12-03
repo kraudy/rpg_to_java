@@ -18,12 +18,13 @@ import java.util.List;
 import java.util.Map;
 
 
-public class CommandMapDeserializer extends JsonDeserializer<ParamMap> {
+public class CommandMapDeserializer extends JsonDeserializer<List<String>> {
   @Override
-  public ParamMap deserialize(JsonParser p, DeserializationContext ctxt)
+  public List<String> deserialize(JsonParser p, DeserializationContext ctxt)
           throws IOException {
 
-    List<String> paramList = new ArrayList<>();;
+    //TODO: List of commands to be executed. They need to be stored to be later executed. For now, it is a mundane list.
+    List<String> paramList = new ArrayList<>();
 
     //TODO: Maybe i don't need the connection here just for now, maybe just use them as param holders
     ParamMap result = new ParamMap(false, false, null, false);
@@ -72,6 +73,7 @@ public class CommandMapDeserializer extends JsonDeserializer<ParamMap> {
 
       paramList.add(result.getCommandString(sysCmd));
     }
-    return result;
+
+    return paramList;
   }
 }
