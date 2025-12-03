@@ -139,7 +139,7 @@ public class ParamMap {
 
     switch (param) {
       case TEXT:
-        value = "'" + value + "'";
+        value = "''" + value + "''";
         break;
     
       case SRCSTMF:
