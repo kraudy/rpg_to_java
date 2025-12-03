@@ -309,7 +309,7 @@ public class ObjectCompiler implements Runnable{
         ParamCmdSequence.executeCommand(compilationCommand);    
         
         // Per-target success hook
-        ParamCmdSequence.executeRawCommands(target.onSuccess, "onSuccess (target: " + keyStr + ")");
+        //ParamCmdSequence.executeRawCommands(target.onSuccess, "onSuccess (target: " + keyStr + ")");
 
         System.out.println(ParamCmdSequence.getExecutionChain());
 
@@ -318,10 +318,12 @@ public class ObjectCompiler implements Runnable{
         e.printStackTrace();
 
         // Run failure hooks
-        ParamCmdSequence.executeRawCommands(target.onFailure, "onFailure (target: " + keyStr + ")");
+        //ParamCmdSequence.executeRawCommands(target.onFailure, "onFailure (target: " + keyStr + ")");
+
       } finally {
         // Always run per-target after
-        ParamCmdSequence.executeRawCommands(target.after, "after (target: " + keyStr + ")");
+        //ParamCmdSequence.executeRawCommands(target.after, "after (target: " + keyStr + ")");
+        
       }
     }
     cleanup();

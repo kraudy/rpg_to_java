@@ -63,8 +63,12 @@ public class BuildSpec {
     @JsonDeserialize(using = ParamMapDeserializer.class)
     public final Map<ParamCmd, Object> params = new HashMap<>();
 
-    public List<String> before;   // optional per-target
-    public List<String> after;    // optional per-target
+    // Per-target system commands
+    @JsonDeserialize(using = ParamMapDeserializer.class)
+    public final ParamMap before = new ParamMap(false, false, null, false);
+
+    @JsonDeserialize(using = ParamMapDeserializer.class)
+    public final ParamMap after = new ParamMap(false, false, null, false);
     
     public List<String> onSuccess;
     public List<String> onFailure;
