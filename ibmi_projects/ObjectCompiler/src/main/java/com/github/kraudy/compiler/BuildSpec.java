@@ -23,6 +23,14 @@ public class BuildSpec {
   @JsonDeserialize(using = ParamMapDeserializer.class)
   public final Map<ParamCmd, Object> defaults = new HashMap<>();
 
+  // Global system commands (before/after everything)
+  @JsonDeserialize(using = CommandMapDeserializer.class)
+  public final ParamMap sysBefore = new ParamMap(false, false, null, false);
+
+  @JsonDeserialize(using = CommandMapDeserializer.class)
+  public final ParamMap sysAfter = new ParamMap(false, false, null, false);
+
+  //TODO: This could also be used to get a linked list of comand: params
   // Ordered targets
   public final LinkedHashMap<String, TargetSpec> targets = new LinkedHashMap<>();
 
