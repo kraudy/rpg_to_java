@@ -11,8 +11,10 @@ import com.github.kraudy.compiler.CompilationPattern.SysCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 
@@ -21,50 +23,54 @@ public class CommandMapDeserializer extends JsonDeserializer<ParamMap> {
   public ParamMap deserialize(JsonParser p, DeserializationContext ctxt)
           throws IOException {
 
+    List<String> paramList = new ArrayList<>();;
+
     //TODO: Maybe i don't need the connection here just for now, maybe just use them as param holders
     ParamMap result = new ParamMap(false, false, null, false);
     ObjectNode node = p.getCodec().readTree(p);
 
     Iterator<Map.Entry<String, JsonNode>> fields = node.fields();
     while (fields.hasNext()) {
-        Map.Entry<String, JsonNode> entry = fields.next();
-        String cmdName = entry.getKey().toUpperCase();
-        JsonNode paramsNode = entry.getValue();
+      Map.Entry<String, JsonNode> entry = fields.next();
+      String cmdName = entry.getKey().toUpperCase();
+      JsonNode paramsNode = entry.getValue();
 
-        //TODO: Add CompCmd validation
-        SysCmd sysCmd;
-        try {
-            sysCmd = SysCmd.valueOf(cmdName);
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Unknown system command: " + cmdName);
-        }
+      //TODO: Add CompCmd validation
+      SysCmd sysCmd;
+      try {
+          sysCmd = SysCmd.valueOf(cmdName);
+      } catch (IllegalArgumentException e) {
+          throw new IllegalArgumentException("Unknown system command: " + cmdName);
+      }
 
-        if (!paramsNode.isObject()) {
-            throw new IllegalArgumentException("Parameters for " + cmdName + " must be a map");
-        }
+      if (!paramsNode.isObject()) {
+          throw new IllegalArgumentException("Parameters for " + cmdName + " must be a map");
+      }
 
-        ObjectNode paramObj = (ObjectNode) paramsNode;
-        Iterator<Map.Entry<String, JsonNode>> paramFields = paramObj.fields();
-        while (paramFields.hasNext()) {
-            Map.Entry<String, JsonNode> paramEntry = paramFields.next();
-            String paramName = paramEntry.getKey().toUpperCase();
-            JsonNode valueNode = paramEntry.getValue();
+      ObjectNode paramObj = (ObjectNode) paramsNode;
+      Iterator<Map.Entry<String, JsonNode>> paramFields = paramObj.fields();
+      while (paramFields.hasNext()) {
+          Map.Entry<String, JsonNode> paramEntry = paramFields.next();
+          String paramName = paramEntry.getKey().toUpperCase();
+          JsonNode valueNode = paramEntry.getValue();
 
-            ParamCmd paramCmd = ParamCmd.valueOf(paramName);
+          ParamCmd paramCmd = ParamCmd.valueOf(paramName);
 
-            Object value = valueNode.isTextual() ? valueNode.asText()
-                          : valueNode.isBoolean() ? valueNode.asBoolean()
-                          : valueNode.isInt() ? valueNode.asInt()
-                          : valueNode.traverse(p.getCodec()).readValueAs(Object.class);
+          Object value = valueNode.isTextual() ? valueNode.asText()
+                        : valueNode.isBoolean() ? valueNode.asBoolean()
+                        : valueNode.isInt() ? valueNode.asInt()
+                        : valueNode.traverse(p.getCodec()).readValueAs(Object.class);
 
-            if (value instanceof String) {
-              String str = (String ) value;
-              try { value = ValCmd.fromString(str); }
-              catch (Exception ignored) {}
-            }
+          if (value instanceof String) {
+            String str = (String ) value;
+            try { value = ValCmd.fromString(str); }
+            catch (Exception ignored) {}
+          }
 
-            result.put(sysCmd, paramCmd, value);
-        }
+          result.put(sysCmd, paramCmd, value);
+      }
+
+      paramList.add(result.getCommandString(sysCmd));
     }
     return result;
   }
