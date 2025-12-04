@@ -1,11 +1,13 @@
 package com.github.kraudy.compiler;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,6 +15,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.kraudy.compiler.CompilationPattern.Command;
 import com.github.kraudy.compiler.CompilationPattern.CompCmd;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
@@ -87,6 +91,34 @@ public class ParamMap {
     params.forEach((param, value) -> put(cmd, param, value));
 
   }
+
+  public String put(Command cmd, ParamCmd param, JsonNode nodeValue) throws IOException{
+    Object value = extractValue(nodeValue);
+    if (value instanceof String) {
+        String str = (String ) value;
+        try { value = ValCmd.fromString(str); }
+        catch (Exception ignored) {}
+    }
+
+    return put(cmd, param, value);
+  }
+
+  private Object extractValue(JsonNode node) throws IOException {
+    if (node.isTextual()) return node.asText();
+    if (node.isBoolean()) return node.asBoolean();
+    if (node.isInt()) return node.asInt();
+    if (node.isNull()) return null;
+    if (node.isArray()) {
+        List<String> list = new ArrayList<>();
+        node.elements().forEachRemaining(n -> list.add(n.asText()));
+        return list;
+    }
+    if (node.isObject()) {
+        // Future: support complex values if needed
+        return node.traverse(new ObjectMapper()).readValueAs(Object.class);
+    }
+    return node.asText(); // fallback
+}
 
   public String put(Command cmd, ParamCmd param, Object value) {
     //TODO: toString() should work on any case

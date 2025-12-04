@@ -56,18 +56,18 @@ public class CommandMapDeserializer extends JsonDeserializer<List<String>> {
 
           ParamCmd paramCmd = ParamCmd.valueOf(paramName);
 
-          Object value = valueNode.isTextual() ? valueNode.asText()
-                        : valueNode.isBoolean() ? valueNode.asBoolean()
-                        : valueNode.isInt() ? valueNode.asInt()
-                        : valueNode.traverse(p.getCodec()).readValueAs(Object.class);
+          //Object value = valueNode.isTextual() ? valueNode.asText()
+          //              : valueNode.isBoolean() ? valueNode.asBoolean()
+          //              : valueNode.isInt() ? valueNode.asInt()
+          //              : valueNode.traverse(p.getCodec()).readValueAs(Object.class);
 
-          if (value instanceof String) {
-            String str = (String ) value;
-            try { value = ValCmd.fromString(str); }
-            catch (Exception ignored) {}
-          }
+          //if (value instanceof String) {
+          //  String str = (String ) value;
+          //  try { value = ValCmd.fromString(str); }
+          //  catch (Exception ignored) {}
+          //}
 
-          result.put(sysCmd, paramCmd, value);
+          result.put(sysCmd, paramCmd, valueNode);
       }
 
       paramList.add(result.getCommandString(sysCmd));
