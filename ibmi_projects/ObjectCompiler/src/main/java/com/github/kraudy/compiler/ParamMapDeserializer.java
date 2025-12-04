@@ -21,9 +21,10 @@ public class ParamMapDeserializer extends JsonDeserializer<Map<ParamCmd, Object>
     /* Get tree */
     ObjectNode node = p.getCodec().readTree(p);
     /* New map to store Param: Value */
+    //TODO: Maybe change this to Map<ParamCmd, JsonNode>
     Map<ParamCmd, Object> result = new HashMap<>();
+    //ParamMap result = new ParamMap(false, false, false);
 
-    /* TODO: Maybe i could add the JsonNode method directly to the ParamMap put method */
     Iterator<Map.Entry<String, JsonNode>> fields = node.fields();
     while (fields.hasNext()) {
       Map.Entry<String, JsonNode> field = fields.next();
@@ -34,21 +35,9 @@ public class ParamMapDeserializer extends JsonDeserializer<Map<ParamCmd, Object>
 
       /* This validates if the YAML node has a valid param name */
       ParamCmd param = safeValueOf(key);
-      /* Get param value from json node */
-      Object value = valueNode.isTextual() ? valueNode.asText() :
-                      valueNode.isBoolean() ? valueNode.asBoolean() :
-                      valueNode.isInt() ? valueNode.asInt() :
-                      valueNode.traverse(p.getCodec()).readValueAs(Object.class);
 
-      // Optional: auto-convert "*SOURCE" → ValCmd.SOURCE
-      if (value instanceof String) {
-        String str = (String) value;
-        try {
-          value = com.github.kraudy.compiler.CompilationPattern.ValCmd.fromString(str);
-        } catch (Exception ignored) {}
-      }
-
-      result.put(param, value);
+      //TODO: For now, lets leave it as the Json node and let ParamMap do the parsing
+      result.put(param, valueNode);
     }
     
     return result;

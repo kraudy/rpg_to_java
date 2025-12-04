@@ -74,11 +74,11 @@ public class BuildSpec {
 
     // Per-target system commands
     @JsonProperty("before")
-    @JsonDeserialize(using = ParamMapDeserializer.class)
+    @JsonDeserialize(using = CommandMapDeserializer.class)
     public final List<String> before = new ArrayList<>();
 
     @JsonProperty("after")
-    @JsonDeserialize(using = ParamMapDeserializer.class)
+    @JsonDeserialize(using = CommandMapDeserializer.class)
     public final List<String> after = new ArrayList<>();
     
     public List<String> onSuccess;

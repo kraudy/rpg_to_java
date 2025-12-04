@@ -87,8 +87,13 @@ public class ParamMap {
   public void put(Command cmd, Map<ParamCmd, Object> params) {
     if (params == null) return;
 
-
-    params.forEach((param, value) -> put(cmd, param, value));
+    params.forEach((param, value) -> {
+      try {
+        put(cmd, param, value);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    });
 
   }
 
@@ -120,7 +125,7 @@ public class ParamMap {
     return node.asText(); // fallback
 }
 
-  public String put(Command cmd, ParamCmd param, Object value) {
+  public String put(Command cmd, ParamCmd param, Object value) throws IOException{
     //TODO: toString() should work on any case
     if (value instanceof String) {
       String strValue = value.toString().trim();  
@@ -132,7 +137,12 @@ public class ParamMap {
       return this.put(cmd, param, valCmd);
     }
 
-    // Handle list
+    // Handle JsonNode
+    if (value instanceof JsonNode) {
+      JsonNode valueNode = (JsonNode) value;
+      return this.put(cmd, param, valueNode);
+    }
+
     if (value instanceof List<?>) {
       List<String> list = (List<String>) value;
       return this.put(cmd, param, list);
