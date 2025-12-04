@@ -193,6 +193,8 @@ public class ObjectCompiler implements Runnable{
       executeCommand(spec.before);
     }
 
+    showLibraryList();
+
     /* This is intended for a YAML file with multiple objects in a toposort order */
     for (Map.Entry<String, BuildSpec.TargetSpec> entry : spec.targets.entrySet()) {
       String keyStr = entry.getKey();
@@ -217,14 +219,13 @@ public class ObjectCompiler implements Runnable{
           throw new RuntimeException("Failed to initialize migrator: " + e.getMessage(), e);
         }
 
-        //TODO: Add --dry-run to just run without executing. Just to generate the command string
         this.ParamCmdSequence = new ParamMap(this.debug, this.verbose, this.connection, this.dryRun);
 
-        //TODO: Only add them using .put and then call the execution command
-        //ParamCmdSequence.executeRawCommands(target.before, "before (target: " + keyStr + ")");
-        //ParamCmdSequence.put(spec.before);
+        /* Per target before */
+        if(!target.before.isEmpty()){
+          executeCommand(target.before);
+        }
 
-        showLibraryList();
 
         CompCmd compilationCommand = CompilationPattern.getCompilationCommand(key.sourceType, key.objectType);
 
@@ -250,18 +251,11 @@ public class ObjectCompiler implements Runnable{
         /* Parameters values, if provided, overwrite retrieved values */
         if (!text.isEmpty()) ParamCmdSequence.put(compilationCommand, ParamCmd.TEXT, text);
         if (!actGrp.isEmpty()) ParamCmdSequence.put(compilationCommand, ParamCmd.ACTGRP, actGrp);
-        if (!modules.isEmpty()) {
-          StringBuilder sb = new StringBuilder(); 
-          for (String mod: modules){
-            sb.append(ValCmd.LIBL.toString() + "/" + mod);
-            sb.append(" ");
-          }
-          ParamCmdSequence.put(compilationCommand, ParamCmd.MODULE, sb.toString().trim());
+        if (!modules.isEmpty()) ParamCmdSequence.put(compilationCommand, ParamCmd.MODULE, modules);
 
-        }
-
-        /* Set global defaults params */
+        /* Set global defaults params per target */
         ParamCmdSequence.put(compilationCommand, spec.defaults);
+
         /* Set specific target params */
         ParamCmdSequence.put(compilationCommand, target.params);
 
@@ -314,29 +308,32 @@ public class ObjectCompiler implements Runnable{
         }
 
         /* Execute compilation command */
-        //ParamCmdSequence.executeCommand(compilationCommand);    
         executeCommand(ParamCmdSequence.getCommandString(compilationCommand));
-        
-        // Per-target success hook
-        //ParamCmdSequence.executeRawCommands(target.onSuccess, "onSuccess (target: " + keyStr + ")");
 
       } catch (Exception e){
         System.err.println("Target failed: " + keyStr);
         e.printStackTrace();
 
-        // Run failure hooks
-        //ParamCmdSequence.executeRawCommands(target.onFailure, "onFailure (target: " + keyStr + ")");
+        /* Per target failure */
+        //if(!target.onError.isEmpty()){
+        //  executeCommand(target.onError);
+        //} 
 
       } finally {
-        /* Execute global after */
-        if(!spec.after.isEmpty()){
-          executeCommand(spec.after);
-        }
-
-        System.out.println(getExecutionChain());
-
+        /* Per target after */
+        if(!target.after.isEmpty()){
+          executeCommand(target.after);
+        } 
       }
     }
+
+    /* Execute global after */
+    if(!spec.after.isEmpty()){
+      executeCommand(spec.after);
+    }
+    
+    System.out.println(getExecutionChain());
+
     cleanup();
   }
 

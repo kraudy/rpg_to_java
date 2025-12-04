@@ -102,17 +102,10 @@ public class ParamMap {
       return this.put(cmd, param, valCmd);
     }
 
-    // Handle modules list
+    // Handle list
     if (value instanceof List<?>) {
-      if(param != ParamCmd.MODULE){
-        return "";
-      } 
       List<String> list = (List<String>) value;
-      String joined = list.stream()
-          .map(Object::toString)
-          .map(s -> "*LIBL/" + s)
-          .collect(Collectors.joining(" "));
-      return this.put(cmd, param, joined);
+      return this.put(cmd, param, list);
     }
     
     return put(cmd, param, value.toString());
@@ -120,6 +113,26 @@ public class ParamMap {
 
   public String put(Command cmd, ParamCmd param, ValCmd value) {
     return put(cmd, param, value.toString());
+  }
+
+  public String put(Command cmd, ParamCmd param, List<String> listValue) {
+    String value = "";
+
+    switch (param) {
+      case MODULE:
+        value = listValue.stream()
+          .map(Object::toString)
+          .map(s -> ValCmd.LIBL.toString() + s)
+          .collect(Collectors.joining(" "));
+        break;
+    
+      default:
+        break;
+    }
+
+    //TODO: Add validation here.
+
+    return put(cmd, get(cmd), getChanges(cmd), param, value);
   }
 
   public String put(Command cmd, ParamCmd param, String value) {
