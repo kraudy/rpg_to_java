@@ -21,7 +21,6 @@ import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 import com.github.kraudy.compiler.CompilationPattern.SysCmd;
 
 public class ParamMap {
-  public final Connection connection;
   private final boolean debug;
   private final boolean verbose;
   private boolean dryRun;
@@ -31,10 +30,9 @@ public class ParamMap {
   private final StringBuilder CmdExecutionChain = new StringBuilder();
   
 
-  public ParamMap(boolean debug, boolean verbose, Connection connection, boolean dryRun) {
+  public ParamMap(boolean debug, boolean verbose, boolean dryRun) {
     this.debug = debug;
     this.verbose = verbose;
-    this.connection = connection;
     this.dryRun = dryRun;
   }
 
