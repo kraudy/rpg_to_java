@@ -180,6 +180,9 @@ public class ParamMap {
   }
   
   public String getCommandString(Command command){
+    ResolveConflicts(command);
+    getChangesSummary(command);
+
     return getCommandString(getPattern(command), get(command), command.name());
   }
 
@@ -216,12 +219,6 @@ public class ParamMap {
   //  }
   //  System.out.println("=== END " + phase.toUpperCase() + " ===\n");
   //}
-
-  public void executeCommand(Command cmd){
-    ResolveConflicts(cmd);
-    getChangesSummary(cmd);
-    executeCommand(getCommandString(cmd));
-  }
 
   public void ResolveConflicts(Command cmd){
     if (cmd instanceof CompCmd) {
@@ -308,6 +305,13 @@ public class ParamMap {
   public void ResolveConflicts(SysCmd cmd){
 
   }
+
+  public void executeCommand(Command cmd){
+    //ResolveConflicts(cmd);
+    //getChangesSummary(cmd);
+    executeCommand(getCommandString(cmd));
+  }
+
 
   //TODO: Maybe i need to separate the executor from the ParamMap
   // Maybe move it back to ObjectCompiler

@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,6 +42,7 @@ public class ObjectCompiler implements Runnable{
   private ObjectDescription odes;
   private SourceMigrator migrator;
   public ParamMap ParamCmdSequence;
+  private final StringBuilder CmdExecutionChain = new StringBuilder();
 
 
   static class LibraryConverter implements CommandLine.ITypeConverter<String> {
@@ -188,7 +190,7 @@ public class ObjectCompiler implements Runnable{
     this.ParamCmdSequence = new ParamMap(this.debug, this.verbose, this.connection, this.dryRun);
 
     if(!spec.before.isEmpty()){
-      this.ParamCmdSequence.executeCommand(spec.before);
+      executeCommand(spec.before);
     }
 
     /* This is intended for a YAML file with multiple objects in a toposort order */
@@ -221,9 +223,6 @@ public class ObjectCompiler implements Runnable{
         //TODO: Only add them using .put and then call the execution command
         //ParamCmdSequence.executeRawCommands(target.before, "before (target: " + keyStr + ")");
         //ParamCmdSequence.put(spec.before);
-
-        cleanLibraryList();
-        setCurLib(key.library);
 
         showLibraryList();
 
@@ -314,12 +313,12 @@ public class ObjectCompiler implements Runnable{
               break;
         }
 
-        ParamCmdSequence.executeCommand(compilationCommand);    
+        /* Execute compilation command */
+        //ParamCmdSequence.executeCommand(compilationCommand);    
+        executeCommand(ParamCmdSequence.getCommandString(compilationCommand));
         
         // Per-target success hook
         //ParamCmdSequence.executeRawCommands(target.onSuccess, "onSuccess (target: " + keyStr + ")");
-
-        System.out.println(ParamCmdSequence.getExecutionChain());
 
       } catch (Exception e){
         System.err.println("Target failed: " + keyStr);
@@ -331,8 +330,11 @@ public class ObjectCompiler implements Runnable{
       } finally {
         /* Execute global after */
         if(!spec.after.isEmpty()){
-          this.ParamCmdSequence.executeCommand(spec.after);
+          executeCommand(spec.after);
         }
+
+        System.out.println(getExecutionChain());
+
       }
     }
     cleanup();
@@ -355,18 +357,88 @@ public class ObjectCompiler implements Runnable{
     }
   }
 
-  private void cleanLibraryList(){
-    this.ParamCmdSequence.put(SysCmd.CHGLIBL, ParamCmd.LIBL, "");
-    this.ParamCmdSequence.executeCommand(SysCmd.CHGLIBL);
-
+  //TODO: Maybe i need to separate the executor from the ParamMap
+  // Maybe move it back to ObjectCompiler
+  public void executeCommand(List<String> commandList){
+    for(String command: commandList){
+      executeCommand(command);
+    }
   }
 
-  //TODO: Should i do ADDLIBLE library *FIRST too?
-  private void setCurLib(String library){
-    this.ParamCmdSequence.put(SysCmd.CHGCURLIB, ParamCmd.CURLIB, library);
-    this.ParamCmdSequence.executeCommand(SysCmd.CHGCURLIB);
+  public void executeCommand(String command){
+    Timestamp commandTime = null;
+    try (Statement stmt = connection.createStatement();
+        ResultSet rsTime = stmt.executeQuery("SELECT CURRENT_TIMESTAMP AS Command_Time FROM sysibm.sysdummy1")) {
+      if (rsTime.next()) {
+        commandTime = rsTime.getTimestamp("Command_Time");
+      }
+    } catch (SQLException e) {
+      if (verbose) System.err.println("Could not get command time.");
+      if (debug) e.printStackTrace();
+      throw new IllegalArgumentException("Could not get command time.");
+    }
+
+    if (this.CmdExecutionChain.length() > 0) {
+      this.CmdExecutionChain.append(" => ");
+    }
+    this.CmdExecutionChain.append(command);
+
+    /* Dry run just returns before executing the command */
+    if(dryRun){
+      return;
+    }
+
+    try (Statement cmdStmt = connection.createStatement()) {
+      cmdStmt.execute("CALL QSYS2.QCMDEXC('" + command + "')");
+    } catch (SQLException e) {
+      System.out.println("Command failed.");
+      //TODO: Add a class filed that stores the messages and is updated with each compilation command
+      // but make the massages ENUM to just do something like .contains(CPF5813) and then the delete
+      // like DLTOBJ OBJ() OBJTYPE()
+      //if ("CPF5813".equals(e.getMessage()))
+      e.printStackTrace();
+      getJoblogMessages(commandTime);
+      throw new IllegalArgumentException("Could not execute command: " + command); //TODO: Catch this and throw the appropiate message
+    }
+
+    System.out.println("Command successful: " + command);
+    getJoblogMessages(commandTime);
   }
 
+  public void getJoblogMessages(Timestamp commandTime){
+    // SQL0601 : Object already exists
+    // CPF5813 : File CUSTOMER in library ROBKRAUDY2 already exists
+    try (Statement stmt = connection.createStatement();
+        ResultSet rsMessages = stmt.executeQuery(
+          "SELECT MESSAGE_TIMESTAMP, MESSAGE_ID, SEVERITY, MESSAGE_TEXT, COALESCE(MESSAGE_SECOND_LEVEL_TEXT, '') As MESSAGE_SECOND_LEVEL_TEXT " +
+          "FROM TABLE(QSYS2.JOBLOG_INFO('*')) " + 
+          "WHERE FROM_USER = USER " +
+          "AND MESSAGE_TIMESTAMP > '" + commandTime + "' " +
+          "AND MESSAGE_ID NOT IN ('SQL0443', 'CPC0904', 'CPF2407') " +
+          "ORDER BY MESSAGE_TIMESTAMP DESC "
+        )) {
+      while (rsMessages.next()) {
+        Timestamp messageTime = rsMessages.getTimestamp("MESSAGE_TIMESTAMP");
+        String messageId = rsMessages.getString("MESSAGE_ID").trim();
+        String severity = rsMessages.getString("SEVERITY").trim();
+        String message = rsMessages.getString("MESSAGE_TEXT").trim();
+        String messageSecondLevel = rsMessages.getString("MESSAGE_SECOND_LEVEL_TEXT").trim();
+        // Format the timestamp as a string
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String formattedTime = sdf.format(messageTime);
+        
+        // Print in a formatted table-like structure
+        System.out.printf("%-20s | %-10s | %-4s | %s%n", formattedTime, messageId, severity, message);
+      } 
+    } catch (SQLException e) {
+      System.out.println("Could not get messages.");
+      e.printStackTrace();
+    }
+  }
+
+  public String getExecutionChain() {
+    return CmdExecutionChain.toString();
+  }
 
   //TODO: This is kinda slow.
   // String cpysplfCmd = "CPYSPLF FILE(" + objectName + ") TOFILE(QTEMP/SPLFCPY) JOB(*) SPLNBR(*LAST)";
