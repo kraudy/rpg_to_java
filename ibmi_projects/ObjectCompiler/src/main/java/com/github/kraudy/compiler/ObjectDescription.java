@@ -10,23 +10,16 @@ import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 
 import com.github.kraudy.compiler.CompilationPattern.ObjectType;
-import com.github.kraudy.compiler.CompilationPattern.SourceType;
 
-// Core struct for capturing compilation specs (JSON-friendly via Jackson)
+/* Core struct for capturing compilation specs */
 public class ObjectDescription {
-  public final Connection connection;
+  private final Connection connection;
   private final boolean debug;
   private final boolean verbose;
-  //TODO: Make this private, add set method and move to another file
-  //public String targetLibrary;
-  // public String objectName;
-  //public ObjectType objectType;
-  // public String sourceLibrary;
-  public String sourceFile;
-  public String sourceName;
-  public SourceType sourceType;
-  public Utilities.ParsedKey targetKey;
-  public CompCmd compilationCommand;
+  private String sourceFile;
+  private String sourceName;
+  private Utilities.ParsedKey targetKey;
+  private CompCmd compilationCommand;
 
   public ObjectDescription(
         Connection connection,
@@ -148,27 +141,9 @@ public class ObjectDescription {
         break;
     }
 
-    //TODO: If i set the values directly in ParamMap this return won't be needed
     return ParamCmdSequence;
 
   }
-
-  //public Map<CompilationPattern.ParamCmd, String> getParamCmdSequence() { return ParamCmdSequence; }
-  //public ParamMap getParamCmdSequence() { return ParamCmdSequence; }
-
-  //public void setParamsSequence(Map<CompilationPattern.ParamCmd, String> ParamCmdSequence) {
-  //TODO: Maybe add a method to ParamMap to just send the map
-  //TODO: This should be inside ParamMap
-  //TODO: overrideParams()
-  //public void setParamsSequence(ParamMap ParamCmdSequence) {
-    // TODO: Check this
-    // this.ParamCmdSequence.putAll(odes.getParamCmdSequence());  // Copy from odes (triggers put for each entry)
-
-    //this.ParamCmdSequence.overrideParams(this.compilationCommand, ParamCmdSequence)
-    //for (CompilationPattern.ParamCmd paramCmd : ParamCmdSequence.keySet(this.compilationCommand)){
-    //  this.ParamCmdSequence.put(this.compilationCommand, paramCmd, ParamCmdSequence.get(this.compilationCommand, paramCmd));
-    //}
-  //}
 
   public ParamMap getObjectInfo (ParamMap ParamCmdSequence, CompCmd compilationCommand) throws SQLException {
     //TODO: Check if the object exists.
@@ -350,8 +325,6 @@ public class ObjectDescription {
         //throw new IllegalArgumentException("Could not get object '" + objectName + "' from library '" + library + "' type" + "'" + objectType.toString() + "'");
       }
 
-      //TODO: Show method being executed
-
       if (verbose) System.out.println("Found object '" + objectName + "' from library '" + library + "' type " + "'" + objectType.toParam() + "'");
 
       //TODO: Could i change this to objectType for less casses?
@@ -468,32 +441,12 @@ public class ObjectDescription {
           break;
       }
 
-      /* Specific program type */
-      String programType = rsObj.getString("PROGRAM_TYPE").trim();
-      if (debug) System.out.println("PROGRAM_TYPE " + programType );
-
-      //TODO: Remove this
-      switch (programType) {
-        case "ILE":
-          try {
-            ParamCmdSequence = getModuleInfo(ParamCmdSequence, rsObj.getString("PROGRAM_ENTRY_PROCEDURE_MODULE_LIBRARY").trim(), 
-                                          rsObj.getString("PROGRAM_ENTRY_PROCEDURE_MODULE").trim());
-          } catch (IllegalArgumentException e) {
-            if (verbose) System.err.println("Warning: Could not retrieve bound module info: " + e.getMessage() + ". Using defaults.");
-            if (debug) e.printStackTrace();
-          }
-          break;
-      
-        case "OPM":
-          break;
-      }
-
       return ParamCmdSequence;
 
     }
   }
 
-  // NEW: Query BOUND_MODULE_INFO for module-specific fields (e.g., GENLVL, OPTION)
+  /* Query BOUND_MODULE_INFO for module-specific fields */
   private ParamMap getModuleInfo(ParamMap ParamCmdSequence, String entryModuleLib, String entryModule) throws SQLException {
     if (entryModuleLib.isEmpty() || entryModule.isEmpty()) {
       System.err.println("Entry module or lib are empty");  // Skip if no entry module
@@ -617,8 +570,6 @@ public class ObjectDescription {
     
     try (Statement stmt = connection.createStatement();
         ResultSet rsCmdInfo = stmt.executeQuery(
-          //TODO: I could make this cursor filter params and just iter over it like a Key/Value pair to automatically PUT the compilation params
-          // but for that i would need something like a pivot so i don't know if it is worth it.
           "With " + //TODO: Put this lib CTE in a String
           "Libs (Libraries) As ( " +
               "SELECT DISTINCT(SCHEMA_NAME) FROM QSYS2.LIBRARY_LIST_INFO " + 
