@@ -86,7 +86,6 @@ public class ParamMap {
 
   //public void put(Command cmd, Map<ParamCmd, Object> params) {
   //  if (params == null) return;
-
   //  params.forEach((param, value) -> {
   //    try {
   //      put(cmd, param, value);
@@ -94,7 +93,6 @@ public class ParamMap {
   //      e.printStackTrace();
   //    }
   //  });
-
   //}
 
   public void put(Command cmd, Map<ParamCmd, JsonNode> params) {

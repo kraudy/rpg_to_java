@@ -166,8 +166,8 @@ public class ObjectCompiler implements Runnable{
     /* Try to get compilation params from object. If it exists. */
 
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-    //BuildSpec spec = null;
-    BuildSpec spec = new BuildSpec(this.debug, this.verbose, this.connection, this.dryRun);
+    BuildSpec spec = null;
+    //BuildSpec spec = new BuildSpec(this.debug, this.verbose, this.connection, this.dryRun);
 
     if (yamlFile != null) {
       File f = new File(yamlFile);
@@ -182,7 +182,7 @@ public class ObjectCompiler implements Runnable{
       // backward compatibility: single object mode
       //TODO: Maybe i should add a param here to override values or just create a new
       // paramMap for input ci values
-      spec = new BuildSpec(targetKey, this.debug, this.verbose, this.connection, this.dryRun);
+      spec = new BuildSpec(targetKey);
     }
 
     /* Global before */

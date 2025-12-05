@@ -17,11 +17,6 @@ import java.util.Map;
 
 /* This class represents the pattern of the YAML file */
 public class BuildSpec {
-  public final Connection connection;
-  private final boolean debug;
-  private final boolean verbose;
-  private boolean dryRun;
-  
   // Global defaults – deserialized by our custom deserializer
   @JsonProperty("defaults")
   @JsonDeserialize(using = ParamMapDeserializer.class)
@@ -41,28 +36,14 @@ public class BuildSpec {
   // Ordered targets
   public final LinkedHashMap<String, TargetSpec> targets = new LinkedHashMap<>();
 
-  public BuildSpec(boolean debug, boolean verbose, Connection connection, boolean dryRun) {
-    this.debug = debug;
-    this.verbose = verbose;
-    this.connection = connection;
-    this.dryRun = dryRun;
+  public BuildSpec() {
+
   }
 
-  public BuildSpec() {
-    this.debug = false;
-    this.verbose = false;
-    this.connection = null;
-    this.dryRun = false;
-}
-
-  public BuildSpec(ParsedKey targetKey, boolean debug, boolean verbose, Connection connection, boolean dryRun) {
+  public BuildSpec(ParsedKey targetKey) {
     TargetSpec spec = new TargetSpec();
     //TODO: Add specific spec params here
     this.targets.put(targetKey.asString(),  spec);
-    this.debug = debug;
-    this.verbose = verbose;
-    this.connection = connection;
-    this.dryRun = dryRun;
   }
 
   public static class TargetSpec {
