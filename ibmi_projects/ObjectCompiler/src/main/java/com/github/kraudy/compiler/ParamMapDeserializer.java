@@ -13,17 +13,16 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-public class ParamMapDeserializer extends JsonDeserializer<Map<ParamCmd, Object>> {
+public class ParamMapDeserializer extends JsonDeserializer<Map<ParamCmd, JsonNode>> {
   @Override
-  public Map<ParamCmd, Object> deserialize(JsonParser p, DeserializationContext ctxt)
+  public Map<ParamCmd, JsonNode> deserialize(JsonParser p, DeserializationContext ctxt)
         throws IOException, JacksonException {
 
     /* Get tree */
     ObjectNode node = p.getCodec().readTree(p);
-    /* New map to store Param: Value */
-    //TODO: Maybe change this to Map<ParamCmd, JsonNode>
-    Map<ParamCmd, Object> result = new HashMap<>();
-    //ParamMap result = new ParamMap(false, false, false);
+
+    /* Params map */
+    Map<ParamCmd, JsonNode> result = new HashMap<>();
 
     Iterator<Map.Entry<String, JsonNode>> fields = node.fields();
     while (fields.hasNext()) {
@@ -42,6 +41,8 @@ public class ParamMapDeserializer extends JsonDeserializer<Map<ParamCmd, Object>
     
     return result;
   }
+
+  //TODO: Maybe i could leave the JsondNode validatio here to not have it in ParamMap
 
   private ParamCmd safeValueOf(String name) {
     try {

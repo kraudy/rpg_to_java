@@ -2,6 +2,7 @@ package com.github.kraudy.compiler;
 
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.github.kraudy.compiler.BuildSpec.TargetSpec;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
@@ -24,13 +25,14 @@ public class BuildSpec {
   // Global defaults – deserialized by our custom deserializer
   @JsonProperty("defaults")
   @JsonDeserialize(using = ParamMapDeserializer.class)
-  public final Map<ParamCmd, Object> defaults = new HashMap<>();
+  public final Map<ParamCmd, JsonNode> defaults = new HashMap<>();
 
-  // Global system commands (before/after everything)
+  // Global before
   @JsonProperty("before")
   @JsonDeserialize(using = CommandMapDeserializer.class)
   public final List<String> before = new ArrayList<>();
 
+  // Global after
   @JsonProperty("after")
   @JsonDeserialize(using = CommandMapDeserializer.class)
   public final List<String> after = new ArrayList<>();
@@ -38,10 +40,6 @@ public class BuildSpec {
   //TODO: This could also be used to get a linked list of comand: params
   // Ordered targets
   public final LinkedHashMap<String, TargetSpec> targets = new LinkedHashMap<>();
-
-  //TODO: Change the list for these maps
-  //public Map<SysCmd, Object> before;
-  //public Map<SysCmd, Object> after;
 
   public BuildSpec(boolean debug, boolean verbose, Connection connection, boolean dryRun) {
     this.debug = debug;
@@ -70,7 +68,7 @@ public class BuildSpec {
   public static class TargetSpec {
     @JsonProperty("params")
     @JsonDeserialize(using = ParamMapDeserializer.class)
-    public final Map<ParamCmd, Object> params = new HashMap<>();
+    public final Map<ParamCmd, JsonNode> params = new HashMap<>();
 
     // Per-target system commands
     @JsonProperty("before")
