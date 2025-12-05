@@ -5,9 +5,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import com.github.kraudy.compiler.CompilationPattern.CompCmd;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
@@ -31,17 +28,14 @@ public class ObjectDescription {
   public Utilities.ParsedKey targetKey;
   public CompCmd compilationCommand;
 
-  
-
-  @JsonCreator
   public ObjectDescription(
         Connection connection,
         boolean debug,
         boolean verbose,
         CompCmd compilationCommand,
-        @JsonProperty("targetKey") Utilities.ParsedKey targetKey,
-        @JsonProperty("sourceFile") String sourceFile,
-        @JsonProperty("sourceName") String sourceName) {
+        Utilities.ParsedKey targetKey,
+        String sourceFile,
+        String sourceName) {
 
     this.connection = connection;
     this.debug = debug;
