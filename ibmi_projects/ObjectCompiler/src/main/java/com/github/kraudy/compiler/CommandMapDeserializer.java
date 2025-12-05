@@ -26,7 +26,7 @@ public class CommandMapDeserializer extends JsonDeserializer<List<String>> {
     //TODO: List of commands to be executed. They need to be stored to be later executed. For now, it is a mundane list.
     List<String> paramList = new ArrayList<>();
 
-    ParamMap result = new ParamMap(false, false, false);
+    ParamMap result = new ParamMap();
     ObjectNode node = p.getCodec().readTree(p);
 
     Iterator<Map.Entry<String, JsonNode>> fields = node.fields();

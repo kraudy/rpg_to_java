@@ -1,12 +1,6 @@
 package com.github.kraudy.compiler;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -25,19 +19,12 @@ import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 import com.github.kraudy.compiler.CompilationPattern.SysCmd;
 
 public class ParamMap {
-  private final boolean debug;
-  private final boolean verbose;
-  private boolean dryRun;
-
   private final Map<Command, Map<ParamCmd, String>> paramMap = new HashMap<>();
   private final Map<Command, Map<ParamCmd, String>> paramChanges = new HashMap<>();
-  private final StringBuilder CmdExecutionChain = new StringBuilder();
   
 
-  public ParamMap(boolean debug, boolean verbose, boolean dryRun) {
-    this.debug = debug;
-    this.verbose = verbose;
-    this.dryRun = dryRun;
+  public ParamMap() {
+
   }
 
   public boolean containsKey(Command cmd, ParamCmd param) {
@@ -83,17 +70,6 @@ public class ParamMap {
 
     return oldValue;
   }
-
-  //public void put(Command cmd, Map<ParamCmd, Object> params) {
-  //  if (params == null) return;
-  //  params.forEach((param, value) -> {
-  //    try {
-  //      put(cmd, param, value);
-  //    } catch (IOException e) {
-  //      e.printStackTrace();
-  //    }
-  //  });
-  //}
 
   public void put(Command cmd, Map<ParamCmd, JsonNode> params) {
     if (params == null) return;

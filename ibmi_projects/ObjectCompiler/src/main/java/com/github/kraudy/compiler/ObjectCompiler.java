@@ -187,7 +187,7 @@ public class ObjectCompiler implements Runnable{
 
     /* Global before */
     //Make this better
-    this.ParamCmdSequence = new ParamMap(this.debug, this.verbose, this.dryRun);
+    this.ParamCmdSequence = new ParamMap();
 
     if(!spec.before.isEmpty()){
       executeCommand(spec.before);
@@ -219,7 +219,7 @@ public class ObjectCompiler implements Runnable{
           throw new RuntimeException("Failed to initialize migrator: " + e.getMessage(), e);
         }
 
-        this.ParamCmdSequence = new ParamMap(this.debug, this.verbose, this.dryRun);
+        this.ParamCmdSequence = new ParamMap();
 
         /* Per target before */
         if(!target.before.isEmpty()){
