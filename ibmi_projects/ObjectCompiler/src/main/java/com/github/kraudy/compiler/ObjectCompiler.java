@@ -42,7 +42,7 @@ public class ObjectCompiler implements Runnable{
   private ObjectDescription odes;
   private SourceMigrator migrator;
   public ParamMap ParamCmdSequence;
-  private final StringBuilder CmdExecutionChain = new StringBuilder();
+  private CommandExecutor commandExec;
 
 
   static class LibraryConverter implements CommandLine.ITypeConverter<String> {
@@ -167,6 +167,8 @@ public class ObjectCompiler implements Runnable{
 
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
     BuildSpec spec = null;
+
+    commandExec = new CommandExecutor(connection, debug, verbose, dryRun);
     //BuildSpec spec = new BuildSpec(this.debug, this.verbose, this.connection, this.dryRun);
 
     if (yamlFile != null) {
@@ -190,7 +192,7 @@ public class ObjectCompiler implements Runnable{
     this.ParamCmdSequence = new ParamMap();
 
     if(!spec.before.isEmpty()){
-      executeCommand(spec.before);
+      commandExec.executeCommand(spec.before);
     }
 
     showLibraryList();
@@ -223,7 +225,7 @@ public class ObjectCompiler implements Runnable{
 
         /* Per target before */
         if(!target.before.isEmpty()){
-          executeCommand(target.before);
+          commandExec.executeCommand(target.before);
         }
 
 
@@ -308,7 +310,7 @@ public class ObjectCompiler implements Runnable{
         }
 
         /* Execute compilation command */
-        executeCommand(ParamCmdSequence.getCommandString(compilationCommand));
+        commandExec.executeCommand(ParamCmdSequence.getCommandString(compilationCommand));
 
       } catch (Exception e){
         System.err.println("Target failed: " + keyStr);
@@ -316,23 +318,23 @@ public class ObjectCompiler implements Runnable{
 
         /* Per target failure */
         //if(!target.onError.isEmpty()){
-        //  executeCommand(target.onError);
+        //  commandExec.executeCommand(target.onError);
         //} 
 
       } finally {
         /* Per target after */
         if(!target.after.isEmpty()){
-          executeCommand(target.after);
+          commandExec.executeCommand(target.after);
         } 
       }
     }
 
     /* Execute global after */
     if(!spec.after.isEmpty()){
-      executeCommand(spec.after);
+      commandExec.executeCommand(spec.after);
     }
     
-    System.out.println(getExecutionChain());
+    System.out.println(commandExec.getExecutionChain());
 
     cleanup();
   }
@@ -352,89 +354,6 @@ public class ObjectCompiler implements Runnable{
       System.err.println("Could not get library list.");
       e.printStackTrace();
     }
-  }
-
-  //TODO: Maybe i need to separate the executor from the ParamMap
-  // Maybe move it back to ObjectCompiler
-  public void executeCommand(List<String> commandList){
-    for(String command: commandList){
-      executeCommand(command);
-    }
-  }
-
-  public void executeCommand(String command){
-    Timestamp commandTime = null;
-    try (Statement stmt = connection.createStatement();
-        ResultSet rsTime = stmt.executeQuery("SELECT CURRENT_TIMESTAMP AS Command_Time FROM sysibm.sysdummy1")) {
-      if (rsTime.next()) {
-        commandTime = rsTime.getTimestamp("Command_Time");
-      }
-    } catch (SQLException e) {
-      if (verbose) System.err.println("Could not get command time.");
-      if (debug) e.printStackTrace();
-      throw new IllegalArgumentException("Could not get command time.");
-    }
-
-    if (this.CmdExecutionChain.length() > 0) {
-      this.CmdExecutionChain.append(" => ");
-    }
-    this.CmdExecutionChain.append(command);
-
-    /* Dry run just returns before executing the command */
-    if(dryRun){
-      return;
-    }
-
-    try (Statement cmdStmt = connection.createStatement()) {
-      cmdStmt.execute("CALL QSYS2.QCMDEXC('" + command + "')");
-    } catch (SQLException e) {
-      System.out.println("Command failed.");
-      //TODO: Add a class filed that stores the messages and is updated with each compilation command
-      // but make the massages ENUM to just do something like .contains(CPF5813) and then the delete
-      // like DLTOBJ OBJ() OBJTYPE()
-      //if ("CPF5813".equals(e.getMessage()))
-      e.printStackTrace();
-      getJoblogMessages(commandTime);
-      throw new IllegalArgumentException("Could not execute command: " + command); //TODO: Catch this and throw the appropiate message
-    }
-
-    System.out.println("Command successful: " + command);
-    getJoblogMessages(commandTime);
-  }
-
-  public void getJoblogMessages(Timestamp commandTime){
-    // SQL0601 : Object already exists
-    // CPF5813 : File CUSTOMER in library ROBKRAUDY2 already exists
-    try (Statement stmt = connection.createStatement();
-        ResultSet rsMessages = stmt.executeQuery(
-          "SELECT MESSAGE_TIMESTAMP, MESSAGE_ID, SEVERITY, MESSAGE_TEXT, COALESCE(MESSAGE_SECOND_LEVEL_TEXT, '') As MESSAGE_SECOND_LEVEL_TEXT " +
-          "FROM TABLE(QSYS2.JOBLOG_INFO('*')) " + 
-          "WHERE FROM_USER = USER " +
-          "AND MESSAGE_TIMESTAMP > '" + commandTime + "' " +
-          "AND MESSAGE_ID NOT IN ('SQL0443', 'CPC0904', 'CPF2407') " +
-          "ORDER BY MESSAGE_TIMESTAMP DESC "
-        )) {
-      while (rsMessages.next()) {
-        Timestamp messageTime = rsMessages.getTimestamp("MESSAGE_TIMESTAMP");
-        String messageId = rsMessages.getString("MESSAGE_ID").trim();
-        String severity = rsMessages.getString("SEVERITY").trim();
-        String message = rsMessages.getString("MESSAGE_TEXT").trim();
-        String messageSecondLevel = rsMessages.getString("MESSAGE_SECOND_LEVEL_TEXT").trim();
-        // Format the timestamp as a string
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String formattedTime = sdf.format(messageTime);
-        
-        // Print in a formatted table-like structure
-        System.out.printf("%-20s | %-10s | %-4s | %s%n", formattedTime, messageId, severity, message);
-      } 
-    } catch (SQLException e) {
-      System.out.println("Could not get messages.");
-      e.printStackTrace();
-    }
-  }
-
-  public String getExecutionChain() {
-    return CmdExecutionChain.toString();
   }
 
   //TODO: This is kinda slow.
