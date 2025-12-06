@@ -141,6 +141,30 @@ public class ObjectDescription {
         break;
     }
 
+    /* Set option and genopt */
+    switch (this.compilationCommand) {
+      case CRTSRVPGM:
+      case CRTBNDRPG:
+      case CRTBNDCL:
+      case CRTRPGMOD:
+      case CRTCLMOD:
+      case CRTSQLRPGI:
+      case RUNSQLSTM:
+      case CRTDSPF:
+      case CRTPF:
+      case CRTLF:
+        ParamCmdSequence.put(this.compilationCommand, ParamCmd.OPTION, ValCmd.EVENTF);
+        break;
+    }
+
+    switch (this.compilationCommand) {
+      case CRTRPGPGM:
+      case CRTCLPGM:
+        ParamCmdSequence.put(this.compilationCommand, ParamCmd.OPTION, ValCmd.LSTDBG);
+        ParamCmdSequence.put(this.compilationCommand, ParamCmd.GENOPT, ValCmd.LIST);
+        break;
+    }
+
     return ParamCmdSequence;
 
   }
@@ -209,34 +233,34 @@ public class ObjectDescription {
               "COALESCE(PROGRAM_TYPE,'') As PROGRAM_TYPE, " +  // [ILE, OPM] 
               "OBJECT_TYPE, " +   // typeOfProgram
               "CREATE_TIMESTAMP, " + // creationDateTime
-              "COALESCE(TEXT_DESCRIPTION, '') As TEXT_DESCRIPTION, " + // textDescription
+              "COALESCE(TEXT_DESCRIPTION, '') As TEXT, " + // textDescription
               "PROGRAM_OWNER, " + // owner
               "PROGRAM_ATTRIBUTE, " + // attribute
-              "USER_PROFILE, " +
+              "USER_PROFILE As USRPRF, " +
               "USE_ADOPTED_AUTHORITY, " +
               "RELEASE_CREATED_ON, " +
-              "COALESCE(TARGET_RELEASE, '') As TARGET_RELEASE, " +
+              "COALESCE(TARGET_RELEASE, '') As TGTRLS, " +
               "MINIMUM_NUMBER_PARMS, " + // minParameters
               "MAXIMUM_NUMBER_PARMS, " + // maxParameters
               "PAGING_POOL, " +
               "PAGING_AMOUNT, " +
-              "COALESCE(ALLOW_RTVCLSRC, '') As ALLOW_RTVCLSRC, " + // allowRTVCLSRC
+              "COALESCE(ALLOW_RTVCLSRC, '') As ALWRTVSRC, " + // allowRTVCLSRC
               "CONVERSION_REQUIRED, " +
               "CONVERSION_DETAIL, " +
               //-- These seem to be for ILE objects
               "COALESCE(PROGRAM_ENTRY_PROCEDURE_MODULE_LIBRARY, '') As PROGRAM_ENTRY_PROCEDURE_MODULE_LIBRARY, " +
               "COALESCE(PROGRAM_ENTRY_PROCEDURE_MODULE, '') As PROGRAM_ENTRY_PROCEDURE_MODULE, " +
-              "COALESCE(ACTIVATION_GROUP, '') AS ACTIVATION_GROUP, " + // activationGroupAttribute
+              "COALESCE(ACTIVATION_GROUP, '') AS ACTGRP, " + // activationGroupAttribute
               "SHARED_ACTIVATION_GROUP, " +
               "OBSERVABLE_INFO_COMPRESSED, " +
               "RUNTIME_INFO_COMPRESSED, " +
               "ALLOW_UPDATE, " +
               "ALLOW_BOUND_SRVPGM_LIBRARY_UPDATE, " +
               "ALL_CREATION_DATA, " +
-              "COALESCE(PROFILING_DATA, '') As PROFILING_DATA, " +
+              "COALESCE(PROFILING_DATA, '') As PRFDTA, " +
               "TERASPACE_STORAGE_ENABLED_MODULES, " +
               "TERASPACE_STORAGE_ENABLED_PEP, " +
-              "COALESCE(STORAGE_MODEL , '') As STORAGE_MODEL, " +
+              "COALESCE(STORAGE_MODEL , '') As STGMDL, " +
               "ARGUMENT_OPTIMIZATION, " +
               "NUMBER_OF_UNRESOLVED_REFERENCES, " +
               "ALLOW_STATIC_STORAGE_REINIT, " +
@@ -275,11 +299,11 @@ public class ObjectDescription {
               "SOURCE_FILE_CHANGE_TIMESTAMP, " + // sourceUpdatedDateTime
               "COALESCE(SORT_SEQUENCE_LIBRARY, '') As SORT_SEQUENCE_LIBRARY, " +
               "COALESCE(SORT_SEQUENCE, '') As SORT_SEQUENCE, " +
-              "COALESCE(LANGUAGE_ID, '') As LANGUAGE_ID, " +
+              "COALESCE(LANGUAGE_ID, '') As LANGID, " +
               "OBSERVABLE, " + // observable
-              "COALESCE(OPTIMIZATION, '') As OPTIMIZATION, " +
-              "COALESCE(LOG_COMMANDS, '' ) As LOG_COMMANDS, " +
-              "COALESCE(FIX_DECIMAL_DATA, '') As FIX_DECIMAL_DATA, " + // fixDecimalData
+              "COALESCE(OPTIMIZATION, '') As OPTIMIZE, " +
+              "COALESCE(LOG_COMMANDS, '' ) As LOG, " +
+              "COALESCE(FIX_DECIMAL_DATA, '') As FIXNBR, " + // fixDecimalData
               "UPDATE_PASA, " +
               "CLEAR_PASA, " +
               "COMPILER_ID, " +
@@ -332,24 +356,24 @@ public class ObjectDescription {
         case CRTSRVPGM:
         case CRTBNDRPG:
         case CRTBNDCL:
-          String actgrp = rsObj.getString("ACTIVATION_GROUP").trim();
+          String actgrp = rsObj.getString("ACTGRP").trim();
           if (!actgrp.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.ACTGRP, actgrp);
           if ("QILE".equals(actgrp)) ParamCmdSequence.put(this.compilationCommand, ParamCmd.DFTACTGRP, ValCmd.NO);
         case CRTRPGMOD:
-          String stgMdl = rsObj.getString("STORAGE_MODEL").trim();
+          String stgMdl = rsObj.getString("STGMDL").trim();
           if (!stgMdl.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.STGMDL, stgMdl);
         case CRTCLMOD:
         case CRTSQLRPGI:
         case CRTRPGPGM:
         case CRTCLPGM:
-          String tgtRls = rsObj.getString("TARGET_RELEASE").trim();
+          String tgtRls = rsObj.getString("TGTRLS").trim();
           ParamCmdSequence.put(this.compilationCommand, ParamCmd.TGTRLS, ValCmd.CURRENT);
           if (!tgtRls.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.TGTRLS, tgtRls);
         case CRTDSPF:
         case CRTPF:
         case CRTLF:
-          String text = rsObj.getString("TEXT_DESCRIPTION").trim();
-          if (!text.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.TEXT, "'" + text + "'");
+          String text = rsObj.getString("TEXT").trim();
+          if (!text.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.TEXT, text);
           break;
       }
 
@@ -361,11 +385,11 @@ public class ObjectDescription {
         case CRTRPGPGM:
         case CRTCLPGM:
         case RUNSQLSTM:
-          String tgtRls = rsObj.getString("TARGET_RELEASE").trim();
+          String tgtRls = rsObj.getString("TGTRLS").trim();
           ParamCmdSequence.put(this.compilationCommand, ParamCmd.TGTRLS, ValCmd.CURRENT);
           if (!tgtRls.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.TGTRLS, tgtRls);
 
-          String usrPrf = rsObj.getString("USER_PROFILE").trim();
+          String usrPrf = rsObj.getString("USRPRF").trim();
           if (!usrPrf.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.USRPRF, usrPrf);
           break;
       }
@@ -375,7 +399,7 @@ public class ObjectDescription {
         case CRTBNDCL:
         case CRTRPGMOD:
         case CRTCLMOD:
-          String optimize = rsObj.getString("OPTIMIZATION").trim();
+          String optimize = rsObj.getString("OPTIMIZE").trim();
           if (!optimize.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.OPTIMIZE, optimize);
         case CRTSQLRPGI:
         case CRTRPGPGM:
@@ -388,7 +412,7 @@ public class ObjectDescription {
           String srtSeq = rsObj.getString("SORT_SEQUENCE").trim();
           if (!srtSeq.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.SRTSEQ, srtSeq + (srtLib.isEmpty() ? "" : " " + srtLib));
 
-          String langId = rsObj.getString("LANGUAGE_ID").trim();
+          String langId = rsObj.getString("LANGID").trim();
           if (!langId.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.LANGID, langId);
           break;
       }
@@ -396,12 +420,12 @@ public class ObjectDescription {
       switch (this.compilationCommand) {
         case CRTBNDRPG:
         case CRTRPGMOD:
-          String fixNbr = rsObj.getString("FIX_DECIMAL_DATA").trim();
+          String fixNbr = rsObj.getString("FIXNBR").trim();
           if (!fixNbr.isEmpty()){
             ParamCmdSequence.put(this.compilationCommand, ParamCmd.FIXNBR, fixNbr.equals("1") ? ValCmd.YES : ValCmd.NO);
           }
 
-          String prfDta = rsObj.getString("PROFILING_DATA").trim();
+          String prfDta = rsObj.getString("PRFDTA").trim();
           if (!prfDta.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.PRFDTA, prfDta);
           break;
       }
@@ -410,34 +434,11 @@ public class ObjectDescription {
         case CRTBNDCL:
         case CRTCLMOD:
         case CRTCLPGM:
-          String logCmds = rsObj.getString("LOG_COMMANDS").trim();
+          String logCmds = rsObj.getString("LOG").trim();
           if (!logCmds.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.LOG, logCmds.equals("1") ? ValCmd.YES : ValCmd.NO);
 
-          String alwRtvSrc = rsObj.getString("ALLOW_RTVCLSRC").trim();
+          String alwRtvSrc = rsObj.getString("ALWRTVSRC").trim();
           if (!alwRtvSrc.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.ALWRTVSRC, alwRtvSrc.equals("1") ? ValCmd.YES : ValCmd.NO);
-          break;
-      }
-
-      switch (this.compilationCommand) {
-        case CRTSRVPGM:
-        case CRTBNDRPG:
-        case CRTBNDCL:
-        case CRTRPGMOD:
-        case CRTCLMOD:
-        case CRTSQLRPGI:
-        case RUNSQLSTM:
-        case CRTDSPF:
-        case CRTPF:
-        case CRTLF:
-          ParamCmdSequence.put(this.compilationCommand, ParamCmd.OPTION, ValCmd.EVENTF);
-          break;
-      }
-
-      switch (this.compilationCommand) {
-        case CRTRPGPGM:
-        case CRTCLPGM:
-          ParamCmdSequence.put(this.compilationCommand, ParamCmd.OPTION, ValCmd.LSTDBG);
-          ParamCmdSequence.put(this.compilationCommand, ParamCmd.GENOPT, ValCmd.LIST);
           break;
       }
 
@@ -475,21 +476,21 @@ public class ObjectDescription {
                 "MODULE_CCSID, " +
                 "SORT_SEQUENCE_LIBRARY, " +
                 "SORT_SEQUENCE, " +
-                "LANGUAGE_ID, " +
+                "LANGUAGE_ID As LANGID, " +
                 "DEBUG_DATA, " +
-                "OPTIMIZATION_LEVEL, " +
+                "OPTIMIZATION_LEVEL As OPTIMIZE, " +
                 "MAX_OPTIMIZATION_LEVEL, " +
                 "OBJECT_CONTROL_LEVEL, " +
                 "RELEASE_CREATED_ON, " +
-                "TARGET_RELEASE, " +
+                "TARGET_RELEASE AS TGTRLS, " +
                 "CREATION_DATA, " +
                 "TERASPACE_STORAGE_ENABLED, " +
                 "STORAGE_MODEL, " +
                 "NUMBER_PROCEDURES, " +
                 "NUMBER_PROCEDURES_BLOCK_REORDERED, " +
                 "NUMBER_PROCEDURES_BLOCK_ORDER_MEASURED, " +
-                "PROFILING_DATA, " +
-                "ALLOW_RTVCLSRC, " +
+                "PROFILING_DATA As PRFDTA, " +
+                "ALLOW_RTVCLSRC As ALWRTVSRC, " +
                 "USER_MODIFIED, " +
                 "LIC_OPTIONS, " +
                 "LICENSED_PROGRAM, " +
@@ -529,15 +530,9 @@ public class ObjectDescription {
         return ParamCmdSequence;
         //throw new IllegalArgumentException("Could not found module '" + entryModule + "' in library list");
       }
-
-        //TODO: Validate the compilation command here
-        //String dbgData = rsMod.getString("DEBUG_DATA").trim();
-        //if ("*YES".equals(dbgData)) ParamCmdSequence.put(this.compilationCommand, ParamCmd.DBGVIEW, ValCmd.ALL);
-        
-
         // Override OPTIMIZE if more specific here
         // This gives 10 but the param  OPTIMIZE only accepts: *NONE, *BASIC, *FULL   
-        String modOptimize = rsMod.getString("OPTIMIZATION_LEVEL").trim();
+        String modOptimize = rsMod.getString("OPTIMIZE").trim();
         if (!modOptimize.isEmpty()) {
           switch (modOptimize) {
             case "10": ParamCmdSequence.put(this.compilationCommand, ParamCmd.OPTIMIZE, ValCmd.NONE);   break;
@@ -577,7 +572,7 @@ public class ObjectDescription {
           ") " +
           "SELECT " +
             "(TRIM(COMMAND_LIBRARY) || '/' || TRIM(COMMAND_NAME)) As CMD, " +
-            "TEXT_DESCRIPTION, " +
+            "TEXT_DESCRIPTION As TEXT, " +
             "(TRIM(COMMAND_PROCESSING_PROGRAM_LIBRARY) || '/' || TRIM(COMMAND_PROCESSING_PROGRAM)) As PGM, " +
             "(TRIM(SOURCE_FILE_LIBRARY) || '/' || TRIM(SOURCE_FILE)) As SRCFILE, " +
             "SOURCE_FILE_MEMBER As SRCMBR, " +
