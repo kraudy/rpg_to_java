@@ -44,7 +44,7 @@ public class ObjectDescription {
 
   }
 
-  public ParamMap SetCompilationParams(ParamMap ParamCmdSequence) {
+  public void SetCompilationParams(ParamMap ParamCmdSequence) {
 
     /* Generate compilation params values from object description */
 
@@ -165,11 +165,9 @@ public class ObjectDescription {
         break;
     }
 
-    return ParamCmdSequence;
-
   }
 
-  public ParamMap getObjectInfo (ParamMap ParamCmdSequence, CompCmd compilationCommand) throws SQLException {
+  public void getObjectInfo (ParamMap ParamCmdSequence, CompCmd compilationCommand) throws SQLException {
     //TODO: Check if the object exists.
 
     /* Get PGM info */
@@ -180,7 +178,7 @@ public class ObjectDescription {
       case CRTRPGPGM :
       case CRTCLPGM :
       case CRTSRVPGM : //TODO: Should this be here?
-        ParamCmdSequence = getPgmInfo(ParamCmdSequence, this.targetKey.library, this.targetKey.objectName, this.targetKey.objectType);
+        getPgmInfo(ParamCmdSequence, this.targetKey.library, this.targetKey.objectName, this.targetKey.objectType);
         break;
      
       case RUNSQLSTM :
@@ -193,7 +191,7 @@ public class ObjectDescription {
         break;
 
       case CRTCMD :
-        ParamCmdSequence = getCmdInfo(ParamCmdSequence, this.targetKey.library, this.targetKey.objectName);
+        getCmdInfo(ParamCmdSequence, this.targetKey.library, this.targetKey.objectName);
         break;
     
       default:
@@ -203,23 +201,23 @@ public class ObjectDescription {
     /* Get module info */
     switch (compilationCommand) {
       case CRTSRVPGM : //TODO: Do I need to get the module info?
-        ParamCmdSequence = getModuleInfo(ParamCmdSequence, this.targetKey.library, this.targetKey.objectName); 
+        getModuleInfo(ParamCmdSequence, this.targetKey.library, this.targetKey.objectName); 
         break;
 
       case CRTSQLRPGI: //TODO: This could be pgm or module
       case CRTRPGMOD :
       case CRTCLMOD :
-        ParamCmdSequence = getModuleInfo(ParamCmdSequence, this.targetKey.library, this.targetKey.objectName); 
+        getModuleInfo(ParamCmdSequence, this.targetKey.library, this.targetKey.objectName); 
         break;
     
       default:
         break;
     }
 
-    return ParamCmdSequence;
+    return ;
   }
 
-  private ParamMap getPgmInfo(ParamMap ParamCmdSequence, String library, String objectName, ObjectType objectType) throws SQLException {
+  private void getPgmInfo(ParamMap ParamCmdSequence, String library, String objectName, ObjectType objectType) throws SQLException {
     
     try (Statement stmt = connection.createStatement();
         ResultSet rsObj = stmt.executeQuery(
@@ -345,7 +343,6 @@ public class ObjectDescription {
       if (!rsObj.next()) {
         // TODO: Maybe this should be optional for new objects. Just throw a warning
         System.err.println(("Could not get object '" + objectName + "' from library '" + library + "' type" + "'" + objectType.toString() + "'"));
-        return ParamCmdSequence;
         //throw new IllegalArgumentException("Could not get object '" + objectName + "' from library '" + library + "' type" + "'" + objectType.toString() + "'");
       }
 
@@ -442,16 +439,14 @@ public class ObjectDescription {
           break;
       }
 
-      return ParamCmdSequence;
 
     }
   }
 
   /* Query BOUND_MODULE_INFO for module-specific fields */
-  private ParamMap getModuleInfo(ParamMap ParamCmdSequence, String entryModuleLib, String entryModule) throws SQLException {
+  private void getModuleInfo(ParamMap ParamCmdSequence, String entryModuleLib, String entryModule) throws SQLException {
     if (entryModuleLib.isEmpty() || entryModule.isEmpty()) {
       System.err.println("Entry module or lib are empty");  // Skip if no entry module
-      return ParamCmdSequence;
     } 
 
     try (Statement stmt = connection.createStatement();
@@ -527,7 +522,6 @@ public class ObjectDescription {
         )) {
       if (!rsMod.next()) {
         System.err.println("Could not found module '" + entryModule + "' in library list");
-        return ParamCmdSequence;
         //throw new IllegalArgumentException("Could not found module '" + entryModule + "' in library list");
       }
         // Override OPTIMIZE if more specific here
@@ -556,12 +550,11 @@ public class ObjectDescription {
         String modCCSID = rsMod.getString("MODULE_CCSID").trim();
 
         // Add more mappings (e.g., DEFINE, INCDIR, PPGENOPT)
-        return ParamCmdSequence;
       
     }
   }
 
-  private ParamMap getCmdInfo(ParamMap ParamCmdSequence, String library, String objectName) throws SQLException {
+  private void getCmdInfo(ParamMap ParamCmdSequence, String library, String objectName) throws SQLException {
     
     try (Statement stmt = connection.createStatement();
         ResultSet rsCmdInfo = stmt.executeQuery(
@@ -586,7 +579,6 @@ public class ObjectDescription {
       if (!rsCmdInfo.next()) {
         //TODO: Check if object exist before getting the info.
         System.err.println(("Could not get command '" + objectName + "' from library list"));
-        return ParamCmdSequence;
         //throw new IllegalArgumentException("Could not get object '" + objectName + "' from library '" + library + "' type" + "'" + objectType.toString() + "'");
       }
 
@@ -610,7 +602,6 @@ public class ObjectDescription {
 
       
 
-      return ParamCmdSequence;
 
       }
   }

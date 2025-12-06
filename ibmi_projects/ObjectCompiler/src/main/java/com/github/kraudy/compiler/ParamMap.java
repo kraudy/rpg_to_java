@@ -72,6 +72,7 @@ public class ParamMap {
   }
 
   // this.ParamCmdSequence.putAll(odes.getParamCmdSequence());
+  //TODO: Leave this JsonNode conversion in the deserializer and just use the string here
   public void put(Command cmd, Map<ParamCmd, JsonNode> params) {
     if (params == null) return;
 

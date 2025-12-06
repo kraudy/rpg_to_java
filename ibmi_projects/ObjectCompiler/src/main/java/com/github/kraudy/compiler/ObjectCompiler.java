@@ -240,10 +240,10 @@ public class ObjectCompiler implements Runnable{
               sourceFile, sourceName
         );
 
-        this.ParamCmdSequence = this.odes.SetCompilationParams(this.ParamCmdSequence);
+        this.odes.SetCompilationParams(this.ParamCmdSequence);
 
         try {
-          this.ParamCmdSequence = odes.getObjectInfo(this.ParamCmdSequence, compilationCommand);
+          odes.getObjectInfo(this.ParamCmdSequence, compilationCommand);
         } catch (Exception e) {
           //TODO: Change logging for SLF4J or java.util.logging 
           if (debug) e.printStackTrace();
