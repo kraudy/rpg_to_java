@@ -34,7 +34,8 @@ public class BuildSpec {
 
   //TODO: This could also be used to get a linked list of comand: params
   // Ordered targets
-  public final LinkedHashMap<String, TargetSpec> targets = new LinkedHashMap<>();
+  //public final LinkedHashMap<String, TargetSpec> targets = new LinkedHashMap<>();
+  public final LinkedHashMap<Utilities.ParsedKey, TargetSpec> targets = new LinkedHashMap<>();
 
   public BuildSpec() {
 
@@ -43,7 +44,8 @@ public class BuildSpec {
   public BuildSpec(ParsedKey targetKey) {
     TargetSpec spec = new TargetSpec();
     //TODO: Add specific spec params here
-    this.targets.put(targetKey.asString(),  spec);
+    //this.targets.put(targetKey.asString(),  spec);
+    this.targets.put(targetKey,  spec);
   }
 
   public static class TargetSpec {

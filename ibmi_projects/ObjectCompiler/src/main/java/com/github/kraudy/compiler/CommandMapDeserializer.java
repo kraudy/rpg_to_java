@@ -35,7 +35,7 @@ public class CommandMapDeserializer extends JsonDeserializer<List<String>> {
       String cmdName = entry.getKey().toUpperCase();
       JsonNode paramsNode = entry.getValue();
 
-      //TODO: Add CompCmd validation
+      //TODO: Add CompCmd?
       SysCmd sysCmd;
       try {
           sysCmd = SysCmd.valueOf(cmdName);

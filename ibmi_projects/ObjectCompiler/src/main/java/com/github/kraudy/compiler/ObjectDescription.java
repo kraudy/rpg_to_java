@@ -149,7 +149,6 @@ public class ObjectDescription {
       case CRTRPGMOD:
       case CRTCLMOD:
       case CRTSQLRPGI:
-      case RUNSQLSTM:
       case CRTDSPF:
       case CRTPF:
       case CRTLF:
@@ -473,7 +472,7 @@ public class ObjectDescription {
                 "SORT_SEQUENCE, " +
                 "LANGUAGE_ID As LANGID, " +
                 "DEBUG_DATA, " +
-                "OPTIMIZATION_LEVEL As OPTIMIZE, " +
+                "COALESCE(OPTIMIZATION_LEVEL, '') As OPTIMIZE, " +
                 "MAX_OPTIMIZATION_LEVEL, " +
                 "OBJECT_CONTROL_LEVEL, " +
                 "RELEASE_CREATED_ON, " +

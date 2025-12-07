@@ -198,14 +198,15 @@ public class ObjectCompiler implements Runnable{
     showLibraryList();
 
     /* This is intended for a YAML file with multiple objects in a toposort order */
-    for (Map.Entry<String, BuildSpec.TargetSpec> entry : spec.targets.entrySet()) {
-      String keyStr = entry.getKey();
+    //for (Map.Entry<String, BuildSpec.TargetSpec> entry : spec.targets.entrySet()) {
+    for (Map.Entry<Utilities.ParsedKey, BuildSpec.TargetSpec> entry : spec.targets.entrySet()) {
+      Utilities.ParsedKey key = entry.getKey();
       BuildSpec.TargetSpec target = entry.getValue();
 
       try{
         // Per-target before (optional)
 
-        Utilities.ParsedKey key = new Utilities.ParsedKey(keyStr);
+        //Utilities.ParsedKey key = new Utilities.ParsedKey(keyStr);
         
         // *** Reset per-target fields ***
         this.sourceFile = "";
@@ -313,7 +314,7 @@ public class ObjectCompiler implements Runnable{
         commandExec.executeCommand(ParamCmdSequence.getCommandString(compilationCommand));
 
       } catch (Exception e){
-        System.err.println("Target failed: " + keyStr);
+        System.err.println("Target failed: " + targetKey.toString());
         e.printStackTrace();
 
         /* Per target failure */
