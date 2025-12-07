@@ -521,6 +521,7 @@ public class ObjectDescription {
         )) {
       if (!rsMod.next()) {
         System.err.println("Could not found module '" + entryModule + "' in library list");
+        return;
         //throw new IllegalArgumentException("Could not found module '" + entryModule + "' in library list");
       }
         // Override OPTIMIZE if more specific here

@@ -176,7 +176,7 @@ public class ParamMap {
         break;
     
       case SRCSTMF:
-        value = "'" + value + "'";
+        value = "''" + value + "''";
         break;
     
       default:
@@ -254,6 +254,11 @@ public class ParamMap {
   }
 
   public void ResolveConflicts(CompCmd cmd){
+
+    if (this.containsKey(cmd, ParamCmd.SRCSTMF)) {
+      this.put(cmd, ParamCmd.TGTCCSID, ValCmd.JOB);
+    }
+
     switch (cmd){
       case CRTRPGMOD:
         if (this.containsKey(cmd, ParamCmd.SRCSTMF)) {

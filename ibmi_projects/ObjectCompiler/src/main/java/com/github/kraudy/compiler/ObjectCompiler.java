@@ -198,7 +198,7 @@ public class ObjectCompiler implements Runnable{
     showLibraryList();
 
     /* This is intended for a YAML file with multiple objects in a toposort order */
-    //for (Map.Entry<String, BuildSpec.TargetSpec> entry : spec.targets.entrySet()) {
+    //TODO: Here, to compile only object with changes, just use a diff and filter the keys.
     for (Map.Entry<Utilities.ParsedKey, BuildSpec.TargetSpec> entry : spec.targets.entrySet()) {
       Utilities.ParsedKey key = entry.getKey();
       BuildSpec.TargetSpec target = entry.getValue();
@@ -262,10 +262,10 @@ public class ObjectCompiler implements Runnable{
         /* Set specific target params */
         ParamCmdSequence.put(compilationCommand, target.params);
 
-        if (!this.sourceStmf.isEmpty()) {
-          ParamCmdSequence.put(compilationCommand, ParamCmd.SRCSTMF, "'" + this.sourceStmf + "'");
-          ParamCmdSequence.put(compilationCommand, ParamCmd.TGTCCSID, ValCmd.JOB);
-        }
+        //if (!this.sourceStmf.isEmpty()) {
+        //  ParamCmdSequence.put(compilationCommand, ParamCmd.SRCSTMF, this.sourceStmf);
+        //  ParamCmdSequence.put(compilationCommand, ParamCmd.TGTCCSID, ValCmd.JOB);
+        //}
 
 
         switch (compilationCommand){

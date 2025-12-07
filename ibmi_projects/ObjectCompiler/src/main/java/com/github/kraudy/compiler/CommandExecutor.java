@@ -55,7 +55,7 @@ public class CommandExecutor {
     try (Statement cmdStmt = connection.createStatement()) {
       cmdStmt.execute("CALL QSYS2.QCMDEXC('" + command + "')");
     } catch (SQLException e) {
-      System.out.println("Command failed.");
+      System.out.println("Command failed: " + command);
       //TODO: Add a class filed that stores the messages and is updated with each compilation command
       // but make the massages ENUM to just do something like .contains(CPF5813) and then the delete
       // like DLTOBJ OBJ() OBJTYPE()
