@@ -29,13 +29,15 @@ public class CommandMapDeserializer extends JsonDeserializer<List<String>> {
     ParamMap result = new ParamMap();
     ObjectNode node = p.getCodec().readTree(p);
 
+    /* Get before or after commands hooks */
     Iterator<Map.Entry<String, JsonNode>> fields = node.fields();
     while (fields.hasNext()) {
       Map.Entry<String, JsonNode> entry = fields.next();
-      String cmdName = entry.getKey().toUpperCase();
-      JsonNode paramsNode = entry.getValue();
 
-      //TODO: Add CompCmd?
+      /* Get command */
+      String cmdName = entry.getKey().toUpperCase();
+
+      //TODO: Add CompCmd or maybe ExecCmd?
       SysCmd sysCmd;
       try {
           sysCmd = SysCmd.valueOf(cmdName);
@@ -43,10 +45,12 @@ public class CommandMapDeserializer extends JsonDeserializer<List<String>> {
           throw new IllegalArgumentException("Unknown system command: " + cmdName);
       }
 
+      JsonNode paramsNode = entry.getValue();
       if (!paramsNode.isObject()) {
           throw new IllegalArgumentException("Parameters for " + cmdName + " must be a map");
       }
 
+      /* Gets list of params and values */
       ObjectNode paramObj = (ObjectNode) paramsNode;
       Iterator<Map.Entry<String, JsonNode>> paramFields = paramObj.fields();
       while (paramFields.hasNext()) {

@@ -32,6 +32,8 @@ public class BuildSpec {
   @JsonDeserialize(using = CommandMapDeserializer.class)
   public final List<String> after = new ArrayList<>();
 
+  //TODO: Add onFailure
+
   //TODO: This could also be used to get a linked list of comand: params
   // Ordered targets
   //public final LinkedHashMap<String, TargetSpec> targets = new LinkedHashMap<>();
@@ -62,6 +64,8 @@ public class BuildSpec {
     @JsonDeserialize(using = CommandMapDeserializer.class)
     public final List<String> after = new ArrayList<>();
     
+    //TODO: Add onFailure
+    //TODO: Add onSuccess
     public List<String> onSuccess;
     public List<String> onFailure;
 
