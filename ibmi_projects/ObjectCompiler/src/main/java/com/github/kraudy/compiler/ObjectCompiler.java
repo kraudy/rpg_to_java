@@ -283,10 +283,8 @@ public class ObjectCompiler implements Runnable{
               //TODO: This could be done directly in ObjectCompiler
               this.migrator.setParams(ParamCmdSequence.get(compilationCommand, ParamCmd.SRCFILE), key.objectName, "sources");
               this.migrator.api(); // Try to migrate this thing
-              System.out.println("After calling migration api");
               
               ParamCmdSequence.put(compilationCommand, ParamCmd.SRCSTMF, this.migrator.getFirstPath());
-              ParamCmdSequence.put(compilationCommand, ParamCmd.TGTCCSID, ValCmd.JOB); // Needed to compile from stream files
             }
             break;
 

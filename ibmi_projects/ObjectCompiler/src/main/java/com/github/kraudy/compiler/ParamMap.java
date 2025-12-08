@@ -151,7 +151,7 @@ public class ParamMap {
       case MODULE:
         value = listValue.stream()
           .map(Object::toString)
-          .map(s -> ValCmd.LIBL.toString() + s)
+          .map(s -> ValCmd.LIBL.toString() + "/" + s)
           .collect(Collectors.joining(" "));
         break;
     
@@ -261,10 +261,6 @@ public class ParamMap {
 
     switch (cmd){
       case CRTRPGMOD:
-        if (this.containsKey(cmd, ParamCmd.SRCSTMF)) {
-          this.remove(cmd, ParamCmd.SRCFILE); 
-          this.remove(cmd, ParamCmd.SRCMBR); 
-        }
       case CRTCLMOD:
         break;
 
