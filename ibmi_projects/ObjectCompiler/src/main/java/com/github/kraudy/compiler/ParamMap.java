@@ -126,12 +126,6 @@ public class ParamMap {
       return this.put(cmd, param, valCmd);
     }
 
-    // Handle JsonNode
-    if (value instanceof JsonNode) {
-      JsonNode valueNode = (JsonNode) value;
-      return this.put(cmd, param, valueNode);
-    }
-
     if (value instanceof List<?>) {
       List<String> list = (List<String>) value;
       return this.put(cmd, param, list);
