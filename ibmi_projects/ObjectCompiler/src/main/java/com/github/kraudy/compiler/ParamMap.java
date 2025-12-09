@@ -72,7 +72,6 @@ public class ParamMap {
   }
 
   // this.ParamCmdSequence.putAll(odes.getParamCmdSequence());
-  //TODO: Leave this JsonNode conversion in the deserializer and just use the string here
   public void put(Command cmd, Map<ParamCmd, String> params) {
     if (params == null) return;
 
@@ -80,26 +79,6 @@ public class ParamMap {
       put(cmd, param, value);
     });
 
-  }
-
-  public String put(Command cmd, ParamCmd param, Object value) throws IOException{
-    //TODO: toString() should work on any case
-    if (value instanceof String) {
-      String strValue = value.toString().trim();  
-      return this.put(cmd, param, strValue);
-    }
-
-    if (value instanceof ValCmd) {
-      ValCmd valCmd = (ValCmd) value;
-      return this.put(cmd, param, valCmd);
-    }
-
-    if (value instanceof List<?>) {
-      List<String> list = (List<String>) value;
-      return this.put(cmd, param, list);
-    }
-    
-    return put(cmd, param, value.toString());
   }
 
   public String put(Command cmd, ParamCmd param, ValCmd value) {
