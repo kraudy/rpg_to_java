@@ -1,9 +1,17 @@
 package com.github.kraudy.compiler;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.kraudy.compiler.CompilationPattern.Command;
 import com.github.kraudy.compiler.CompilationPattern.ObjectType;
+import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.SourceType;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 
@@ -64,10 +72,53 @@ public class Utilities {
       return new ParsedKey(newKey); // Reuse constructor for full validation
     }
 
-    @JsonValue  // Serializes to a JSON string like "MYLIB.HELLO.PGM.RPGLE"
     public String asString() {
         String base = library + "." + objectName + "." + objectType.name();
         return (sourceType != null) ? base + "." + sourceType.name() : base;
     }
+  }
+
+  public static String nodeToString(JsonNode node) {
+    //TODO: Maybe i only need this method after all
+    String value = "";
+    if (node.isNull()) return null;
+    if (node.isTextual()) {
+      try { value = ValCmd.fromString(node.asText()).toString(); }
+      catch (Exception ignored) { value = node.asText();}
+    }
+    if (node.isInt()) value = node.asText();
+    if (node.isArray()) {
+        //TODO: Do here the list joining(" ") and make it string to not deal with that later
+        List<String> elements = new ArrayList<>();
+        node.elements().forEachRemaining(child -> {
+            // Recursively extract text, handle nested values safely
+            if (!child.isNull()) {
+                elements.add(child.asText());
+            }
+        });
+        value = String.join(" ", elements).trim(); // Space sparated list
+    }
+    return value;
+  }
+
+  public static String objectToString(Object value) {
+    //TODO: I think these first two could be reduced to value.toString().trim() after the list<?>
+    if (value instanceof String) {
+      return value.toString().trim();
+    }
+
+    if (value instanceof ValCmd) {
+      ValCmd valCmd = (ValCmd) value;
+      return valCmd.toString();
+    }
+
+    if (value instanceof List<?>) {
+      List<String> list = (List<String>) value;
+      return list.stream()
+          .map(Object::toString)
+          .collect(Collectors.joining(" ")); //TODO: I'll need to fix the separation      
+    }
+    
+    return value.toString();
   }
 }

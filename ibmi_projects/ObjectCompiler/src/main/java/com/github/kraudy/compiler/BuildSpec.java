@@ -18,7 +18,7 @@ public class BuildSpec {
   // Global defaults – deserialized by our custom deserializer
   @JsonProperty("defaults")
   @JsonDeserialize(using = ParamMapDeserializer.class)
-  public final Map<ParamCmd, JsonNode> defaults = new HashMap<>();
+  public final Map<ParamCmd, String> defaults = new HashMap<>();
 
   // Global before
   @JsonProperty("before")
@@ -46,7 +46,7 @@ public class BuildSpec {
   public static class TargetSpec {
     @JsonProperty("params")
     @JsonDeserialize(using = ParamMapDeserializer.class)
-    public final Map<ParamCmd, JsonNode> params = new HashMap<>();
+    public final Map<ParamCmd, String> params = new HashMap<>();
 
     // Per-target system commands
     @JsonProperty("before")

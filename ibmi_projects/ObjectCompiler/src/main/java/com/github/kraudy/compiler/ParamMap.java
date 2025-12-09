@@ -73,15 +73,11 @@ public class ParamMap {
 
   // this.ParamCmdSequence.putAll(odes.getParamCmdSequence());
   //TODO: Leave this JsonNode conversion in the deserializer and just use the string here
-  public void put(Command cmd, Map<ParamCmd, JsonNode> params) {
+  public void put(Command cmd, Map<ParamCmd, String> params) {
     if (params == null) return;
 
     params.forEach((param, value) -> {
-      try {
-        put(cmd, param, value);
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
+      put(cmd, param, value);
     });
 
   }
@@ -113,7 +109,7 @@ public class ParamMap {
         return node.traverse(new ObjectMapper()).readValueAs(Object.class);
     }
     return node.asText(); // fallback
-}
+  }
 
   public String put(Command cmd, ParamCmd param, Object value) throws IOException{
     //TODO: toString() should work on any case

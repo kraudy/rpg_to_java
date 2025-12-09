@@ -126,7 +126,7 @@ public class CompilationPattern {
 
     public static ParamCmd fromString(String value) {
       try {
-        return ParamCmd.valueOf(value);
+        return ParamCmd.valueOf(value.toUpperCase().trim());
       } catch (IllegalArgumentException e) {
         throw new IllegalArgumentException("Could not get compilation command param from string: '" + value + "'");
       }
@@ -149,7 +149,7 @@ public class CompilationPattern {
     //TODO: should i remove this?
     public static ValCmd fromString(String value) {
       try {
-          return ValCmd.valueOf(value.replace("*", "")); // Remove the leading "*" and convert to enum
+          return ValCmd.valueOf(value.toUpperCase().trim().replace("*", "")); // Remove the leading "*" and convert to enum
       } catch (IllegalArgumentException e) {
           throw new IllegalArgumentException("Could not convert '" + value + "' to ValCmd. Unknown value: '" + value + "'");
       }
