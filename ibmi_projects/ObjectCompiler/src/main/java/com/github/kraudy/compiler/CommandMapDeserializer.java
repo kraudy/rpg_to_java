@@ -20,14 +20,14 @@ import java.util.Map;
 
 public class CommandMapDeserializer extends JsonDeserializer<List<String>> {
   @Override
-  public List<String> deserialize(JsonParser p, DeserializationContext ctxt)
+  public List<String> deserialize(JsonParser parser, DeserializationContext ctxt)
           throws IOException {
 
     //TODO: List of commands to be executed. They need to be stored to be later executed. For now, it is a mundane list.
     List<String> paramList = new ArrayList<>();
 
     ParamMap result = new ParamMap();
-    ObjectNode node = p.getCodec().readTree(p);
+    ObjectNode node = parser.getCodec().readTree(parser);
 
     /* Get before or after commands hooks */
     Iterator<Map.Entry<String, JsonNode>> fields = node.fields();

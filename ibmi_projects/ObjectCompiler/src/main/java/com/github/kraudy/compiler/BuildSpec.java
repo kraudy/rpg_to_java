@@ -4,11 +4,9 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.github.kraudy.compiler.BuildSpec.TargetSpec;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.Utilities.ParsedKey;
 
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -34,10 +32,7 @@ public class BuildSpec {
 
   //TODO: Add onFailure
 
-  //TODO: This could also be used to get a linked list of comand: params
-  // Ordered targets
-  //public final LinkedHashMap<String, TargetSpec> targets = new LinkedHashMap<>();
-  public final LinkedHashMap<Utilities.ParsedKey, TargetSpec> targets = new LinkedHashMap<>();
+  public final LinkedHashMap<ParsedKey, TargetSpec> targets = new LinkedHashMap<>();
 
   public BuildSpec() {
 
@@ -45,8 +40,6 @@ public class BuildSpec {
 
   public BuildSpec(ParsedKey targetKey) {
     TargetSpec spec = new TargetSpec();
-    //TODO: Add specific spec params here
-    //this.targets.put(targetKey.asString(),  spec);
     this.targets.put(targetKey,  spec);
   }
 

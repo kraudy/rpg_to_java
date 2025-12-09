@@ -355,44 +355,6 @@ public class ObjectCompiler implements Runnable{
     }
   }
 
-  //TODO: This is kinda slow.
-  // String cpysplfCmd = "CPYSPLF FILE(" + objectName + ") TOFILE(QTEMP/SPLFCPY) JOB(*) SPLNBR(*LAST)";
-  // Or send it to a stream file
-  // Try to use CPYSPLF to a stream file or db2 table
-  /*  https://gist.github.com/BirgittaHauser/f28e3527f1cc4c422a05eea865b455bb */
-  private void showCompilationSpool(Timestamp compilationTime, String user, String objectName) throws SQLException{
-
-    System.out.println("Compiler error messages: \n");
-
-    try(Statement stmt = connection.createStatement();
-      ResultSet rsCompilationSpool = stmt.executeQuery(
-        "With " +
-        "Spool as ( " +
-          "Select b.ordinal_position, Spooled_Data " + 
-          "from  qsys2.OutPut_Queue_Entries a Cross Join " +
-              "Lateral(Select * " +
-                        "From Table(SysTools.Spooled_File_Data( " +
-                                                "Job_Name            => a.Job_Name, " +
-                                                "Spooled_File_Name   => a.Spooled_File_Name, " +
-                                                "Spooled_File_Number => File_Number))) b " +
-          "Where     Output_Queue_Name = '" + user + "' " +
-                "and USER_NAME = '" + user + "' " + 
-                "and SPOOLED_FILE_NAME = '" + objectName + "' " +
-                "and OUTPUT_QUEUE_LIBRARY_NAME = 'QGPL' " +
-                "and CREATE_TIMESTAMP > '" + compilationTime + "' " +
-        "), " +
-        "Message As ( " +
-          "Select ordinal_position From Spool Where Spooled_Data like '%M e s s a g e   S u m m a r y%' " +
-        ") " +
-        "Select RTrim(Cast(Spooled_Data As Varchar(132) CCSID " + INVARIANT_CCSID +" )) As  Spooled_Data " + 
-        "from Spool Where ordinal_position >= (Select ordinal_position From Message) "
-      )){
-        while (rsCompilationSpool.next()) {
-          System.out.println(rsCompilationSpool.getString("Spooled_Data"));
-        }
-    }
-  }
-
   private void cleanup(){
     try {
       if (connection != null && !connection.isClosed()) {

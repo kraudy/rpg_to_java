@@ -97,6 +97,7 @@ public class ParamMap {
     return put(cmd, param, value);
   }
 
+  //TODO: Maybe i could leave this in utils
   private Object extractValue(JsonNode node) throws IOException {
     if (node.isTextual()) return node.asText();
     if (node.isBoolean()) return node.asBoolean();

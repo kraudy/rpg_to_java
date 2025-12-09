@@ -28,12 +28,10 @@ public class ParamMapDeserializer extends JsonDeserializer<Map<ParamCmd, JsonNod
     while (fields.hasNext()) {
       Map.Entry<String, JsonNode> field = fields.next();
       /* Get param */
-      String key = field.getKey();
+      ParamCmd param = safeValueOf(field.getKey());
+
       /* Get param value */
       JsonNode valueNode = field.getValue();
-
-      /* This validates if the YAML node has a valid param name */
-      ParamCmd param = safeValueOf(key);
 
       //TODO: For now, lets leave it as the Json node and let ParamMap do the parsing
       result.put(param, valueNode);
