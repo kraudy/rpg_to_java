@@ -90,37 +90,7 @@ public class ParamMap {
 
   public String put(Command cmd, Map<ParamCmd, String> paramMap, Map<ParamCmd, String> paramChanges, ParamCmd param, String value) {
 
-    //TODO: Move this to utils like: CheckParamValue
-    // and add another one that checks if the param is part of the command list .contains()
-    switch (param) {
-      case TEXT:
-        value = "''" + value + "''";
-        break;
-    
-      case SRCSTMF:
-        value = "''" + value + "''";
-        break;
-    
-    
-      case MODULE:
-        String[] list = value.split(" ");
-        if(list.length <= 1) break;
-
-        value = "";
-        for(String module : list){
-          if(module.contains("/")) {
-            value += module;
-          } else {
-            value += ValCmd.LIBL.toString() + "/" + module;
-          }
-          value += " ";
-        }
-        value = value.trim();
-        break;
-    
-      default:
-        break;
-    }
+    value = Utilities.validateParamValue(param, value);
 
     String oldValue = paramMap.put(param, value);
 

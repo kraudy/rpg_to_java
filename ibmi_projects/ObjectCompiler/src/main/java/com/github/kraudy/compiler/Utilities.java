@@ -101,6 +101,38 @@ public class Utilities {
     return value;
   }
 
+  public static String validateParamValue(ParamCmd param, String value) {
+    switch (param) {
+      case TEXT:
+      case SRCSTMF:
+        return "''" + value + "''";
+    
+      case MODULE:
+        String[] list = value.split(" ");
+        if(list.length <= 1) return value;
+
+        value = "";
+        for(String module : list){
+          if(module.contains("/")) {
+            value += module;
+          } else {
+            value += ValCmd.LIBL.toString() + "/" + module;
+          }
+          value += " ";
+        }
+        return value.trim();
+    
+      default:
+        break;
+    }
+    return value;
+  }
+
+  public static boolean validateCommandParam(Command cmd, ParamCmd param) {
+    
+    return true;
+  }
+
   public static String validParamList() {
     return String.join(", ", 
         java.util.Arrays.stream(ParamCmd.values())

@@ -28,7 +28,7 @@ public class ParamMapDeserializer extends JsonDeserializer<Map<ParamCmd, String>
     while (fields.hasNext()) {
       Map.Entry<String, JsonNode> field = fields.next();
       /* Get param */
-      ParamCmd param = ParamCmd.valueOf(field.getKey());
+      ParamCmd param = ParamCmd.fromString(field.getKey());
 
       /* Get param value */
       String valueNode = Utilities.nodeToString(field.getValue());

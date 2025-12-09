@@ -55,7 +55,7 @@ public class CommandMapDeserializer extends JsonDeserializer<List<String>> {
       Iterator<Map.Entry<String, JsonNode>> paramFields = paramObj.fields();
       while (paramFields.hasNext()) {
           Map.Entry<String, JsonNode> paramEntry = paramFields.next();
-          ParamCmd paramCmd = ParamCmd.valueOf(paramEntry.getKey());
+          ParamCmd paramCmd = ParamCmd.fromString(paramEntry.getKey());
 
           String valueNode = Utilities.nodeToString(paramEntry.getValue());
 
