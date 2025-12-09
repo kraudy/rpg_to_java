@@ -254,7 +254,7 @@ public class ObjectCompiler implements Runnable{
         /* Parameters values, if provided, overwrite retrieved values */
         if (!text.isEmpty()) ParamCmdSequence.put(compilationCommand, ParamCmd.TEXT, text);
         if (!actGrp.isEmpty()) ParamCmdSequence.put(compilationCommand, ParamCmd.ACTGRP, actGrp);
-        if (!modules.isEmpty()) ParamCmdSequence.put(compilationCommand, ParamCmd.MODULE, modules);
+        //if (!modules.isEmpty()) ParamCmdSequence.put(compilationCommand, ParamCmd.MODULE, modules);
 
         /* Set global defaults params per target */
         ParamCmdSequence.putAll(compilationCommand, spec.defaults);

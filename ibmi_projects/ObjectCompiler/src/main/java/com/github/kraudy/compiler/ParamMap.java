@@ -84,32 +84,14 @@ public class ParamMap {
     return put(cmd, param, value.toString());
   }
 
-  public String put(Command cmd, ParamCmd param, List<String> listValue) {
-    String value = "";
-
-    switch (param) {
-      case MODULE:
-        value = listValue.stream()
-          .map(Object::toString)
-          .map(s -> ValCmd.LIBL.toString() + "/" + s)
-          .collect(Collectors.joining(" "));
-        break;
-    
-      default:
-        break;
-    }
-
-    //TODO: Add validation here.
-
-    return put(cmd, get(cmd), getChanges(cmd), param, value);
-  }
-
   public String put(Command cmd, ParamCmd param, String value) {
     return put(cmd, get(cmd), getChanges(cmd), param, value);
   }
 
   public String put(Command cmd, Map<ParamCmd, String> paramMap, Map<ParamCmd, String> paramChanges, ParamCmd param, String value) {
 
+    //TODO: Move this to utils like: CheckParamValue
+    // and add another one that checks if the param is part of the command list .contains()
     switch (param) {
       case TEXT:
         value = "''" + value + "''";
