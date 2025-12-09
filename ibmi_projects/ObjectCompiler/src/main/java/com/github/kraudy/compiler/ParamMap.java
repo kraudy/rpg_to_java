@@ -71,8 +71,7 @@ public class ParamMap {
     return oldValue;
   }
 
-  // this.ParamCmdSequence.putAll(odes.getParamCmdSequence());
-  public void put(Command cmd, Map<ParamCmd, String> params) {
+  public void putAll(Command cmd, Map<ParamCmd, String> params) {
     if (params == null) return;
 
     params.forEach((param, value) -> {
@@ -118,6 +117,23 @@ public class ParamMap {
     
       case SRCSTMF:
         value = "''" + value + "''";
+        break;
+    
+    
+      case MODULE:
+        String[] list = value.split(" ");
+        if(list.length <= 1) break;
+
+        value = "";
+        for(String module : list){
+          if(module.contains("/")) {
+            value += module;
+          } else {
+            value += ValCmd.LIBL.toString() + "/" + module;
+          }
+          value += " ";
+        }
+        value = value.trim();
         break;
     
       default:

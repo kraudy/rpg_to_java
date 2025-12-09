@@ -257,10 +257,10 @@ public class ObjectCompiler implements Runnable{
         if (!modules.isEmpty()) ParamCmdSequence.put(compilationCommand, ParamCmd.MODULE, modules);
 
         /* Set global defaults params per target */
-        ParamCmdSequence.put(compilationCommand, spec.defaults);
+        ParamCmdSequence.putAll(compilationCommand, spec.defaults);
 
         /* Set specific target params */
-        ParamCmdSequence.put(compilationCommand, target.params);
+        ParamCmdSequence.putAll(compilationCommand, target.params);
 
         //if (!this.sourceStmf.isEmpty()) {
         //  ParamCmdSequence.put(compilationCommand, ParamCmd.SRCSTMF, this.sourceStmf);
