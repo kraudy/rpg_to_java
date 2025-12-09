@@ -100,4 +100,11 @@ public class Utilities {
     }
     return value;
   }
+
+  public static String validParamList() {
+    return String.join(", ", 
+        java.util.Arrays.stream(ParamCmd.values())
+            .map(Enum::name)
+            .toList());
+  }
 }

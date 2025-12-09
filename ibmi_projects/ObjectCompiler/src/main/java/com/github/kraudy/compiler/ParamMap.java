@@ -93,24 +93,6 @@ public class ParamMap {
     return put(cmd, param, value);
   }
 
-  //TODO: Maybe i could leave this in utils
-  private Object extractValue(JsonNode node) throws IOException {
-    if (node.isTextual()) return node.asText();
-    if (node.isBoolean()) return node.asBoolean();
-    if (node.isInt()) return node.asInt();
-    if (node.isNull()) return null;
-    if (node.isArray()) {
-        List<String> list = new ArrayList<>();
-        node.elements().forEachRemaining(n -> list.add(n.asText()));
-        return list;
-    }
-    if (node.isObject()) {
-        // Future: support complex values if needed
-        return node.traverse(new ObjectMapper()).readValueAs(Object.class);
-    }
-    return node.asText(); // fallback
-  }
-
   public String put(Command cmd, ParamCmd param, Object value) throws IOException{
     //TODO: toString() should work on any case
     if (value instanceof String) {

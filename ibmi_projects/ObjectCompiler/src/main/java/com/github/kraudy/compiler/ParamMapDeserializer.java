@@ -38,11 +38,4 @@ public class ParamMapDeserializer extends JsonDeserializer<Map<ParamCmd, String>
     
     return result;
   }
-
-  private static String validParamList() {
-    return String.join(", ", 
-        java.util.Arrays.stream(ParamCmd.values())
-            .map(Enum::name)
-            .toList());
-  }
 }
