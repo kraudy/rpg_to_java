@@ -82,17 +82,6 @@ public class ParamMap {
 
   }
 
-  public String put(Command cmd, ParamCmd param, JsonNode nodeValue) throws IOException{
-    Object value = extractValue(nodeValue);
-    if (value instanceof String) {
-        String str = (String ) value;
-        try { value = ValCmd.fromString(str); }
-        catch (Exception ignored) {}
-    }
-
-    return put(cmd, param, value);
-  }
-
   public String put(Command cmd, ParamCmd param, Object value) throws IOException{
     //TODO: toString() should work on any case
     if (value instanceof String) {
