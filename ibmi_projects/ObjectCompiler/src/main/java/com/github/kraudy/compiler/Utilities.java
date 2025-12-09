@@ -100,25 +100,4 @@ public class Utilities {
     }
     return value;
   }
-
-  public static String objectToString(Object value) {
-    //TODO: I think these first two could be reduced to value.toString().trim() after the list<?>
-    if (value instanceof String) {
-      return value.toString().trim();
-    }
-
-    if (value instanceof ValCmd) {
-      ValCmd valCmd = (ValCmd) value;
-      return valCmd.toString();
-    }
-
-    if (value instanceof List<?>) {
-      List<String> list = (List<String>) value;
-      return list.stream()
-          .map(Object::toString)
-          .collect(Collectors.joining(" ")); //TODO: I'll need to fix the separation      
-    }
-    
-    return value.toString();
-  }
 }
