@@ -52,7 +52,9 @@ public class CommandMapDeserializer extends JsonDeserializer<List<String>> {
 
           String valueNode = Utilities.nodeToString(paramEntry.getValue());
 
-
+          if (!Utilities.validateCommandParam(sysCmd, paramCmd)) {
+            throw new IllegalArgumentException("Parameters " + paramCmd.name() + " not valid for command " + sysCmd.name());
+          }
 
           result.put(sysCmd, paramCmd, valueNode);
       }
