@@ -85,12 +85,12 @@ public class ParamMap {
   }
 
   public String put(Command cmd, ParamCmd param, String value) {
+    value = Utilities.validateParamValue(param, value);
+
     return put(cmd, get(cmd), getChanges(cmd), param, value);
   }
 
   public String put(Command cmd, Map<ParamCmd, String> paramMap, Map<ParamCmd, String> paramChanges, ParamCmd param, String value) {
-
-    value = Utilities.validateParamValue(param, value);
 
     String oldValue = paramMap.put(param, value);
 

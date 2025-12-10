@@ -2,6 +2,7 @@ package com.github.kraudy.compiler;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -79,7 +80,6 @@ public class Utilities {
   }
 
   public static String nodeToString(JsonNode node) {
-    //TODO: Maybe i only need this method after all
     String value = "";
     if (node.isNull()) return null;
     if (node.isTextual()) {
@@ -129,7 +129,11 @@ public class Utilities {
   }
 
   public static boolean validateCommandParam(Command cmd, ParamCmd param) {
-    
+    /* Check if param is in the command pattern */
+    if (!CompilationPattern.commandToPatternMap.getOrDefault(cmd, Collections.emptyList()).contains(param)) {
+      return false;
+    }
+
     return true;
   }
 

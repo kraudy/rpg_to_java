@@ -35,19 +35,12 @@ public class CommandMapDeserializer extends JsonDeserializer<List<String>> {
       Map.Entry<String, JsonNode> entry = fields.next();
 
       /* Get command */
-      String cmdName = entry.getKey().toUpperCase();
-
       //TODO: Add CompCmd or maybe ExecCmd?
-      SysCmd sysCmd;
-      try {
-          sysCmd = SysCmd.valueOf(cmdName);
-      } catch (IllegalArgumentException e) {
-          throw new IllegalArgumentException("Unknown system command: " + cmdName);
-      }
+      SysCmd sysCmd = SysCmd.fromString(entry.getKey());
 
       JsonNode paramsNode = entry.getValue();
       if (!paramsNode.isObject()) {
-          throw new IllegalArgumentException("Parameters for " + cmdName + " must be a map");
+          throw new IllegalArgumentException("Parameters for " + sysCmd.name() + " must be param: value");
       }
 
       /* Gets list of params and values */
@@ -58,6 +51,7 @@ public class CommandMapDeserializer extends JsonDeserializer<List<String>> {
           ParamCmd paramCmd = ParamCmd.fromString(paramEntry.getKey());
 
           String valueNode = Utilities.nodeToString(paramEntry.getValue());
+
 
 
           result.put(sysCmd, paramCmd, valueNode);

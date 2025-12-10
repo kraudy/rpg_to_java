@@ -19,7 +19,17 @@ public class CompilationPattern {
     DSPPGMREF, DSPOBJD, DSPDBR ,
     // 
     CRTBNDDIR
-  
+    
+    ;
+
+    public static SysCmd fromString(String value) {
+      try {
+        return SysCmd.valueOf(value.toUpperCase().trim());
+      } catch (IllegalArgumentException e) {
+        throw new IllegalArgumentException("Could not get system command from string: '" + value + "'");
+      }
+    }
+
   }
 
   public enum CompCmd implements Command { 
@@ -31,7 +41,7 @@ public class CompilationPattern {
 
     public static SourceType fromString(String value) {
       try {
-        return SourceType.valueOf(value);
+        return SourceType.valueOf(value.toUpperCase().trim());
       } catch (IllegalArgumentException e) {
         throw new IllegalArgumentException("Could not get source type from object attribute '" + value + "'");
       }
@@ -146,7 +156,6 @@ public class CompilationPattern {
 
     YES, NO, STMT, SOURCE, LIST, HEX, JOBRUN, USER, LIBCRTAUT, PEP, NOCOL, PRINT, SNGLVL; 
 
-    //TODO: should i remove this?
     public static ValCmd fromString(String value) {
       try {
           return ValCmd.valueOf(value.toUpperCase().trim().replace("*", "")); // Remove the leading "*" and convert to enum
