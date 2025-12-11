@@ -312,8 +312,10 @@ public class ObjectCompiler implements Runnable{
         commandExec.executeCommand(ParamCmdSequence.getCommandString(compilationCommand));
 
       } catch (Exception e){
-        System.err.println("Target failed: " + targetKey.toString());
+        System.err.println("Target failed");
+        //System.err.println("Target failed: " + targetKey.toString());
         e.printStackTrace();
+        break;
 
         /* Per target failure */
         //if(!target.onError.isEmpty()){

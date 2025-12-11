@@ -75,6 +75,9 @@ public class ParamMap {
     if (params == null) return;
 
     params.forEach((param, value) -> {
+      //if (!Utilities.validateCommandParam(cmd, param)) {
+      //  return;
+      //}
       put(cmd, param, value);
     });
 
@@ -91,7 +94,9 @@ public class ParamMap {
   }
 
   public String put(Command cmd, Map<ParamCmd, String> paramMap, Map<ParamCmd, String> paramChanges, ParamCmd param, String value) {
-
+    if (!Utilities.validateCommandParam(cmd, param)) {
+      throw new IllegalArgumentException("Parameters " + param.name() + " not valid for command " + cmd.name());
+    }
     String oldValue = paramMap.put(param, value);
 
     //TODO: Add param change tracking
@@ -164,8 +169,18 @@ public class ParamMap {
 
   public void ResolveConflicts(CompCmd cmd){
 
-    if (this.containsKey(cmd, ParamCmd.SRCSTMF)) {
-      this.put(cmd, ParamCmd.TGTCCSID, ValCmd.JOB);
+    switch (cmd){
+      case CRTBNDRPG:
+      case CRTBNDCL:
+      case CRTRPGMOD:
+      case CRTCLMOD:
+        if (this.containsKey(cmd, ParamCmd.SRCSTMF)) {
+          this.put(cmd, ParamCmd.TGTCCSID, ValCmd.JOB);
+        }
+        break;
+
+      default: 
+        break;
     }
 
     switch (cmd){
