@@ -75,9 +75,10 @@ public class ParamMap {
     if (params == null) return;
 
     params.forEach((param, value) -> {
-      //if (!Utilities.validateCommandParam(cmd, param)) {
-      //  return;
-      //}
+      if (!Utilities.validateCommandParam(cmd, param)) {
+        System.out.println("Rejected: Parameter " + param.name() + " not valid for command " + cmd.name());
+        return;
+      }
       put(cmd, param, value);
     });
 
@@ -94,6 +95,7 @@ public class ParamMap {
   }
 
   public String put(Command cmd, Map<ParamCmd, String> paramMap, Map<ParamCmd, String> paramChanges, ParamCmd param, String value) {
+    /* At this point there should be not invalid command params */
     if (!Utilities.validateCommandParam(cmd, param)) {
       throw new IllegalArgumentException("Parameters " + param.name() + " not valid for command " + cmd.name());
     }
