@@ -14,15 +14,14 @@ public class ParamValue {
     // Constructor for initial insertion
     public ParamValue(String value) {
         this.current = value;
-        //this.history.add(value + " [INIT]");
+        this.history.add("[INIT]");
         this.history.add(value);
         this.count += 1;
     }
 
     // Getters
     public String get() {
-      //if (this.current == null) return "NULL";
-      return current;
+      return current; // if null, returns null, dah.
     }
 
     public String put(String value) {
@@ -33,8 +32,12 @@ public class ParamValue {
     }
 
     public String getPrevious() {
-        if (count < 1) return this.history.getFirst();
-        return this.history.get(count - 1);
+      if (count < 1) return this.history.getFirst();
+      return this.history.get(count - 1);
+    }
+
+    public String getFirst() {
+      return this.history.getFirst();
     }
 
     public String remove() {
@@ -53,5 +56,9 @@ public class ParamValue {
 
     public boolean wasRemoved() {
         return "[REMOVED]".equals(getLastChange());
+    }
+
+    public boolean wasInit() {
+        return "[INIT]".equals(getFirst());
     }
 }

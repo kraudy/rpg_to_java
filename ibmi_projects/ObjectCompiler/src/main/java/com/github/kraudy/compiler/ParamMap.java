@@ -93,11 +93,6 @@ public class ParamMap {
     
   }
 
-  //public void put(Command cmd, Map<ParamCmd, String> innerParamMap, Map<ParamCmd, String> innerChanges) {
-  //  paramMap.put(cmd, innerParamMap);
-  //  paramChanges.put(cmd, innerChanges);
-  //}
-
   public void getChangesSummary(Command cmd) {
     System.out.println(cmd.name());
 
@@ -109,22 +104,7 @@ public class ParamMap {
       if (pv == null) continue;
       System.out.println(param.name() + ":" + pv.getHistory());
     }
-
-
-    //getChangesSummary(getPattern(cmd), getChanges(cmd));
   }
-
-  //public void getChangesSummary(List<ParamCmd> compilationPattern, Map<ParamCmd, String> paramChanges) {
-  //  for (ParamCmd param : compilationPattern) {
-  //    getChangeString(paramChanges.getOrDefault(param, ""), param);
-  //  }
-  //}
-
-  //public void getChangeString(String change, ParamCmd paramCmd){
-  //  if (change.isEmpty()) return;
-
-  //  System.out.println(change);
-  //}
   
   public String getCommandString(Command cmd){
     ResolveConflicts(cmd);
@@ -144,20 +124,7 @@ public class ParamMap {
 
     return sb.toString();
 
-    //return getCommandString(getPattern(cmd), get(cmd), cmd.name());
   }
-
-  //public String getCommandString(List<ParamCmd> compilationPattern, Map<ParamCmd, String> paramMap, String command){
-  //  StringBuilder sb = new StringBuilder(); 
-
-  //  sb.append(command);
-
-  //  for (ParamCmd param : compilationPattern) {
-  //    sb.append(param.paramString(paramMap.getOrDefault(param, "NULL")));
-  //  }
-
-  //  return sb.toString();
-  //}
 
   public void ResolveConflicts(Command cmd){
     if (cmd instanceof CompCmd) {
