@@ -18,19 +18,6 @@ public class ParamValue {
         this.count += 1;
     }
 
-    // Constructor for copying/updating (used internally)
-    //public ParamValue(String current, List<String> history) {
-    //    this.current = current;
-    //    this.history = new ArrayList<String>(history);  // Defensive copy for immutability
-    //}
-
-    // Append a change and return a new instance (keeps old one intact if needed)
-    //public ParamValue appendChange(String newValue) {
-    //    List<String> updatedHistory = new ArrayList<String>(this.history);
-    //    updatedHistory.add(newValue != null ? newValue : "[REMOVED]");
-    //    return new ParamValue(newValue, updatedHistory);
-    //}
-
     // Getters
     public String get() {
       if (this.current == null) return "NULL";
