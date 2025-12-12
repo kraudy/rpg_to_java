@@ -1,17 +1,12 @@
 package com.github.kraudy.compiler;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.List;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.kraudy.compiler.CompilationPattern.Command;
 import com.github.kraudy.compiler.CompilationPattern.CompCmd;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
@@ -20,9 +15,6 @@ import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 import com.github.kraudy.compiler.CompilationPattern.SysCmd;
 
 public class ParamMap {
-  //private final Map<Command, Map<ParamCmd, String>> paramMap = new HashMap<>();
-  //private final Map<Command, Map<ParamCmd, String>> paramChanges = new HashMap<>();
-
   private final Map<Command, EnumMap<ParamCmd, ParamValue>> paramMap = new HashMap<>();
 
   public ParamMap() {

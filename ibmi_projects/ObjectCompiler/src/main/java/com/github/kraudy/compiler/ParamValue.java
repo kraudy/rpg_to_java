@@ -20,7 +20,7 @@ public class ParamValue {
 
     // Getters
     public String get() {
-      if (this.current == null) return "NULL";
+      //if (this.current == null) return "NULL";
       return current;
     }
 
