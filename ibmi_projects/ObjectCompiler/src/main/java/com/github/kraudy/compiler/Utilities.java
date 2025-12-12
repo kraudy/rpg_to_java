@@ -29,9 +29,11 @@ public class Utilities {
     public String objectName;
     public ObjectType objectType;
     public SourceType sourceType; // null if absent
-    public String defaultSourceFile;
-    public String defaultSourceName; // Set to object name
+    public String sourceFile;
+    public String sourceName; // Set to object name
+    public String sourceStmf; // IFS route
     public CompCmd compilationCommand;
+    public ParamMap ParamCmdSequence;
 
     public String getQualifiedObject(){
       return this.library + "/" + this.objectName;
@@ -68,13 +70,16 @@ public class Utilities {
       }
 
       /* Set default source file in case no SRCFILE or SRCSTMF are not provided  */
-      this.defaultSourceFile = SourceType.defaultSourcePf(this.sourceType, this.objectType);
+      this.sourceFile = SourceType.defaultSourcePf(this.sourceType, this.objectType);
 
       /* Set default source name to object name */
-      this.defaultSourceName = this.objectName;
+      this.sourceName = this.objectName;
 
       /* Get target key compilation command */
       this.compilationCommand = CompilationPattern.getCompilationCommand(this.sourceType, this.objectType);
+
+      /* Init param map for this target */
+      this.ParamCmdSequence = new ParamMap();
     }
 
     public ParsedKey withLibrary(String newLibrary) {
@@ -92,16 +97,20 @@ public class Utilities {
         return (sourceType != null) ? base + "." + sourceType.name() : base;
     }
 
-    public String getDefaultSourceFile() {
-        return this.defaultSourceFile;
+    public String getSourceFile() {
+        return this.sourceFile;
     }
 
-    public String getDefaultSourceName() {
-        return this.defaultSourceName;
+    public String getSourceName() {
+        return this.sourceName;
     }
 
     public CompCmd getCompilationCommand() {
         return this.compilationCommand;
+    }
+
+    public ParamMap getParamMap() {
+        return this.ParamCmdSequence;
     }
 
   }

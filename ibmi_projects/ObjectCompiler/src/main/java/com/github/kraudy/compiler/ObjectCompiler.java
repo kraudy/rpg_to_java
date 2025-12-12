@@ -41,7 +41,6 @@ public class ObjectCompiler implements Runnable{
   private final User currentUser;
   private ObjectDescription odes;
   private SourceMigrator migrator;
-  public ParamMap ParamCmdSequence;
   private CommandExecutor commandExec;
 
 
@@ -103,16 +102,6 @@ public class ObjectCompiler implements Runnable{
   @Option(names = {"-tk","--target-key"}, description = "Target key: library.objectName.objectType[.sourceType] (e.g., MYLIB.HELLO.PGM.RPGLE)", converter = TargetKeyConverter.class)
   private Utilities.ParsedKey targetKey;
 
-  /* Source-related params. Good to have */
-  @Option(names = { "-sf", "--source-file" }, description = "Source physical file (defaults based on source type or retrieved from object)")
-  private String sourceFile = "";
-
-  @Option(names = { "-sn", "--source-name" }, description = "Source member name (defaults to object name)")
-  private String sourceName = "";
-
-  @Option(names = { "-stmf", "--source-stmf" }, description = "Source stream file path in IFS (e.g., /home/sources/hello.rpgle). Overrides lib/sourceFile/name if provided.")
-  private String sourceStmf = "";
-
   /* yaml */
   @Option(names = {"-f", "--file"}, description = "YAML build file (instead of --target-key)")
   private String yamlFile;
@@ -173,9 +162,6 @@ public class ObjectCompiler implements Runnable{
     }
 
     /* Global before */
-    //Make this better
-    this.ParamCmdSequence = new ParamMap();
-
     if(!spec.before.isEmpty()){
       commandExec.executeCommand(spec.before);
     }
@@ -189,13 +175,7 @@ public class ObjectCompiler implements Runnable{
       BuildSpec.TargetSpec target = entry.getValue();
 
       try{
-        
-        // *** Reset per-target fields ***
-        this.sourceFile = "";
-        this.sourceName = "";
-        this.sourceStmf = "";
-
-        // Re-create migrator fresh for every target (safest)
+        // Re-create migrator fresh for every target, fix that.
         try {
           this.migrator = new SourceMigrator(this.system, this.connection, true, true);
         } catch (Exception e){
@@ -204,30 +184,24 @@ public class ObjectCompiler implements Runnable{
           throw new RuntimeException("Failed to initialize migrator: " + e.getMessage(), e);
         }
 
-        this.ParamCmdSequence = new ParamMap();
-
         /* Per target before */
         if(!target.before.isEmpty()){
           commandExec.executeCommand(target.before);
         }
 
-        //TODO: Change source file and sourcename directly in the key with the yaml params
-
-        //CompCmd compilationCommand = CompilationPattern.getCompilationCommand(key.sourceType, key.objectType);
-        //sourceFile = sourceFile.isEmpty() ? SourceType.defaultSourcePf(key.sourceType, key.objectType) : sourceFile;
-        //sourceName = sourceName.isEmpty() ? key.objectName : sourceName;
+        //TODO: Override source file and sourcename directly in the key with the yaml params
 
         this.odes = new ObjectDescription(
               connection, debug, verbose, key.getCompilationCommand(), key,
               //TODO: Remove these and change it in the key
-              key.getDefaultSourceFile(), // Source file, TODO: get it from yaml param 
-              key.getDefaultSourceName()  // For now, source name is the same one from the key
+              key.getSourceFile(), // Source file, TODO: get it from yaml param 
+              key.getSourceName()  // For now, source name is the same one from the key
         );
 
-        this.odes.SetCompilationParams(this.ParamCmdSequence);
+        this.odes.SetCompilationParams(key.getParamMap());
 
         try {
-          odes.getObjectInfo(this.ParamCmdSequence, key.getCompilationCommand());
+          odes.getObjectInfo(key.getParamMap(), key.getCompilationCommand());
         } catch (Exception e) {
           //TODO: Change logging for SLF4J or java.util.logging 
           if (debug) e.printStackTrace();
@@ -235,10 +209,10 @@ public class ObjectCompiler implements Runnable{
         }
 
         /* Set global defaults params per target */
-        ParamCmdSequence.putAll(key.getCompilationCommand(), spec.defaults);
+        key.getParamMap().putAll(key.getCompilationCommand(), spec.defaults);
 
         /* Set specific target params */
-        ParamCmdSequence.putAll(key.getCompilationCommand(), target.params);
+        key.getParamMap().putAll(key.getCompilationCommand(), target.params);
 
         //TODO: Move this to somewhere else.
         switch (key.getCompilationCommand()){
@@ -251,13 +225,13 @@ public class ObjectCompiler implements Runnable{
           case CRTSQLRPGI:
           case CRTSRVPGM:
           case RUNSQLSTM:
-            if (!ParamCmdSequence.containsKey(key.getCompilationCommand(), ParamCmd.SRCSTMF)) {
-              System.out.println("SRCFILE data: " + ParamCmdSequence.get(key.getCompilationCommand(), ParamCmd.SRCFILE));
+            if (!key.getParamMap().containsKey(key.getCompilationCommand(), ParamCmd.SRCSTMF)) {
+              System.out.println("SRCFILE data: " + key.getParamMap().get(key.getCompilationCommand(), ParamCmd.SRCFILE));
               //TODO: This could be done directly in ObjectCompiler
-              this.migrator.setParams(ParamCmdSequence.get(key.getCompilationCommand(), ParamCmd.SRCFILE), key.objectName, "sources");
+              this.migrator.setParams(key.getParamMap().get(key.getCompilationCommand(), ParamCmd.SRCFILE), key.objectName, "sources");
               this.migrator.api(); // Try to migrate this thing
               
-              ParamCmdSequence.put(key.getCompilationCommand(), ParamCmd.SRCSTMF, this.migrator.getFirstPath());
+              key.getParamMap().put(key.getCompilationCommand(), ParamCmd.SRCSTMF, this.migrator.getFirstPath());
             }
             break;
 
@@ -265,10 +239,10 @@ public class ObjectCompiler implements Runnable{
           case CRTRPGPGM:
             /* 
             For OPM, create temp members if source is IFS (reverse migration).
-            ParamCmdSequence.put(key.getCompilationCommand(), ParamCmd.SRCSTMF, stmfPath);
-            migrator.IfsToMember(ParamCmdSequence.get(ParamCmd.SRCSTMF), Library);
-            ParamCmdSequence.remove(ParamCmd.SRCFILE);  // Switch to stream file
-            ParamCmdSequence.put(key.getCompilationCommand(), ParamCmd.SRCMBR, member);
+            key.getParamMap().put(key.getCompilationCommand(), ParamCmd.SRCSTMF, stmfPath);
+            migrator.IfsToMember(key.getParamMap().get(ParamCmd.SRCSTMF), Library);
+            key.getParamMap().remove(ParamCmd.SRCFILE);  // Switch to stream file
+            key.getParamMap().put(key.getCompilationCommand(), ParamCmd.SRCMBR, member);
             */
             break;
 
@@ -282,7 +256,7 @@ public class ObjectCompiler implements Runnable{
         }
 
         /* Execute compilation command */
-        commandExec.executeCommand(ParamCmdSequence.getCommandString(key.getCompilationCommand()));
+        commandExec.executeCommand(key.getParamMap().getCommandString(key.getCompilationCommand()));
 
       } catch (Exception e){
         System.err.println("Target failed");
