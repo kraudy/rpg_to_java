@@ -113,22 +113,6 @@ public class ObjectCompiler implements Runnable{
   @Option(names = { "-stmf", "--source-stmf" }, description = "Source stream file path in IFS (e.g., /home/sources/hello.rpgle). Overrides lib/sourceFile/name if provided.")
   private String sourceStmf = "";
 
-  @Option(names = { "-mods","--modules"}, arity = "0..*", description = "Space-separated list of modules for SRVPGM (e.g., *CURLIB/HELLO2NENT *CURLIB/HELLO2BYE). Defaults to retrieved from existing object.")
-  private List<String> modules = new ArrayList<>();
-
-  /* Compilation flags. Optionals */
-  @Option(names = { "--text" }, description = "Object text description (defaults to retrieved from object if possible)")
-  private String text = "";
-
-  @Option(names = { "--actgrp" }, description = "Activation group (defaults to retrieved from object if possible)")
-  private String actGrp = "";
-
-  @Option(names = "--dbgview", description = "Debug view (e.g., *ALL, *SOURCE, *LIST, *NONE). Defaults to *ALL.")
-  private String dbgView = CompilationPattern.ValCmd.ALL.toString(); //"*ALL"
-
-  @Option(names = "--bnddir", description = "Binding directories (space-separated). Defaults to *NONE.")
-  private String bndDir = CompilationPattern.ValCmd.NONE.toString(); // "*NONE"
-
   /* yaml */
   @Option(names = {"-f", "--file"}, description = "YAML build file (instead of --target-key)")
   private String yamlFile;
@@ -168,9 +152,10 @@ public class ObjectCompiler implements Runnable{
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
     BuildSpec spec = null;
 
+    /* Init command executor */
     commandExec = new CommandExecutor(connection, debug, verbose, dryRun);
-    //BuildSpec spec = new BuildSpec(this.debug, this.verbose, this.connection, this.dryRun);
 
+    //TODO: Leave only the yaml here, i think i'll remove picocli and just use a scanner or something.
     if (yamlFile != null) {
       File f = new File(yamlFile);
       if (!f.exists()) throw new RuntimeException("YAML file not found: " + yamlFile);
@@ -204,9 +189,6 @@ public class ObjectCompiler implements Runnable{
       BuildSpec.TargetSpec target = entry.getValue();
 
       try{
-        // Per-target before (optional)
-
-        //Utilities.ParsedKey key = new Utilities.ParsedKey(keyStr);
         
         // *** Reset per-target fields ***
         this.sourceFile = "";
@@ -229,46 +211,37 @@ public class ObjectCompiler implements Runnable{
           commandExec.executeCommand(target.before);
         }
 
+        //TODO: Change source file and sourcename directly in the key with the yaml params
 
-        CompCmd compilationCommand = CompilationPattern.getCompilationCommand(key.sourceType, key.objectType);
-
-        sourceFile = sourceFile.isEmpty() ? SourceType.defaultSourcePf(key.sourceType, key.objectType) : sourceFile;
-        sourceName = sourceName.isEmpty() ? key.objectName : sourceName;
+        //CompCmd compilationCommand = CompilationPattern.getCompilationCommand(key.sourceType, key.objectType);
+        //sourceFile = sourceFile.isEmpty() ? SourceType.defaultSourcePf(key.sourceType, key.objectType) : sourceFile;
+        //sourceName = sourceName.isEmpty() ? key.objectName : sourceName;
 
         this.odes = new ObjectDescription(
-              connection, debug, verbose, compilationCommand, key,
+              connection, debug, verbose, key.getCompilationCommand(), key,
               //TODO: Remove these and change it in the key
-              sourceFile, sourceName
+              key.getDefaultSourceFile(), // Source file, TODO: get it from yaml param 
+              key.getDefaultSourceName()  // For now, source name is the same one from the key
         );
 
         this.odes.SetCompilationParams(this.ParamCmdSequence);
 
         try {
-          odes.getObjectInfo(this.ParamCmdSequence, compilationCommand);
+          odes.getObjectInfo(this.ParamCmdSequence, key.getCompilationCommand());
         } catch (Exception e) {
           //TODO: Change logging for SLF4J or java.util.logging 
           if (debug) e.printStackTrace();
           if (verbose) System.err.println("Object not found; using defaults.");
         }
 
-        /* Parameters values, if provided, overwrite retrieved values */
-        if (!text.isEmpty()) ParamCmdSequence.put(compilationCommand, ParamCmd.TEXT, text);
-        if (!actGrp.isEmpty()) ParamCmdSequence.put(compilationCommand, ParamCmd.ACTGRP, actGrp);
-        //if (!modules.isEmpty()) ParamCmdSequence.put(compilationCommand, ParamCmd.MODULE, modules);
-
         /* Set global defaults params per target */
-        ParamCmdSequence.putAll(compilationCommand, spec.defaults);
+        ParamCmdSequence.putAll(key.getCompilationCommand(), spec.defaults);
 
         /* Set specific target params */
-        ParamCmdSequence.putAll(compilationCommand, target.params);
+        ParamCmdSequence.putAll(key.getCompilationCommand(), target.params);
 
-        //if (!this.sourceStmf.isEmpty()) {
-        //  ParamCmdSequence.put(compilationCommand, ParamCmd.SRCSTMF, this.sourceStmf);
-        //  ParamCmdSequence.put(compilationCommand, ParamCmd.TGTCCSID, ValCmd.JOB);
-        //}
-
-
-        switch (compilationCommand){
+        //TODO: Move this to somewhere else.
+        switch (key.getCompilationCommand()){
           case CRTCLMOD:
             break;
 
@@ -278,13 +251,13 @@ public class ObjectCompiler implements Runnable{
           case CRTSQLRPGI:
           case CRTSRVPGM:
           case RUNSQLSTM:
-            if (!ParamCmdSequence.containsKey(compilationCommand, ParamCmd.SRCSTMF)) {
-              System.out.println("SRCFILE data: " + ParamCmdSequence.get(compilationCommand, ParamCmd.SRCFILE));
+            if (!ParamCmdSequence.containsKey(key.getCompilationCommand(), ParamCmd.SRCSTMF)) {
+              System.out.println("SRCFILE data: " + ParamCmdSequence.get(key.getCompilationCommand(), ParamCmd.SRCFILE));
               //TODO: This could be done directly in ObjectCompiler
-              this.migrator.setParams(ParamCmdSequence.get(compilationCommand, ParamCmd.SRCFILE), key.objectName, "sources");
+              this.migrator.setParams(ParamCmdSequence.get(key.getCompilationCommand(), ParamCmd.SRCFILE), key.objectName, "sources");
               this.migrator.api(); // Try to migrate this thing
               
-              ParamCmdSequence.put(compilationCommand, ParamCmd.SRCSTMF, this.migrator.getFirstPath());
+              ParamCmdSequence.put(key.getCompilationCommand(), ParamCmd.SRCSTMF, this.migrator.getFirstPath());
             }
             break;
 
@@ -292,10 +265,10 @@ public class ObjectCompiler implements Runnable{
           case CRTRPGPGM:
             /* 
             For OPM, create temp members if source is IFS (reverse migration).
-            ParamCmdSequence.put(compilationCommand, ParamCmd.SRCSTMF, stmfPath);
+            ParamCmdSequence.put(key.getCompilationCommand(), ParamCmd.SRCSTMF, stmfPath);
             migrator.IfsToMember(ParamCmdSequence.get(ParamCmd.SRCSTMF), Library);
             ParamCmdSequence.remove(ParamCmd.SRCFILE);  // Switch to stream file
-            ParamCmdSequence.put(compilationCommand, ParamCmd.SRCMBR, member);
+            ParamCmdSequence.put(key.getCompilationCommand(), ParamCmd.SRCMBR, member);
             */
             break;
 
@@ -309,7 +282,7 @@ public class ObjectCompiler implements Runnable{
         }
 
         /* Execute compilation command */
-        commandExec.executeCommand(ParamCmdSequence.getCommandString(compilationCommand));
+        commandExec.executeCommand(ParamCmdSequence.getCommandString(key.getCompilationCommand()));
 
       } catch (Exception e){
         System.err.println("Target failed");

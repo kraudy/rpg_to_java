@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.kraudy.compiler.CompilationPattern.Command;
+import com.github.kraudy.compiler.CompilationPattern.CompCmd;
 import com.github.kraudy.compiler.CompilationPattern.ObjectType;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.SourceType;
@@ -22,11 +23,15 @@ public class Utilities {
     return (sourceType != null) ? base + "." + sourceType.name() : base;
   }
 
+  //TODO: Move this to its own class and name it TargetKey
   public static class ParsedKey {
     public String library;
     public String objectName;
     public ObjectType objectType;
     public SourceType sourceType; // null if absent
+    public String defaultSourceFile;
+    public String defaultSourceName; // Set to object name
+    public CompCmd compilationCommand;
 
     public String getQualifiedObject(){
       return this.library + "/" + this.objectName;
@@ -61,6 +66,15 @@ public class Utilities {
       } catch (IllegalArgumentException e) {
         throw new IllegalArgumentException("Invalid sourceType : " + parts[3]);
       }
+
+      /* Set default source file in case no SRCFILE or SRCSTMF are not provided  */
+      this.defaultSourceFile = SourceType.defaultSourcePf(this.sourceType, this.objectType);
+
+      /* Set default source name to object name */
+      this.defaultSourceName = this.objectName;
+
+      /* Get target key compilation command */
+      this.compilationCommand = CompilationPattern.getCompilationCommand(this.sourceType, this.objectType);
     }
 
     public ParsedKey withLibrary(String newLibrary) {
@@ -77,6 +91,19 @@ public class Utilities {
         String base = library + "." + objectName + "." + objectType.name();
         return (sourceType != null) ? base + "." + sourceType.name() : base;
     }
+
+    public String getDefaultSourceFile() {
+        return this.defaultSourceFile;
+    }
+
+    public String getDefaultSourceName() {
+        return this.defaultSourceName;
+    }
+
+    public CompCmd getCompilationCommand() {
+        return this.compilationCommand;
+    }
+
   }
 
   public static String nodeToString(JsonNode node) {
