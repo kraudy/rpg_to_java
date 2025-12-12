@@ -113,7 +113,7 @@ public class ParamMap {
     EnumMap<ParamCmd, ParamValue> inner = get(cmd);
     ParamValue pv = inner.get(param);
 
-    /* If a previous value exists, just append it */
+    /* If a previous value exists, just append it and early return */
     if (pv != null) return pv.put(value);
 
     /* Create new value */
@@ -121,31 +121,6 @@ public class ParamMap {
     inner.put(param, pv);
     return pv.getPrevious();
     
-    //TODO: Do i need to do the put here again? it should point to the same object instance.
-    //inner.put(param, pv);
-
-    //ParamValue oldPv = inner.get(param); // Get ParamCmd ParamValue
-    //ParamValue newPv;
-    ////TODO: Maybe just add a put(ParamValue) that accepst another ParamValue isntance and does the changes inside
-    //if (oldPv == null) {
-    //    newPv = new ParamValue(value);  // Initial insert
-    //    //return inner.put(param, new ParamValue(value));
-    //} else {
-    //    newPv = oldPv.appendChange(value);  // Update with history
-    //}
-    //inner.put(param, newPv);
-
-    // String oldValue = paramMap.put(param, value);
-    //String currentChain = paramChanges.getOrDefault(param, "");
-    //if (currentChain.isEmpty()) {
-    //  currentChain = param.name() + " : " + value; // First insertion
-    //} else {
-    //  currentChain += " => " + value; // Update: append the new value to the chain
-    //}
-    //paramChanges.put(param, currentChain);
-    //put(cmd, paramMap, paramChanges);
-
-    //return pv.getPrevious();  // Calls the overridden put(ParamCmd, String); no .toString() needed
   }
 
   //public void put(Command cmd, Map<ParamCmd, String> innerParamMap, Map<ParamCmd, String> innerChanges) {
