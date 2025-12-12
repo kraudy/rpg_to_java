@@ -14,7 +14,8 @@ public class ParamValue {
     // Constructor for initial insertion
     public ParamValue(String value) {
         this.current = value;
-        this.history.add(value + " [INIT]");
+        //this.history.add(value + " [INIT]");
+        this.history.add(value);
         this.count += 1;
     }
 

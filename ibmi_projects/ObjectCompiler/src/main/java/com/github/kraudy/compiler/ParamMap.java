@@ -39,28 +39,17 @@ public class ParamMap {
     ParamValue pv = get(cmd).get(param);
     if (pv == null) return "";
     return pv.get();
-    //return get(cmd).getOrDefault(param, "").get();
   }
 
   public List<ParamCmd> getPattern(Command cmd) {
     return CompilationPattern.commandToPatternMap.getOrDefault(cmd, Collections.emptyList());
   }
 
-  //public Map<ParamCmd, String> getChanges(Command cmd) {
-  //  return paramChanges.computeIfAbsent(cmd, k -> new HashMap<>());
-  //}
-
   public String remove(Command cmd, ParamCmd param) {
     EnumMap<ParamCmd, ParamValue> inner = get(cmd);
     ParamValue pv = inner.get(param);
 
-    //TODO: I'm not sure if I should do this here because i want it to show the [REMOVED]
-    inner.remove(param);
-
-    if (pv == null) {
-      return ""; // If no pv, there is nothing to remove
-      //pv = new ParamValue();
-    }
+    if (pv == null) return ""; // If no pv, there is nothing to remove
 
     return pv.remove();
   }

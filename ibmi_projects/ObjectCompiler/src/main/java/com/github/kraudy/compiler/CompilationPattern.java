@@ -143,7 +143,8 @@ public class CompilationPattern {
     }
 
     public String paramString(String val){
-      if ("NULL".equals(val)) return "";
+      //if ("NULL".equals(val)) return "";
+      if (val == null) return "";
 
       return " " + this.name() + "(" + val + ")";
     }
