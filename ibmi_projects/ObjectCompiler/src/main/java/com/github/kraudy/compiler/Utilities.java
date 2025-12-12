@@ -130,7 +130,7 @@ public class Utilities {
 
   public static boolean validateCommandParam(Command cmd, ParamCmd param) {
     /* Check if param is in the command pattern */
-    System.out.println("validateCommandParam command: " + cmd.name());
+    //System.out.println("validateCommandParam command: " + cmd.name());
     if (!CompilationPattern.commandToPatternMap.getOrDefault(cmd, Collections.emptyList()).contains(param)) {
       return false;
     }
