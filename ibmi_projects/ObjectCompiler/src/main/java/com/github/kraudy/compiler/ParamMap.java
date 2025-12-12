@@ -113,12 +113,14 @@ public class ParamMap {
     EnumMap<ParamCmd, ParamValue> inner = get(cmd);
     ParamValue pv = inner.get(param);
 
-    if (pv == null) {
-      pv = new ParamValue();
-      inner.put(param, pv);
-    }
+    /* If a previous value exists, just append it */
+    if (pv != null) return pv.put(value);
 
-    return pv.put(value);
+    /* Create new value */
+    pv = new ParamValue(value);
+    inner.put(param, pv);
+    return pv.getPrevious();
+    
     //TODO: Do i need to do the put here again? it should point to the same object instance.
     //inner.put(param, pv);
 
