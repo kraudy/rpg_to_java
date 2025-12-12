@@ -59,10 +59,10 @@ public class ParamMap {
   //}
 
   public String remove(Command cmd, ParamCmd param) {
-
     EnumMap<ParamCmd, ParamValue> inner = get(cmd);
     ParamValue pv = inner.get(param);
 
+    //TODO: I'm not sure if I should do this here because i want it to show the [REMOVED]
     inner.remove(param);
 
     if (pv == null) {
@@ -71,17 +71,6 @@ public class ParamMap {
     }
 
     return pv.remove();
-
-    //String oldValue = paramMap.remove(param);
-    //String currentChain = paramChanges.getOrDefault(param, "");
-    //if (currentChain.isEmpty()) {
-    //  currentChain = param.name() + " : [REMOVED]"; // First entry is a removal
-    //} else {
-    //  currentChain += " => [REMOVED]"; // Append removal to existing chain
-    //}
-    //paramChanges.put(param, currentChain);
-    //put(cmd, paramMap, paramChanges);
-    //return oldValue;
   }
 
   public void putAll(Command cmd, Map<ParamCmd, String> params) {
@@ -89,7 +78,7 @@ public class ParamMap {
 
     params.forEach((param, value) -> {
       if (!Utilities.validateCommandParam(cmd, param)) {
-        System.out.println("Rejected: Parameter " + param.name() + " not valid for command " + cmd.name());
+        System.err.println("Rejected: Parameter " + param.name() + " not valid for command " + cmd.name());
         return;
       }
       put(cmd, param, value);

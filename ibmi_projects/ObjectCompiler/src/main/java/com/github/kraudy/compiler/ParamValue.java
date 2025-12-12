@@ -33,7 +33,8 @@ public class ParamValue {
 
     // Getters
     public String get() {
-        return current;
+      if (this.current == null) return "NULL";
+      return current;
     }
 
     public String put(String value) {
