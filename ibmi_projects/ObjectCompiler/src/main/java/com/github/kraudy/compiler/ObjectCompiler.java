@@ -5,23 +5,12 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
-import com.github.kraudy.compiler.CompilationPattern.CompCmd;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
-import com.github.kraudy.compiler.CompilationPattern.ValCmd;
-
-import com.github.kraudy.compiler.CompilationPattern.SourceType;
-import com.github.kraudy.compiler.CompilationPattern.SysCmd;
 
 import com.github.kraudy.migrator.SourceMigrator;
 import com.ibm.as400.access.AS400;
@@ -42,50 +31,6 @@ public class ObjectCompiler implements Runnable{
   private ObjectDescription odes;
   private SourceMigrator migrator;
   private CommandExecutor commandExec;
-
-
-  static class LibraryConverter implements CommandLine.ITypeConverter<String> {
-    @Override
-    public String convert(String value) throws Exception {
-      try{
-        value = value.trim().toUpperCase();
-        if (value.length() > 10 || value.isEmpty()) {
-          throw new Exception("Invalid library name: must be 1-10 characters");
-        }
-        return value;
-
-      } catch (IllegalArgumentException e) {
-        throw new Exception("Invalid library name: " + value);
-      }
-    }
-  }  
-
-  static class ObjectNameConverter implements CommandLine.ITypeConverter<String> {
-    @Override
-    public String convert(String value) throws Exception {
-      try{
-        value = value.trim().toUpperCase();
-        if (value.length() > 10 || value.isEmpty()) {
-          throw new Exception("Invalid object name: must be 1-10 characters");
-        }
-        return value;
-
-      } catch (IllegalArgumentException e) {
-        throw new Exception("Invalid object name: " + value);
-      }
-    }
-  }  
-
-  static class SourceTypeConverter implements CommandLine.ITypeConverter<SourceType> {
-    @Override
-    public SourceType convert(String value) throws Exception {
-      try {
-        return SourceType.valueOf(value.trim().toUpperCase());
-      } catch (IllegalArgumentException e) {
-        throw new Exception("Invalid source type: " + value);
-      }
-    }
-  }
 
   static class TargetKeyConverter implements CommandLine.ITypeConverter<Utilities.ParsedKey> {
     @Override
@@ -135,7 +80,6 @@ public class ObjectCompiler implements Runnable{
   }
 
   public void run() {
-    
     /* Try to get compilation params from object. If it exists. */
 
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
