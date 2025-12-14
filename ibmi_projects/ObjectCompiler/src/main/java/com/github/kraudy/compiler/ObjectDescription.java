@@ -5,7 +5,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import com.github.kraudy.compiler.CompilationPattern.CompCmd;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 
@@ -149,18 +148,18 @@ public class ObjectDescription {
   }
 
   //TODO: Just send the key here.
-  public void getObjectInfo (ParamMap ParamCmdSequence, CompCmd compilationCommand) throws SQLException {
+  public void getObjectInfo () throws SQLException {
     //TODO: Check if the object exists.
 
     /* Get PGM info */
-    switch (compilationCommand) {
+    switch (this.targetKey.getCompilationCommand()) {
       case CRTSQLRPGI: //TODO: This could be pgm or module
       case CRTBNDRPG :
       case CRTBNDCL :
       case CRTRPGPGM :
       case CRTCLPGM :
       case CRTSRVPGM : //TODO: Should this be here?
-        getPgmInfo(ParamCmdSequence, this.targetKey.library, this.targetKey.objectName, this.targetKey.objectType);
+        getPgmInfo(this.targetKey.library, this.targetKey.objectName, this.targetKey.objectType);
         break;
      
       case RUNSQLSTM :
@@ -173,7 +172,7 @@ public class ObjectDescription {
         break;
 
       case CRTCMD :
-        getCmdInfo(ParamCmdSequence, this.targetKey.library, this.targetKey.objectName);
+        getCmdInfo(this.targetKey.library, this.targetKey.objectName);
         break;
     
       default:
@@ -181,15 +180,15 @@ public class ObjectDescription {
     }
 
     /* Get module info */
-    switch (compilationCommand) {
+    switch (this.targetKey.getCompilationCommand()) {
       case CRTSRVPGM : //TODO: Do I need to get the module info?
-        getModuleInfo(ParamCmdSequence, this.targetKey.library, this.targetKey.objectName); 
+        getModuleInfo(this.targetKey.library, this.targetKey.objectName); 
         break;
 
       case CRTSQLRPGI: //TODO: This could be pgm or module
       case CRTRPGMOD :
       case CRTCLMOD :
-        getModuleInfo(ParamCmdSequence, this.targetKey.library, this.targetKey.objectName); 
+        getModuleInfo(this.targetKey.library, this.targetKey.objectName); 
         break;
     
       default:
@@ -199,7 +198,7 @@ public class ObjectDescription {
     return ;
   }
 
-  private void getPgmInfo(ParamMap ParamCmdSequence, String library, String objectName, ObjectType objectType) throws SQLException {
+  private void getPgmInfo(String library, String objectName, ObjectType objectType) throws SQLException {
     
     try (Statement stmt = connection.createStatement();
         ResultSet rsObj = stmt.executeQuery(
@@ -426,7 +425,7 @@ public class ObjectDescription {
   }
 
   /* Query BOUND_MODULE_INFO for module-specific fields */
-  private void getModuleInfo(ParamMap ParamCmdSequence, String entryModuleLib, String entryModule) throws SQLException {
+  private void getModuleInfo(String entryModuleLib, String entryModule) throws SQLException {
     if (entryModuleLib.isEmpty() || entryModule.isEmpty()) {
       System.err.println("Entry module or lib are empty");  // Skip if no entry module
     } 
@@ -538,7 +537,7 @@ public class ObjectDescription {
     }
   }
 
-  private void getCmdInfo(ParamMap ParamCmdSequence, String library, String objectName) throws SQLException {
+  private void getCmdInfo(String library, String objectName) throws SQLException {
     
     try (Statement stmt = connection.createStatement();
         ResultSet rsCmdInfo = stmt.executeQuery(

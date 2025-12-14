@@ -124,7 +124,7 @@ public class ObjectCompiler implements Runnable{
         this.odes.SetCompilationParams(key.getParamMap());
 
         try {
-          odes.getObjectInfo(key.getParamMap(), key.getCompilationCommand());
+          odes.getObjectInfo();
         } catch (Exception e) {
           //TODO: Change logging for SLF4J or java.util.logging 
           if (debug) e.printStackTrace();
@@ -137,7 +137,7 @@ public class ObjectCompiler implements Runnable{
         /* Set specific target params */
         key.getParamMap().putAll(key.getCompilationCommand(), target.params);
 
-        //TODO: Move this to somewhere else.
+        //TODO: Move this to objectDescriptor or something.
         switch (key.getCompilationCommand()){
           case CRTCLMOD:
             break;
