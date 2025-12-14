@@ -30,7 +30,7 @@ public class ObjectDescription {
 
     //TODO: Add something like [DEFAULT] for default value of params
 
-    //TODO: Set another switch specifically for SRCSTMF
+    //TODO: Could i make these put into a Map<ParamCmd, String> params and then just use putall?
     switch (this.targetKey.getCompilationCommand()) {
       case CRTSQLRPGI:
       case CRTBNDRPG:

@@ -1,5 +1,7 @@
 package com.github.kraudy.compiler;
 
+import java.util.Map;
+
 import com.github.kraudy.compiler.CompilationPattern.CompCmd;
 import com.github.kraudy.compiler.CompilationPattern.ObjectType;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
@@ -67,33 +69,36 @@ public class TargetKey {
     return this.library + "/" + this.sourceFile;
   }
 
+  public void putAll(Map<ParamCmd, String> params) {
+    this.ParamCmdSequence.putAll(this.compilationCommand, params);
+  }
+
   public String put(ParamCmd param, String value) {
-      return this.ParamCmdSequence.put(this.compilationCommand, param, value);
+    return this.ParamCmdSequence.put(this.compilationCommand, param, value);
   }
 
   public String put(ParamCmd param, ValCmd value) {
-      return this.ParamCmdSequence.put(this.compilationCommand, param, value);
+    return this.ParamCmdSequence.put(this.compilationCommand, param, value);
   }
 
   public String asString() {
-      String base = library + "." + objectName + "." + objectType.name();
-      return (sourceType != null) ? base + "." + sourceType.name() : base;
+    return library + "." + objectName + "." + objectType.name() + "." + sourceType.name();
   }
 
   public String getSourceFile() {
-      return this.sourceFile;
+    return this.sourceFile;
   }
 
   public String getSourceName() {
-      return this.sourceName;
+    return this.sourceName;
   }
 
   public CompCmd getCompilationCommand() {
-      return this.compilationCommand;
+    return this.compilationCommand;
   }
 
   public ParamMap getParamMap() {
-      return this.ParamCmdSequence;
+    return this.ParamCmdSequence;
   }
 
 }

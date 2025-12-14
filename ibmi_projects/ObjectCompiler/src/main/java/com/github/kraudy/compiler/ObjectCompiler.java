@@ -115,12 +115,12 @@ public class ObjectCompiler implements Runnable{
         }
 
         /* Set global defaults params per target */
-        key.getParamMap().putAll(key.getCompilationCommand(), spec.defaults);
+        key.putAll(spec.defaults);
 
         /* Set specific target params */
-        key.getParamMap().putAll(key.getCompilationCommand(), target.params);
+        key.putAll(target.params);
 
-        //TODO: Move this to objectDescriptor or something.
+        //TODO: Move this to objectDescriptor migrateSource().
         switch (key.getCompilationCommand()){
           case CRTCLMOD:
             break;
