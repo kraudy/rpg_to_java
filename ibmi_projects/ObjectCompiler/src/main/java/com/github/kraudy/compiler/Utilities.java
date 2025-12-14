@@ -35,14 +35,6 @@ public class Utilities {
     public CompCmd compilationCommand;
     public ParamMap ParamCmdSequence;
 
-    public String getQualifiedObject(){
-      return this.library + "/" + this.objectName;
-    }
-
-    public String getQualifiedObject(ValCmd valcmd){
-      return valcmd.toString() + "/" + this.objectName;
-    }
-
     @JsonCreator  // Enables deserialization from a JSON string like "MYLIB.HELLO.PGM.RPGLE"
     public ParsedKey(String key) {
       String[] parts = key.split("\\.");
@@ -82,15 +74,14 @@ public class Utilities {
       this.ParamCmdSequence = new ParamMap();
     }
 
-    public ParsedKey withLibrary(String newLibrary) {
-      if (newLibrary == null || newLibrary.trim().isEmpty()) {
-        throw new IllegalArgumentException("Library name is required.");
-      }
-      String upperLibrary = newLibrary.toUpperCase();
-      String newKey = upperLibrary + "." + this.objectName + "." + this.objectType.name() +
-                      (this.sourceType != null ? "." + this.sourceType.name() : "");
-      return new ParsedKey(newKey); // Reuse constructor for full validation
+    public String getQualifiedObject(){
+      return this.library + "/" + this.objectName;
     }
+
+    public String getQualifiedObject(ValCmd valcmd){
+      return valcmd.toString() + "/" + this.objectName;
+    }
+
 
     public String put(ParamCmd param, String value) {
         return this.ParamCmdSequence.put(this.compilationCommand, param, value);
