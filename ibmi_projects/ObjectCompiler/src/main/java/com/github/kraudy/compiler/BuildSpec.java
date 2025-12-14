@@ -13,7 +13,7 @@ import java.util.Map;
 
 /* This class represents the pattern of the YAML file */
 public class BuildSpec {
-  /* Global default compilation params */
+  /* Global compilation command params */
   @JsonProperty("defaults")
   @JsonDeserialize(using = ParamMapDeserializer.class)
   public final Map<ParamCmd, String> defaults = new HashMap<>();
@@ -72,12 +72,12 @@ public class BuildSpec {
     /* Per-target on success system commands */
     @JsonProperty("success")
     @JsonDeserialize(using = CommandMapDeserializer.class)
-    public List<String> success;
+    public final List<String> success  = new ArrayList<>();
 
     /* Per-target on failure system commands */
     @JsonProperty("failure")
     @JsonDeserialize(using = CommandMapDeserializer.class)
-    public List<String> failure;
+    public final List<String> failure  = new ArrayList<>();
 
     @JsonAnySetter
     public void unknown(String name, Object value) {

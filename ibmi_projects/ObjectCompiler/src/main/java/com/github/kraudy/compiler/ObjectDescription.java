@@ -24,7 +24,7 @@ public class ObjectDescription {
     this.targetKey = targetKey;
   }
 
-  public void SetCompilationParams(ParamMap ParamCmdSequence) {
+  public void SetCompilationParams() {
 
     /* Generate compilation params values from object description */
 
