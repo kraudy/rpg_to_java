@@ -24,7 +24,7 @@ public class Utilities {
   }
 
   //TODO: Move this to its own class and name it TargetKey
-  public static class ParsedKey {
+  public static class TargetKey {
     public String library;
     public String objectName;
     public ObjectType objectType;
@@ -35,8 +35,7 @@ public class Utilities {
     public CompCmd compilationCommand;
     public ParamMap ParamCmdSequence;
 
-    @JsonCreator  // Enables deserialization from a JSON string like "MYLIB.HELLO.PGM.RPGLE"
-    public ParsedKey(String key) {
+    public TargetKey(String key) {
       String[] parts = key.split("\\.");
       if (parts.length != 4) {
         throw new IllegalArgumentException("Invalid key: " + key + ". Expected: library.objectName.objectType.sourceType");

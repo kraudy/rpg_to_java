@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
-import com.github.kraudy.compiler.Utilities.ParsedKey;
+import com.github.kraudy.compiler.Utilities.TargetKey;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,13 +32,13 @@ public class BuildSpec {
 
   //TODO: Add onFailure
 
-  public final LinkedHashMap<ParsedKey, TargetSpec> targets = new LinkedHashMap<>();
+  public final LinkedHashMap<TargetKey, TargetSpec> targets = new LinkedHashMap<>();
 
   public BuildSpec() {
 
   }
 
-  public BuildSpec(ParsedKey targetKey) {
+  public BuildSpec(TargetKey targetKey) {
     TargetSpec spec = new TargetSpec();
     this.targets.put(targetKey,  spec);
   }

@@ -15,9 +15,9 @@ public class ObjectDescription {
   private final Connection connection;
   private final boolean debug;
   private final boolean verbose;
-  private Utilities.ParsedKey targetKey;
+  private Utilities.TargetKey targetKey;
 
-  public ObjectDescription(Connection connection, boolean debug, boolean verbose, Utilities.ParsedKey targetKey) {
+  public ObjectDescription(Connection connection, boolean debug, boolean verbose, Utilities.TargetKey targetKey) {
     this.connection = connection;
     this.debug = debug;
     this.verbose = verbose;
