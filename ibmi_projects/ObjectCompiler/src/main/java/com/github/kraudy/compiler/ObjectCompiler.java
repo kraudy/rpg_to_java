@@ -119,9 +119,7 @@ public class ObjectCompiler implements Runnable{
 
         //TODO: Override source file and sourcename directly in the key with the yaml params
 
-        this.odes = new ObjectDescription(
-              connection, debug, verbose, key.getCompilationCommand(), key
-        );
+        this.odes = new ObjectDescription(connection, debug, verbose, key);
 
         this.odes.SetCompilationParams(key.getParamMap());
 

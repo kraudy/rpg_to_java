@@ -17,25 +17,12 @@ public class ObjectDescription {
   private final boolean debug;
   private final boolean verbose;
   private Utilities.ParsedKey targetKey;
-  private CompCmd compilationCommand;
 
-  public ObjectDescription(
-        Connection connection,
-        boolean debug,
-        boolean verbose,
-        CompCmd compilationCommand,
-        Utilities.ParsedKey targetKey
-      ) {
-
+  public ObjectDescription(Connection connection, boolean debug, boolean verbose, Utilities.ParsedKey targetKey) {
     this.connection = connection;
     this.debug = debug;
     this.verbose = verbose;
-
     this.targetKey = targetKey;
-
-    this.compilationCommand = compilationCommand;
-
-
   }
 
   public void SetCompilationParams(ParamMap ParamCmdSequence) {
@@ -59,63 +46,64 @@ public class ObjectDescription {
       case CRTCLMOD:
       case RUNSQLSTM:
         //TODO: SRCFILE could be set to *LIBL,etc until the migrators works with the library list
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.SRCFILE, this.targetKey.getQualifiedSourceFile());
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.SRCMBR, this.targetKey.getSourceName());
+        this.targetKey.put(ParamCmd.SRCFILE, this.targetKey.getQualifiedSourceFile());
+        this.targetKey.put(ParamCmd.SRCMBR, this.targetKey.getSourceName());
         break;
     }
 
     /* Set default values */
     switch (this.targetKey.getCompilationCommand()) {
       case CRTSQLRPGI:
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.OBJ, this.targetKey.getQualifiedObject());
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.OBJ, this.targetKey.getQualifiedObject(ValCmd.CURLIB));
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.OBJTYPE, this.targetKey.objectType.toParam());
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.COMMIT, ValCmd.NONE);
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.DBGVIEW, ValCmd.SOURCE);
+        this.targetKey.put(ParamCmd.OBJ, this.targetKey.getQualifiedObject());
+        this.targetKey.put(ParamCmd.OBJ, this.targetKey.getQualifiedObject(ValCmd.CURLIB));
+        this.targetKey.put(ParamCmd.OBJTYPE, this.targetKey.objectType.toParam());
+        this.targetKey.put(ParamCmd.COMMIT, ValCmd.NONE);
+        this.targetKey.put(ParamCmd.DBGVIEW, ValCmd.SOURCE);
         break;
     
       case CRTBNDRPG:
       case CRTBNDCL:
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.DBGVIEW, ValCmd.ALL);
+        this.targetKey.put(ParamCmd.DBGVIEW, ValCmd.ALL);
       case CRTRPGPGM:
       case CRTCLPGM:
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.PGM, this.targetKey.getQualifiedObject());
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.PGM, this.targetKey.getQualifiedObject(ValCmd.CURLIB));
+        this.targetKey.put(ParamCmd.PGM, this.targetKey.getQualifiedObject());
+        this.targetKey.put(ParamCmd.PGM, this.targetKey.getQualifiedObject(ValCmd.CURLIB));
         break;
 
       case CRTDSPF:
       case CRTPF:
       case CRTLF:
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.FILE, this.targetKey.getQualifiedObject());
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.FILE, this.targetKey.getQualifiedObject(ValCmd.CURLIB));
+        this.targetKey.put(ParamCmd.FILE, this.targetKey.getQualifiedObject());
+        this.targetKey.put(ParamCmd.FILE, this.targetKey.getQualifiedObject(ValCmd.CURLIB));
         break;
       
       case CRTSRVPGM:
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.SRVPGM, this.targetKey.getQualifiedObject());
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.SRVPGM, this.targetKey.getQualifiedObject(ValCmd.CURLIB));
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.MODULE, this.targetKey.getQualifiedObject());
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.MODULE, this.targetKey.getQualifiedObject(ValCmd.LIBL));
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.BNDSRVPGM, ValCmd.NONE);
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.EXPORT, ValCmd.ALL);
+        this.targetKey.put(ParamCmd.SRVPGM, this.targetKey.getQualifiedObject());
+        this.targetKey.put(ParamCmd.SRVPGM, this.targetKey.getQualifiedObject(ValCmd.CURLIB));
+        this.targetKey.put(ParamCmd.MODULE, this.targetKey.getQualifiedObject());
+        this.targetKey.put(ParamCmd.MODULE, this.targetKey.getQualifiedObject(ValCmd.LIBL));
+        this.targetKey.put(ParamCmd.BNDSRVPGM, ValCmd.NONE);
+        this.targetKey.put(ParamCmd.EXPORT, ValCmd.ALL);
         break;
 
       case CRTRPGMOD:
       case CRTCLMOD:
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.DBGVIEW, ValCmd.ALL);
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.MODULE, this.targetKey.getQualifiedObject());
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.MODULE, this.targetKey.getQualifiedObject(ValCmd.CURLIB));
+        this.targetKey.put(ParamCmd.DBGVIEW, ValCmd.ALL);
+        this.targetKey.put(ParamCmd.MODULE, this.targetKey.getQualifiedObject());
+        this.targetKey.put(ParamCmd.MODULE, this.targetKey.getQualifiedObject(ValCmd.CURLIB));
         break;
 
       case RUNSQLSTM:
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.COMMIT, ValCmd.NONE);
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.DBGVIEW, ValCmd.SOURCE);
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.OPTION, ValCmd.LIST);
+        this.targetKey.put(ParamCmd.COMMIT, ValCmd.NONE);
+        this.targetKey.put(ParamCmd.DBGVIEW, ValCmd.SOURCE);
+        this.targetKey.put(ParamCmd.OPTION, ValCmd.LIST);
         break;
 
       default:
         break;
     }
 
+    //TODO: These switch could be moved to methods inside TargetKey class and just call them here.
     /* Set override value */
     switch (this.targetKey.getCompilationCommand()) {
       case CRTSRVPGM:
@@ -128,7 +116,7 @@ public class ObjectDescription {
       case CRTCLPGM:
       case CRTDSPF:
       case CRTPRTF:
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.REPLACE, ValCmd.YES);
+        this.targetKey.put(ParamCmd.REPLACE, ValCmd.YES);
         break;
     
       default:
@@ -146,15 +134,15 @@ public class ObjectDescription {
       case CRTDSPF:
       case CRTPF:
       case CRTLF:
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.OPTION, ValCmd.EVENTF);
+        this.targetKey.put(ParamCmd.OPTION, ValCmd.EVENTF);
         break;
     }
 
     switch (this.targetKey.getCompilationCommand()) {
       case CRTRPGPGM:
       case CRTCLPGM:
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.OPTION, ValCmd.LSTDBG);
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.GENOPT, ValCmd.LIST);
+        this.targetKey.put(ParamCmd.OPTION, ValCmd.LSTDBG);
+        this.targetKey.put(ParamCmd.GENOPT, ValCmd.LIST);
         break;
     }
 
@@ -343,32 +331,32 @@ public class ObjectDescription {
       if (verbose) System.out.println("Found object '" + objectName + "' from library '" + library + "' type " + "'" + objectType.toParam() + "'");
 
       //TODO: Could i change this to objectType for less casses?
-      switch (this.compilationCommand) {
+      switch (this.targetKey.getCompilationCommand()) {
         case CRTSRVPGM:
         case CRTBNDRPG:
         case CRTBNDCL:
           String actgrp = rsObj.getString("ACTGRP").trim();
-          if (!actgrp.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.ACTGRP, actgrp);
-          if ("QILE".equals(actgrp)) ParamCmdSequence.put(this.compilationCommand, ParamCmd.DFTACTGRP, ValCmd.NO);
+          if (!actgrp.isEmpty()) this.targetKey.put(ParamCmd.ACTGRP, actgrp);
+          if ("QILE".equals(actgrp)) this.targetKey.put(ParamCmd.DFTACTGRP, ValCmd.NO);
         case CRTRPGMOD:
           String stgMdl = rsObj.getString("STGMDL").trim();
-          if (!stgMdl.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.STGMDL, stgMdl);
+          if (!stgMdl.isEmpty()) this.targetKey.put(ParamCmd.STGMDL, stgMdl);
         case CRTCLMOD:
         case CRTSQLRPGI:
         case CRTRPGPGM:
         case CRTCLPGM:
           String tgtRls = rsObj.getString("TGTRLS").trim();
-          ParamCmdSequence.put(this.compilationCommand, ParamCmd.TGTRLS, ValCmd.CURRENT);
-          if (!tgtRls.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.TGTRLS, tgtRls);
+          this.targetKey.put(ParamCmd.TGTRLS, ValCmd.CURRENT);
+          if (!tgtRls.isEmpty()) this.targetKey.put(ParamCmd.TGTRLS, tgtRls);
         case CRTDSPF:
         case CRTPF:
         case CRTLF:
           String text = rsObj.getString("TEXT").trim();
-          if (!text.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.TEXT, text);
+          if (!text.isEmpty()) this.targetKey.put(ParamCmd.TEXT, text);
           break;
       }
 
-      switch (this.compilationCommand) {
+      switch (this.targetKey.getCompilationCommand()) {
         case CRTSRVPGM:
         case CRTBNDRPG:
         case CRTBNDCL:
@@ -377,21 +365,21 @@ public class ObjectDescription {
         case CRTCLPGM:
         case RUNSQLSTM:
           String tgtRls = rsObj.getString("TGTRLS").trim();
-          ParamCmdSequence.put(this.compilationCommand, ParamCmd.TGTRLS, ValCmd.CURRENT);
-          if (!tgtRls.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.TGTRLS, tgtRls);
+          this.targetKey.put(ParamCmd.TGTRLS, ValCmd.CURRENT);
+          if (!tgtRls.isEmpty()) this.targetKey.put(ParamCmd.TGTRLS, tgtRls);
 
           String usrPrf = rsObj.getString("USRPRF").trim();
-          if (!usrPrf.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.USRPRF, usrPrf);
+          if (!usrPrf.isEmpty()) this.targetKey.put(ParamCmd.USRPRF, usrPrf);
           break;
       }
 
-      switch (this.compilationCommand) {
+      switch (this.targetKey.getCompilationCommand()) {
         case CRTBNDRPG:
         case CRTBNDCL:
         case CRTRPGMOD:
         case CRTCLMOD:
           String optimize = rsObj.getString("OPTIMIZE").trim();
-          if (!optimize.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.OPTIMIZE, optimize);
+          if (!optimize.isEmpty()) this.targetKey.put(ParamCmd.OPTIMIZE, optimize);
         case CRTSQLRPGI:
         case CRTRPGPGM:
         case CRTCLPGM:
@@ -401,35 +389,35 @@ public class ObjectDescription {
         case CRTLF:
           String srtLib = rsObj.getString("SORT_SEQUENCE_LIBRARY").trim();
           String srtSeq = rsObj.getString("SORT_SEQUENCE").trim();
-          if (!srtSeq.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.SRTSEQ, srtSeq + (srtLib.isEmpty() ? "" : " " + srtLib));
+          if (!srtSeq.isEmpty()) this.targetKey.put(ParamCmd.SRTSEQ, srtSeq + (srtLib.isEmpty() ? "" : " " + srtLib));
 
           String langId = rsObj.getString("LANGID").trim();
-          if (!langId.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.LANGID, langId);
+          if (!langId.isEmpty()) this.targetKey.put(ParamCmd.LANGID, langId);
           break;
       }
       
-      switch (this.compilationCommand) {
+      switch (this.targetKey.getCompilationCommand()) {
         case CRTBNDRPG:
         case CRTRPGMOD:
           String fixNbr = rsObj.getString("FIXNBR").trim();
           if (!fixNbr.isEmpty()){
-            ParamCmdSequence.put(this.compilationCommand, ParamCmd.FIXNBR, fixNbr.equals("1") ? ValCmd.YES : ValCmd.NO);
+            this.targetKey.put(ParamCmd.FIXNBR, fixNbr.equals("1") ? ValCmd.YES : ValCmd.NO);
           }
 
           String prfDta = rsObj.getString("PRFDTA").trim();
-          if (!prfDta.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.PRFDTA, prfDta);
+          if (!prfDta.isEmpty()) this.targetKey.put(ParamCmd.PRFDTA, prfDta);
           break;
       }
 
-      switch (this.compilationCommand) {
+      switch (this.targetKey.getCompilationCommand()) {
         case CRTBNDCL:
         case CRTCLMOD:
         case CRTCLPGM:
           String logCmds = rsObj.getString("LOG").trim();
-          if (!logCmds.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.LOG, logCmds.equals("1") ? ValCmd.YES : ValCmd.NO);
+          if (!logCmds.isEmpty()) this.targetKey.put(ParamCmd.LOG, logCmds.equals("1") ? ValCmd.YES : ValCmd.NO);
 
           String alwRtvSrc = rsObj.getString("ALWRTVSRC").trim();
-          if (!alwRtvSrc.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.ALWRTVSRC, alwRtvSrc.equals("1") ? ValCmd.YES : ValCmd.NO);
+          if (!alwRtvSrc.isEmpty()) this.targetKey.put(ParamCmd.ALWRTVSRC, alwRtvSrc.equals("1") ? ValCmd.YES : ValCmd.NO);
           break;
       }
 
@@ -524,10 +512,10 @@ public class ObjectDescription {
         String modOptimize = rsMod.getString("OPTIMIZE").trim();
         if (!modOptimize.isEmpty()) {
           switch (modOptimize) {
-            case "10": ParamCmdSequence.put(this.compilationCommand, ParamCmd.OPTIMIZE, ValCmd.NONE);   break;
-            case "20": ParamCmdSequence.put(this.compilationCommand, ParamCmd.OPTIMIZE, ValCmd.BASIC);  break;
-            case "30": ParamCmdSequence.put(this.compilationCommand, ParamCmd.OPTIMIZE, ValCmd.BASIC);  break;
-            case "40": ParamCmdSequence.put(this.compilationCommand, ParamCmd.OPTIMIZE, ValCmd.FULL);   break;
+            case "10": this.targetKey.put(ParamCmd.OPTIMIZE, ValCmd.NONE);   break;
+            case "20": this.targetKey.put(ParamCmd.OPTIMIZE, ValCmd.BASIC);  break;
+            case "30": this.targetKey.put(ParamCmd.OPTIMIZE, ValCmd.BASIC);  break;
+            case "40": this.targetKey.put(ParamCmd.OPTIMIZE, ValCmd.FULL);   break;
           }
         }
 
@@ -582,19 +570,19 @@ public class ObjectDescription {
       
       // -- Missing: REXSRCFILE, REXSRCMBR, REXCMDENV, REXEXITPGM
       String cmd = rsCmdInfo.getString("CMD").trim();
-      if(!cmd.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.CMD, cmd); 
+      if(!cmd.isEmpty()) this.targetKey.put(ParamCmd.CMD, cmd); 
 
       String pgm = rsCmdInfo.getString("PGM").trim();
-      if(!pgm.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.PGM, pgm); 
+      if(!pgm.isEmpty()) this.targetKey.put(ParamCmd.PGM, pgm); 
 
       String srcfile = rsCmdInfo.getString("SRCFILE").trim();
-      if(!srcfile.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.SRCFILE, srcfile); 
+      if(!srcfile.isEmpty()) this.targetKey.put(ParamCmd.SRCFILE, srcfile); 
 
       String srcmbr = rsCmdInfo.getString("SRCMBR").trim();
-      if(!srcmbr.isEmpty()) ParamCmdSequence.put(this.compilationCommand, ParamCmd.SRCMBR, srcmbr); 
+      if(!srcmbr.isEmpty()) this.targetKey.put(ParamCmd.SRCMBR, srcmbr); 
 
       ValCmd threadsafe = ValCmd.fromString(rsCmdInfo.getString("THDSAFE").trim());
-      ParamCmdSequence.put(this.compilationCommand, ParamCmd.THDSAFE, threadsafe); 
+      this.targetKey.put(ParamCmd.THDSAFE, threadsafe); 
 
       
 
