@@ -16,8 +16,6 @@ public class ObjectDescription {
   private final Connection connection;
   private final boolean debug;
   private final boolean verbose;
-  private String sourceFile;
-  private String sourceName;
   private Utilities.ParsedKey targetKey;
   private CompCmd compilationCommand;
 
@@ -26,18 +24,14 @@ public class ObjectDescription {
         boolean debug,
         boolean verbose,
         CompCmd compilationCommand,
-        Utilities.ParsedKey targetKey,
-        String sourceFile,
-        String sourceName) {
+        Utilities.ParsedKey targetKey
+      ) {
 
     this.connection = connection;
     this.debug = debug;
     this.verbose = verbose;
 
     this.targetKey = targetKey;
-
-    this.sourceFile = sourceFile;
-    this.sourceName = sourceName;
 
     this.compilationCommand = compilationCommand;
 
@@ -51,7 +45,7 @@ public class ObjectDescription {
     //TODO: Add something like [DEFAULT] for default value of params
 
     //TODO: Set another switch specifically for SRCSTMF
-    switch (this.compilationCommand) {
+    switch (this.targetKey.getCompilationCommand()) {
       case CRTSQLRPGI:
       case CRTBNDRPG:
       case CRTBNDCL:
@@ -65,13 +59,13 @@ public class ObjectDescription {
       case CRTCLMOD:
       case RUNSQLSTM:
         //TODO: SRCFILE could be set to *LIBL,etc until the migrators works with the library list
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.SRCFILE, this.targetKey.library + "/" + this.sourceFile);
-        ParamCmdSequence.put(this.compilationCommand, ParamCmd.SRCMBR, this.sourceName);
+        ParamCmdSequence.put(this.compilationCommand, ParamCmd.SRCFILE, this.targetKey.getQualifiedSourceFile());
+        ParamCmdSequence.put(this.compilationCommand, ParamCmd.SRCMBR, this.targetKey.getSourceName());
         break;
     }
 
     /* Set default values */
-    switch (this.compilationCommand) {
+    switch (this.targetKey.getCompilationCommand()) {
       case CRTSQLRPGI:
         ParamCmdSequence.put(this.compilationCommand, ParamCmd.OBJ, this.targetKey.getQualifiedObject());
         ParamCmdSequence.put(this.compilationCommand, ParamCmd.OBJ, this.targetKey.getQualifiedObject(ValCmd.CURLIB));
@@ -123,7 +117,7 @@ public class ObjectDescription {
     }
 
     /* Set override value */
-    switch (this.compilationCommand) {
+    switch (this.targetKey.getCompilationCommand()) {
       case CRTSRVPGM:
       case CRTBNDRPG:
       case CRTBNDCL:
@@ -142,7 +136,7 @@ public class ObjectDescription {
     }
 
     /* Set option and genopt */
-    switch (this.compilationCommand) {
+    switch (this.targetKey.getCompilationCommand()) {
       case CRTSRVPGM:
       case CRTBNDRPG:
       case CRTBNDCL:
@@ -156,7 +150,7 @@ public class ObjectDescription {
         break;
     }
 
-    switch (this.compilationCommand) {
+    switch (this.targetKey.getCompilationCommand()) {
       case CRTRPGPGM:
       case CRTCLPGM:
         ParamCmdSequence.put(this.compilationCommand, ParamCmd.OPTION, ValCmd.LSTDBG);
@@ -166,6 +160,7 @@ public class ObjectDescription {
 
   }
 
+  //TODO: Just send the key here.
   public void getObjectInfo (ParamMap ParamCmdSequence, CompCmd compilationCommand) throws SQLException {
     //TODO: Check if the object exists.
 
@@ -541,7 +536,8 @@ public class ObjectDescription {
         if (!modSrcLib.isEmpty()) {
           //TODO: I'm not sure if this will work the first time.
           String sourceLibrary = modSrcLib.toUpperCase();
-          ParamCmdSequence.put(this.compilationCommand, ParamCmd.SRCFILE, sourceLibrary + "/" + sourceFile);  // Update
+          //TODO: if you want to do this, change the sourceFile in the targetKey and then put() it
+          //ParamCmdSequence.put(this.compilationCommand, ParamCmd.SRCFILE, sourceLibrary + "/" + sourceFile);  // Update
         }
         String modSrcFil = rsMod.getString("SOURCE_FILE").trim();
         String modSrcMbr = rsMod.getString("SOURCE_FILE_MEMBER").trim();

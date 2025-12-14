@@ -82,6 +82,9 @@ public class Utilities {
       return valcmd.toString() + "/" + this.objectName;
     }
 
+    public String getQualifiedSourceFile(){
+      return this.library + "/" + this.sourceFile;
+    }
 
     public String put(ParamCmd param, String value) {
         return this.ParamCmdSequence.put(this.compilationCommand, param, value);
