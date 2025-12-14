@@ -92,6 +92,14 @@ public class Utilities {
       return new ParsedKey(newKey); // Reuse constructor for full validation
     }
 
+    public String put(ParamCmd param, String value) {
+        return this.ParamCmdSequence.put(this.compilationCommand, param, value);
+    }
+
+    public String put(ParamCmd param, ValCmd value) {
+        return this.ParamCmdSequence.put(this.compilationCommand, param, value);
+    }
+
     public String asString() {
         String base = library + "." + objectName + "." + objectType.name();
         return (sourceType != null) ? base + "." + sourceType.name() : base;

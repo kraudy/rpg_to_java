@@ -80,7 +80,7 @@ public class ObjectCompiler implements Runnable{
     
     File f = new File(yamlFile);
     if (!f.exists()) throw new RuntimeException("YAML file not found: " + yamlFile);
-    
+
     try{
       /* Diserialize yaml file */
       spec = mapper.readValue(f, BuildSpec.class);
@@ -103,7 +103,7 @@ public class ObjectCompiler implements Runnable{
       BuildSpec.TargetSpec target = entry.getValue();
 
       try{
-        // Re-create migrator fresh for every target, fix that.
+        // Re-create migrator fresh for every target, fix this.
         try {
           this.migrator = new SourceMigrator(this.system, this.connection, true, true);
         } catch (Exception e){
