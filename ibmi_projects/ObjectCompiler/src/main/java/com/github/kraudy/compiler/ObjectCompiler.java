@@ -67,27 +67,11 @@ public class ObjectCompiler implements Runnable{
   public void run() {
     /* Try to get compilation params from object. If it exists. */
 
-    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-    BuildSpec spec = null;
-
     /* Init command executor */
     commandExec = new CommandExecutor(connection, debug, verbose, dryRun);
 
-    //TODO: Leave only the yaml here, i think i'll remove picocli and just use a scanner or something.
-    if (yamlFile == null) {
-      throw new RuntimeException("YAML build file must be provided");
-    }
-    
-    File f = new File(yamlFile);
-    if (!f.exists()) throw new RuntimeException("YAML file not found: " + yamlFile);
-
-    try{
-      /* Diserialize yaml file */
-      spec = mapper.readValue(f, BuildSpec.class);
-    } catch (Exception e) {
-      e.printStackTrace();
-      throw new RuntimeException("Could not map build file to spec");
-    }
+    /* Get build spec from yaml file */
+    BuildSpec spec = Utilities.deserializeYaml(yamlFile);
 
     /* Global before */
     if(!spec.before.isEmpty()){

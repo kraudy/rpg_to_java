@@ -1,15 +1,40 @@
 package com.github.kraudy.compiler;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.kraudy.compiler.CompilationPattern.Command;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 
 public class Utilities {
+
+  public static BuildSpec deserializeYaml (String yamlFile) {
+    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    BuildSpec spec = null;
+
+    if (yamlFile == null) throw new RuntimeException("YAML build file must be provided");
+    
+    File f = new File(yamlFile);
+    
+    if (!f.exists()) throw new RuntimeException("YAML file not found: " + yamlFile);
+
+    try{
+      /* Diserialize yaml file */
+      spec = mapper.readValue(f, BuildSpec.class);
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new RuntimeException("Could not map build file to spec");
+    }
+
+    return spec;
+  }
+
   public static String nodeToString(JsonNode node) {
     String value = "";
     if (node.isNull()) return null;
