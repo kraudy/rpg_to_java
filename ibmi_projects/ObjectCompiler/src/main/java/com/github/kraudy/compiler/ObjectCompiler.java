@@ -32,23 +32,8 @@ public class ObjectCompiler implements Runnable{
   private SourceMigrator migrator;
   private CommandExecutor commandExec;
 
-  static class TargetKeyConverter implements CommandLine.ITypeConverter<Utilities.ParsedKey> {
-    @Override
-    public Utilities.ParsedKey convert(String value) throws Exception {
-      try {
-        return new Utilities.ParsedKey(value.trim().toUpperCase());
-      } catch (IllegalArgumentException e) {
-        throw new Exception("Invalid target key: " + e.getMessage());
-      }
-    }
-  }
-
-  /* Object attributes. Required params */
-  @Option(names = {"-tk","--target-key"}, description = "Target key: library.objectName.objectType[.sourceType] (e.g., MYLIB.HELLO.PGM.RPGLE)", converter = TargetKeyConverter.class)
-  private Utilities.ParsedKey targetKey;
-
   /* yaml */
-  @Option(names = {"-f", "--file"}, description = "YAML build file (instead of --target-key)")
+  @Option(names = {"-f", "--file"}, description = "YAML build file")
   private String yamlFile;
 
   @Option(names = {"--dry-run"}, description = "Show commands without executing")
@@ -89,20 +74,19 @@ public class ObjectCompiler implements Runnable{
     commandExec = new CommandExecutor(connection, debug, verbose, dryRun);
 
     //TODO: Leave only the yaml here, i think i'll remove picocli and just use a scanner or something.
-    if (yamlFile != null) {
-      File f = new File(yamlFile);
-      if (!f.exists()) throw new RuntimeException("YAML file not found: " + yamlFile);
-      try{
-        /* Diserialize yaml file */
-        spec = mapper.readValue(f, BuildSpec.class);
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
-    } else if (targetKey != null) {
-      // backward compatibility: single object mode
-      //TODO: Maybe i should add a param here to override values or just create a new
-      // paramMap for input ci values
-      spec = new BuildSpec(targetKey);
+    if (yamlFile == null) {
+      throw new RuntimeException("YAML build file must be provided");
+    }
+    
+    File f = new File(yamlFile);
+    if (!f.exists()) throw new RuntimeException("YAML file not found: " + yamlFile);
+    
+    try{
+      /* Diserialize yaml file */
+      spec = mapper.readValue(f, BuildSpec.class);
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new RuntimeException("Could not map build file to spec");
     }
 
     /* Global before */
@@ -110,7 +94,7 @@ public class ObjectCompiler implements Runnable{
       commandExec.executeCommand(spec.before);
     }
 
-    showLibraryList();
+    if(debug || verbose) showLibraryList();
 
     /* This is intended for a YAML file with multiple objects in a toposort order */
     //TODO: Here, to compile only object with changes, just use a diff and filter the keys.
@@ -203,15 +187,15 @@ public class ObjectCompiler implements Runnable{
         commandExec.executeCommand(key.getParamMap().getCommandString(key.getCompilationCommand()));
 
       } catch (Exception e){
-        System.err.println("Target failed");
-        //System.err.println("Target failed: " + targetKey.toString());
+        System.err.println("Target failed: " + key.toString());
         e.printStackTrace();
-        break;
 
         /* Per target failure */
         //if(!target.onError.isEmpty()){
         //  commandExec.executeCommand(target.onError);
         //} 
+
+        break;
 
       } finally {
         /* Per target after */
