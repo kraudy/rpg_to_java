@@ -32,23 +32,18 @@ public class BuildSpec {
   /* Global on success system commands */
   @JsonProperty("success")
   @JsonDeserialize(using = CommandMapDeserializer.class)
-  public List<String> success;
+  public final List<String> success = new ArrayList<>();
 
   /* Global on failure system commands */
   @JsonProperty("failure")
   @JsonDeserialize(using = CommandMapDeserializer.class)
-  public List<String> failure;
+  public final List<String> failure = new ArrayList<>();
 
   /* Ordered sequence of targets and their spec */
   public final LinkedHashMap<TargetKey, TargetSpec> targets = new LinkedHashMap<>();
 
   public BuildSpec() {
 
-  }
-
-  public BuildSpec(TargetKey targetKey) {
-    TargetSpec spec = new TargetSpec();
-    this.targets.put(targetKey,  spec);
   }
 
   public static class TargetSpec {
