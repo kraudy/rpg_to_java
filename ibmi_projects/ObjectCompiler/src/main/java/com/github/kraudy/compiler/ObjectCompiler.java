@@ -98,8 +98,8 @@ public class ObjectCompiler implements Runnable{
 
     /* This is intended for a YAML file with multiple objects in a toposort order */
     //TODO: Here, to compile only object with changes, just use a diff and filter the keys.
-    for (Map.Entry<Utilities.TargetKey, BuildSpec.TargetSpec> entry : spec.targets.entrySet()) {
-      Utilities.TargetKey key = entry.getKey();
+    for (Map.Entry<TargetKey, BuildSpec.TargetSpec> entry : spec.targets.entrySet()) {
+      TargetKey key = entry.getKey();
       BuildSpec.TargetSpec target = entry.getValue();
 
       try{
