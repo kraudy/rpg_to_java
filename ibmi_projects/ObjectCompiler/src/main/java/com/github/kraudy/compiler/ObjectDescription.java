@@ -178,6 +178,9 @@ public class ObjectDescription {
         key.getParamMap().remove(ParamCmd.SRCFILE);  // Switch to stream file
         key.getParamMap().put(key.getCompilationCommand(), ParamCmd.SRCMBR, member);
         */
+        if (this.targetKey.containsStreamFile()) {
+          //TODO: Do reverse migration here
+        }
         break;
 
       case CRTDSPF:

@@ -80,6 +80,10 @@ public class TargetKey {
     return this.ParamCmdSequence.containsKey(this.compilationCommand, param);
   }
 
+  public boolean containsStreamFile() {
+    return !("").equals(this.sourceStmf);
+  }
+
   public void putAll(Map<ParamCmd, String> params) {
     this.ParamCmdSequence.putAll(this.compilationCommand, params);
   }
