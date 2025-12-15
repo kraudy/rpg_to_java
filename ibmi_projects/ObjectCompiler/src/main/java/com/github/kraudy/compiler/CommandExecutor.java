@@ -29,7 +29,16 @@ public class CommandExecutor {
     }
   }
 
-  //TODO: I need a way to know if it is a CompCdm or a SysCmd
+  public void executeCommand(TargetKey key) throws Exception{
+    Timestamp commandTime = getCurrentTime();
+    try{
+      executeCommand(key.getCommandString());
+    } catch (Exception e) {
+      showCompilationSpool(commandTime);
+      throw e;
+    }
+  }
+
   public void executeCommand(String command){
     Timestamp commandTime = getCurrentTime();
 
@@ -110,40 +119,28 @@ public class CommandExecutor {
     return CmdExecutionChain.toString();
   }
 
-  //TODO: This is kinda slow.
   // String cpysplfCmd = "CPYSPLF FILE(" + objectName + ") TOFILE(QTEMP/SPLFCPY) JOB(*) SPLNBR(*LAST)";
-  // Or send it to a stream file
-  // Try to use CPYSPLF to a stream file or db2 table
-  /*  https://gist.github.com/BirgittaHauser/f28e3527f1cc4c422a05eea865b455bb */
-  private void showCompilationSpool(Timestamp compilationTime, String user, String objectName) throws SQLException{
-
-    System.out.println("Compiler error messages: \n");
-
+  private void showCompilationSpool(Timestamp compilationTime) throws SQLException{
     try(Statement stmt = connection.createStatement();
       ResultSet rsCompilationSpool = stmt.executeQuery(
-        "With " +
-        "Spool as ( " +
-          "Select b.ordinal_position, Spooled_Data " + 
-          "from  qsys2.OutPut_Queue_Entries a Cross Join " +
-              "Lateral(Select * " +
-                        "From Table(SysTools.Spooled_File_Data( " +
-                                                "Job_Name            => a.Job_Name, " +
-                                                "Spooled_File_Name   => a.Spooled_File_Name, " +
-                                                "Spooled_File_Number => File_Number))) b " +
-          "Where     Output_Queue_Name = '" + user + "' " +
-                "and USER_NAME = '" + user + "' " + 
-                "and SPOOLED_FILE_NAME = '" + objectName + "' " +
-                "and OUTPUT_QUEUE_LIBRARY_NAME = 'QGPL' " +
-                "and CREATE_TIMESTAMP > '" + compilationTime + "' " +
-        "), " +
-        "Message As ( " +
-          "Select ordinal_position From Spool Where Spooled_Data like '%M e s s a g e   S u m m a r y%' " +
-        ") " +
-        "Select RTrim(Cast(Spooled_Data As Varchar(132) CCSID " + ObjectCompiler.INVARIANT_CCSID +" )) As  Spooled_Data " + 
-        "from Spool Where ordinal_position >= (Select ordinal_position From Message) "
+        "Select d.SPOOLED_DATA " +
+        "From Table ( " +
+            "QSYS2.SPOOLED_FILE_INFO( " +
+                "USER_NAME => USER, " +
+                "STARTING_TIMESTAMP => '" + compilationTime + "', " +
+                "JOB_NAME => (VALUES QSYS2.JOB_NAME)" +
+            ") " +
+        ") As s " +
+        "Inner Join Table ( " +
+            "SYSTOOLS.SPOOLED_FILE_DATA( " +
+                "JOB_NAME => s.QUALIFIED_JOB_NAME, " +
+                "SPOOLED_FILE_NAME => s.SPOOLED_FILE_NAME, " +
+                "SPOOLED_FILE_NUMBER => s.SPOOLED_FILE_NUMBER " +
+            ") " +
+        ") As d On 1=1" 
       )){
         while (rsCompilationSpool.next()) {
-          System.out.println(rsCompilationSpool.getString("Spooled_Data"));
+          System.out.println(rsCompilationSpool.getString("SPOOLED_DATA"));
         }
     }
   }

@@ -132,7 +132,7 @@ public class ObjectCompiler implements Runnable{
         }
 
         /* Execute compilation command */
-        commandExec.executeCommand(key.getCommandString());
+        commandExec.executeCommand(key);
 
         /* Per target success */
         if(!targetSpec.success.isEmpty()){
