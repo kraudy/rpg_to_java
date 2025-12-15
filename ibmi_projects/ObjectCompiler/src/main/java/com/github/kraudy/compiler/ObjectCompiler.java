@@ -126,24 +126,43 @@ public class ObjectCompiler implements Runnable{
         /* Execute compilation command */
         commandExec.executeCommand(key.getCommandString());
 
+        /* Per target success */
+        if(!target.success.isEmpty()){
+          commandExec.executeCommand(target.success);
+        } 
+
+        /* Per target after */
+        if(!target.after.isEmpty()){
+          commandExec.executeCommand(target.after);
+        } 
+
       } catch (Exception e){
         System.err.println("Target failed: " + key.toString());
         e.printStackTrace();
 
         /* Per target failure */
-        //if(!target.onError.isEmpty()){
-        //  commandExec.executeCommand(target.onError);
-        //} 
+        if(!target.failure.isEmpty()){
+          commandExec.executeCommand(target.failure);
+        } 
 
-        break;
+        /* Global failure */
+        if(!spec.failure.isEmpty()){
+          commandExec.executeCommand(spec.failure);
+        }
+
+        break; // Get out of the for loop
 
       } finally {
-        /* Per target after */
-        if(!target.after.isEmpty()){
-          commandExec.executeCommand(target.after);
-        } 
+        //TODO: What should i add here? Logging or something
       }
+
     }
+
+    //TODO: How to know at this point if it was succesful or not?
+    /* Execute global success */
+    //if(!spec.success.isEmpty()){
+    //  commandExec.executeCommand(spec.success);
+    //}
 
     /* Execute global after */
     if(!spec.after.isEmpty()){
