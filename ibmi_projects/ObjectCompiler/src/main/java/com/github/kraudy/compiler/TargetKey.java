@@ -1,5 +1,7 @@
 package com.github.kraudy.compiler;
 
+import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 
 import com.github.kraudy.compiler.CompilationPattern.Command;
@@ -84,6 +86,10 @@ public class TargetKey {
 
   public String get(ParamCmd param) {
     return this.ParamCmdSequence.get(this.compilationCommand, param);
+  }
+
+  public String getCommandString(){
+    return this.ParamCmdSequence.getCommandString(this.compilationCommand);
   }
 
   public String put(ParamCmd param, String value) {

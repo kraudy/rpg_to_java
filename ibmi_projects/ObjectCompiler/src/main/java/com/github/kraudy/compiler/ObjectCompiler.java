@@ -124,7 +124,7 @@ public class ObjectCompiler implements Runnable{
         odes.migrateSource(this.migrator);
 
         /* Execute compilation command */
-        commandExec.executeCommand(key.getParamMap().getCommandString(key.getCompilationCommand()));
+        commandExec.executeCommand(key.getCommandString());
 
       } catch (Exception e){
         System.err.println("Target failed: " + key.toString());
