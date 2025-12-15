@@ -31,17 +31,7 @@ public class CommandExecutor {
 
   //TODO: I need a way to know if it is a CompCdm or a SysCmd
   public void executeCommand(String command){
-    Timestamp commandTime = null;
-    try (Statement stmt = connection.createStatement();
-        ResultSet rsTime = stmt.executeQuery("SELECT CURRENT_TIMESTAMP AS Command_Time FROM sysibm.sysdummy1")) {
-      if (rsTime.next()) {
-        commandTime = rsTime.getTimestamp("Command_Time");
-      }
-    } catch (SQLException e) {
-      if (verbose) System.err.println("Could not get command time.");
-      if (debug) e.printStackTrace();
-      throw new IllegalArgumentException("Could not get command time.");
-    }
+    Timestamp commandTime = getCurrentTime();
 
     if (this.CmdExecutionChain.length() > 0) {
       this.CmdExecutionChain.append(" => ");
@@ -68,6 +58,21 @@ public class CommandExecutor {
 
     System.out.println("Command successful: " + command);
     getJoblogMessages(commandTime);
+  }
+
+  public Timestamp getCurrentTime(){
+    Timestamp currentTime = null;
+    try (Statement stmt = connection.createStatement();
+        ResultSet rsTime = stmt.executeQuery("SELECT CURRENT_TIMESTAMP AS Command_Time FROM sysibm.sysdummy1")) {
+      if (rsTime.next()) {
+        currentTime = rsTime.getTimestamp("Command_Time");
+      }
+    } catch (SQLException e) {
+      if (verbose) System.err.println("Could not get command time.");
+      if (debug) e.printStackTrace();
+      throw new IllegalArgumentException("Could not get command time.");
+    }
+    return currentTime;
   }
 
   public void getJoblogMessages(Timestamp commandTime){
