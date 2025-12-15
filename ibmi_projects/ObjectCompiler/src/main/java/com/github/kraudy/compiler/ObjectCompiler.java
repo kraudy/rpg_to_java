@@ -22,7 +22,7 @@ public class ObjectCompiler implements Runnable{
   private final AS400 system;
   private final Connection connection;
   private final User currentUser;
-  private SourceMigrator migrator;
+  //private SourceMigrator migrator;
   private CommandExecutor commandExec;
 
   /* yaml */
@@ -80,14 +80,7 @@ public class ObjectCompiler implements Runnable{
       BuildSpec.TargetSpec target = entry.getValue();
 
       try{
-        // Re-create migrator fresh for every target, fix this.
-        try {
-          this.migrator = new SourceMigrator(this.system, this.connection, true, true);
-        } catch (Exception e){
-          if (debug) e.printStackTrace();
-          if (verbose) System.err.println("Could not initialize migrator");
-          throw new RuntimeException("Failed to initialize migrator: " + e.getMessage(), e);
-        }
+        
 
         /* Per target before */
         if(!target.before.isEmpty()){
@@ -114,7 +107,15 @@ public class ObjectCompiler implements Runnable{
         key.putAll(target.params);
 
         /* Migrate source file */
-        odes.migrateSource(this.migrator);
+        // Re-create migrator fresh for every target, fix this.
+        try {
+          SourceMigrator migrator = new SourceMigrator(this.system, this.connection, true, true);
+          odes.migrateSource(migrator);
+        } catch (Exception e){
+          if (debug) e.printStackTrace();
+          if (verbose) System.err.println("Could not initialize migrator");
+          throw new RuntimeException("Failed to initialize migrator: " + e.getMessage(), e);
+        }
 
         /* Execute compilation command */
         commandExec.executeCommand(key.getCommandString());
@@ -143,6 +144,7 @@ public class ObjectCompiler implements Runnable{
           commandExec.executeCommand(spec.failure);
         }
 
+        //TODO: This could be a return
         break; // Get out of the for loop
 
       } finally {
