@@ -58,33 +58,31 @@ public class ObjectCompiler implements Runnable{
   }
 
   public void run() {
-    /* Try to get compilation params from object. If it exists. */
 
     /* Init command executor */
     commandExec = new CommandExecutor(connection, debug, verbose, dryRun);
 
-    /* Get build spec from yaml file */
-    BuildSpec spec = Utilities.deserializeYaml(yamlFile);
+    /* Get build globalSpec from yaml file */
+    BuildSpec globalSpec = Utilities.deserializeYaml(yamlFile);
 
     /* Global before */
-    if(!spec.before.isEmpty()){
-      commandExec.executeCommand(spec.before);
+    if(!globalSpec.before.isEmpty()){
+      commandExec.executeCommand(globalSpec.before);
     }
 
     if(debug || verbose) showLibraryList();
 
     /* This is intended for a YAML file with multiple objects in a toposort order */
     //TODO: Here, to compile only object with changes, just use a diff and filter the keys.
-    for (Map.Entry<TargetKey, BuildSpec.TargetSpec> entry : spec.targets.entrySet()) {
+    for (Map.Entry<TargetKey, BuildSpec.TargetSpec> entry : globalSpec.targets.entrySet()) {
       TargetKey key = entry.getKey();
-      BuildSpec.TargetSpec target = entry.getValue();
+      BuildSpec.TargetSpec targetSpec = entry.getValue();
 
       try{
         
-
         /* Per target before */
-        if(!target.before.isEmpty()){
-          commandExec.executeCommand(target.before);
+        if(!targetSpec.before.isEmpty()){
+          commandExec.executeCommand(targetSpec.before);
         }
 
         ObjectDescription odes = new ObjectDescription(connection, debug, verbose, key);
@@ -101,10 +99,10 @@ public class ObjectCompiler implements Runnable{
         }
 
         /* Set global defaults params per target */
-        key.putAll(spec.defaults);
+        key.putAll(globalSpec.defaults);
 
         /* Set specific target params */
-        key.putAll(target.params);
+        key.putAll(targetSpec.params);
 
         /* Migrate source file */
         // Re-create migrator fresh for every target, fix this.
@@ -121,13 +119,13 @@ public class ObjectCompiler implements Runnable{
         commandExec.executeCommand(key.getCommandString());
 
         /* Per target success */
-        if(!target.success.isEmpty()){
-          commandExec.executeCommand(target.success);
+        if(!targetSpec.success.isEmpty()){
+          commandExec.executeCommand(targetSpec.success);
         } 
 
         /* Per target after */
-        if(!target.after.isEmpty()){
-          commandExec.executeCommand(target.after);
+        if(!targetSpec.after.isEmpty()){
+          commandExec.executeCommand(targetSpec.after);
         } 
 
       } catch (Exception e){
@@ -135,13 +133,13 @@ public class ObjectCompiler implements Runnable{
         e.printStackTrace();
 
         /* Per target failure */
-        if(!target.failure.isEmpty()){
-          commandExec.executeCommand(target.failure);
+        if(!targetSpec.failure.isEmpty()){
+          commandExec.executeCommand(targetSpec.failure);
         } 
 
         /* Global failure */
-        if(!spec.failure.isEmpty()){
-          commandExec.executeCommand(spec.failure);
+        if(!globalSpec.failure.isEmpty()){
+          commandExec.executeCommand(globalSpec.failure);
         }
 
         //TODO: This could be a return
@@ -160,8 +158,8 @@ public class ObjectCompiler implements Runnable{
     //}
 
     /* Execute global after */
-    if(!spec.after.isEmpty()){
-      commandExec.executeCommand(spec.after);
+    if(!globalSpec.after.isEmpty()){
+      commandExec.executeCommand(globalSpec.after);
     }
     
     System.out.println(commandExec.getExecutionChain());
