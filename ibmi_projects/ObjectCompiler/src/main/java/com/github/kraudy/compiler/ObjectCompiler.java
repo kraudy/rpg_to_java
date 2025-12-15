@@ -1,16 +1,10 @@
 package com.github.kraudy.compiler;
 
-import java.io.File;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-
-import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 
 import com.github.kraudy.migrator.SourceMigrator;
 import com.ibm.as400.access.AS400;
@@ -28,7 +22,6 @@ public class ObjectCompiler implements Runnable{
   private final AS400 system;
   private final Connection connection;
   private final User currentUser;
-  private ObjectDescription odes;
   private SourceMigrator migrator;
   private CommandExecutor commandExec;
 
@@ -101,17 +94,17 @@ public class ObjectCompiler implements Runnable{
           commandExec.executeCommand(target.before);
         }
 
-        this.odes = new ObjectDescription(connection, debug, verbose, key);
+        ObjectDescription odes = new ObjectDescription(connection, debug, verbose, key);
 
         /* Set default compilation params */
-        this.odes.SetCompilationParams();
+        odes.SetCompilationParams();
 
         try {
           odes.getObjectInfo();
         } catch (Exception e) {
           //TODO: Change logging for SLF4J or java.util.logging 
           if (debug) e.printStackTrace();
-          if (verbose) System.err.println("Object not found; using defaults.");
+          if (verbose) System.err.println("Object not found; only the default values will be used.");
         }
 
         /* Set global defaults params per target */
