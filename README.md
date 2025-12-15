@@ -414,6 +414,8 @@ MVN compilation
 
 mvn archetype:generate -DgroupId=com.github.kraudy.api -DartifactId=ApiCaller -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
 
+mvn archetype:generate -DgroupId=com.github.kraudy.ftype -DartifactId=FileType -DarchetypeArtifactId=maven-archetype-quickstart -DinteractiveMode=false
+
 
 // Check pom pacakges dependencies
 mvn dependency:tree

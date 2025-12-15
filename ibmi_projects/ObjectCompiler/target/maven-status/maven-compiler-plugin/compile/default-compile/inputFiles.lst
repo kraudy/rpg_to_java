@@ -1,0 +1,11 @@
+/home/kraudy/ibm/rpg_to_java/ibmi_projects/ObjectCompiler/src/main/java/com/github/kraudy/compiler/BuildSpec.java
+/home/kraudy/ibm/rpg_to_java/ibmi_projects/ObjectCompiler/src/main/java/com/github/kraudy/compiler/CommandExecutor.java
+/home/kraudy/ibm/rpg_to_java/ibmi_projects/ObjectCompiler/src/main/java/com/github/kraudy/compiler/CommandMapDeserializer.java
+/home/kraudy/ibm/rpg_to_java/ibmi_projects/ObjectCompiler/src/main/java/com/github/kraudy/compiler/CompilationPattern.java
+/home/kraudy/ibm/rpg_to_java/ibmi_projects/ObjectCompiler/src/main/java/com/github/kraudy/compiler/ObjectCompiler.java
+/home/kraudy/ibm/rpg_to_java/ibmi_projects/ObjectCompiler/src/main/java/com/github/kraudy/compiler/ObjectDescription.java
+/home/kraudy/ibm/rpg_to_java/ibmi_projects/ObjectCompiler/src/main/java/com/github/kraudy/compiler/ParamMap.java
+/home/kraudy/ibm/rpg_to_java/ibmi_projects/ObjectCompiler/src/main/java/com/github/kraudy/compiler/ParamMapDeserializer.java
+/home/kraudy/ibm/rpg_to_java/ibmi_projects/ObjectCompiler/src/main/java/com/github/kraudy/compiler/ParamValue.java
+/home/kraudy/ibm/rpg_to_java/ibmi_projects/ObjectCompiler/src/main/java/com/github/kraudy/compiler/TargetKey.java
+/home/kraudy/ibm/rpg_to_java/ibmi_projects/ObjectCompiler/src/main/java/com/github/kraudy/compiler/Utilities.java
