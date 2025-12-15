@@ -122,6 +122,25 @@ public class CommandExecutor {
   // String cpysplfCmd = "CPYSPLF FILE(" + objectName + ") TOFILE(QTEMP/SPLFCPY) JOB(*) SPLNBR(*LAST)";
   private void showCompilationSpool(Timestamp compilationTime) throws SQLException{
     try(Statement stmt = connection.createStatement();
+      ResultSet rsCheckSpool = stmt.executeQuery(
+      "Select SPOOLED_FILE_NAME, SPOOLED_FILE_NUMBER, QUALIFIED_JOB_NAME " +
+      "From Table ( " +
+          "QSYS2.SPOOLED_FILE_INFO( " +
+              "USER_NAME => USER , " +
+              "STARTING_TIMESTAMP => '" + compilationTime + "', " +
+              "JOB_NAME => (VALUES QSYS2.JOB_NAME) " +
+          ") " +
+        ") " +
+        "LIMIT 1 "
+      )){
+        if (!rsCheckSpool.next()) {
+          System.err.println("No spool found for compilation command");
+          return;
+        }
+    }
+
+    /* Get compilation spool */
+    try(Statement stmt = connection.createStatement();
       ResultSet rsCompilationSpool = stmt.executeQuery(
         "Select d.SPOOLED_DATA " +
         "From Table ( " +

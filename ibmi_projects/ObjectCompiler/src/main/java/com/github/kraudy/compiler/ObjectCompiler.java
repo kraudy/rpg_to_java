@@ -146,7 +146,7 @@ public class ObjectCompiler implements Runnable{
 
       } catch (Exception e){
         if (debug) e.printStackTrace();
-        if (verbose) System.err.println("Target failed: " + key.toString());
+        if (verbose) System.err.println("Target failed: " + key.asString());
 
         /* Per target failure */
         if(!targetSpec.failure.isEmpty()){
