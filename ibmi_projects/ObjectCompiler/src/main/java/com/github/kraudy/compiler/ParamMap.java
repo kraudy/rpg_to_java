@@ -2,41 +2,41 @@ package com.github.kraudy.compiler;
 
 import java.util.Collections;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.List;
 
 import com.github.kraudy.compiler.CompilationPattern.Command;
 import com.github.kraudy.compiler.CompilationPattern.CompCmd;
+import com.github.kraudy.compiler.CompilationPattern.SysCmd;
+
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 
-import com.github.kraudy.compiler.CompilationPattern.SysCmd;
 
 public class ParamMap {
-  private final Map<Command, EnumMap<ParamCmd, ParamValue>> paramMap = new HashMap<>();
+  private final EnumMap<ParamCmd, ParamValue> paramMap = new EnumMap<>(ParamCmd.class);
 
   public ParamMap() {
 
   }
 
-  public boolean containsKey(Command cmd, ParamCmd param) {
-    return get(cmd).containsKey(param);
+  public boolean containsKey(ParamCmd param) {
+    return this.paramMap.containsKey(param);
   }
 
-  public Set<ParamCmd> keySet(Command cmd){
-    return get(cmd).keySet();
+  public Set<ParamCmd> keySet(){
+    return this.paramMap.keySet();
   }
 
   /* Get map of ParamCmd and ParamValue */
-  public EnumMap<ParamCmd, ParamValue> get(Command cmd) {
-    return paramMap.computeIfAbsent(cmd, k -> new  EnumMap<>(ParamCmd.class));
+  public EnumMap<ParamCmd, ParamValue> get() {
+    return paramMap;
   }
 
   /* Get specific param value */
-  public String get(Command cmd, ParamCmd param) {
-    ParamValue pv = get(cmd).get(param);
+  public String get(ParamCmd param) {
+    ParamValue pv = this.paramMap.get(param);
     if (pv == null) return "";
     return pv.get();
   }
@@ -45,15 +45,15 @@ public class ParamMap {
     return CompilationPattern.commandToPatternMap.getOrDefault(cmd, Collections.emptyList());
   }
 
-  public String remove(Command cmd, ParamCmd param) {
-    EnumMap<ParamCmd, ParamValue> inner = get(cmd);
-    ParamValue pv = inner.get(param);
+  public String remove(ParamCmd param) {
+    ParamValue pv = this.paramMap.get(param);
 
     if (pv == null) return ""; // If no pv, there is nothing to remove
 
     return pv.remove();
   }
 
+  //TODO: This validation should be done outside this class.
   public void putAll(Command cmd, Map<ParamCmd, String> params) {
     if (params == null) return;
 
@@ -80,15 +80,14 @@ public class ParamMap {
       throw new IllegalArgumentException("Parameters " + param.name() + " not valid for command " + cmd.name());
     }
 
-    EnumMap<ParamCmd, ParamValue> inner = get(cmd);
-    ParamValue pv = inner.get(param);
+    ParamValue pv = this.paramMap.get(param);
 
     /* If a previous value exists, just append it and early return */
     if (pv != null) return pv.put(value);
 
     /* Create new value */
     pv = new ParamValue(value);
-    inner.put(param, pv);
+    this.paramMap.put(param, pv);
     return pv.getPrevious();
     
   }
@@ -97,10 +96,9 @@ public class ParamMap {
     System.out.println(cmd.name());
 
     List<ParamCmd> compilationPattern = getPattern(cmd);
-    EnumMap<ParamCmd, ParamValue> inner = get(cmd);
 
     for (ParamCmd param : compilationPattern) {
-      ParamValue pv = inner.get(param);
+      ParamValue pv = this.paramMap.get(param);
       if (pv == null) continue;
       System.out.println(param.name() + ":" + pv.getHistory());
     }
@@ -111,13 +109,12 @@ public class ParamMap {
     getChangesSummary(cmd);
 
     List<ParamCmd> compilationPattern = getPattern(cmd);
-    EnumMap<ParamCmd, ParamValue> inner = get(cmd);
     StringBuilder sb = new StringBuilder(); 
 
     sb.append(cmd.name());
 
     for (ParamCmd param : compilationPattern) {
-      ParamValue pv = inner.get(param);
+      ParamValue pv = this.paramMap.get(param);
       if (pv == null) continue;
       sb.append(param.paramString(pv.get()));
     }
@@ -146,7 +143,7 @@ public class ParamMap {
       case CRTBNDCL:
       case CRTRPGMOD:
       case CRTCLMOD:
-        if (this.containsKey(cmd, ParamCmd.SRCSTMF)) {
+        if (this.containsKey(ParamCmd.SRCSTMF)) {
           this.put(cmd, ParamCmd.TGTCCSID, ValCmd.JOB);
         }
         break;
@@ -161,8 +158,8 @@ public class ParamMap {
         break;
 
       case CRTBNDRPG:
-        if (!this.containsKey(cmd, ParamCmd.DFTACTGRP)) {
-          this.remove(cmd, ParamCmd.STGMDL); 
+        if (!this.containsKey(ParamCmd.DFTACTGRP)) {
+          this.remove(ParamCmd.STGMDL); 
         }
       case CRTBNDCL:
       case CRTCLPGM:
@@ -172,15 +169,15 @@ public class ParamMap {
         break;
 
       case CRTSQLRPGI:
-        if (this.containsKey(cmd, ParamCmd.SRCSTMF)) {
+        if (this.containsKey(ParamCmd.SRCSTMF)) {
           this.put(cmd, ParamCmd.CVTCCSID, ValCmd.JOB);
         }
         break;
 
       case CRTSRVPGM:
-        if (this.containsKey(cmd, ParamCmd.SRCSTMF) && 
-            this.containsKey(cmd, ParamCmd.EXPORT)) {
-          this.remove(cmd, ParamCmd.EXPORT); 
+        if (this.containsKey(ParamCmd.SRCSTMF) && 
+            this.containsKey(ParamCmd.EXPORT)) {
+          this.remove(ParamCmd.EXPORT); 
         }
         break;
 
@@ -207,10 +204,10 @@ public class ParamMap {
       case CRTSQLRPGI:
       case CRTSRVPGM:
       case RUNSQLSTM:
-        if(this.containsKey(cmd, ParamCmd.SRCSTMF) &&
-            this.containsKey(cmd, ParamCmd.SRCFILE)){
-          this.remove(cmd, ParamCmd.SRCFILE); 
-          this.remove(cmd, ParamCmd.SRCMBR); 
+        if(this.containsKey(ParamCmd.SRCSTMF) &&
+            this.containsKey(ParamCmd.SRCFILE)){
+          this.remove(ParamCmd.SRCFILE); 
+          this.remove(ParamCmd.SRCMBR); 
         }
         break;
 

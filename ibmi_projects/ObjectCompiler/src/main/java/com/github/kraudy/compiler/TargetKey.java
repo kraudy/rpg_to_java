@@ -77,7 +77,7 @@ public class TargetKey {
   }
 
   public boolean containsKey(ParamCmd param) {
-    return this.ParamCmdSequence.containsKey(this.compilationCommand, param);
+    return this.ParamCmdSequence.containsKey(param);
   }
 
   public boolean containsStreamFile() {
@@ -89,7 +89,7 @@ public class TargetKey {
   }
 
   public String get(ParamCmd param) {
-    return this.ParamCmdSequence.get(this.compilationCommand, param);
+    return this.ParamCmdSequence.get(param);
   }
 
   public String getCommandString(){

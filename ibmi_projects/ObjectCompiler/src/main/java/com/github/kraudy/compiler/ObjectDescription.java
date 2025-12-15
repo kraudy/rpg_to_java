@@ -160,7 +160,7 @@ public class ObjectDescription {
       case RUNSQLSTM:
         if (!this.targetKey.containsKey(ParamCmd.SRCSTMF) && 
           this.targetKey.containsKey(ParamCmd.SRCFILE)) {
-          System.out.println("SRCFILE data: " + this.targetKey.getParamMap().get(this.targetKey.getCompilationCommand(), ParamCmd.SRCFILE));
+          System.out.println("SRCFILE data: " + this.targetKey.getParamMap().get(ParamCmd.SRCFILE));
           migrator.setParams(this.targetKey.getQualifiedSourceFile(), this.targetKey.getObjectName(), "sources");
           migrator.api(); // Try to migrate this thing
           
