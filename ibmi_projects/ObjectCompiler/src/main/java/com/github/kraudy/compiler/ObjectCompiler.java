@@ -120,47 +120,8 @@ public class ObjectCompiler implements Runnable{
         /* Set specific target params */
         key.putAll(target.params);
 
-        //TODO: Move this to objectDescriptor migrateSource().
-        switch (key.getCompilationCommand()){
-          case CRTCLMOD:
-            break;
-
-          case CRTRPGMOD:
-          case CRTBNDRPG:
-          case CRTBNDCL:
-          case CRTSQLRPGI:
-          case CRTSRVPGM:
-          case RUNSQLSTM:
-            if (!key.containsKey(ParamCmd.SRCSTMF) && 
-              key.containsKey(ParamCmd.SRCFILE)) {
-              System.out.println("SRCFILE data: " + key.getParamMap().get(key.getCompilationCommand(), ParamCmd.SRCFILE));
-              this.migrator.setParams(key.getQualifiedSourceFile(), key.getObjectName(), "sources");
-              this.migrator.api(); // Try to migrate this thing
-              
-              key.setStreamSourceFile(this.migrator.getFirstPath());
-              key.put(ParamCmd.SRCSTMF, key.getStreamFile());
-            }
-            break;
-
-          case CRTCLPGM:
-          case CRTRPGPGM:
-            /* 
-            For OPM, create temp members if source is IFS (reverse migration).
-            key.getParamMap().put(key.getCompilationCommand(), ParamCmd.SRCSTMF, stmfPath);
-            migrator.IfsToMember(key.getParamMap().get(ParamCmd.SRCSTMF), Library);
-            key.getParamMap().remove(ParamCmd.SRCFILE);  // Switch to stream file
-            key.getParamMap().put(key.getCompilationCommand(), ParamCmd.SRCMBR, member);
-            */
-            break;
-
-          case CRTDSPF:
-          case CRTPF:
-          case CRTLF:
-          case CRTPRTF:
-          case CRTMNU:
-          case CRTQMQRY:
-              break;
-        }
+        /* Migrate source file */
+        odes.migrateSource(this.migrator);
 
         /* Execute compilation command */
         commandExec.executeCommand(key.getParamMap().getCommandString(key.getCompilationCommand()));

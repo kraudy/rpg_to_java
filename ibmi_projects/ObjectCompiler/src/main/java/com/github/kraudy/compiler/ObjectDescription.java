@@ -7,7 +7,7 @@ import java.sql.Statement;
 
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
-
+import com.github.kraudy.migrator.SourceMigrator;
 import com.github.kraudy.compiler.CompilationPattern.ObjectType;
 
 /* Core struct for capturing compilation specs */
@@ -145,6 +145,49 @@ public class ObjectDescription {
         break;
     }
 
+  }
+
+  public void migrateSource(SourceMigrator migrator){
+    switch (this.targetKey.getCompilationCommand()){
+      case CRTCLMOD:
+        break;
+
+      case CRTRPGMOD:
+      case CRTBNDRPG:
+      case CRTBNDCL:
+      case CRTSQLRPGI:
+      case CRTSRVPGM:
+      case RUNSQLSTM:
+        if (!this.targetKey.containsKey(ParamCmd.SRCSTMF) && 
+          this.targetKey.containsKey(ParamCmd.SRCFILE)) {
+          System.out.println("SRCFILE data: " + this.targetKey.getParamMap().get(this.targetKey.getCompilationCommand(), ParamCmd.SRCFILE));
+          migrator.setParams(this.targetKey.getQualifiedSourceFile(), this.targetKey.getObjectName(), "sources");
+          migrator.api(); // Try to migrate this thing
+          
+          this.targetKey.setStreamSourceFile(migrator.getFirstPath());
+          this.targetKey.put(ParamCmd.SRCSTMF, this.targetKey.getStreamFile());
+        }
+        break;
+
+      case CRTCLPGM:
+      case CRTRPGPGM:
+        /* 
+        For OPM, create temp members if source is IFS (reverse migration).
+        key.getParamMap().put(key.getCompilationCommand(), ParamCmd.SRCSTMF, stmfPath);
+        migrator.IfsToMember(key.getParamMap().get(ParamCmd.SRCSTMF), Library);
+        key.getParamMap().remove(ParamCmd.SRCFILE);  // Switch to stream file
+        key.getParamMap().put(key.getCompilationCommand(), ParamCmd.SRCMBR, member);
+        */
+        break;
+
+      case CRTDSPF:
+      case CRTPF:
+      case CRTLF:
+      case CRTPRTF:
+      case CRTMNU:
+      case CRTQMQRY:
+          break;
+    }
   }
 
   //TODO: Just send the key here.
