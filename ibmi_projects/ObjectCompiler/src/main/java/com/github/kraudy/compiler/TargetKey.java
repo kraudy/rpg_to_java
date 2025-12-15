@@ -2,6 +2,7 @@ package com.github.kraudy.compiler;
 
 import java.util.Map;
 
+import com.github.kraudy.compiler.CompilationPattern.Command;
 import com.github.kraudy.compiler.CompilationPattern.CompCmd;
 import com.github.kraudy.compiler.CompilationPattern.ObjectType;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
@@ -57,6 +58,10 @@ public class TargetKey {
     this.ParamCmdSequence = new ParamMap();
   }
 
+  public void setStreamSourceFile(String sourcePath){
+    this.sourceStmf = sourcePath;
+  }
+
   public String getQualifiedObject(){
     return this.library + "/" + this.objectName;
   }
@@ -69,8 +74,16 @@ public class TargetKey {
     return this.library + "/" + this.sourceFile;
   }
 
+  public boolean containsKey(ParamCmd param) {
+    return this.ParamCmdSequence.containsKey(this.compilationCommand, param);
+  }
+
   public void putAll(Map<ParamCmd, String> params) {
     this.ParamCmdSequence.putAll(this.compilationCommand, params);
+  }
+
+  public String get(ParamCmd param) {
+    return this.ParamCmdSequence.get(this.compilationCommand, param);
   }
 
   public String put(ParamCmd param, String value) {
@@ -83,6 +96,14 @@ public class TargetKey {
 
   public String asString() {
     return library + "." + objectName + "." + objectType.name() + "." + sourceType.name();
+  }
+
+  public String getStreamFile() {
+    return this.sourceStmf;
+  }
+
+  public String getObjectName() {
+    return this.objectName;
   }
 
   public String getSourceFile() {

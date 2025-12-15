@@ -131,13 +131,14 @@ public class ObjectCompiler implements Runnable{
           case CRTSQLRPGI:
           case CRTSRVPGM:
           case RUNSQLSTM:
-            if (!key.getParamMap().containsKey(key.getCompilationCommand(), ParamCmd.SRCSTMF)) {
+            if (!key.containsKey(ParamCmd.SRCSTMF) && 
+              key.containsKey(ParamCmd.SRCFILE)) {
               System.out.println("SRCFILE data: " + key.getParamMap().get(key.getCompilationCommand(), ParamCmd.SRCFILE));
-              //TODO: This could be done directly in ObjectCompiler
-              this.migrator.setParams(key.getParamMap().get(key.getCompilationCommand(), ParamCmd.SRCFILE), key.objectName, "sources");
+              this.migrator.setParams(key.getQualifiedSourceFile(), key.getObjectName(), "sources");
               this.migrator.api(); // Try to migrate this thing
               
-              key.getParamMap().put(key.getCompilationCommand(), ParamCmd.SRCSTMF, this.migrator.getFirstPath());
+              key.setStreamSourceFile(this.migrator.getFirstPath());
+              key.put(ParamCmd.SRCSTMF, key.getStreamFile());
             }
             break;
 
