@@ -70,32 +70,48 @@ public class ObjectCompiler implements Runnable{
       commandExec.executeCommand(globalSpec.before);
     }
 
-    if(debug || verbose) showLibraryList();
+    if(verbose) showLibraryList();
 
+    /* Build each target */
+    buildTargets(globalSpec);
+
+    /* Execute global after */
+    if(!globalSpec.after.isEmpty()){
+      commandExec.executeCommand(globalSpec.after);
+    }
+    
+    /* Show chain of commands */
+    if(verbose) System.out.println(commandExec.getExecutionChain());
+
+    cleanup();
+  }
+
+  private void buildTargets(BuildSpec globalSpec){
     /* This is intended for a YAML file with multiple objects in a toposort order */
-    //TODO: Here, to compile only object with changes, just use a diff and filter the keys.
+    //TODO: Here, to compile only object with changes, just use a diff and filter the keys. Coming soon.
     for (Map.Entry<TargetKey, BuildSpec.TargetSpec> entry : globalSpec.targets.entrySet()) {
       TargetKey key = entry.getKey();
       BuildSpec.TargetSpec targetSpec = entry.getValue();
 
       try{
-        
         /* Per target before */
         if(!targetSpec.before.isEmpty()){
           commandExec.executeCommand(targetSpec.before);
         }
 
+        /* Init object descriptor */
         ObjectDescription odes = new ObjectDescription(connection, debug, verbose, key);
 
         /* Set default compilation params */
         odes.SetCompilationParams();
 
+        /* If the object exists, we try to extract its compilation params */
         try {
           odes.getObjectInfo();
         } catch (Exception e) {
-          //TODO: Change logging for SLF4J or java.util.logging 
+          //TODO: Change logging for SLF4J or java.util.logging. This is also needed for pipeline integration.
           if (debug) e.printStackTrace();
-          if (verbose) System.err.println("Object not found; only the default values will be used.");
+          if (verbose) System.err.println("Object not found; only default or provided values will be used.");
         }
 
         /* Set global defaults params per target */
@@ -129,8 +145,8 @@ public class ObjectCompiler implements Runnable{
         } 
 
       } catch (Exception e){
-        System.err.println("Target failed: " + key.toString());
-        e.printStackTrace();
+        if (debug) e.printStackTrace();
+        if (verbose) System.err.println("Target failed: " + key.toString());
 
         /* Per target failure */
         if(!targetSpec.failure.isEmpty()){
@@ -142,29 +158,17 @@ public class ObjectCompiler implements Runnable{
           commandExec.executeCommand(globalSpec.failure);
         }
 
-        //TODO: This could be a return
-        break; // Get out of the for loop
+        return; // Stop compilation
 
       } finally {
         //TODO: What should i add here? Logging or something
       }
-
     }
 
-    //TODO: How to know at this point if it was succesful or not?
     /* Execute global success */
-    //if(!spec.success.isEmpty()){
-    //  commandExec.executeCommand(spec.success);
-    //}
-
-    /* Execute global after */
-    if(!globalSpec.after.isEmpty()){
-      commandExec.executeCommand(globalSpec.after);
+    if(!globalSpec.success.isEmpty()){
+      commandExec.executeCommand(globalSpec.success);
     }
-    
-    System.out.println(commandExec.getExecutionChain());
-
-    cleanup();
   }
 
   private void showLibraryList(){
