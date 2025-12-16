@@ -119,6 +119,10 @@ public class TargetKey {
     return this.objectName;
   }
 
+  public String getObjectType() {
+    return this.objectType.toParam();
+  }
+
   public String getSourceFile() {
     return this.sourceFile;
   }

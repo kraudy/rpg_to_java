@@ -71,7 +71,6 @@ public class ObjectDescription {
     }
   }
 
-  //TODO: Just send the key here.
   public void getObjectInfo () throws SQLException {
     //TODO: Check if the object exists.
 
@@ -83,7 +82,7 @@ public class ObjectDescription {
       case CRTRPGPGM :
       case CRTCLPGM :
       case CRTSRVPGM : //TODO: Should this be here?
-        getPgmInfo(this.targetKey.library, this.targetKey.objectName, this.targetKey.objectType);
+        getPgmInfo();
         break;
      
       case RUNSQLSTM :
@@ -122,7 +121,7 @@ public class ObjectDescription {
     return ;
   }
 
-  private void getPgmInfo(String library, String objectName, ObjectType objectType) throws SQLException {
+  private void getPgmInfo() throws SQLException {
     
     try (Statement stmt = connection.createStatement();
         ResultSet rsObj = stmt.executeQuery(
@@ -242,18 +241,15 @@ public class ObjectDescription {
             "INNER JOIN Libs " +
             "ON (PROGRAM_LIBRARY = Libs.Libraries) " +
             "WHERE " + 
-                "PROGRAM_NAME = '" + objectName + "' " +
-                "AND OBJECT_TYPE = '" + objectType.toParam() + "' "
+                "PROGRAM_NAME = '" + this.targetKey.getObjectName() + "' " +
+                "AND OBJECT_TYPE = '" + this.targetKey.getObjectType() + "' "
           )) {
       if (!rsObj.next()) {
-        // TODO: Maybe this should be optional for new objects. Just throw a warning
-        System.err.println(("Could not get object '" + objectName + "' from library '" + library + "' type" + "'" + objectType.toString() + "'"));
-        //throw new IllegalArgumentException("Could not get object '" + objectName + "' from library '" + library + "' type" + "'" + objectType.toString() + "'");
+        System.err.println(("Could not get object '" + this.targetKey.asString() )); // If not object found, returns.
       }
 
-      if (verbose) System.out.println("Found object '" + objectName + "' from library '" + library + "' type " + "'" + objectType.toParam() + "'");
+      if (verbose) System.out.println("Found object '" + this.targetKey.asString());
 
-      //TODO: Could i change this to objectType for less casses?
       switch (this.targetKey.getCompilationCommand()) {
         case CRTSRVPGM:
         case CRTBNDRPG:
