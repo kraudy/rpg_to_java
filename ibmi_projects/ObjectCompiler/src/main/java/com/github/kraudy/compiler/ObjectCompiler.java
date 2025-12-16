@@ -119,9 +119,6 @@ public class ObjectCompiler implements Runnable{
         /* Init object descriptor */
         ObjectDescription odes = new ObjectDescription(connection, debug, verbose, key);
 
-        /* Set default compilation params */
-        odes.SetCompilationParams();
-
         /* If the object exists, we try to extract its compilation params */
         try {
           odes.getObjectInfo();

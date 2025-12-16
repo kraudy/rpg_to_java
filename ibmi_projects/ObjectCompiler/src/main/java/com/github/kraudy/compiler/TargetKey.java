@@ -58,6 +58,9 @@ public class TargetKey {
 
     /* Init param map for this target */
     this.ParamCmdSequence = new ParamMap();
+
+    /* Set default compilation params */
+    Utilities.SetDefaultParams(this);
   }
 
   public void setStreamSourceFile(String sourcePath){

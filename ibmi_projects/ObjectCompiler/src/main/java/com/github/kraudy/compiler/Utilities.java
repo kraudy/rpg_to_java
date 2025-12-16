@@ -14,6 +14,126 @@ import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 
 public class Utilities {
 
+  public static void SetDefaultParams(TargetKey targetKey) {
+
+    /* Generate compilation params values from object description */
+
+    switch (targetKey.getCompilationCommand()) {
+      case CRTSQLRPGI:
+      case CRTBNDRPG:
+      case CRTBNDCL:
+      case CRTRPGPGM:
+      case CRTCLPGM:
+      case CRTDSPF:
+      case CRTPF:
+      case CRTLF:
+      case CRTSRVPGM:
+      case CRTRPGMOD:
+      case CRTCLMOD:
+      case RUNSQLSTM:
+        //TODO: SRCFILE could be set to *LIBL,etc until the migrators works with the library list
+        targetKey.put(ParamCmd.SRCFILE, targetKey.getQualifiedSourceFile());
+        targetKey.put(ParamCmd.SRCMBR, targetKey.getSourceName());
+        break;
+    }
+
+    /* Set default values */
+    switch (targetKey.getCompilationCommand()) {
+      case CRTSQLRPGI:
+        targetKey.put(ParamCmd.OBJ, targetKey.getQualifiedObject());
+        targetKey.put(ParamCmd.OBJ, targetKey.getQualifiedObject(ValCmd.CURLIB));
+        targetKey.put(ParamCmd.OBJTYPE, targetKey.objectType.toParam());
+        targetKey.put(ParamCmd.COMMIT, ValCmd.NONE);
+        targetKey.put(ParamCmd.DBGVIEW, ValCmd.SOURCE);
+        break;
+    
+      case CRTBNDRPG:
+      case CRTBNDCL:
+        targetKey.put(ParamCmd.DBGVIEW, ValCmd.ALL);
+      case CRTRPGPGM:
+      case CRTCLPGM:
+        targetKey.put(ParamCmd.PGM, targetKey.getQualifiedObject());
+        targetKey.put(ParamCmd.PGM, targetKey.getQualifiedObject(ValCmd.CURLIB));
+        break;
+
+      case CRTDSPF:
+      case CRTPF:
+      case CRTLF:
+        targetKey.put(ParamCmd.FILE, targetKey.getQualifiedObject());
+        targetKey.put(ParamCmd.FILE, targetKey.getQualifiedObject(ValCmd.CURLIB));
+        break;
+      
+      case CRTSRVPGM:
+        targetKey.put(ParamCmd.SRVPGM, targetKey.getQualifiedObject());
+        targetKey.put(ParamCmd.SRVPGM, targetKey.getQualifiedObject(ValCmd.CURLIB));
+        targetKey.put(ParamCmd.MODULE, targetKey.getQualifiedObject());
+        targetKey.put(ParamCmd.MODULE, targetKey.getQualifiedObject(ValCmd.LIBL));
+        targetKey.put(ParamCmd.BNDSRVPGM, ValCmd.NONE);
+        targetKey.put(ParamCmd.EXPORT, ValCmd.ALL);
+        break;
+
+      case CRTRPGMOD:
+      case CRTCLMOD:
+        targetKey.put(ParamCmd.DBGVIEW, ValCmd.ALL);
+        targetKey.put(ParamCmd.MODULE, targetKey.getQualifiedObject());
+        targetKey.put(ParamCmd.MODULE, targetKey.getQualifiedObject(ValCmd.CURLIB));
+        break;
+
+      case RUNSQLSTM:
+        targetKey.put(ParamCmd.COMMIT, ValCmd.NONE);
+        targetKey.put(ParamCmd.DBGVIEW, ValCmd.SOURCE);
+        targetKey.put(ParamCmd.OPTION, ValCmd.LIST);
+        break;
+
+      default:
+        break;
+    }
+
+    //TODO: These switch could be moved to methods inside TargetKey class and just call them here.
+    /* Set override value */
+    switch (targetKey.getCompilationCommand()) {
+      case CRTSRVPGM:
+      case CRTBNDRPG:
+      case CRTBNDCL:
+      case CRTRPGMOD:
+      case CRTCLMOD:
+      case CRTSQLRPGI:
+      case CRTRPGPGM:
+      case CRTCLPGM:
+      case CRTDSPF:
+      case CRTPRTF:
+        targetKey.put(ParamCmd.REPLACE, ValCmd.YES);
+        break;
+    
+      default:
+        break;
+    }
+
+    /* Set option and genopt */
+    switch (targetKey.getCompilationCommand()) {
+      case CRTSRVPGM:
+      case CRTBNDRPG:
+      case CRTBNDCL:
+      case CRTRPGMOD:
+      case CRTCLMOD:
+      case CRTSQLRPGI:
+      case CRTDSPF:
+      case CRTPF:
+      case CRTLF:
+        targetKey.put(ParamCmd.OPTION, ValCmd.EVENTF);
+        break;
+    }
+
+    switch (targetKey.getCompilationCommand()) {
+      case CRTRPGPGM:
+      case CRTCLPGM:
+        targetKey.put(ParamCmd.OPTION, ValCmd.LSTDBG);
+        targetKey.put(ParamCmd.GENOPT, ValCmd.LIST);
+        break;
+    }
+
+  }
+
   public static BuildSpec deserializeYaml (String yamlFile) {
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
     BuildSpec spec = null;
