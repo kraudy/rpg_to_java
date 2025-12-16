@@ -105,13 +105,13 @@ public class ObjectDescription {
     /* Get module info */
     switch (this.targetKey.getCompilationCommand()) {
       case CRTSRVPGM : //TODO: Do I need to get the module info?
-        getModuleInfo(this.targetKey.library, this.targetKey.objectName); 
+        getModuleInfo(); 
         break;
 
       case CRTSQLRPGI: //TODO: This could be pgm or module
       case CRTRPGMOD :
       case CRTCLMOD :
-        getModuleInfo(this.targetKey.library, this.targetKey.objectName); 
+        getModuleInfo(); 
         break;
     
       default:
@@ -345,10 +345,7 @@ public class ObjectDescription {
   }
 
   /* Query BOUND_MODULE_INFO for module-specific fields */
-  private void getModuleInfo(String entryModuleLib, String entryModule) throws SQLException {
-    if (entryModuleLib.isEmpty() || entryModule.isEmpty()) {
-      System.err.println("Entry module or lib are empty");  // Skip if no entry module
-    } 
+  private void getModuleInfo() throws SQLException {
 
     try (Statement stmt = connection.createStatement();
         ResultSet rsMod = stmt.executeQuery(
@@ -418,13 +415,12 @@ public class ObjectDescription {
             "ON (PROGRAM_LIBRARY = Libs.Libraries " +
             "AND BOUND_MODULE_LIBRARY = Libs.Libraries) " +
           "WHERE " +
-            "PROGRAM_NAME = '" + this.targetKey.objectName + "' " +
-            "AND BOUND_MODULE = '" + entryModule + "' "
+            "PROGRAM_NAME = '" + this.targetKey.getObjectName() + "' " +
+            "AND BOUND_MODULE = '" + this.targetKey.getObjectName() + "' " //TODO: Fix this
         )) {
       if (!rsMod.next()) {
-        System.err.println("Could not found module '" + entryModule + "' in library list");
+        if(verbose) System.err.println("Could not find module '" + this.targetKey.asString());
         return;
-        //throw new IllegalArgumentException("Could not found module '" + entryModule + "' in library list");
       }
         // Override OPTIMIZE if more specific here
         // This gives 10 but the param  OPTIMIZE only accepts: *NONE, *BASIC, *FULL   
@@ -449,7 +445,6 @@ public class ObjectDescription {
         String modSrcFil = rsMod.getString("SOURCE_FILE").trim();
         String modSrcMbr = rsMod.getString("SOURCE_FILE_MEMBER").trim();
         String modSteamFile = rsMod.getString("SOURCE_STREAM_FILE_PATH").trim();
-        //TODO: Here, if (modSteamFile.isEmpty()) do the migration to /temp or another route. and do the compilation
         String modCCSID = rsMod.getString("MODULE_CCSID").trim();
 
         // Add more mappings (e.g., DEFINE, INCDIR, PPGENOPT)
