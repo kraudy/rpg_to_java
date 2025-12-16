@@ -22,7 +22,6 @@ public class ObjectCompiler implements Runnable{
   private final AS400 system;
   private final Connection connection;
   private final User currentUser;
-  //private SourceMigrator migrator;
   private CommandExecutor commandExec;
 
   /* yaml */
@@ -65,28 +64,46 @@ public class ObjectCompiler implements Runnable{
     /* Get build globalSpec from yaml file */
     BuildSpec globalSpec = Utilities.deserializeYaml(yamlFile);
 
-    /* Global before */
-    if(!globalSpec.before.isEmpty()){
-      commandExec.executeCommand(globalSpec.before);
+    try {
+      /* Global before */
+      if(!globalSpec.before.isEmpty()){
+        commandExec.executeCommand(globalSpec.before);
+      }
+
+      if(verbose) showLibraryList();
+
+      /* Build each target */
+      buildTargets(globalSpec);
+
+      /* Execute global after */
+      if(!globalSpec.after.isEmpty()){
+        commandExec.executeCommand(globalSpec.after);
+      }
+
+      /* Execute global success */
+      if(!globalSpec.success.isEmpty()){
+        commandExec.executeCommand(globalSpec.success);
+      }
+      
+    } catch (Exception e) {
+
+      /* Global failure */
+      if(!globalSpec.failure.isEmpty()){
+        commandExec.executeCommand(globalSpec.failure);
+      }
+
+      if (debug) e.printStackTrace();
+
+    } finally {
+      /* Show chain of commands */
+      if(verbose) System.out.println(commandExec.getExecutionChain());
+
+      cleanup();
     }
 
-    if(verbose) showLibraryList();
-
-    /* Build each target */
-    buildTargets(globalSpec);
-
-    /* Execute global after */
-    if(!globalSpec.after.isEmpty()){
-      commandExec.executeCommand(globalSpec.after);
-    }
-    
-    /* Show chain of commands */
-    if(verbose) System.out.println(commandExec.getExecutionChain());
-
-    cleanup();
   }
 
-  private void buildTargets(BuildSpec globalSpec){
+  private void buildTargets(BuildSpec globalSpec) throws Exception{
     /* This is intended for a YAML file with multiple objects in a toposort order */
     //TODO: Here, to compile only object with changes, just use a diff and filter the keys. Coming soon.
     for (Map.Entry<TargetKey, BuildSpec.TargetSpec> entry : globalSpec.targets.entrySet()) {
@@ -134,18 +151,17 @@ public class ObjectCompiler implements Runnable{
         /* Execute compilation command */
         commandExec.executeCommand(key);
 
-        /* Per target success */
-        if(!targetSpec.success.isEmpty()){
-          commandExec.executeCommand(targetSpec.success);
-        } 
-
         /* Per target after */
         if(!targetSpec.after.isEmpty()){
           commandExec.executeCommand(targetSpec.after);
         } 
 
+        /* Per target success */
+        if(!targetSpec.success.isEmpty()){
+          commandExec.executeCommand(targetSpec.success);
+        } 
+
       } catch (Exception e){
-        if (debug) e.printStackTrace();
         if (verbose) System.err.println("Target failed: " + key.asString());
 
         /* Per target failure */
@@ -153,22 +169,13 @@ public class ObjectCompiler implements Runnable{
           commandExec.executeCommand(targetSpec.failure);
         } 
 
-        /* Global failure */
-        if(!globalSpec.failure.isEmpty()){
-          commandExec.executeCommand(globalSpec.failure);
-        }
-
-        return; // Stop compilation
+        throw e; // Raise
 
       } finally {
         //TODO: What should i add here? Logging or something
       }
     }
 
-    /* Execute global success */
-    if(!globalSpec.success.isEmpty()){
-      commandExec.executeCommand(globalSpec.success);
-    }
   }
 
   private void showLibraryList(){
