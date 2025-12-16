@@ -95,7 +95,7 @@ public class ObjectDescription {
         break;
 
       case CRTCMD :
-        getCmdInfo(this.targetKey.library, this.targetKey.objectName);
+        getCmdInfo();
         break;
     
       default:
@@ -422,17 +422,20 @@ public class ObjectDescription {
         if(verbose) System.err.println("Could not find module '" + this.targetKey.asString());
         return;
       }
-        // Override OPTIMIZE if more specific here
-        // This gives 10 but the param  OPTIMIZE only accepts: *NONE, *BASIC, *FULL   
-        String modOptimize = rsMod.getString("OPTIMIZE").trim();
-        if (!modOptimize.isEmpty()) {
-          switch (modOptimize) {
-            case "10": this.targetKey.put(ParamCmd.OPTIMIZE, ValCmd.NONE);   break;
-            case "20": this.targetKey.put(ParamCmd.OPTIMIZE, ValCmd.BASIC);  break;
-            case "30": this.targetKey.put(ParamCmd.OPTIMIZE, ValCmd.BASIC);  break;
-            case "40": this.targetKey.put(ParamCmd.OPTIMIZE, ValCmd.FULL);   break;
-          }
+
+      if (verbose) System.out.println("Found module '" + this.targetKey.asString());
+
+      // Override OPTIMIZE if more specific here
+      // This gives 10 but the param  OPTIMIZE only accepts: *NONE, *BASIC, *FULL   
+      String modOptimize = rsMod.getString("OPTIMIZE").trim();
+      if (!modOptimize.isEmpty()) {
+        switch (modOptimize) {
+          case "10": this.targetKey.put(ParamCmd.OPTIMIZE, ValCmd.NONE);   break;
+          case "20": this.targetKey.put(ParamCmd.OPTIMIZE, ValCmd.BASIC);  break;
+          case "30": this.targetKey.put(ParamCmd.OPTIMIZE, ValCmd.BASIC);  break;
+          case "40": this.targetKey.put(ParamCmd.OPTIMIZE, ValCmd.FULL);   break;
         }
+      }
 
         // Update source if more accurate
         String modSrcLib = rsMod.getString("SOURCE_FILE_LIBRARY").trim();
@@ -452,7 +455,7 @@ public class ObjectDescription {
     }
   }
 
-  private void getCmdInfo(String library, String objectName) throws SQLException {
+  private void getCmdInfo() throws SQLException {
     
     try (Statement stmt = connection.createStatement();
         ResultSet rsCmdInfo = stmt.executeQuery(
@@ -472,15 +475,15 @@ public class ObjectDescription {
             "INNER JOIN Libs " +
             "ON (COMMAND_LIBRARY = Libs.Libraries) " +
             "WHERE " + 
-                "COMMAND_NAME = '" + objectName + "' "
+                "COMMAND_NAME = '" + this.targetKey.getObjectName() + "' "
           )) {
       if (!rsCmdInfo.next()) {
         //TODO: Check if object exist before getting the info.
-        System.err.println(("Could not get command '" + objectName + "' from library list"));
-        //throw new IllegalArgumentException("Could not get object '" + objectName + "' from library '" + library + "' type" + "'" + objectType.toString() + "'");
+        System.err.println(("Could not get command '" + this.targetKey.asString()));
+        return;
       }
 
-      if (verbose) System.out.println("Found command '" + objectName + "' in library list");
+      if (verbose) System.out.println("Found command '" + this.targetKey.asString());
       
       // -- Missing: REXSRCFILE, REXSRCMBR, REXCMDENV, REXEXITPGM
       String cmd = rsCmdInfo.getString("CMD").trim();
