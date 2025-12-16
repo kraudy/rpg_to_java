@@ -34,7 +34,7 @@ public class CommandExecutor {
     try{
       executeCommand(key.getCommandString());
     } catch (Exception e) {
-      showCompilationSpool(commandTime);
+      if(verbose) showCompilationSpool(commandTime);
       throw e;
     }
   }
@@ -121,20 +121,21 @@ public class CommandExecutor {
 
   // String cpysplfCmd = "CPYSPLF FILE(" + objectName + ") TOFILE(QTEMP/SPLFCPY) JOB(*) SPLNBR(*LAST)";
   private void showCompilationSpool(Timestamp compilationTime) throws SQLException{
+    /* Is there a spool file? */
     try(Statement stmt = connection.createStatement();
       ResultSet rsCheckSpool = stmt.executeQuery(
       "Select SPOOLED_FILE_NAME, SPOOLED_FILE_NUMBER, QUALIFIED_JOB_NAME " +
       "From Table ( " +
           "QSYS2.SPOOLED_FILE_INFO( " +
               "USER_NAME => USER , " +
-              "STARTING_TIMESTAMP => '" + compilationTime + "', " +
-              "JOB_NAME => (VALUES QSYS2.JOB_NAME) " +
+              "STARTING_TIMESTAMP => '" + compilationTime + "' " +
+              //"JOB_NAME => (VALUES QSYS2.JOB_NAME) " +
           ") " +
         ") " +
         "LIMIT 1 "
       )){
         if (!rsCheckSpool.next()) {
-          System.err.println("No spool found for compilation command");
+          if(verbose) System.err.println("No spool found for compilation command");
           return;
         }
     }
@@ -146,8 +147,8 @@ public class CommandExecutor {
         "From Table ( " +
             "QSYS2.SPOOLED_FILE_INFO( " +
                 "USER_NAME => USER, " +
-                "STARTING_TIMESTAMP => '" + compilationTime + "', " +
-                "JOB_NAME => (VALUES QSYS2.JOB_NAME)" +
+                "STARTING_TIMESTAMP => '" + compilationTime + "' " +
+                //"JOB_NAME => (VALUES QSYS2.JOB_NAME)" +
             ") " +
         ") As s " +
         "Inner Join Table ( " +
@@ -159,7 +160,7 @@ public class CommandExecutor {
         ") As d On 1=1" 
       )){
         while (rsCompilationSpool.next()) {
-          System.out.println(rsCompilationSpool.getString("SPOOLED_DATA"));
+          System.out.println(rsCompilationSpool.getString("SPOOLED_DATA").trim());
         }
     }
   }
