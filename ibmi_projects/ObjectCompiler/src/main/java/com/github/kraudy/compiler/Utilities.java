@@ -156,25 +156,37 @@ public class Utilities {
   }
 
   public static String nodeToString(JsonNode node) {
-    String value = "";
-    if (node.isNull()) return null;
-    if (node.isTextual()) {
-      try { value = ValCmd.fromString(node.asText()).toString(); }
-      catch (Exception ignored) { value = node.asText();}
-    }
-    if (node.isInt()) value = node.asText();
+    if (node.isNull()) throw new RuntimeException("Node value can not be null");
+
+    /* Convert list to space separated string */
     if (node.isArray()) {
-        //TODO: Do here the list joining(" ") and make it string to not deal with that later
         List<String> elements = new ArrayList<>();
         node.elements().forEachRemaining(child -> {
-            // Recursively extract text, handle nested values safely
             if (!child.isNull()) {
                 elements.add(child.asText());
             }
         });
-        value = String.join(" ", elements).trim(); // Space sparated list
+        return String.join(" ", elements).trim(); // Space sparated list
     }
-    return value;
+
+    //String value = "";
+    //if (node.isTextual()) {
+    //  try { value = ValCmd.fromString(node.asText()).toString(); }
+    //  catch (Exception ignored) { value = node.asText();}
+    //}
+    //if (node.isInt()) value = node.asText();
+
+    /* Try to get ValCmd string from node */
+    try { return ValCmd.fromString(node.asText()).toString(); }
+    catch (Exception ignored) { 
+      try {
+        /* Try to get text from node */
+        return node.asText();
+      } catch (Exception e) {
+        throw new RuntimeException("Could not extract text from node");
+      }
+    }
+    
   }
 
   public static String validateParamValue(ParamCmd param, String value) {
