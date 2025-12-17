@@ -104,6 +104,7 @@ public class ParamMap {
     }
   }
   
+  /* Here we need the command to ResolveConflincts */
   public String getCommandString(Command cmd){
     ResolveConflicts(cmd);
     getChangesSummary(cmd);

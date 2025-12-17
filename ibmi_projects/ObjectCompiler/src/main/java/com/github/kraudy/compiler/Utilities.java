@@ -169,13 +169,6 @@ public class Utilities {
         return String.join(" ", elements).trim(); // Space sparated list
     }
 
-    //String value = "";
-    //if (node.isTextual()) {
-    //  try { value = ValCmd.fromString(node.asText()).toString(); }
-    //  catch (Exception ignored) { value = node.asText();}
-    //}
-    //if (node.isInt()) value = node.asText();
-
     /* Try to get ValCmd string from node */
     try { return ValCmd.fromString(node.asText()).toString(); }
     catch (Exception ignored) { 
@@ -202,9 +195,9 @@ public class Utilities {
         value = "";
         for(String module : list){
           if(module.contains("/")) {
-            value += module;
+            value += module; // If already qualified, just append
           } else {
-            value += ValCmd.LIBL.toString() + "/" + module;
+            value += ValCmd.LIBL.toString() + "/" + module; // If not qualifed, append LIBL
           }
           value += " ";
         }
@@ -217,8 +210,6 @@ public class Utilities {
   }
 
   public static boolean validateCommandParam(Command cmd, ParamCmd param) {
-    /* Check if param is in the command pattern */
-    //System.out.println("validateCommandParam command: " + cmd.name());
     if (!CompilationPattern.commandToPatternMap.getOrDefault(cmd, Collections.emptyList()).contains(param)) {
       return false;
     }
