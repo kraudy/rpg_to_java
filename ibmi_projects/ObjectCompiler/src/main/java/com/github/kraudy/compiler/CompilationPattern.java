@@ -1,11 +1,18 @@
 package com.github.kraudy.compiler;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/*
+ * To include a new command: 
+ *  - Add the command enum to SysCmd or CompCmd accordingly.
+ *  - Create new list with the command pattern
+ *  - Add the new command and its pattern to the commandToPatternMap
+ */
 public class CompilationPattern {
 
   public interface Command {
@@ -18,7 +25,11 @@ public class CompilationPattern {
     // Dependency commands
     DSPPGMREF, DSPOBJD, DSPDBR ,
     // 
-    CRTBNDDIR
+    CRTBNDDIR,
+    //
+    OVRDBF, OVRPRTF,
+    //
+    CHGOBJD, 
     
     ;
 
@@ -78,21 +89,26 @@ public class CompilationPattern {
     }
   }
 
+  /* Compiled objects types */
   public enum ObjectType { 
     PGM, SRVPGM, MODULE, TABLE, LF, INDEX, VIEW, ALIAS, PROCEDURE, FUNCTION, PF, DSPF;
     public String toParam(){
       return "*" + this.name();
     }
-  } // Add more as needed
+  } 
 
-  public enum PostCmpCmd { CHGOBJD }
+  /* Default source files */
+  public enum DftSrc { 
+    QRPGLESRC, QRPGSRC, QCLSRC, QSQLSRC, QSRVSRC, QDSPFSRC, QPFSRC, QLFSRC, QSQLRPGSRC, QSQLMODSRC 
+  }
 
-  public enum DftSrc { QRPGLESRC, QRPGSRC, QCLSRC, QSQLSRC, QSRVSRC, QDSPFSRC, QPFSRC, QLFSRC, QSQLRPGSRC, QSQLMODSRC }
-
+  /*
+   * Commands params as enums
+   */
   public enum ParamCmd { 
     PGM, MODULE, OBJ, OBJTYPE, OUTPUT, OUTMBR, SRVPGM, BNDSRVPGM, LIBL, SRCFILE, SRCMBR, ACTGRP, DFTACTGRP, BNDDIR, COMMIT, TEXT, TGTCCSID, CRTFRMSTMF,
     OPTION, TGTRLS, SRCSTMF,
-    // NEW: Added for (RPG/CL specific)
+    // RPG/CL
     GENLVL, DBGVIEW, DBGENCKEY, OPTIMIZE, INDENT, CVTOPT, SRTSEQ, LANGID, REPLACE, USRPRF, AUT, TRUNCNBR, FIXNBR, ALWNULL, DEFINE, ENBPFRCOL, PRFDTA, 
     LICOPT, INCDIR, PGMINFO, INFOSTMF, PPGENOPT, PPSRCFILE, PPSRCMBR, PPSRCSTMF, REQPREXP, PPMINOUTLN,
     GENOPT, SAAFLAG, PRTFILE, PHSTRC, ITDUMP, SNPDUMP, CODELIST, IGNDECERR, LOG, ALWRTVSRC, INCFILE, STGMDL,
@@ -130,10 +146,17 @@ public class CompilationPattern {
     CMD, REXSRCFILE, REXSRCMBR, REXCMDENV, REXEXITPGM, THDSAFE,
 
     // CRTMNU
-    MENU, TYPE, DSPF, MSGF, CMDLIN, DSPKEY, PRDLIB
+    MENU, TYPE, DSPF, MSGF, CMDLIN, DSPKEY, PRDLIB,
+
+    // OVRDBF
+    TOFILE, POSITION, RCDFMTLCK, NBRRCDS, EOFDLY, EXPCHK, INHWRT, SECURE, OVRSCOPE, OPNSCOPE, SEQONLY, DSTDTA,
+
+    // OVRPRTF
+    SPLFNAME, IGCDTA, IGCEXNCHR, IGCCHRRTT, IGCCPI, IGCSOSI, IGCCDEFNT,
 
     ;
 
+    /* Convert string to param enum */
     public static ParamCmd fromString(String value) {
       try {
         return ParamCmd.valueOf(value.toUpperCase().trim());
@@ -142,8 +165,8 @@ public class CompilationPattern {
       }
     }
 
+    /* Convert param enum to string */
     public String paramString(String val){
-      //if ("NULL".equals(val)) return "";
       if (val == null) return "";
 
       return " " + this.name() + "(" + val + ")";
@@ -151,11 +174,16 @@ public class CompilationPattern {
     
   }
 
+  /* Params defined values */
   public enum ValCmd { 
     FIRST, REPLACE, OUTFILE, LIBL, FILE, DTAARA, PGM, MODULE, OBJ, SRVPGM, CURLIB, ALL, CURRENT,
     NONE, BASIC, FULL, LSTDBG, JOB, EVENTF,
 
-    YES, NO, STMT, SOURCE, LIST, HEX, JOBRUN, USER, LIBCRTAUT, PEP, NOCOL, PRINT, SNGLVL; 
+    YES, NO, STMT, SOURCE, LIST, HEX, JOBRUN, USER, LIBCRTAUT, PEP, NOCOL, PRINT, SNGLVL,
+    
+    // OVRDBF
+    ACTGRPDFN, CALLLVL,
+    ; 
 
     public static ValCmd fromString(String value) {
       try {
@@ -171,7 +199,9 @@ public class CompilationPattern {
     }  
   }
 
-  /* Maps Source Type => Object Type => Compilation command */
+  /*
+   * Maps Source Type => Object Type => Compilation command 
+   */
   private static final Map<SourceType, Map<ObjectType, CompCmd>> typeToCmdMap = new EnumMap<>(SourceType.class);
 
   static{
@@ -227,26 +257,140 @@ public class CompilationPattern {
     typeToCmdMap.put(SourceType.DDS, ddsMap);
   }  
 
-  /* System command patterns */
+  /* 
+   * System command patterns 
+   */
+
+  // CHGLIBL
   public static final List<ParamCmd> ChgLibLPattern = Arrays.asList(
     ParamCmd.LIBL,
     ParamCmd.CURLIB // Add USRLIBL if needed and added to ParamCmd
   );
 
+  // CHGCURLIB
   public static final List<ParamCmd> ChgCurLibPattern = Arrays.asList(
     ParamCmd.CURLIB
   );
 
-    // CRTBNDDIR
+  // CRTBNDDIR
   public static final List<ParamCmd> BndDirPattern = Arrays.asList(
     ParamCmd.BNDDIR,
     ParamCmd.AUT,   
     ParamCmd.TEXT
   );
-  
-  /* Maps compilation command to its pattern */
 
-  /* ILE Patterns */
+  // OVRDBF
+  public static final List<ParamCmd> OvrDbfPattern = Arrays.asList(
+    ParamCmd.FILE,
+    ParamCmd.TOFILE,
+    ParamCmd.MBR,
+    ParamCmd.POSITION,
+    ParamCmd.RCDFMTLCK,
+    ParamCmd.FRCRATIO,
+    ParamCmd.FMTSLR,
+    ParamCmd.WAITFILE,
+    ParamCmd.WAITRCD, 
+    ParamCmd.REUSEDLT,
+    ParamCmd.NBRRCDS, 
+    ParamCmd.EOFDLY,  
+    ParamCmd.LVLCHK,  
+    ParamCmd.EXPCHK,  
+    ParamCmd.INHWRT,  
+    ParamCmd.SECURE,
+    ParamCmd.OVRSCOPE,
+    ParamCmd.SHARE,   
+    ParamCmd.OPNSCOPE,
+    ParamCmd.SEQONLY, 
+    ParamCmd.DSTDTA
+  );
+
+  // OVRPRTF
+  public static final List<ParamCmd> OvrPrtfPattern = Arrays.asList(
+    ParamCmd.FILE,
+    ParamCmd.TOFILE,
+    ParamCmd.DEV,
+    ParamCmd.DEVTYPE,
+    ParamCmd.PAGESIZE,
+    ParamCmd.LPI,
+    ParamCmd.CPI,
+    ParamCmd.FRONTMGN,
+    ParamCmd.BACKMGN,
+    ParamCmd.OVRFLW,
+    ParamCmd.FOLD,
+    ParamCmd.RPLUNPRT,
+    ParamCmd.ALIGN,
+    ParamCmd.DRAWER,
+    ParamCmd.OUTBIN,
+    ParamCmd.FONT,
+    ParamCmd.FORMFEED,
+    ParamCmd.PRTQLTY,
+    ParamCmd.CTLCHAR,
+    ParamCmd.CHLVAL, 
+    ParamCmd.FIDELITY,
+    ParamCmd.CHRID,   
+    ParamCmd.DECFMT,
+    ParamCmd.FNTCHRSET,
+    ParamCmd.CDEFNT,
+    ParamCmd.PAGDFN,
+    ParamCmd.FORMDF,
+    ParamCmd.AFPCHARS,
+    ParamCmd.TBLREFCHR,
+    ParamCmd.PAGRTT,   
+    ParamCmd.MULTIUP,  
+    ParamCmd.REDUCE,   
+    ParamCmd.PRTTXT,   
+    ParamCmd.JUSTIFY, 
+    ParamCmd.DUPLEX,  
+    ParamCmd.UOM,     
+    ParamCmd.FRONTOVL,
+    ParamCmd.BACKOVL,
+    ParamCmd.CVTLINDTA, 
+    ParamCmd.IPDSPASTHR,
+    ParamCmd.USRRSCLIBL,
+    ParamCmd.CORNERSTPL,
+    ParamCmd.EDGESTITCH,
+    ParamCmd.SADLSTITCH,
+    ParamCmd.FNTRSL,
+    ParamCmd.DFRWRT,
+    ParamCmd.SPOOL, 
+    ParamCmd.OUTQ,  
+    ParamCmd.FORMTYPE, 
+    ParamCmd.COPIES,   
+    ParamCmd.PAGERANGE,
+    ParamCmd.MAXRCDS,  
+    ParamCmd.FILESEP,  
+    ParamCmd.SCHEDULE, 
+    ParamCmd.HOLD,     
+    ParamCmd.SAVE,     
+    ParamCmd.OUTPTY,   
+    ParamCmd.USRDTA,   
+    ParamCmd.SPLFOWN,  
+    ParamCmd.USRDFNOPT,
+    ParamCmd.USRDFNDTA,
+    ParamCmd.USRDFNOBJ,
+    ParamCmd.SPLFNAME, 
+    ParamCmd.EXPDATE,  
+    ParamCmd.DAYS,     
+    ParamCmd.IGCDTA,   
+    ParamCmd.IGCEXNCHR,
+    ParamCmd.IGCCHRRTT,
+    ParamCmd.IGCCPI,   
+    ParamCmd.IGCSOSI,  
+    ParamCmd.IGCCDEFNT,
+    ParamCmd.TOSTMF,
+    ParamCmd.WSCST,
+    ParamCmd.WAITFILE,
+    ParamCmd.LVLCHK,  
+    ParamCmd.SECURE,  
+    ParamCmd.OVRSCOPE,
+    ParamCmd.SHARE,   
+    ParamCmd.OPNSCOPE
+  );
+
+
+  /* 
+   * ILE Compilation Patterns 
+   */
 
   // CRTSRVPGM
   public static final List<ParamCmd> SrvpgmPattern = Arrays.asList(
@@ -288,7 +432,7 @@ public class CompilationPattern {
 
     ParamCmd.DFTACTGRP,
     ParamCmd.ACTGRP,
-    ParamCmd.STGMDL,    //TODO: Maybe this needs to be conditional
+    ParamCmd.STGMDL,
 
     ParamCmd.BNDDIR,    // Binding directory
 
@@ -362,7 +506,7 @@ public class CompilationPattern {
 
   );
 
-  // Modules 
+  /* Modules */
 
   // CRTRPGMOD
   public static final List<ParamCmd> RpgModulePattern = Arrays.asList(
@@ -436,7 +580,7 @@ public class CompilationPattern {
 
   );
 
-  // Sql and RPG
+  /* Sql and RPG */
 
   // CRTSQLRPGI
   public static final List<ParamCmd> SqlRpgPgmPattern = Arrays.asList(
@@ -545,8 +689,8 @@ public class CompilationPattern {
 
   );
 
-
   /* Sql */
+
   // RUNSQLSTM
   public static final List<ParamCmd> SqlPattern = Arrays.asList(
     ParamCmd.SRCFILE,
@@ -804,8 +948,7 @@ public class CompilationPattern {
     ParamCmd.AUT
   );
 
-  //TODO: Add config file support like YAML. This will allow specific patterns to be provided.
-  // So, you would try to load the file with the param patter or use the default one.
+  //TODO: Add config file support like YAML. This will allow specific patterns to be provided or loaded at runtime.
 
   public static final Map<Command, List<ParamCmd>> commandToPatternMap = new HashMap<>();
 
@@ -815,8 +958,13 @@ public class CompilationPattern {
     commandToPatternMap.put(SysCmd.CHGCURLIB, ChgCurLibPattern);
     /* Bind dir */
     commandToPatternMap.put(SysCmd.CRTBNDDIR, BndDirPattern);
+    /* Ovr */
+    commandToPatternMap.put(SysCmd.OVRDBF, OvrDbfPattern);
+    commandToPatternMap.put(SysCmd.OVRPRTF, OvrPrtfPattern);
 
-    /* Maps compilation command to its pattern */ 
+    /* 
+     * Maps compilation command to its pattern 
+     */ 
 
     /* ILE */
     commandToPatternMap.put(CompCmd.CRTSRVPGM, SrvpgmPattern);
@@ -840,8 +988,14 @@ public class CompilationPattern {
     commandToPatternMap.put(CompCmd.CRTCMD, CmdPattern);
   }
 
+  /* Return compilation command */
   public static CompCmd getCompilationCommand(SourceType sourceType, ObjectType objectType){
     return typeToCmdMap.get(sourceType).get(objectType);
+  }
+
+  /* Return command pattern */
+  public static List<ParamCmd> getCommandPattern(Command cmd){
+    return commandToPatternMap.getOrDefault(cmd, Collections.emptyList());
   }
 
 }

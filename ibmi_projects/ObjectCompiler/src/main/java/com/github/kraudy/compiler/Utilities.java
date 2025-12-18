@@ -210,7 +210,7 @@ public class Utilities {
   }
 
   public static boolean validateCommandParam(Command cmd, ParamCmd param) {
-    if (!CompilationPattern.commandToPatternMap.getOrDefault(cmd, Collections.emptyList()).contains(param)) {
+    if (!CompilationPattern.getCommandPattern(cmd).contains(param)) {
       return false;
     }
 
