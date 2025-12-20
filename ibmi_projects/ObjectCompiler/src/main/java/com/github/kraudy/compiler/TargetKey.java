@@ -47,7 +47,7 @@ public class TargetKey {
       throw new IllegalArgumentException("Invalid sourceType : " + parts[3]);
     }
 
-    /* Set default source file in case no SRCFILE or SRCSTMF are not provided  */
+    /* Set default source file in case no SRCFILE or SRCSTMF are provided  */
     this.sourceFile = SourceType.defaultSourcePf(this.sourceType, this.objectType);
 
     /* Set default source name to object name */

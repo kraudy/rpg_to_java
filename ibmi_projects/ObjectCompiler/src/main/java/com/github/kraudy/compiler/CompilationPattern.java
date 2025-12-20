@@ -19,6 +19,11 @@ public class CompilationPattern {
     String name();  // Mirrors Enum.name() for consistency
   }
 
+  // TODO: Add functionality to call programs.
+  public enum ExecCmd implements Command { 
+    CALL,
+  } 
+
   public enum SysCmd implements Command { 
     // Library commands
     CHGLIBL, CHGCURLIB, 

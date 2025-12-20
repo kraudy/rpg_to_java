@@ -154,19 +154,10 @@ public class ParamMap {
     }
 
     switch (cmd){
-      case CRTRPGMOD:
-      case CRTCLMOD:
-        break;
-
       case CRTBNDRPG:
         if (!this.containsKey(ParamCmd.DFTACTGRP)) {
           this.remove(ParamCmd.STGMDL); 
         }
-      case CRTBNDCL:
-      case CRTCLPGM:
-        break;
-        
-      case CRTRPGPGM:
         break;
 
       case CRTSQLRPGI:
@@ -180,17 +171,6 @@ public class ParamMap {
             this.containsKey(ParamCmd.EXPORT)) {
           this.remove(ParamCmd.EXPORT); 
         }
-        break;
-
-      case RUNSQLSTM:
-        break;
-
-      case CRTDSPF:
-      case CRTPF:
-      case CRTLF:
-      case CRTPRTF:
-      case CRTMNU:
-      case CRTQMQRY:
         break;
 
       default: 

@@ -245,7 +245,8 @@ public class ObjectDescription {
                 "AND OBJECT_TYPE = '" + this.targetKey.getObjectType() + "' "
           )) {
       if (!rsObj.next()) {
-        System.err.println(("Could not get object '" + this.targetKey.asString() )); // If not object found, returns.
+        System.err.println(("Could not get object '" + this.targetKey.asString() ));
+        return;
       }
 
       if (verbose) System.out.println("Found object '" + this.targetKey.asString());
@@ -478,7 +479,6 @@ public class ObjectDescription {
                 "COMMAND_NAME = '" + this.targetKey.getObjectName() + "' "
           )) {
       if (!rsCmdInfo.next()) {
-        //TODO: Check if object exist before getting the info.
         System.err.println(("Could not get command '" + this.targetKey.asString()));
         return;
       }
