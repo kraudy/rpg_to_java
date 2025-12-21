@@ -88,9 +88,11 @@ public class ObjectCompiler implements Runnable{
     } catch (Exception e) {
 
       /* Global failure */
-      if(!globalSpec.failure.isEmpty()){
-        commandExec.executeCommand(globalSpec.failure);
-      }
+      try{
+        if(!globalSpec.failure.isEmpty()){
+          commandExec.executeCommand(globalSpec.failure);
+        }
+      } catch (Exception ignore) {}
 
       /* Fail loudly */
       e.printStackTrace();

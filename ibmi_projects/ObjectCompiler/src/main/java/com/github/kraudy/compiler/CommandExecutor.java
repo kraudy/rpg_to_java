@@ -23,7 +23,7 @@ public class CommandExecutor {
 
   }
  
-  public void executeCommand(List<String> commandList){
+  public void executeCommand(List<String> commandList) throws SQLException{
     for(String command: commandList){
       executeCommand(command);
     }
@@ -35,11 +35,13 @@ public class CommandExecutor {
       executeCommand(key.getCommandString());
     } catch (Exception e) {
       if(verbose) showCompilationSpool(commandTime);
-      throw e;
+      throw e; // Raise
     }
+    /* Set build time */
+    key.setLastBuild(commandTime);
   }
 
-  public void executeCommand(String command){
+  public void executeCommand(String command) throws SQLException{
     Timestamp commandTime = getCurrentTime();
 
     if (this.CmdExecutionChain.length() > 0) {
@@ -55,18 +57,17 @@ public class CommandExecutor {
     try (Statement cmdStmt = connection.createStatement()) {
       cmdStmt.execute("CALL QSYS2.QCMDEXC('" + command + "')");
     } catch (SQLException e) {
-      System.out.println("Command failed: " + command);
+      System.err.println("Command failed: " + command);
       //TODO: Add a class filed that stores the messages and is updated with each compilation command
       // but make the massages ENUM to just do something like .contains(CPF5813) and then the delete
       // like DLTOBJ OBJ() OBJTYPE()
       //if ("CPF5813".equals(e.getMessage()))
-      e.printStackTrace();
-      getJoblogMessages(commandTime);
-      throw new IllegalArgumentException("Could not execute command: " + command); //TODO: Catch this and throw the appropiate message
+      if(verbose) getJoblogMessages(commandTime);
+      throw e; // Raise
     }
 
     System.out.println("Command successful: " + command);
-    getJoblogMessages(commandTime);
+    if(verbose) getJoblogMessages(commandTime);
   }
 
   public Timestamp getCurrentTime(){
@@ -79,7 +80,7 @@ public class CommandExecutor {
     } catch (SQLException e) {
       if (verbose) System.err.println("Could not get command time.");
       if (debug) e.printStackTrace();
-      throw new IllegalArgumentException("Could not get command time.");
+      throw new RuntimeException("Could not get command time.");
     }
     return currentTime;
   }
@@ -110,8 +111,9 @@ public class CommandExecutor {
         System.out.printf("%-20s | %-10s | %-4s | %s%n", formattedTime, messageId, severity, message);
       } 
     } catch (SQLException e) {
-      System.out.println("Could not get messages.");
-      e.printStackTrace();
+      if (verbose) System.out.println("Could not get messages.");
+      if (debug) e.printStackTrace();
+      throw new RuntimeException("Could not get messages.");
     }
   }
 
