@@ -92,7 +92,8 @@ public class ObjectCompiler implements Runnable{
         commandExec.executeCommand(globalSpec.failure);
       }
 
-      if (debug) e.printStackTrace();
+      /* Fail loudly */
+      e.printStackTrace();
 
     } finally {
       /* Show chain of commands */
@@ -120,13 +121,7 @@ public class ObjectCompiler implements Runnable{
         ObjectDescription odes = new ObjectDescription(connection, debug, verbose, key);
 
         /* If the object exists, we try to extract its compilation params */
-        //try {
         odes.getObjectInfo();
-        //} catch (Exception e) {
-        //  //TODO: Change logging for SLF4J or java.util.logging. This is also needed for pipeline integration.
-        //  if (debug) e.printStackTrace();
-        //  if (verbose) System.err.println("Object not found; only default or provided values will be used.");
-        //}
 
         /* Set global defaults params per target */
         key.putAll(globalSpec.defaults);

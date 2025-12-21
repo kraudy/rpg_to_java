@@ -14,18 +14,18 @@ import com.github.kraudy.compiler.CompilationPattern.ValCmd;
  * A new object is created per each target defined in the spec (Yaml file)
  */
 public class TargetKey {
-  public String library;              // Target object library
-  public String objectName;           // Target object name
-  public ObjectType objectType;       // Target object type
-  public SourceType sourceType;       // Target source type
-  public String sourceFile;           // Target Source Phisical File name.
-  public String sourceName;           // Target Source member name. Set to object name by default
-  public String sourceStmf;           // Target Ifs source stream file
-  public CompCmd compilationCommand;  // Compilation command
-  public ParamMap ParamCmdSequence;   // Compilation command's Param:Value 
+  private String library;              // Target object library
+  private String objectName;           // Target object name
+  private ObjectType objectType;       // Target object type
+  private SourceType sourceType;       // Target source type
+  private String sourceFile;           // Target Source Phisical File name.
+  private String sourceName;           // Target Source member name. Set to object name by default
+  private String sourceStmf;           // Target Ifs source stream file
+  private CompCmd compilationCommand;  // Compilation command
+  private ParamMap ParamCmdSequence;   // Compilation command's Param:Value 
 
-  public Timestamp lastSourceEdit;    // Last time the source was edited
-  public Timestamp lastBuild;         // Last time the object was compiled
+  private Timestamp lastSourceEdit;    // Last time the source was edited
+  private Timestamp lastBuild;         // Last time the object was compiled
 
   public TargetKey(String key) {
     String[] parts = key.split("\\.");

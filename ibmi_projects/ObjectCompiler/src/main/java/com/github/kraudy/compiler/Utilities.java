@@ -42,7 +42,7 @@ public class Utilities {
       case CRTSQLRPGI:
         targetKey.put(ParamCmd.OBJ, targetKey.getQualifiedObject());
         targetKey.put(ParamCmd.OBJ, targetKey.getQualifiedObject(ValCmd.CURLIB));
-        targetKey.put(ParamCmd.OBJTYPE, targetKey.objectType.toParam());
+        targetKey.put(ParamCmd.OBJTYPE, targetKey.getObjectType());
         targetKey.put(ParamCmd.COMMIT, ValCmd.NONE);
         targetKey.put(ParamCmd.DBGVIEW, ValCmd.SOURCE);
         break;

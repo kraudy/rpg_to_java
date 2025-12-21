@@ -71,11 +71,10 @@ public class ObjectDescription {
     }
   }
 
-  //TODO: This method needs some love.
   public void getObjectInfo () throws SQLException {
 
     switch (this.targetKey.getCompilationCommand()) {
-      // PGM info
+      /* PGM info */
       case CRTBNDRPG:
       case CRTBNDCL:
       case CRTRPGPGM:
@@ -83,24 +82,28 @@ public class ObjectDescription {
         getPgmInfo();
         break;
 
+      /* Sql Rpg info */
       case CRTSQLRPGI:
         getSqlRpgInfo();
         break;
 
+      /* SrvPgm info */
       case CRTSRVPGM:
         getSrvpgmInfo();
         break;
      
-      //  module info
+      /* Module info */
       case CRTRPGMOD :
       case CRTCLMOD :
         getModuleInfo(); 
         break;
 
+      /* Sql info */
       case RUNSQLSTM :
         getSqlInfo();
         break;
 
+      /* Dds info */
       case CRTDSPF: 
       case CRTPF:
       case CRTLF:
@@ -108,6 +111,7 @@ public class ObjectDescription {
         getDdsInfo();
         break;
 
+      /* Cmd info */
       case CRTCMD :
         getCmdInfo();
         break;
@@ -147,8 +151,6 @@ public class ObjectDescription {
               "CONVERSION_REQUIRED, " +
               "CONVERSION_DETAIL, " +
               //-- These seem to be for ILE objects
-              "COALESCE(PROGRAM_ENTRY_PROCEDURE_MODULE_LIBRARY, '') As PROGRAM_ENTRY_PROCEDURE_MODULE_LIBRARY, " +
-              "COALESCE(PROGRAM_ENTRY_PROCEDURE_MODULE, '') As PROGRAM_ENTRY_PROCEDURE_MODULE, " +
               "COALESCE(ACTIVATION_GROUP, '') AS ACTGRP, " + // activationGroupAttribute
               "SHARED_ACTIVATION_GROUP, " +
               "OBSERVABLE_INFO_COMPRESSED, " +
@@ -163,12 +165,6 @@ public class ObjectDescription {
               "ARGUMENT_OPTIMIZATION, " +
               "NUMBER_OF_UNRESOLVED_REFERENCES, " +
               // Module related data
-              "MODULES, " + 
-              "MAXIMUM_MODULES, " +
-              "SERVICE_PROGRAMS, " +
-              "MAXIMUM_SERVICE_PROGRAMS, " +
-              "STRING_DIRECTORY_SIZE, " +
-              "MAXIMUM_STRING_DIRECTORY_SIZE, " +
               "COPYRIGHTS, " +
               "COPYRIGHT_STRINGS, " +
               "EXPORT_SOURCE_LIBRARY, " +
@@ -183,12 +179,10 @@ public class ObjectDescription {
               "EXPORT_SIGNATURES, " +
               "MAXIMUM_SIGNATURES, " +
               // Source file related data
-              "SOURCE_FILE_LIBRARY, " + // sourceLibrary
-              "SOURCE_FILE, " + // sourceFile
-              "SOURCE_FILE_MEMBER, " +
+              "(TRIM(SOURCE_FILE_LIBRARY) || '/' || TRIM(SOURCE_FILE)) As SRCFILE, " +
+              "SOURCE_FILE_MEMBER As SRCMBR, " +
               "SOURCE_FILE_CHANGE_TIMESTAMP, " + // sourceUpdatedDateTime
-              "COALESCE(SORT_SEQUENCE_LIBRARY, '') As SORT_SEQUENCE_LIBRARY, " +
-              "COALESCE(SORT_SEQUENCE, '') As SORT_SEQUENCE, " +
+              "(TRIM(SQL_SORT_SEQUENCE_LIBRARY) || '/' || TRIM(SQL_SORT_SEQUENCE)) As SRTSEQ, " +
               "COALESCE(LANGUAGE_ID, '') As LANGID, " +
               "OBSERVABLE, " + // observable
               "COALESCE(OPTIMIZATION, '') As OPTIMIZE, " +
@@ -208,6 +202,10 @@ public class ObjectDescription {
       }
 
       if (verbose) System.out.println("Found object '" + this.targetKey.asString());
+
+      this.targetKey.setLastBuild(rsObj.getTimestamp("CREATE_TIMESTAMP"));
+      this.targetKey.setLastEdit(rsObj.getTimestamp("SOURCE_FILE_CHANGE_TIMESTAMP"));
+
 
       switch (this.targetKey.getCompilationCommand()) {
         case CRTSRVPGM:
