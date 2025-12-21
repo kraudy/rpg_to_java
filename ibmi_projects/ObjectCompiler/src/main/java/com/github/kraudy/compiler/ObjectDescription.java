@@ -8,7 +8,6 @@ import java.sql.Statement;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 import com.github.kraudy.migrator.SourceMigrator;
-import com.github.kraudy.compiler.CompilationPattern.ObjectType;
 
 /* Core struct for capturing compilation specs */
 public class ObjectDescription {
@@ -76,7 +75,8 @@ public class ObjectDescription {
 
     /* Get PGM info */
     switch (this.targetKey.getCompilationCommand()) {
-      case CRTSQLRPGI: //TODO: This could be pgm or module
+      case CRTSQLRPGI:
+        if (!this.targetKey.isProgram()) break; // This could be pgm or module
       case CRTBNDRPG :
       case CRTBNDCL :
       case CRTRPGPGM :
@@ -104,11 +104,8 @@ public class ObjectDescription {
 
     /* Get module info */
     switch (this.targetKey.getCompilationCommand()) {
-      case CRTSRVPGM : //TODO: Do I need to get the module info?
-        getModuleInfo(); 
-        break;
-
-      case CRTSQLRPGI: //TODO: This could be pgm or module
+      case CRTSQLRPGI:
+        if (!this.targetKey.isModule()) break;  // This could be pgm or module
       case CRTRPGMOD :
       case CRTCLMOD :
         getModuleInfo(); 
@@ -118,7 +115,7 @@ public class ObjectDescription {
         break;
     }
 
-    return ;
+    return;
   }
 
   private void getPgmInfo() throws SQLException {
@@ -144,8 +141,6 @@ public class ObjectDescription {
               "COALESCE(TARGET_RELEASE, '') As TGTRLS, " +
               "MINIMUM_NUMBER_PARMS, " + // minParameters
               "MAXIMUM_NUMBER_PARMS, " + // maxParameters
-              "PAGING_POOL, " +
-              "PAGING_AMOUNT, " +
               "COALESCE(ALLOW_RTVCLSRC, '') As ALWRTVSRC, " + // allowRTVCLSRC
               "CONVERSION_REQUIRED, " +
               "CONVERSION_DETAIL, " +
@@ -165,13 +160,6 @@ public class ObjectDescription {
               "COALESCE(STORAGE_MODEL , '') As STGMDL, " +
               "ARGUMENT_OPTIMIZATION, " +
               "NUMBER_OF_UNRESOLVED_REFERENCES, " +
-              "ALLOW_STATIC_STORAGE_REINIT, " +
-              "MINIMUM_STATIC_STORAGE_SIZE, " +
-              "MAXIMUM_STATIC_STORAGE_SIZE, " +
-              "AUXILIARY_STORAGE_SEGMENTS, " +
-              "MAXIMUM_AUXILIARY_STORAGE_SEGMENTS, " +
-              "PROGRAM_SIZE, " +
-              "MAXIMUM_PROGRAM_SIZE, " +
               // Module related data
               "MODULES, " + 
               "MAXIMUM_MODULES, " +
@@ -181,8 +169,6 @@ public class ObjectDescription {
               "MAXIMUM_STRING_DIRECTORY_SIZE, " +
               "COPYRIGHTS, " +
               "COPYRIGHT_STRINGS, " +
-              "COPYRIGHT_STRING_SIZE, " +
-              "MAXIMUM_COPYRIGHT_STRING_SIZE, " +
               "EXPORT_SOURCE_LIBRARY, " +
               "EXPORT_SOURCE_FILE, " +
               "EXPORT_SOURCE_FILE_MEMBER, " +
@@ -206,17 +192,8 @@ public class ObjectDescription {
               "COALESCE(OPTIMIZATION, '') As OPTIMIZE, " +
               "COALESCE(LOG_COMMANDS, '' ) As LOG, " +
               "COALESCE(FIX_DECIMAL_DATA, '') As FIXNBR, " + // fixDecimalData
-              "UPDATE_PASA, " +
-              "CLEAR_PASA, " +
-              "COMPILER_ID, " +
               "TERASPACE_STORAGE_ENABLED_PROGRAM, " + // teraspaceEnabled
-              "OPM_PROGRAM_SIZE, " +
-              "STATIC_STORAGE_SIZE, " +
-              "AUTOMATIC_STORAGE_SIZE, " +
-              "NUMBER_MI_INSTRUCTIONS, " +
-              "NUMBER_MI_ODT_ENTRIES, " +
               //-- Sql related info
-              "SQL_STATEMENT_COUNT, " +
               "SQL_RELATIONAL_DATABASE, " +
               "SQL_COMMITMENT_CONTROL, " +
               "SQL_NAMING, " +
@@ -381,8 +358,6 @@ public class ObjectDescription {
                 "TERASPACE_STORAGE_ENABLED, " +
                 "STORAGE_MODEL, " +
                 "NUMBER_PROCEDURES, " +
-                "NUMBER_PROCEDURES_BLOCK_REORDERED, " +
-                "NUMBER_PROCEDURES_BLOCK_ORDER_MEASURED, " +
                 "PROFILING_DATA As PRFDTA, " +
                 "ALLOW_RTVCLSRC As ALWRTVSRC, " +
                 "USER_MODIFIED, " +
@@ -390,7 +365,6 @@ public class ObjectDescription {
                 "LICENSED_PROGRAM, " +
                 "PTF_NUMBER, " +
                 "APAR_ID, " +
-                "SQL_STATEMENT_COUNT, " +
                 "SQL_RELATIONAL_DATABASE, " +
                 "SQL_COMMITMENT_CONTROL, " +
                 "SQL_NAMING, " +
@@ -426,8 +400,6 @@ public class ObjectDescription {
 
       if (verbose) System.out.println("Found module '" + this.targetKey.asString());
 
-      // Override OPTIMIZE if more specific here
-      // This gives 10 but the param  OPTIMIZE only accepts: *NONE, *BASIC, *FULL   
       String modOptimize = rsMod.getString("OPTIMIZE").trim();
       if (!modOptimize.isEmpty()) {
         switch (modOptimize) {

@@ -92,6 +92,18 @@ public class TargetKey {
     return !("").equals(this.sourceStmf);
   }
 
+  public boolean isModule() {
+    return this.objectType == ObjectType.MODULE;
+  }
+
+  public boolean isProgram() {
+    return this.objectType == ObjectType.PGM;
+  }
+
+  public boolean isServiceProgram() {
+    return this.objectType == ObjectType.SRVPGM;
+  }
+
   public void putAll(Map<ParamCmd, String> params) {
     this.ParamCmdSequence.putAll(this.compilationCommand, params);
   }
