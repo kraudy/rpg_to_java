@@ -71,8 +71,8 @@ public class ObjectDescription {
     }
   }
 
+  //TODO: This method needs some love.
   public void getObjectInfo () throws SQLException {
-    //TODO: Check if the object exists.
 
     /* Get PGM info */
     switch (this.targetKey.getCompilationCommand()) {

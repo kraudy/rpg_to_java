@@ -14,6 +14,9 @@ import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 
 
+/*
+ *  Handles logic to set param:value per command
+ */
 public class ParamMap {
   private final EnumMap<ParamCmd, ParamValue> paramMap = new EnumMap<>(ParamCmd.class);
 

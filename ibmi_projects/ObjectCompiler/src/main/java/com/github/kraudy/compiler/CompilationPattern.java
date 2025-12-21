@@ -8,10 +8,15 @@ import java.util.List;
 import java.util.Map;
 
 /*
+ * Defines all the commands and params as enums.
+ * Uses these enums to describe all commands as patterns of params
+ * Maps commands to patterns
+ * Maps source type to compilaiton commands
+ * 
  * To include a new command: 
- *  - Add the command enum to SysCmd or CompCmd accordingly.
- *  - Create new list with the command pattern
- *  - Add the new command and its pattern to the commandToPatternMap
+ *  - Add the command enum to SysCmd, ExecCmd or CompCmd accordingly.
+ *  - Create a new list with the command pattern
+ *  - Add the new command and its pattern to the commandToPatternMap data structure
  */
 public class CompilationPattern {
 
@@ -63,10 +68,11 @@ public class CompilationPattern {
       }
     } 
 
+    /* Returns default source phisical file based on source type and object type */
     public static String defaultSourcePf (SourceType sourceType, ObjectType objectType){
       switch (sourceType){
         case RPG:
-          return DftSrc.QRPGSRC.name(); //TODO: Add .name()? and return string?
+          return DftSrc.QRPGSRC.name();
         case RPGLE:
           return DftSrc.QRPGLESRC.name();
         case SQLRPGLE:
@@ -76,7 +82,7 @@ public class CompilationPattern {
         case CLP:
         case CLLE:
           return DftSrc.QCLSRC.name();
-        case DDS: //TODO: This need to be fixed for DSPF, PF and LF, maybe add objectType as param
+        case DDS:
           switch (objectType) {
             case DSPF:
               return DftSrc.QDSPFSRC.name();
@@ -107,9 +113,7 @@ public class CompilationPattern {
     QRPGLESRC, QRPGSRC, QCLSRC, QSQLSRC, QSRVSRC, QDSPFSRC, QPFSRC, QLFSRC, QSQLRPGSRC, QSQLMODSRC 
   }
 
-  /*
-   * Commands params as enums
-   */
+  /* Commands params as enums */
   public enum ParamCmd { 
     PGM, MODULE, OBJ, OBJTYPE, OUTPUT, OUTMBR, SRVPGM, BNDSRVPGM, LIBL, SRCFILE, SRCMBR, ACTGRP, DFTACTGRP, BNDDIR, COMMIT, TEXT, TGTCCSID, CRTFRMSTMF,
     OPTION, TGTRLS, SRCSTMF,
@@ -179,7 +183,7 @@ public class CompilationPattern {
     
   }
 
-  /* Params defined values */
+  /* Params defined values. You see these when you press F4 */
   public enum ValCmd { 
     FIRST, REPLACE, OUTFILE, LIBL, FILE, DTAARA, PGM, MODULE, OBJ, SRVPGM, CURLIB, ALL, CURRENT,
     NONE, BASIC, FULL, LSTDBG, JOB, EVENTF,

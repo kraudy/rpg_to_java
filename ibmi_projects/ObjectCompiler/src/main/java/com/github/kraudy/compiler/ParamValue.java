@@ -3,6 +3,9 @@ package com.github.kraudy.compiler;
 import java.util.ArrayList;
 import java.util.List;
 
+/*
+ *  Simple POJO for param's value encapsulation and history tracking.
+ */
 public class ParamValue {
     private String current = "";
     private Integer count = 0;

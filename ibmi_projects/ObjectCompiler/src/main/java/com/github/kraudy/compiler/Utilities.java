@@ -2,7 +2,6 @@ package com.github.kraudy.compiler;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -12,12 +11,14 @@ import com.github.kraudy.compiler.CompilationPattern.Command;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 
+/*
+ * Utility methods
+ */
 public class Utilities {
 
   public static void SetDefaultParams(TargetKey targetKey) {
 
-    /* Generate compilation params values from object description */
-
+    /* Set source Pf and source member */
     switch (targetKey.getCompilationCommand()) {
       case CRTSQLRPGI:
       case CRTBNDRPG:
@@ -31,7 +32,6 @@ public class Utilities {
       case CRTRPGMOD:
       case CRTCLMOD:
       case RUNSQLSTM:
-        //TODO: SRCFILE could be set to *LIBL,etc until the migrators works with the library list
         targetKey.put(ParamCmd.SRCFILE, targetKey.getQualifiedSourceFile());
         targetKey.put(ParamCmd.SRCMBR, targetKey.getSourceName());
         break;
@@ -89,7 +89,6 @@ public class Utilities {
         break;
     }
 
-    //TODO: These switch could be moved to methods inside TargetKey class and just call them here.
     /* Set override value */
     switch (targetKey.getCompilationCommand()) {
       case CRTSRVPGM:
@@ -199,7 +198,7 @@ public class Utilities {
           } else {
             value += ValCmd.LIBL.toString() + "/" + module; // If not qualifed, append LIBL
           }
-          value += " ";
+          value += " "; // Add separator.
         }
         return value.trim();
     

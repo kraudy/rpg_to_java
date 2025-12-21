@@ -1,26 +1,27 @@
 package com.github.kraudy.compiler;
 
-import java.util.EnumMap;
-import java.util.List;
 import java.util.Map;
 
-import com.github.kraudy.compiler.CompilationPattern.Command;
 import com.github.kraudy.compiler.CompilationPattern.CompCmd;
 import com.github.kraudy.compiler.CompilationPattern.ObjectType;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.SourceType;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 
+/*
+ * Simple POJO for compilation targets
+ * A new object is created per each target defined in the spec (Yaml file)
+ */
 public class TargetKey {
-  public String library;
-  public String objectName;
-  public ObjectType objectType;
-  public SourceType sourceType; // null if absent
-  public String sourceFile;
-  public String sourceName; // Set to object name
-  public String sourceStmf; // IFS route
-  public CompCmd compilationCommand;
-  public ParamMap ParamCmdSequence;
+  public String library;              // Target object library
+  public String objectName;           // Target object name
+  public ObjectType objectType;       // Target object type
+  public SourceType sourceType;       // Target source type
+  public String sourceFile;           // Target Source Phisical File name.
+  public String sourceName;           // Target Source member name. Set to object name by default
+  public String sourceStmf;           // Target Ifs source stream file
+  public CompCmd compilationCommand;  // Compilation command
+  public ParamMap ParamCmdSequence;   // Compilation command's Param:Value 
 
   public TargetKey(String key) {
     String[] parts = key.split("\\.");
@@ -47,8 +48,12 @@ public class TargetKey {
       throw new IllegalArgumentException("Invalid sourceType : " + parts[3]);
     }
 
-    /* Set default source file in case no SRCFILE or SRCSTMF are provided  */
-    this.sourceFile = SourceType.defaultSourcePf(this.sourceType, this.objectType);
+    /* Set default source file */
+    try {
+      this.sourceFile = SourceType.defaultSourcePf(this.sourceType, this.objectType);
+    } catch (IllegalArgumentException e){
+      throw e;
+    }
 
     /* Set default source name to object name */
     this.sourceName = this.objectName;
