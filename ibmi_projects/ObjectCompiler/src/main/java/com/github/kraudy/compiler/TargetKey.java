@@ -1,5 +1,6 @@
 package com.github.kraudy.compiler;
 
+import java.sql.Timestamp;
 import java.util.Map;
 
 import com.github.kraudy.compiler.CompilationPattern.CompCmd;
@@ -22,6 +23,9 @@ public class TargetKey {
   public String sourceStmf;           // Target Ifs source stream file
   public CompCmd compilationCommand;  // Compilation command
   public ParamMap ParamCmdSequence;   // Compilation command's Param:Value 
+
+  public Timestamp lastSourceEdit;    // Last time the source was edited
+  public Timestamp lastBuild;         // Last time the object was compiled
 
   public TargetKey(String key) {
     String[] parts = key.split("\\.");
@@ -70,6 +74,14 @@ public class TargetKey {
 
   public void setStreamSourceFile(String sourcePath){
     this.sourceStmf = sourcePath;
+  }
+
+  public void setLastEdit(Timestamp lastSourceEdit){
+    this.lastSourceEdit = lastSourceEdit;
+  }
+
+  public void setLastBuild(Timestamp lastBuild){
+    this.lastBuild = lastBuild;
   }
 
   public String getQualifiedObject(){

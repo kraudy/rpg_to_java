@@ -192,6 +192,8 @@ public class CompilationPattern {
     
     // OVRDBF
     ACTGRPDFN, CALLLVL,
+
+    CHG ,CS, RR ,UR ,RS ,NC  
     ; 
 
     public static ValCmd fromString(String value) {
@@ -702,40 +704,40 @@ public class CompilationPattern {
 
   // RUNSQLSTM
   public static final List<ParamCmd> SqlPattern = Arrays.asList(
-    ParamCmd.SRCFILE,
-    ParamCmd.SRCMBR, 
-    ParamCmd.SRCSTMF,
-    ParamCmd.COMMIT, 
-    ParamCmd.NAMING,      
-    ParamCmd.ERRLVL, 
-    ParamCmd.DATFMT, 
-    ParamCmd.DATSEP, 
-    ParamCmd.TIMFMT, 
-    ParamCmd.TIMSEP,
-    ParamCmd.MARGINS,
-    ParamCmd.DFTRDBCOL,
-    ParamCmd.SAAFLAG,  
-    ParamCmd.FLAGSTD,  
-    ParamCmd.DECMPT,   
-    ParamCmd.SRTSEQ,   
-    ParamCmd.LANGID,   
-    ParamCmd.OPTION,   
-    ParamCmd.PRTFILE,  
-    ParamCmd.PROCESS,  
-    ParamCmd.SECLVLTXT,
-    ParamCmd.ALWCPYDTA,
-    ParamCmd.ALWBLK,    
-    ParamCmd.SQLCURRULE,
-    ParamCmd.DECRESULT, 
-    ParamCmd.CONACC,    
-    ParamCmd.SYSTIME,   
-    ParamCmd.OUTPUT,    
-    ParamCmd.TGTRLS,    
-    ParamCmd.DBGVIEW,   
-    ParamCmd.CLOSQLCSR, 
-    ParamCmd.DLYPRP,    
-    ParamCmd.USRPRF,    
-    ParamCmd.DYNUSRPRF
+    ParamCmd.SRCFILE,   // Source file
+    ParamCmd.SRCMBR,    // Source member
+    ParamCmd.SRCSTMF,   // Source stream file
+    ParamCmd.COMMIT,    // Commitment control
+    ParamCmd.NAMING,    // Naming
+    ParamCmd.ERRLVL,    // Severity level
+    ParamCmd.DATFMT,    // Date format
+    ParamCmd.DATSEP,    // Date separator character
+    ParamCmd.TIMFMT,    // Time format
+    ParamCmd.TIMSEP,    // Time separator character
+    ParamCmd.MARGINS,   // Source margins
+    ParamCmd.DFTRDBCOL, // Default collection
+    ParamCmd.SAAFLAG,   // IBM SQL flagging
+    ParamCmd.FLAGSTD,   // ANS flagging
+    ParamCmd.DECMPT,    // Decimal point
+    ParamCmd.SRTSEQ,    // Sort sequence
+    ParamCmd.LANGID,    // Language id
+    ParamCmd.OPTION,    // Source listing options
+    ParamCmd.PRTFILE,   // Print file
+    ParamCmd.PROCESS,   // Statement processing
+    ParamCmd.SECLVLTXT, // Second level text 
+    ParamCmd.ALWCPYDTA, // Allow copy of data
+    ParamCmd.ALWBLK,    // Allow blocking 
+    ParamCmd.SQLCURRULE,// SQL rules
+    ParamCmd.DECRESULT, // Decimal result options
+    ParamCmd.CONACC,    // Concurrent access resolution
+    ParamCmd.SYSTIME,   // System time sensitive 
+    ParamCmd.OUTPUT,    // Listing output
+    ParamCmd.TGTRLS,    // Target release
+    ParamCmd.DBGVIEW,   // Debugging view
+    ParamCmd.CLOSQLCSR, // Close SQL cursor 
+    ParamCmd.DLYPRP,    // Delay PREPARE 
+    ParamCmd.USRPRF,    // User profile
+    ParamCmd.DYNUSRPRF  // Dynamic user profile
 
   );
 

@@ -1,5 +1,6 @@
 package com.github.kraudy.compiler;
 
+import java.sql.Timestamp;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -73,25 +74,38 @@ public class ObjectDescription {
   //TODO: This method needs some love.
   public void getObjectInfo () throws SQLException {
 
-    /* Get PGM info */
     switch (this.targetKey.getCompilationCommand()) {
-      case CRTSQLRPGI:
-        if (!this.targetKey.isProgram()) break; // This could be pgm or module
-      case CRTBNDRPG :
-      case CRTBNDCL :
-      case CRTRPGPGM :
-      case CRTCLPGM :
-      case CRTSRVPGM : //TODO: Should this be here?
+      // PGM info
+      case CRTBNDRPG:
+      case CRTBNDCL:
+      case CRTRPGPGM:
+      case CRTCLPGM:
         getPgmInfo();
         break;
+
+      case CRTSQLRPGI:
+        getSqlRpgInfo();
+        break;
+
+      case CRTSRVPGM:
+        getSrvpgmInfo();
+        break;
      
+      //  module info
+      case CRTRPGMOD :
+      case CRTCLMOD :
+        getModuleInfo(); 
+        break;
+
       case RUNSQLSTM :
+        getSqlInfo();
+        break;
 
-      case CRTDSPF : 
-      case CRTPF :
-      case CRTLF :
-
-      case CRTPRTF :
+      case CRTDSPF: 
+      case CRTPF:
+      case CRTLF:
+      case CRTPRTF:
+        getDdsInfo();
         break;
 
       case CRTCMD :
@@ -102,22 +116,10 @@ public class ObjectDescription {
         break;
     }
 
-    /* Get module info */
-    switch (this.targetKey.getCompilationCommand()) {
-      case CRTSQLRPGI:
-        if (!this.targetKey.isModule()) break;  // This could be pgm or module
-      case CRTRPGMOD :
-      case CRTCLMOD :
-        getModuleInfo(); 
-        break;
-    
-      default:
-        break;
-    }
-
     return;
   }
 
+  /* This should work for *PGM, *SRVPGM, *MODULE */
   private void getPgmInfo() throws SQLException {
     
     try (Statement stmt = connection.createStatement();
@@ -192,28 +194,7 @@ public class ObjectDescription {
               "COALESCE(OPTIMIZATION, '') As OPTIMIZE, " +
               "COALESCE(LOG_COMMANDS, '' ) As LOG, " +
               "COALESCE(FIX_DECIMAL_DATA, '') As FIXNBR, " + // fixDecimalData
-              "TERASPACE_STORAGE_ENABLED_PROGRAM, " + // teraspaceEnabled
-              //-- Sql related info
-              "SQL_RELATIONAL_DATABASE, " +
-              "SQL_COMMITMENT_CONTROL, " +
-              "SQL_NAMING, " +
-              "SQL_DATE_FORMAT, " +
-              "SQL_DATE_SEPARATOR, " +
-              "SQL_TIME_FORMAT, " +
-              "SQL_TIME_SEPARATOR, " +
-              "SQL_SORT_SEQUENCE_LIBRARY, " +
-              "SQL_SORT_SEQUENCE, " +
-              "SQL_LANGUAGE_ID, " +
-              "SQL_DEFAULT_SCHEMA, " +
-              "SQL_PATH, " +
-              "SQL_DYNAMIC_USER_PROFILE, " +
-              "SQL_ALLOW_COPY_DATA, " +
-              "SQL_CLOSE_SQL_CURSOR, " +
-              "SQL_DELAY_PREPARE, " +
-              "SQL_ALLOW_BLOCK, " +
-              "SQL_PACKAGE_LIBRARY, " +
-              "SQL_PACKAGE, " +
-              "SQL_RDB_CONNECTION_METHOD " +
+              "TERASPACE_STORAGE_ENABLED_PROGRAM " + // teraspaceEnabled
             "FROM QSYS2.PROGRAM_INFO " +
             "INNER JOIN Libs " +
             "ON (PROGRAM_LIBRARY = Libs.Libraries) " +
@@ -239,7 +220,6 @@ public class ObjectDescription {
           String stgMdl = rsObj.getString("STGMDL").trim();
           if (!stgMdl.isEmpty()) this.targetKey.put(ParamCmd.STGMDL, stgMdl);
         case CRTCLMOD:
-        case CRTSQLRPGI:
         case CRTRPGPGM:
         case CRTCLPGM:
           String tgtRls = rsObj.getString("TGTRLS").trim();
@@ -257,10 +237,8 @@ public class ObjectDescription {
         case CRTSRVPGM:
         case CRTBNDRPG:
         case CRTBNDCL:
-        case CRTSQLRPGI:
         case CRTRPGPGM:
         case CRTCLPGM:
-        case RUNSQLSTM:
           String tgtRls = rsObj.getString("TGTRLS").trim();
           this.targetKey.put(ParamCmd.TGTRLS, ValCmd.CURRENT);
           if (!tgtRls.isEmpty()) this.targetKey.put(ParamCmd.TGTRLS, tgtRls);
@@ -277,10 +255,8 @@ public class ObjectDescription {
         case CRTCLMOD:
           String optimize = rsObj.getString("OPTIMIZE").trim();
           if (!optimize.isEmpty()) this.targetKey.put(ParamCmd.OPTIMIZE, optimize);
-        case CRTSQLRPGI:
         case CRTRPGPGM:
         case CRTCLPGM:
-        case RUNSQLSTM:
         case CRTDSPF:
         case CRTPF:
         case CRTLF:
@@ -479,8 +455,109 @@ public class ObjectDescription {
       }
   }
 
-  private void getSrvpgmInfo(){
+  //TODO: Change this view for QSYS2.SYSFILES and use it for crtsqlrpgle isntead
+  private void getSqlInfo() throws SQLException{
+    
+  }
 
+  private void getSqlRpgInfo()throws SQLException{
+    try (Statement stmt = connection.createStatement();
+        ResultSet rsSqlRpgInfo = stmt.executeQuery(
+          "With " +
+          "Libs (Libraries) As ( " +
+              "SELECT DISTINCT(SCHEMA_NAME) FROM QSYS2.LIBRARY_LIST_INFO " + 
+              "WHERE TYPE NOT IN ('SYSTEM','PRODUCT') AND SCHEMA_NAME NOT IN ('QGPL', 'GAMES400') " +
+          ") " +
+          "SELECT PROGRAM_LIBRARY, " + // programLibrary
+              "PROGRAM_NAME, " + // programName
+              "OBJECT_TYPE, " +   // typeOfProgram
+              "CREATE_TIMESTAMP, " + // creationDateTime
+              "COALESCE(TEXT_DESCRIPTION, '') As TEXT, " + // textDescription
+              "PROGRAM_OWNER, " + // owner
+              "PROGRAM_ATTRIBUTE, " + // attribute
+              "USER_PROFILE As USRPRF, " +
+              "USE_ADOPTED_AUTHORITY, " +
+              "COALESCE(TARGET_RELEASE, '') As TGTRLS, " +
+              // Module related data
+              "COPYRIGHTS, " +
+              "COPYRIGHT_STRINGS, " +
+              // Source file related data
+              "(TRIM(SOURCE_FILE_LIBRARY) || '/' || TRIM(SOURCE_FILE)) As SRCFILE, " +
+              "SOURCE_FILE_MEMBER As SRCMBR, " +
+              "SOURCE_FILE_CHANGE_TIMESTAMP, " + // sourceUpdatedDateTime
+              //-- Sql related info
+              "SQL_RELATIONAL_DATABASE, " +
+              "COALESCE(SQL_COMMITMENT_CONTROL, '') As COMMIT, " +
+              "COALESCE(SQL_NAMING, '') As NAMING, " +
+              "SQL_DATE_FORMAT As DATFMT, " +
+              "SQL_DATE_SEPARATOR As DATSEP, " +
+              "SQL_TIME_FORMAT As TIMFMT, " +
+              "SQL_TIME_SEPARATOR As TIMSEP, " +
+              "(TRIM(SQL_SORT_SEQUENCE_LIBRARY) || '/' || TRIM(SQL_SORT_SEQUENCE)) As SRTSEQ, " +
+              "SQL_LANGUAGE_ID As LANGID, " +
+              "SQL_DEFAULT_SCHEMA, " +
+              "SQL_PATH, " +
+              "SQL_DYNAMIC_USER_PROFILE As DYNUSRPRF, " +
+              "SQL_ALLOW_COPY_DATA As ALWCPYDTA, " +
+              "SQL_CLOSE_SQL_CURSOR As CLOSQLCSR, " +
+              "SQL_DELAY_PREPARE As DLYPRP, " +
+              "SQL_ALLOW_BLOCK As ALWBLK " +
+            "FROM QSYS2.PROGRAM_INFO " +
+            "INNER JOIN Libs " +
+            "ON (PROGRAM_LIBRARY = Libs.Libraries) " +
+            "WHERE " + 
+                "PROGRAM_NAME = '" + this.targetKey.getObjectName() + "' " +
+                "AND OBJECT_TYPE = '" + this.targetKey.getObjectType() + "' "
+          )) {
+      if (!rsSqlRpgInfo.next()) {
+        System.err.println(("Could not get object '" + this.targetKey.asString() ));
+        return;
+      }
+
+      if (verbose) System.out.println("Found object '" + this.targetKey.asString());
+
+      this.targetKey.setLastBuild(rsSqlRpgInfo.getTimestamp("CREATE_TIMESTAMP"));
+      this.targetKey.setLastEdit(rsSqlRpgInfo.getTimestamp("SOURCE_FILE_CHANGE_TIMESTAMP"));
+
+      this.targetKey.put(ParamCmd.TEXT, rsSqlRpgInfo.getString("TEXT").trim()); 
+      this.targetKey.put(ParamCmd.USRPRF, rsSqlRpgInfo.getString("USRPRF").trim()); 
+
+      String tgtrls = rsSqlRpgInfo.getString("TGTRLS").trim();
+      if(!tgtrls.isEmpty()) this.targetKey.put(ParamCmd.TGTRLS, tgtrls); 
+
+      //String srcfile = rsSqlRpgInfo.getString("SRCFILE").trim();
+      //if(!srcfile.isEmpty()) this.targetKey.put(ParamCmd.SRCFILE, srcfile); 
+      //String srcmbr = rsSqlRpgInfo.getString("SRCMBR").trim();
+      //if(!srcmbr.isEmpty()) this.targetKey.put(ParamCmd.SRCMBR, srcmbr); 
+
+      //TODO: The service does not returns data for these filed. They need to fix that.
+
+      //this.targetKey.put(ParamCmd.COMMIT, ValCmd.fromString(rsSqlRpgInfo.getString("COMMIT"))); 
+      //this.targetKey.put(ParamCmd.NAMING, ValCmd.fromString(rsSqlRpgInfo.getString("NAMING"))); 
+
+      //this.targetKey.put(ParamCmd.DATFMT, ValCmd.fromString(rsSqlRpgInfo.getString("DATFMT"))); 
+      //this.targetKey.put(ParamCmd.DATSEP, ValCmd.fromString(rsSqlRpgInfo.getString("DATSEP"))); 
+
+      //this.targetKey.put(ParamCmd.TIMFMT, ValCmd.fromString(rsSqlRpgInfo.getString("TIMFMT"))); 
+      //this.targetKey.put(ParamCmd.TIMSEP, ValCmd.fromString(rsSqlRpgInfo.getString("TIMSEP"))); 
+
+      //this.targetKey.put(ParamCmd.SRTSEQ, rsSqlRpgInfo.getString("SRTSEQ").trim()); 
+      //this.targetKey.put(ParamCmd.LANGID, rsSqlRpgInfo.getString("LANGID").trim()); 
+
+      //this.targetKey.put(ParamCmd.DYNUSRPRF, ValCmd.fromString(rsSqlRpgInfo.getString("DYNUSRPRF"))); 
+      //this.targetKey.put(ParamCmd.ALWCPYDTA, ValCmd.fromString(rsSqlRpgInfo.getString("ALWCPYDTA"))); 
+      //this.targetKey.put(ParamCmd.CLOSQLCSR, ValCmd.fromString(rsSqlRpgInfo.getString("CLOSQLCSR"))); 
+      //this.targetKey.put(ParamCmd.DLYPRP, ValCmd.fromString(rsSqlRpgInfo.getString("DLYPRP"))); 
+      //this.targetKey.put(ParamCmd.ALWBLK, ValCmd.fromString(rsSqlRpgInfo.getString("ALWBLK"))); 
+    }
+  }
+
+  private void getDdsInfo(){
+
+  }
+
+  private void getSrvpgmInfo() {
+    
   }
 
 }
