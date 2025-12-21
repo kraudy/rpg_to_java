@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -146,6 +147,14 @@ public class Utilities {
     try{
       /* Diserialize yaml file */
       spec = mapper.readValue(f, BuildSpec.class);
+
+      // Post-deserialization sanity check (e.g., targets not empty)
+      if (spec.targets.isEmpty()) {
+        throw new IllegalArgumentException("YAML must define at least one target in 'targets' section.");
+      }
+
+    } catch (JsonMappingException e) {
+      throw new RuntimeException("YAML schema error: " + e.getMessage() + "\nCheck required fields like 'targets' or 'params'.", e);
     } catch (Exception e) {
       e.printStackTrace();
       throw new RuntimeException("Could not map build file to spec");

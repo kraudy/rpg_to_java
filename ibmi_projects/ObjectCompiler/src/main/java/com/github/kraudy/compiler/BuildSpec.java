@@ -16,32 +16,33 @@ import java.util.Map;
  */
 public class BuildSpec {
   /* Global compilation command params */
-  @JsonProperty("defaults")
+  @JsonProperty(value = "defaults", required = false)
   @JsonDeserialize(using = ParamMapDeserializer.class)
   public final Map<ParamCmd, String> defaults = new HashMap<>();
 
   /* Global pre-compilation system commands */
-  @JsonProperty("before")
+  @JsonProperty(value = "before", required = false)
   @JsonDeserialize(using = CommandMapDeserializer.class)
   public final List<String> before = new ArrayList<>();
 
   /* Global post-compilation system commands */
-  @JsonProperty("after")
+  @JsonProperty(value = "after", required = false)
   @JsonDeserialize(using = CommandMapDeserializer.class)
   public final List<String> after = new ArrayList<>();
 
 
   /* Global on success system commands */
-  @JsonProperty("success")
+  @JsonProperty(value = "success", required = false)
   @JsonDeserialize(using = CommandMapDeserializer.class)
   public final List<String> success = new ArrayList<>();
 
   /* Global on failure system commands */
-  @JsonProperty("failure")
+  @JsonProperty(value = "failure", required = false)
   @JsonDeserialize(using = CommandMapDeserializer.class)
   public final List<String> failure = new ArrayList<>();
 
   /* Ordered sequence of targets and their spec */
+  @JsonProperty(value = "targets", required = true) // Required
   public final LinkedHashMap<TargetKey, TargetSpec> targets = new LinkedHashMap<>();
 
   public BuildSpec() {
@@ -50,29 +51,29 @@ public class BuildSpec {
 
   public static class TargetSpec {
     /* Per-target pre-compilation system commands */
-    @JsonProperty("before")
+    @JsonProperty(value = "before", required = false)
     @JsonDeserialize(using = CommandMapDeserializer.class)
     public final List<String> before = new ArrayList<>();
 
     /* Per-target compilation command params */
-    @JsonProperty("params")
+    @JsonProperty(value = "params", required = true)  // Required
     @JsonDeserialize(using = ParamMapDeserializer.class)
     public final Map<ParamCmd, String> params = new HashMap<>();
 
     /* Per-target post-compilation system commands */
-    @JsonProperty("after")
+    @JsonProperty(value = "after", required = false)
     @JsonDeserialize(using = CommandMapDeserializer.class)
     public final List<String> after = new ArrayList<>();
     
 
 
     /* Per-target on success system commands */
-    @JsonProperty("success")
+    @JsonProperty(value = "success", required = false)
     @JsonDeserialize(using = CommandMapDeserializer.class)
     public final List<String> success  = new ArrayList<>();
 
     /* Per-target on failure system commands */
-    @JsonProperty("failure")
+    @JsonProperty(value = "failure", required = false)
     @JsonDeserialize(using = CommandMapDeserializer.class)
     public final List<String> failure  = new ArrayList<>();
 
