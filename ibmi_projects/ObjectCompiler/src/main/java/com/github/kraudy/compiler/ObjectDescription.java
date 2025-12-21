@@ -71,6 +71,77 @@ public class ObjectDescription {
     }
   }
 
+  /* Get Pgm, Module and SrvPgm objects creation timestamp */
+  public void getObjectCreation () throws SQLException {
+    try (Statement stmt = connection.createStatement();
+        ResultSet rsObjCreationInfo = stmt.executeQuery(
+          "With " +
+          "Libs (Libraries) As ( " +
+              "SELECT DISTINCT(SCHEMA_NAME) FROM QSYS2.LIBRARY_LIST_INFO " + 
+              "WHERE TYPE NOT IN ('SYSTEM','PRODUCT') AND SCHEMA_NAME NOT IN ('QGPL', 'GAMES400') " +
+          ") " +
+          "SELECT " +
+              "CREATE_TIMESTAMP, " + // creationDateTime
+              "SOURCE_FILE_CHANGE_TIMESTAMP " + // sourceUpdatedDateTime
+            "FROM QSYS2.PROGRAM_INFO " +
+            "INNER JOIN Libs " +
+            "ON (PROGRAM_LIBRARY = Libs.Libraries) " +
+            "WHERE " + 
+                "PROGRAM_NAME = '" + this.targetKey.getObjectName() + "' " +
+                "AND OBJECT_TYPE = '" + this.targetKey.getObjectType() + "' "
+          )) {
+      if (!rsObjCreationInfo.next()) {
+        System.err.println(("Could not extract object creation time '" + this.targetKey.asString() ));
+        return;
+      }
+
+      if (verbose) System.out.println("Found object '" + this.targetKey.asString());
+
+      this.targetKey.setLastBuild(rsObjCreationInfo.getTimestamp("CREATE_TIMESTAMP"));
+      this.targetKey.setLastEdit(rsObjCreationInfo.getTimestamp("SOURCE_FILE_CHANGE_TIMESTAMP"));
+
+    }
+  }
+
+  public void getSourceLastChange() throws SQLException {
+    if (this.targetKey.containsStreamFile()) {
+        // IFS: Query QSYS2.IFSOBJD for last modified (or use JT400 API for stat())
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(
+                 "SELECT LAST_MODIFIED FROM QSYS2.IFSOBJD " +
+                 "WHERE IFS_FULL_PATH = '" + this.targetKey.getStreamFile() + "'")) {
+            if (rs.next()) {
+                this.targetKey.setLastEdit(rs.getTimestamp("LAST_MODIFIED"));
+                return;
+            }
+            this.targetKey.setLastEdit(null);  // File not found
+            return;
+        }
+    } else {
+        // PFS member: Standard SQL for source file/member change time
+        try (Statement stmt = connection.createStatement();
+             ResultSet rs = stmt.executeQuery(
+                "With " +
+                "Libs (Libraries) As ( " +
+                    "SELECT DISTINCT(SCHEMA_NAME) FROM QSYS2.LIBRARY_LIST_INFO " + 
+                    "WHERE TYPE NOT IN ('SYSTEM','PRODUCT') AND SCHEMA_NAME NOT IN ('QGPL', 'GAMES400') " +
+                ") " +
+                 "SELECT CHANGE_TIMESTAMP FROM QSYS2.SYSPARTITIONSTAT " +
+                 "INNER JOIN Libs " +
+                  "ON (OBJECT_SCHEMA = Libs.Libraries) " +
+                 "WHERE OBJECT_NAME = '" + this.targetKey.getSourceFile() + "' " +
+                 "AND PARTITION_NAME = '" + this.targetKey.getSourceName() + "'")) {
+            if (rs.next()) {
+                this.targetKey.setLastEdit(rs.getTimestamp("CHANGE_TIMESTAMP"));
+                return;
+            }
+            this.targetKey.setLastEdit(null);  // File not found
+            return;
+        }
+    }
+
+  }
+
   public void getObjectInfo () throws SQLException {
 
     switch (this.targetKey.getCompilationCommand()) {
@@ -137,7 +208,6 @@ public class ObjectDescription {
               "PROGRAM_NAME, " + // programName
               "COALESCE(PROGRAM_TYPE,'') As PROGRAM_TYPE, " +  // [ILE, OPM] 
               "OBJECT_TYPE, " +   // typeOfProgram
-              "CREATE_TIMESTAMP, " + // creationDateTime
               "COALESCE(TEXT_DESCRIPTION, '') As TEXT, " + // textDescription
               "PROGRAM_OWNER, " + // owner
               "PROGRAM_ATTRIBUTE, " + // attribute
@@ -181,7 +251,6 @@ public class ObjectDescription {
               // Source file related data
               "(TRIM(SOURCE_FILE_LIBRARY) || '/' || TRIM(SOURCE_FILE)) As SRCFILE, " +
               "SOURCE_FILE_MEMBER As SRCMBR, " +
-              "SOURCE_FILE_CHANGE_TIMESTAMP, " + // sourceUpdatedDateTime
               "(TRIM(SQL_SORT_SEQUENCE_LIBRARY) || '/' || TRIM(SQL_SORT_SEQUENCE)) As SRTSEQ, " +
               "COALESCE(LANGUAGE_ID, '') As LANGID, " +
               "OBSERVABLE, " + // observable
@@ -202,9 +271,6 @@ public class ObjectDescription {
       }
 
       if (verbose) System.out.println("Found object '" + this.targetKey.asString());
-
-      this.targetKey.setLastBuild(rsObj.getTimestamp("CREATE_TIMESTAMP"));
-      this.targetKey.setLastEdit(rsObj.getTimestamp("SOURCE_FILE_CHANGE_TIMESTAMP"));
 
 
       switch (this.targetKey.getCompilationCommand()) {
@@ -469,7 +535,6 @@ public class ObjectDescription {
           "SELECT PROGRAM_LIBRARY, " + // programLibrary
               "PROGRAM_NAME, " + // programName
               "OBJECT_TYPE, " +   // typeOfProgram
-              "CREATE_TIMESTAMP, " + // creationDateTime
               "COALESCE(TEXT_DESCRIPTION, '') As TEXT, " + // textDescription
               "PROGRAM_OWNER, " + // owner
               "PROGRAM_ATTRIBUTE, " + // attribute
@@ -482,7 +547,6 @@ public class ObjectDescription {
               // Source file related data
               "(TRIM(SOURCE_FILE_LIBRARY) || '/' || TRIM(SOURCE_FILE)) As SRCFILE, " +
               "SOURCE_FILE_MEMBER As SRCMBR, " +
-              "SOURCE_FILE_CHANGE_TIMESTAMP, " + // sourceUpdatedDateTime
               //-- Sql related info
               "SQL_RELATIONAL_DATABASE, " +
               "COALESCE(SQL_COMMITMENT_CONTROL, '') As COMMIT, " +
@@ -513,9 +577,6 @@ public class ObjectDescription {
       }
 
       if (verbose) System.out.println("Found object '" + this.targetKey.asString());
-
-      this.targetKey.setLastBuild(rsSqlRpgInfo.getTimestamp("CREATE_TIMESTAMP"));
-      this.targetKey.setLastEdit(rsSqlRpgInfo.getTimestamp("SOURCE_FILE_CHANGE_TIMESTAMP"));
 
       this.targetKey.put(ParamCmd.TEXT, rsSqlRpgInfo.getString("TEXT").trim()); 
       this.targetKey.put(ParamCmd.USRPRF, rsSqlRpgInfo.getString("USRPRF").trim()); 

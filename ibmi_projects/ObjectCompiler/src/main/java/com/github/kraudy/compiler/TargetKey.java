@@ -116,6 +116,21 @@ public class TargetKey {
     return this.objectType == ObjectType.SRVPGM;
   }
 
+  public boolean needsRebuild() {
+    /* If no timestamp, rebuild */
+    if (this.lastSourceEdit == null || this.lastBuild == null) {
+        return true;
+    }
+    return this.lastSourceEdit.after(this.lastBuild);
+  }
+
+  public String getTimestmaps() {
+    if (this.lastSourceEdit == null) return " (source has no previous edit)";
+    if (this.lastBuild == null) return " (object has no previous edit)";
+
+    return " (source last edit: " + this.lastSourceEdit + ", object last build: " + this.lastBuild + ")";
+  }
+
   public void putAll(Map<ParamCmd, String> params) {
     this.ParamCmdSequence.putAll(this.compilationCommand, params);
   }
