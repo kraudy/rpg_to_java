@@ -11,7 +11,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/* This class represents the pattern of the YAML file */
+/*  
+ *  Commmands patterns to be extracted from the build spec (YAML file )
+ */
 public class BuildSpec {
   /* Global compilation command params */
   @JsonProperty("defaults")

@@ -14,7 +14,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-
+/*
+ *  Extracts commands and its param:value pairs from spec (Yaml file)
+ */
 public class CommandMapDeserializer extends JsonDeserializer<List<String>> {
   @Override
   public List<String> deserialize(JsonParser parser, DeserializationContext ctxt)

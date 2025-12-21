@@ -15,7 +15,7 @@ import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 
 
 /*
- *  Handles logic to set param:value per command
+ *  Handles logic to set param:value pairs per command
  */
 public class ParamMap {
   private final EnumMap<ParamCmd, ParamValue> paramMap = new EnumMap<>(ParamCmd.class);
@@ -56,11 +56,14 @@ public class ParamMap {
     return pv.remove();
   }
 
-  //TODO: This validation should be done outside this class.
   public void putAll(Command cmd, Map<ParamCmd, String> params) {
     if (params == null) return;
 
     params.forEach((param, value) -> {
+      /* 
+       *  This validation is performed because the map was populated without its compilation command and invalid params are just rejected.
+       *  No error is thrown. This is useful for default params and alike.
+       */
       if (!Utilities.validateCommandParam(cmd, param)) {
         System.err.println("Rejected: Parameter " + param.name() + " not valid for command " + cmd.name());
         return;
@@ -78,7 +81,7 @@ public class ParamMap {
 
     value = Utilities.validateParamValue(param, value);
 
-    /* At this point there should be not invalid command params */
+    /* At this point there should be not invalid command params. If present, an error is thrown */
     if (!Utilities.validateCommandParam(cmd, param)) {
       throw new IllegalArgumentException("Parameters " + param.name() + " not valid for command " + cmd.name());
     }
@@ -88,7 +91,7 @@ public class ParamMap {
     /* If a previous value exists, just append it and early return */
     if (pv != null) return pv.put(value);
 
-    /* Create new value */
+    /* If no previous value, create new */
     pv = new ParamValue(value);
     this.paramMap.put(param, pv);
     return pv.getPrevious();

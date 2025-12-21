@@ -16,6 +16,9 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
+/*
+ * Cool object compiler.
+ */
 @Command (name = "compiler", description = "OPM/ILE Object Compiler", mixinStandardHelpOptions = true, version = "ObjectCompiler 0.0.1")
 public class ObjectCompiler implements Runnable{
   public static final String INVARIANT_CCSID = "37"; // EBCDIC
@@ -166,13 +169,13 @@ public class ObjectCompiler implements Runnable{
         throw e; // Raise
 
       } finally {
-        //TODO: What should i add here? Logging or something
+        //TODO: Here do Logging, Reset or something
       }
     }
 
   }
 
-  private void showLibraryList(){
+  private void showLibraryList() throws SQLException{
     System.out.println("Library list: ");
     try(Statement stmt = connection.createStatement();
         ResultSet rsLibList = stmt.executeQuery(
@@ -185,7 +188,7 @@ public class ObjectCompiler implements Runnable{
       }
     } catch (SQLException e){
       System.err.println("Could not get library list.");
-      e.printStackTrace();
+      throw e;
     }
   }
 

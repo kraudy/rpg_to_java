@@ -13,6 +13,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+/*
+ * Extracts compilation command's param:value pairs from spec (Yaml file)
+ */
 public class ParamMapDeserializer extends JsonDeserializer<Map<ParamCmd, String>> {
   @Override
   public Map<ParamCmd, String> deserialize(JsonParser p, DeserializationContext ctxt)

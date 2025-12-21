@@ -181,6 +181,7 @@ public class Utilities {
     
   }
 
+  /* Validates proper value format per param */
   public static String validateParamValue(ParamCmd param, String value) {
     switch (param) {
       case TEXT:
@@ -208,6 +209,7 @@ public class Utilities {
     return value;
   }
 
+  /* Validates param against command pattern */
   public static boolean validateCommandParam(Command cmd, ParamCmd param) {
     if (!CompilationPattern.getCommandPattern(cmd).contains(param)) {
       return false;
