@@ -12,14 +12,11 @@ import com.ibm.as400.access.AS400JDBCDataSource;
 import com.ibm.as400.access.User;
 
 import io.github.theprez.dotenv_ibmi.IBMiDotEnv;
-import picocli.CommandLine;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
+
 
 /*
  * Cool object compiler.
  */
-@Command (name = "compiler", description = "OPM/ILE Object Compiler", mixinStandardHelpOptions = true, version = "ObjectCompiler 0.0.1")
 public class ObjectCompiler implements Runnable{
   public static final String INVARIANT_CCSID = "37"; // EBCDIC
   private final AS400 system;
@@ -27,19 +24,10 @@ public class ObjectCompiler implements Runnable{
   private final User currentUser;
   private CommandExecutor commandExec;
 
-  /* yaml */
-  @Option(names = {"-f", "--file"}, description = "YAML build file")
-  private String yamlFile;
-
-  @Option(names = {"--dry-run"}, description = "Show commands without executing")
-  private boolean dryRun = false;
-
-  /* Options */
-  @Option(names = "-x", description = "Debug")
-  private boolean debug = false;
-
-  @Option(names = "-v", description = "Verbose output")
-  private boolean verbose = false;
+  private String yamlFile; // yaml build file
+  private boolean dryRun = false; // Compile commands without executing 
+  private boolean debug = false; // Debug flag
+  private boolean verbose = false; // Verbose output flag
 
 
   public ObjectCompiler(AS400 system) throws Exception {
@@ -57,6 +45,16 @@ public class ObjectCompiler implements Runnable{
     this.currentUser = new User(system, system.getUserId());
     this.currentUser.loadUserInformation();
 
+  }
+
+  public ObjectCompiler(AS400 system, String yamlFile, boolean dryRun, boolean debug, boolean verbose) throws Exception {
+    this(system, new AS400JDBCDataSource(system).getConnection());
+
+    /* Set params */
+    this.yamlFile = yamlFile;
+    this.dryRun = dryRun;
+    this.debug = debug;
+    this.verbose = verbose;
   }
 
   public void run() {
@@ -219,13 +217,28 @@ public class ObjectCompiler implements Runnable{
     }
   }
 
-  public static void main( String... args ){
+  public static void main(String... args ){
     AS400 system = null;
     ObjectCompiler compiler = null;
     try {
+      ArgParser parser = new ArgParser(args);
+      //TODO: Should i add an scanner here if run locally to prompt for the params?
+      // add the read string back to args as a list split by space
+      if (args.length == 0) ArgParser.printUsage();
+        
       system = IBMiDotEnv.getNewSystemConnection(true); // Get system
-      compiler = new ObjectCompiler(system);
-      new CommandLine(compiler).execute(args);
+      compiler = new ObjectCompiler(
+            system,
+            parser.getYamlFile(),
+            parser.isDryRun(),
+            parser.isDebug(),
+            parser.isVerbose()
+        );
+      compiler.run();
+      //new CommandLine(compiler).execute(args);
+    } catch (IllegalArgumentException e) {
+      System.err.println("Error: " + e.getMessage());
+      ArgParser.printUsage();
     } catch (Exception e) {
       e.printStackTrace();
     }
