@@ -44,6 +44,20 @@ public class ArgParser {
 
       if (optName.isEmpty()) throw new IllegalArgumentException("Empty option: " + arg);
 
+      // Handle combined short options (e.g., -vx means -v -x)
+      if (!arg.startsWith("--") && optName.length() > 1) {
+        for (char c : optName.toCharArray()) {
+          String shortOpt = String.valueOf(c);
+          String fieldName = validOptions.get(shortOpt);
+          if (fieldName == null) throw new IllegalArgumentException("Unknown option: -" + shortOpt);
+
+          if (!booleanOptions.contains(fieldName)) throw new IllegalArgumentException("Combined short options are only supported for boolean flags: -" + shortOpt);
+
+          options.put(fieldName, true);
+        }
+        continue;
+      }
+
       // Map short/long to valid names
       String fieldName = validOptions.get(optName);
       if (fieldName == null) throw new IllegalArgumentException("Unknown option: --" + optName + " or -" + optName);
@@ -99,8 +113,8 @@ public class ArgParser {
     System.err.println("Usage: compiler [-f|--file <YAML>] [--dry-run] [-x] [-v]");
     System.err.println("  -f, --file     YAML build file (required)");
     System.err.println("  --dry-run      Show commands without executing");
-    System.err.println("  -x             Debug mode");
-    System.err.println("  -v             Verbose output");
+    System.err.println("  -x,  --debug   Debug mode");
+    System.err.println("  -v,  --verbose Verbose output");
     System.exit(1);
   }
 

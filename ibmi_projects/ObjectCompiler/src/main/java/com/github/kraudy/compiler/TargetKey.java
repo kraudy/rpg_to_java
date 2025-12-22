@@ -2,6 +2,7 @@ package com.github.kraudy.compiler;
 
 import java.sql.Timestamp;
 import java.util.Map;
+import java.util.Objects;
 
 import com.github.kraudy.compiler.CompilationPattern.CompCmd;
 import com.github.kraudy.compiler.CompilationPattern.ObjectType;
@@ -181,6 +182,22 @@ public class TargetKey {
 
   public ParamMap getParamMap() {
     return this.ParamCmdSequence;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    TargetKey targetKey = (TargetKey) o;
+    return Objects.equals(library, targetKey.library) &&
+           Objects.equals(objectName, targetKey.objectName) &&
+           objectType == targetKey.objectType &&
+           sourceType == targetKey.sourceType;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(library, objectName, objectType, sourceType);
   }
 
 }
