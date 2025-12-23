@@ -103,43 +103,27 @@ public class ObjectDescription {
     }
   }
 
-  public void getSourceLastChange() throws SQLException {
-    if (this.targetKey.containsStreamFile()) {
-        // IFS: Query QSYS2.IFSOBJD for last modified (or use JT400 API for stat())
-        try (Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery(
-                 "SELECT LAST_MODIFIED FROM QSYS2.IFSOBJD " +
-                 "WHERE IFS_FULL_PATH = '" + this.targetKey.getStreamFile() + "'")) {
-            if (rs.next()) {
-                this.targetKey.setLastEdit(rs.getTimestamp("LAST_MODIFIED"));
-                return;
-            }
-            this.targetKey.setLastEdit(null);  // File not found
+  public void getSourceMemberLastChange() throws SQLException {
+    try (Statement stmt = connection.createStatement();
+          ResultSet rs = stmt.executeQuery(
+            "With " +
+            "Libs (Libraries) As ( " +
+                "SELECT DISTINCT(SCHEMA_NAME) FROM QSYS2.LIBRARY_LIST_INFO " + 
+                "WHERE TYPE NOT IN ('SYSTEM','PRODUCT') AND SCHEMA_NAME NOT IN ('QGPL', 'GAMES400') " +
+            ") " +
+              "SELECT LAST_SOURCE_UPDATE_TIMESTAMP FROM QSYS2.SYSPARTITIONSTAT " +
+              "INNER JOIN Libs " +
+              "ON (TABLE_SCHEMA = Libs.Libraries) " +
+              "WHERE TABLE_NAME = '" + this.targetKey.getSourceFile() + "' " +
+              "AND TABLE_PARTITION = '" + this.targetKey.getSourceName() + "'" +
+              "AND SOURCE_TYPE = '" + this.targetKey.getSourceType() + "'")) {
+        if (rs.next()) {
+            this.targetKey.setLastEdit(rs.getTimestamp("LAST_SOURCE_UPDATE_TIMESTAMP"));
             return;
         }
-    } else {
-        // PFS member: Standard SQL for source file/member change time
-        try (Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery(
-                "With " +
-                "Libs (Libraries) As ( " +
-                    "SELECT DISTINCT(SCHEMA_NAME) FROM QSYS2.LIBRARY_LIST_INFO " + 
-                    "WHERE TYPE NOT IN ('SYSTEM','PRODUCT') AND SCHEMA_NAME NOT IN ('QGPL', 'GAMES400') " +
-                ") " +
-                 "SELECT CHANGE_TIMESTAMP FROM QSYS2.SYSPARTITIONSTAT " +
-                 "INNER JOIN Libs " +
-                  "ON (OBJECT_SCHEMA = Libs.Libraries) " +
-                 "WHERE OBJECT_NAME = '" + this.targetKey.getSourceFile() + "' " +
-                 "AND PARTITION_NAME = '" + this.targetKey.getSourceName() + "'")) {
-            if (rs.next()) {
-                this.targetKey.setLastEdit(rs.getTimestamp("CHANGE_TIMESTAMP"));
-                return;
-            }
-            this.targetKey.setLastEdit(null);  // File not found
-            return;
-        }
+        this.targetKey.setLastEdit(null);  // File not found
+        return;
     }
-
   }
 
   public void getObjectInfo () throws SQLException {

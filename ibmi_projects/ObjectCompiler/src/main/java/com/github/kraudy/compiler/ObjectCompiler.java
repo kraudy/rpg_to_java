@@ -120,7 +120,7 @@ public class ObjectCompiler implements Runnable{
       odes.getObjectCreation();
 
       //TODO: Add git diff with pb
-      odes.getSourceLastChange();
+      odes.getSourceMemberLastChange();
 
       /* Skip target if no build required */
       if (!key.needsRebuild()) {

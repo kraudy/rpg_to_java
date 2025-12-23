@@ -168,6 +168,10 @@ public class TargetKey {
     return this.objectType.toParam();
   }
 
+  public String getSourceType() {
+    return this.sourceType.name();
+  }
+
   public String getSourceFile() {
     return this.sourceFile;
   }
