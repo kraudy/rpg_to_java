@@ -62,6 +62,17 @@ public class ArgParserTest {
   }
 
   @Test
+  void testDiffWithFile() {
+    String filePath = this.tempYaml.toString();
+ 
+    String[] args = {"-f", filePath, "--diff"};
+    ArgParser parser = new ArgParser(args);
+
+    assertEquals(filePath, parser.getYamlFile());
+    assertTrue(parser.isDiff());
+  }
+
+  @Test
   void testDebugWithFile() {
     String filePath = this.tempYaml.toString();
  
@@ -118,6 +129,7 @@ public class ArgParserTest {
     assertFalse(parser.isDryRun());
     assertFalse(parser.isDebug());
     assertFalse(parser.isVerbose());
+    assertFalse(parser.isDiff());
   }
 
   @Test

@@ -23,10 +23,13 @@ public class ArgParser {
     validOptions.put("x", "debug");
 
     validOptions.put("v", "verbose");
+
+    validOptions.put("diff", "diff");
+
   }
 
   private static final List<String> booleanOptions = Arrays.asList(
-    "dryRun", "debug", "verbose"
+    "dryRun", "debug", "verbose", "diff"
   );
 
   public ArgParser(String[] args) {
@@ -102,6 +105,10 @@ public class ArgParser {
     return (boolean) options.getOrDefault("verbose", false);
   }
 
+  public boolean isDiff() {
+    return (boolean) options.getOrDefault("diff", false);
+  }
+
   // Simple validation helpers (extend as needed)
   private boolean isValidFile(String path) {
     File f = new File(path);
@@ -112,9 +119,10 @@ public class ArgParser {
   public static void printUsage() {
     System.err.println("Usage: compiler [-f|--file <YAML>] [--dry-run] [-x] [-v]");
     System.err.println("  -f, --file     YAML build file (required)");
+    System.err.println("  --diff         Only build changed objects");
     System.err.println("  --dry-run      Show commands without executing");
-    System.err.println("  -x,  --debug   Debug mode");
-    System.err.println("  -v,  --verbose Verbose output");
+    System.err.println("  -x,            Debug mode");
+    System.err.println("  -v,            Verbose output");
     System.exit(1);
   }
 

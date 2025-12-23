@@ -24,10 +24,11 @@ public class ObjectCompiler implements Runnable{
   private final User currentUser;
   private CommandExecutor commandExec;
 
-  private String yamlFile; // yaml build file
-  private boolean dryRun = false; // Compile commands without executing 
-  private boolean debug = false; // Debug flag
-  private boolean verbose = false; // Verbose output flag
+  private String yamlFile;          // yaml build file
+  private boolean dryRun = false;   // Compile commands without executing 
+  private boolean debug = false;    // Debug flag
+  private boolean verbose = false;  // Verbose output flag
+  private boolean diff = false;     // Diff build flag
 
 
   public ObjectCompiler(AS400 system) throws Exception {
@@ -47,7 +48,7 @@ public class ObjectCompiler implements Runnable{
 
   }
 
-  public ObjectCompiler(AS400 system, String yamlFile, boolean dryRun, boolean debug, boolean verbose) throws Exception {
+  public ObjectCompiler(AS400 system, String yamlFile, boolean dryRun, boolean debug, boolean verbose, boolean diff) throws Exception {
     this(system, new AS400JDBCDataSource(system).getConnection());
 
     /* Set params */
@@ -55,6 +56,7 @@ public class ObjectCompiler implements Runnable{
     this.dryRun = dryRun;
     this.debug = debug;
     this.verbose = verbose;
+    this.diff = diff;
   }
 
   public void run() {
@@ -119,11 +121,10 @@ public class ObjectCompiler implements Runnable{
       /* Get object creation timestamp */
       odes.getObjectCreation();
 
-      //TODO: Add git diff with pb
       odes.getSourceMemberLastChange();
 
-      /* Skip target if no build required */
-      if (!key.needsRebuild()) {
+      /* Skip target if diff and no build required */
+      if (diff && !key.needsRebuild()) {
         if (verbose) System.out.println("Skipping unchanged target: " + key.asString() + key.getTimestmaps());
         continue; 
       }
@@ -232,7 +233,8 @@ public class ObjectCompiler implements Runnable{
             parser.getYamlFile(),
             parser.isDryRun(),
             parser.isDebug(),
-            parser.isVerbose()
+            parser.isVerbose(),
+            parser.isDiff()
         );
       compiler.run();
       //new CommandLine(compiler).execute(args);

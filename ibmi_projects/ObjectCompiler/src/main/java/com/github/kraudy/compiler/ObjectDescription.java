@@ -235,7 +235,7 @@ public class ObjectDescription {
               // Source file related data
               "(TRIM(SOURCE_FILE_LIBRARY) || '/' || TRIM(SOURCE_FILE)) As SRCFILE, " +
               "SOURCE_FILE_MEMBER As SRCMBR, " +
-              "(TRIM(SQL_SORT_SEQUENCE_LIBRARY) || '/' || TRIM(SQL_SORT_SEQUENCE)) As SRTSEQ, " +
+              "COALESCE((TRIM(SQL_SORT_SEQUENCE_LIBRARY) || '/' || TRIM(SQL_SORT_SEQUENCE)), '') As SRTSEQ, " +
               "COALESCE(LANGUAGE_ID, '') As LANGID, " +
               "OBSERVABLE, " + // observable
               "COALESCE(OPTIMIZATION, '') As OPTIMIZE, " +
@@ -308,9 +308,8 @@ public class ObjectDescription {
         case CRTDSPF:
         case CRTPF:
         case CRTLF:
-          String srtLib = rsObj.getString("SORT_SEQUENCE_LIBRARY").trim();
-          String srtSeq = rsObj.getString("SORT_SEQUENCE").trim();
-          if (!srtSeq.isEmpty()) this.targetKey.put(ParamCmd.SRTSEQ, srtSeq + (srtLib.isEmpty() ? "" : " " + srtLib));
+          String srtSeq = rsObj.getString("SRTSEQ").trim();
+          if (!srtSeq.isEmpty()) this.targetKey.put(ParamCmd.SRTSEQ, srtSeq);          
 
           String langId = rsObj.getString("LANGID").trim();
           if (!langId.isEmpty()) this.targetKey.put(ParamCmd.LANGID, langId);
