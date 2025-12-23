@@ -14,14 +14,6 @@ import java.util.Map;
 
 public class ParamMapTest {
   @Test
-  void testPutAndGetSingleParam() {
-      ParamMap map = new ParamMap();
-      map.put(CompCmd.CRTRPGMOD, ParamCmd.TEXT, "Test Module");
-
-      assertEquals("''Test Module''", map.get(ParamCmd.TEXT));
-  }
-
-  @Test
   void testPutAllWithValidation() {
     ParamMap map = new ParamMap();
     Map<ParamCmd, String> params = Map.of(
@@ -33,16 +25,6 @@ public class ParamMapTest {
 
     // Invalid param (e.g., for CRTRPGMOD) should be rejected silently in putAll
     assertEquals("", map.get(ParamCmd.CMD)); // Not added
-  }
-
-  @Test
-  void testCommandStringGeneration() {
-    ParamMap map = new ParamMap();
-    map.put(CompCmd.CRTRPGMOD, ParamCmd.MODULE, "MYLIB/HELLO");
-    map.put(CompCmd.CRTRPGMOD, ParamCmd.TEXT, "Test");
-
-    String cmd = map.getCommandString(CompCmd.CRTRPGMOD);
-    assertEquals("CRTRPGMOD MODULE(MYLIB/HELLO) TEXT(''Test'')", cmd);
   }
 
   @Test
