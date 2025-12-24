@@ -195,15 +195,12 @@ public class TargetKey {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     TargetKey targetKey = (TargetKey) o;
-    return Objects.equals(library, targetKey.library) &&
-           Objects.equals(objectName, targetKey.objectName) &&
-           objectType == targetKey.objectType &&
-           sourceType == targetKey.sourceType;
+    return this.asString().toUpperCase().equals(targetKey.asString().toUpperCase());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(library, objectName, objectType, sourceType);
+    return Objects.hash(this.asString().toUpperCase());
   }
 
 }
