@@ -96,8 +96,7 @@ public class ObjectCompiler implements Runnable{
           commandExec.executeCommand(globalSpec.failure);
         }
       } catch (Exception failureErr) {
-          throw new CompilerException("Target failure hook also failed", failureErr,
-"Failure hook execution", null, null, null);
+          throw new CompilerException("Target failure hook also failed", failureErr);
       }
 
       /* Get full compiler exception context */

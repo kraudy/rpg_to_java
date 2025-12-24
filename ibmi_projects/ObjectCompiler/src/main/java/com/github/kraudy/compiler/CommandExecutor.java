@@ -134,8 +134,6 @@ public class CommandExecutor {
   }
 
   public void getJoblogMessages(Timestamp commandTime){
-    // SQL0601 : Object already exists
-    // CPF5813 : File CUSTOMER in library ROBKRAUDY2 already exists
     try (Statement stmt = connection.createStatement();
         ResultSet rsMessages = stmt.executeQuery(
           "SELECT MESSAGE_TIMESTAMP, MESSAGE_ID, SEVERITY, MESSAGE_TEXT, COALESCE(MESSAGE_SECOND_LEVEL_TEXT, '') As MESSAGE_SECOND_LEVEL_TEXT " +
@@ -169,7 +167,6 @@ public class CommandExecutor {
     return CmdExecutionChain.toString();
   }
 
-  // String cpysplfCmd = "CPYSPLF FILE(" + objectName + ") TOFILE(QTEMP/SPLFCPY) JOB(*) SPLNBR(*LAST)";
   private void showCompilationSpool(Timestamp compilationTime) throws SQLException{
     /* Is there a spool file? */
     try(Statement stmt = connection.createStatement();
