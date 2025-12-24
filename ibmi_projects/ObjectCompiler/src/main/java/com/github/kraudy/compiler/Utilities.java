@@ -211,6 +211,11 @@ public class Utilities {
           value += " "; // Add separator.
         }
         return value.trim();
+
+      case SRCFILE:
+        /* If not qualified, set to LIBL */
+        if(!value.contains("/")) value = ValCmd.LIBL.toString() + "/" + value;
+        break;
     
       default:
         break;

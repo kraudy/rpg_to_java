@@ -42,6 +42,50 @@ public class UtilitiesTest {
   }
 
   @Test
+  void testDeserializeYaml_KeyMatching() throws IOException {
+    String yamlContent = 
+      "targets:\n" +
+      "  mylib.hello.pgm.rpgle: {}\n";
+
+    // Create temp YAML file
+    Path tempYaml = Files.createTempFile("test", ".yaml");
+    Files.write(tempYaml, yamlContent.getBytes());
+      
+    try {
+      BuildSpec spec = Utilities.deserializeYaml(tempYaml.toString());
+
+      assertFalse(spec.targets.isEmpty());
+      TargetKey key = new TargetKey("MyliB.Hello.PGM.RPGle");
+      assertNotNull(spec.targets.get(key));
+    } finally {
+      // Cleanup
+      Files.deleteIfExists(tempYaml);
+    }
+  }
+
+  void testDeserializeYaml_SourceFileWithoutLibrary() throws IOException {
+    String yamlContent = 
+      "targets:\n" +
+      "  mylib.hello.pgm.rpgle:\n" +
+      "    params:\n" +
+      "      SRCFILE: source\n";
+
+    // Create temp YAML file
+    Path tempYaml = Files.createTempFile("test", ".yaml");
+    Files.write(tempYaml, yamlContent.getBytes());
+      
+    try {
+      BuildSpec spec = Utilities.deserializeYaml(tempYaml.toString());
+
+      TargetKey key = new TargetKey("mylib.hello.pgm.rpgle");
+      assertEquals("*LIBL/source", spec.targets.get(key).params.get(ParamCmd.SRCFILE));
+    } finally {
+      // Cleanup
+      Files.deleteIfExists(tempYaml);
+    }
+  }
+
+  @Test
   void testDeserializeYaml_GlobalDefaults() throws IOException {
     String yamlContent = 
       "defaults:\n" +
