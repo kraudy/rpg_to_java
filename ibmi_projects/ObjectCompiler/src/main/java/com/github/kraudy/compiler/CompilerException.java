@@ -5,50 +5,48 @@ import java.util.Map;
 
 
 /*
- * Custom exception for compiler errors, with built-in context to avoid silent failures.
- * Wraps originals and adds: failed command, target key, timestamps, and optional extra details.
+ * Custom exception for compiler errors
  */
 public class CompilerException extends RuntimeException {
-  private final String failedCommand;      // e.g., "CRTBNDRPG PGM(ROBKRAUDY1/HELLO) ..."
-  private final TargetKey targetKey;       // Affected target (if applicable)
-  private final Timestamp commandTime;     // When it failed
-  private final Map<String, String> extraContext;  // e.g., { "joblog_snippet": "CPF1234..." }
+  private final String failedCommand;               // Failed command
+  private final TargetKey targetKey;                // Compilation target
+  private final Timestamp commandTime;              // Fail time
+  private final Map<String, String> extraContext;   // System messages
 
-  // Constructor for general use (no target/command)
-  public CompilerException(String message, Throwable cause) {
-      super(message, cause);
-      this.failedCommand = null;
-      this.targetKey = null;
-      this.commandTime = null;
-      this.extraContext = null;
+  /* Constructor for general use (no target/command) */
+  public CompilerException(String message, Throwable cause, String failedCommand, Timestamp commandTime, Map<String, String> extraContext) {
+    super(message + " | Command: " + failedCommand + " | Time: " + commandTime, cause);
+    this.failedCommand = failedCommand;
+    this.targetKey = null;
+    this.commandTime = commandTime;
+    this.extraContext = extraContext;
   }
 
   public CompilerException(String message, Throwable cause,
                             String failedCommand, TargetKey targetKey,
                             Timestamp commandTime, Map<String, String> extraContext) {
-      super(message + " | Command: " + failedCommand + 
-            (targetKey != null ? " | Target: " + targetKey.asString() : "") +
-            (commandTime != null ? " | Time: " + commandTime : ""), cause);
-      this.failedCommand = failedCommand;
-      this.targetKey = targetKey;
-      this.commandTime = commandTime;
-      this.extraContext = (extraContext != null) ? extraContext : Map.of();
+    super(message + " | Command: " + failedCommand + " | Target: " + targetKey.asString() +
+                    " | Time: " + commandTime, cause);
+    this.failedCommand = failedCommand;
+    this.targetKey = targetKey;
+    this.commandTime = commandTime;
+    this.extraContext = extraContext;
   }
 
-  // Getters
+  /* Getters */
   public String getFailedCommand() { return failedCommand; }
   public TargetKey getTargetKey() { return targetKey; }
   public Timestamp getCommandTime() { return commandTime; }
   public Map<String, String> getExtraContext() { return extraContext; }
 
-  // Convenience: Dump full context as string (for logging)
+  /* Get full context */
   public String getFullContext() {
-      return "CompilerException Details:\n" +
-              "- Message: " + getMessage() + "\n" +
-              "- Command: " + failedCommand + "\n" +
-              "- Target: " + (targetKey != null ? targetKey.asString() : "N/A") + "\n" +
-              "- Time: " + commandTime + "\n" +
-              "- Extra: " + extraContext + "\n" +
-              "- Cause: " + getCause();
+    return "CompilerException Details:\n" +
+            "- Message: " + getMessage() + "\n" +
+            "- Command: " + failedCommand + "\n" +
+            (targetKey != null ? "- Target: " + targetKey.asString() + "\n" : "") +
+            "- Time: " + commandTime + "\n" +
+            "- Extra: " + extraContext + "\n" +
+            "- Cause: " + getCause();
   }
 }

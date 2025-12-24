@@ -31,21 +31,38 @@ public class CommandExecutor {
     }
   }
 
+  /* Executes targets compilation commands */
   public void executeCommand(TargetKey key) throws Exception{
     Timestamp commandTime = getCurrentTime();
-    try{
-      executeCommand(key.getCommandString());
-    } catch (CompilerException e) {
-      if(verbose) showCompilationSpool(commandTime);
-      throw new CompilerException("Target compilation failed", e, null, key, commandTime, null); 
-      //throw e; // Raise
-    } catch (Exception e) {
-      throw e; /* Raise unhandled exception */
+    String command = key.getCommandString();
+
+    if (this.CmdExecutionChain.length() > 0) {
+      this.CmdExecutionChain.append(" => ");
     }
+    this.CmdExecutionChain.append(command);
+
+    /* Dry run just returns before executing the command */
+    if(dryRun){
+      return;
+    }
+
+    try (Statement cmdStmt = connection.createStatement()) {
+      cmdStmt.execute("CALL QSYS2.QCMDEXC('" + command + "')");
+    } catch (SQLException e) {
+      System.err.println("Command failed: " + command);
+      if(verbose) showCompilationSpool(commandTime);
+      Map<String, String> extra = getMapMessages(commandTime);
+      throw new CompilerException("Target compilation failed", e, command, key, commandTime, extra);
+    }
+
+    System.out.println("Command successful: " + command);
+    if(verbose) getJoblogMessages(commandTime);
+
     /* Set build time */
     key.setLastBuild(commandTime);
   }
 
+  /* Executes system commands */
   public void executeCommand(String command) throws CompilerException {
     Timestamp commandTime = getCurrentTime();
 
@@ -64,10 +81,8 @@ public class CommandExecutor {
     } catch (SQLException e) {
       System.err.println("Command failed: " + command);
 
-      //if(verbose) getJoblogMessages(commandTime);
-      //throw e; // Raise
       Map<String, String> extra = getMapMessages(commandTime);
-      throw new CompilerException("Command execution failed", e, command, null, commandTime, extra);  // No target here
+      throw new CompilerException("Command execution failed", e, command, commandTime, extra);  // No target here
     }
 
     System.out.println("Command successful: " + command);
@@ -100,7 +115,7 @@ public class CommandExecutor {
           "WHERE FROM_USER = USER " +
           "AND MESSAGE_TIMESTAMP > '" + commandTime + "' " +
           "AND MESSAGE_ID NOT IN ('SQL0443', 'CPC0904', 'CPF2407') " +
-          "ORDER BY MESSAGE_TIMESTAMP DESC "
+          "ORDER BY MESSAGE_TIMESTAMP ASC " /* Show from first to last */
         )) {
       while (rsMessages.next()) {
         String messageId = rsMessages.getString("MESSAGE_ID").trim();
@@ -128,7 +143,7 @@ public class CommandExecutor {
           "WHERE FROM_USER = USER " +
           "AND MESSAGE_TIMESTAMP > '" + commandTime + "' " +
           "AND MESSAGE_ID NOT IN ('SQL0443', 'CPC0904', 'CPF2407') " +
-          "ORDER BY MESSAGE_TIMESTAMP DESC "
+          "ORDER BY MESSAGE_TIMESTAMP ASC " /* Show from first to last */
         )) {
       while (rsMessages.next()) {
         Timestamp messageTime = rsMessages.getTimestamp("MESSAGE_TIMESTAMP");

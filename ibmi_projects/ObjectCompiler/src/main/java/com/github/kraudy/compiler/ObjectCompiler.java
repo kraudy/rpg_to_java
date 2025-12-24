@@ -89,15 +89,19 @@ public class ObjectCompiler implements Runnable{
       }
       
     } catch (CompilerException e){
+      if (verbose) System.err.println("Compilation failed");
       /* Global compiler failure */
       try{
         if(!globalSpec.failure.isEmpty()){
           commandExec.executeCommand(globalSpec.failure);
         }
-      } catch (Exception hookErr) {
-          throw new CompilerException("Target failure hook also failed", hookErr,
+      } catch (Exception failureErr) {
+          throw new CompilerException("Target failure hook also failed", failureErr,
 "Failure hook execution", null, null, null);
       }
+
+      /* Get full compiler exception context */
+      System.err.println(e.getFullContext());
 
     } catch (Exception e) {
       /* Unhandled Exception. Fail loudly */
@@ -105,7 +109,7 @@ public class ObjectCompiler implements Runnable{
 
     } finally {
       /* Show chain of commands */
-      if(verbose) System.out.println(commandExec.getExecutionChain());
+      if(verbose) System.err.println("Chain of commands: " + commandExec.getExecutionChain());
 
       cleanup();
     }
@@ -147,15 +151,9 @@ public class ObjectCompiler implements Runnable{
         key.putAll(targetSpec.params);
 
         /* Migrate source file */
-        // Re-create migrator fresh for every target, fix this.
-        try {
-          SourceMigrator migrator = new SourceMigrator(this.system, this.connection, true, true);
-          odes.migrateSource(migrator);
-        } catch (Exception e){
-          if (debug) e.printStackTrace();
-          if (verbose) System.err.println("Could not initialize migrator");
-          throw new RuntimeException("Failed to initialize migrator: " + e.getMessage(), e);
-        }
+        // Re-create migrator fresh for every target, fix this. TODO: Send the key?
+        SourceMigrator migrator = new SourceMigrator(this.system, this.connection, true, true);
+        odes.migrateSource(migrator);
 
         /* Execute compilation command */
         commandExec.executeCommand(key);
@@ -171,7 +169,7 @@ public class ObjectCompiler implements Runnable{
         } 
 
       } catch (CompilerException e){
-        if (verbose) System.err.println("Target failed: " + key.asString());
+        if (verbose) System.err.println("Target compilation failed: " + key.asString());
 
         /* Per target failure */
         if(!targetSpec.failure.isEmpty()){
@@ -242,7 +240,6 @@ public class ObjectCompiler implements Runnable{
             parser.isDiff()
         );
       compiler.run();
-      //new CommandLine(compiler).execute(args);
     } catch (IllegalArgumentException e) {
       System.err.println("Error: " + e.getMessage());
       ArgParser.printUsage();
