@@ -28,18 +28,20 @@ public class ObjectDescription {
   public void migrateSource(SourceMigrator migrator){
     switch (this.targetKey.getCompilationCommand()){
       case CRTCLMOD:
-        break;
-
       case CRTRPGMOD:
       case CRTBNDRPG:
       case CRTBNDCL:
       case CRTSQLRPGI:
       case CRTSRVPGM:
       case RUNSQLSTM:
+      case CRTCMD:
+        /* 
+         * Migrate from source member to stream file
+         */
         if (!this.targetKey.containsKey(ParamCmd.SRCSTMF) && 
           this.targetKey.containsKey(ParamCmd.SRCFILE)) {
-          System.out.println("SRCFILE data: " + this.targetKey.getParamMap().get(ParamCmd.SRCFILE));
-          migrator.setParams(this.targetKey.getQualifiedSourceFile(), this.targetKey.getObjectName(), "sources");
+          System.out.println("SRCFILE data: " + this.targetKey.get(ParamCmd.SRCFILE));
+          migrator.setMigrationParams(this.targetKey.getQualifiedSourceFile(), this.targetKey.getObjectName(), "sources");
           migrator.api(); // Try to migrate this thing
           
           this.targetKey.setStreamSourceFile(migrator.getFirstPath());
@@ -49,25 +51,25 @@ public class ObjectDescription {
 
       case CRTCLPGM:
       case CRTRPGPGM:
-        /* 
-        For OPM, create temp members if source is IFS (reverse migration).
-        key.getParamMap().put(key.getCompilationCommand(), ParamCmd.SRCSTMF, stmfPath);
-        migrator.IfsToMember(key.getParamMap().get(ParamCmd.SRCSTMF), Library);
-        key.getParamMap().remove(ParamCmd.SRCFILE);  // Switch to stream file
-        key.getParamMap().put(key.getCompilationCommand(), ParamCmd.SRCMBR, member);
-        */
-        if (this.targetKey.containsStreamFile()) {
-          //TODO: Do reverse migration here
-        }
-        break;
-
       case CRTDSPF:
       case CRTPF:
       case CRTLF:
       case CRTPRTF:
       case CRTMNU:
       case CRTQMQRY:
-          break;
+        /* 
+         * Migrate from stream file to source member
+         */
+        if (this.targetKey.containsStreamFile()) {
+          /* I'd like this to be migrated to QTEMP but the migrator needs some changes for that */
+          migrator.setReverseMigrationParams(this.targetKey.getQualifiedSourceFile(), this.targetKey.getObjectName(), this.targetKey.getStreamFile());
+          migrator.api(); // Try to migrate this thing
+          
+          this.targetKey.setStreamSourceFile(migrator.getFirstPath());
+          this.targetKey.put(ParamCmd.SRCFILE, this.targetKey.getQualifiedSourceFile());
+          this.targetKey.put(ParamCmd.SRCMBR, this.targetKey.getObjectName());
+        }
+        break;
     }
   }
 

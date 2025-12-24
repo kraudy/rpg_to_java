@@ -118,7 +118,7 @@ public class ArgParser {
 
   // Print usage (call on error)
   public static void printUsage() {
-    System.err.println("Usage: compiler [-f|--file <YAML>] [--dry-run] [-x] [-v]");
+    System.err.println("Usage: compiler [-f|--file <YAML>] [--diff] [--dry-run] [-x] [-v]");
     System.err.println("  -f, --file     YAML build file (required)");
     System.err.println("  --diff         Only build changed objects");
     System.err.println("  --dry-run      Show commands without executing");

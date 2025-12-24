@@ -28,6 +28,8 @@ public class TargetKey {
   private Timestamp lastSourceEdit;    // Last time the source was edited
   private Timestamp lastBuild;         // Last time the object was compiled
 
+  private boolean isOpm;               // Is this key opm?
+
   public TargetKey(String key) {
     String[] parts = key.split("\\.");
     if (parts.length != 4) {
@@ -66,6 +68,9 @@ public class TargetKey {
     /* Get target key compilation command */
     this.compilationCommand = CompilationPattern.getCompilationCommand(this.sourceType, this.objectType);
 
+    /* Check if target is opm */
+    this.isOpm = CompilationPattern.isOpm(this.sourceType);
+
     /* Init param map for this target */
     this.ParamCmdSequence = new ParamMap();
 
@@ -95,6 +100,10 @@ public class TargetKey {
 
   public String getQualifiedSourceFile(){
     return this.library + "/" + this.sourceFile;
+  }
+
+  public String getQualifiedTemporarySourceFile(){
+    return "QTEMP" + "/" + this.sourceFile;
   }
 
   public boolean containsKey(ParamCmd param) {
@@ -133,6 +142,15 @@ public class TargetKey {
   }
 
   public void putAll(Map<ParamCmd, String> params) {
+    /* 
+     * If the object is OPM, extract the SRCSTMF param before it is rejected and store its value.
+     * This will help us later to do the migration from stream file to source member since OPM commands don't support SRCSTMF.
+     */
+    if (this.isOpm){
+      if(params.containsKey(ParamCmd.SRCSTMF)){
+        setStreamSourceFile(params.get(ParamCmd.SRCSTMF));
+      }
+    }
     this.ParamCmdSequence.putAll(this.compilationCommand, params);
   }
 
@@ -158,7 +176,7 @@ public class TargetKey {
 
   public String getStreamFile() {
     //TODO: Is this really necessary?
-    if (this.sourceStmf == null && this.ParamCmdSequence.containsKey(ParamCmd.SRCSTMF)) this.sourceStmf = get(ParamCmd.SRCSTMF);
+    //if (this.sourceStmf == null && this.ParamCmdSequence.containsKey(ParamCmd.SRCSTMF)) this.sourceStmf = get(ParamCmd.SRCSTMF);
     return this.sourceStmf;
   }
 

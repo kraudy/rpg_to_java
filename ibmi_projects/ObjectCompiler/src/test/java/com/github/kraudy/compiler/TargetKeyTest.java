@@ -51,6 +51,26 @@ public class TargetKeyTest {
   }
 
   @Test
+  void test_Pgm_Rgp_Command() {
+    TargetKey key = new TargetKey("MYLIB.HELLO.PGM.RPG");
+
+    key.put(ParamCmd.PGM, "MYLIB/HELLO");
+    key.put(ParamCmd.SRCFILE, "MYLIB/PRACTICAS");
+    key.put(ParamCmd.SRCMBR, "HELLO");
+    key.put(ParamCmd.TEXT, "hello!");
+    key.put(ParamCmd.OPTION, "*LSTDBG");
+    key.put(ParamCmd.GENOPT, "*LIST");
+    key.put(ParamCmd.REPLACE, "*YES");
+    key.put(ParamCmd.TGTRLS, "*CURRENT");
+    key.put(ParamCmd.USRPRF, "*USER");
+
+    String cmd = key.getCommandString();
+    assertEquals(
+      "CRTRPGPGM PGM(MYLIB/HELLO) SRCFILE(MYLIB/PRACTICAS) SRCMBR(HELLO) " +
+      "TEXT(''hello!'') OPTION(*LSTDBG) GENOPT(*LIST) REPLACE(*YES) TGTRLS(*CURRENT) USRPRF(*USER)", cmd);
+  }
+
+  @Test
   void testPgmSqlRgpleCommand() {
     TargetKey key = new TargetKey("MYLIB.SQLHELLO.PGM.SQLRPGLE");
 

@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
+
 /*
  * Defines all the commands and params as enums.
  * Uses these enums to describe all commands as patterns of params
@@ -56,6 +58,10 @@ public class CompilationPattern {
   public enum CompCmd implements Command { 
     CRTRPGMOD, CRTSQLRPGI, CRTBNDRPG, CRTRPGPGM, CRTCLMOD, CRTBNDCL, CRTCLPGM, RUNSQLSTM, CRTSRVPGM, CRTDSPF, CRTLF, CRTPRTF, CRTMNU, CRTQMQRY, CRTPF, CRTCMD;
   }
+
+  public static final  List<SourceType> IleSources = Arrays.asList(
+    SourceType.RPG, SourceType.CLP, SourceType.DDS
+  );
 
   public enum SourceType { 
     RPG, RPGLE, SQLRPGLE, CLP, CLLE, SQL, BND, DDS;
@@ -162,6 +168,9 @@ public class CompilationPattern {
 
     // OVRPRTF
     SPLFNAME, IGCDTA, IGCEXNCHR, IGCCHRRTT, IGCCPI, IGCSOSI, IGCCDEFNT,
+
+    // CRTQMQRY
+    QMQRY,
 
     ;
 
@@ -959,6 +968,18 @@ public class CompilationPattern {
     ParamCmd.AUT
   );
 
+  // CRTQMQRY
+  public static final List<ParamCmd> QmqryPattern = Arrays.asList(
+    ParamCmd.QMQRY,
+    ParamCmd.SRCFILE,
+    ParamCmd.SRCMBR,
+    ParamCmd.TEXT,
+    ParamCmd.SRTSEQ,
+    ParamCmd.LANGID,
+    ParamCmd.AUT,
+    ParamCmd.REPLACE
+  );
+
   //TODO: Add config file support like YAML. This will allow specific patterns to be provided or loaded at runtime.
 
   public static final Map<Command, List<ParamCmd>> commandToPatternMap = new HashMap<>();
@@ -993,10 +1014,13 @@ public class CompilationPattern {
     commandToPatternMap.put(CompCmd.CRTDSPF, ddsDspfPattern);
     commandToPatternMap.put(CompCmd.CRTPF, ddsPfPattern);
     commandToPatternMap.put(CompCmd.CRTLF, ddsLfPattern);
-
     commandToPatternMap.put(CompCmd.CRTPRTF, ddsPrtfPattern);
     /* CMD */
     commandToPatternMap.put(CompCmd.CRTCMD, CmdPattern);
+    /* MENU */
+    commandToPatternMap.put(CompCmd.CRTMNU, MnuPattern);
+    /* QMQRY */
+    commandToPatternMap.put(CompCmd.CRTQMQRY, QmqryPattern);
   }
 
   /* Return compilation command */
@@ -1007,6 +1031,11 @@ public class CompilationPattern {
   /* Return command pattern */
   public static List<ParamCmd> getCommandPattern(Command cmd){
     return commandToPatternMap.getOrDefault(cmd, Collections.emptyList());
+  }
+
+  /* Return if source is opm */
+  public static boolean isOpm(SourceType sourceType){
+    return IleSources.contains(sourceType);
   }
 
 }
