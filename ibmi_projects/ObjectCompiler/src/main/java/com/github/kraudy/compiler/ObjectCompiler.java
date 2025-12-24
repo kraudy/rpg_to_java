@@ -88,16 +88,19 @@ public class ObjectCompiler implements Runnable{
         commandExec.executeCommand(globalSpec.success);
       }
       
-    } catch (Exception e) {
-
-      /* Global failure */
+    } catch (CompilerException e){
+      /* Global compiler failure */
       try{
         if(!globalSpec.failure.isEmpty()){
           commandExec.executeCommand(globalSpec.failure);
         }
-      } catch (Exception ignore) {}
+      } catch (Exception hookErr) {
+          throw new CompilerException("Target failure hook also failed", hookErr,
+"Failure hook execution", null, null, null);
+      }
 
-      /* Fail loudly */
+    } catch (Exception e) {
+      /* Unhandled Exception. Fail loudly */
       e.printStackTrace();
 
     } finally {
@@ -167,13 +170,18 @@ public class ObjectCompiler implements Runnable{
           commandExec.executeCommand(targetSpec.success);
         } 
 
-      } catch (Exception e){
+      } catch (CompilerException e){
         if (verbose) System.err.println("Target failed: " + key.asString());
 
         /* Per target failure */
         if(!targetSpec.failure.isEmpty()){
           commandExec.executeCommand(targetSpec.failure);
         } 
+
+        throw e; // Raise
+
+      } catch (Exception e){
+        if (verbose) System.err.println("Unhandled error in Target: " + key.asString());
 
         throw e; // Raise
 

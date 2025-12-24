@@ -6,7 +6,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class CommandExecutor {
   private final Connection connection;
@@ -33,15 +35,18 @@ public class CommandExecutor {
     Timestamp commandTime = getCurrentTime();
     try{
       executeCommand(key.getCommandString());
-    } catch (Exception e) {
+    } catch (CompilerException e) {
       if(verbose) showCompilationSpool(commandTime);
-      throw e; // Raise
+      throw new CompilerException("Target compilation failed", e, null, key, commandTime, null); 
+      //throw e; // Raise
+    } catch (Exception e) {
+      throw e; /* Raise unhandled exception */
     }
     /* Set build time */
     key.setLastBuild(commandTime);
   }
 
-  public void executeCommand(String command) throws SQLException{
+  public void executeCommand(String command) throws CompilerException {
     Timestamp commandTime = getCurrentTime();
 
     if (this.CmdExecutionChain.length() > 0) {
@@ -58,12 +63,11 @@ public class CommandExecutor {
       cmdStmt.execute("CALL QSYS2.QCMDEXC('" + command + "')");
     } catch (SQLException e) {
       System.err.println("Command failed: " + command);
-      //TODO: Add a class filed that stores the messages and is updated with each compilation command
-      // but make the massages ENUM to just do something like .contains(CPF5813) and then the delete
-      // like DLTOBJ OBJ() OBJTYPE()
-      //if ("CPF5813".equals(e.getMessage()))
-      if(verbose) getJoblogMessages(commandTime);
-      throw e; // Raise
+
+      //if(verbose) getJoblogMessages(commandTime);
+      //throw e; // Raise
+      Map<String, String> extra = getMapMessages(commandTime);
+      throw new CompilerException("Command execution failed", e, command, null, commandTime, extra);  // No target here
     }
 
     System.out.println("Command successful: " + command);
@@ -83,6 +87,35 @@ public class CommandExecutor {
       throw new RuntimeException("Could not get command time.");
     }
     return currentTime;
+  }
+
+  public Map<String, String> getMapMessages(Timestamp commandTime){
+      //TODO: Add an enum of messages
+    Map<String, String> extra = new HashMap<String, String>();
+
+    try (Statement stmt = connection.createStatement();
+        ResultSet rsMessages = stmt.executeQuery(
+          "SELECT MESSAGE_TIMESTAMP, MESSAGE_ID, SEVERITY, MESSAGE_TEXT, COALESCE(MESSAGE_SECOND_LEVEL_TEXT, '') As MESSAGE_SECOND_LEVEL_TEXT " +
+          "FROM TABLE(QSYS2.JOBLOG_INFO('*')) " + 
+          "WHERE FROM_USER = USER " +
+          "AND MESSAGE_TIMESTAMP > '" + commandTime + "' " +
+          "AND MESSAGE_ID NOT IN ('SQL0443', 'CPC0904', 'CPF2407') " +
+          "ORDER BY MESSAGE_TIMESTAMP DESC "
+        )) {
+      while (rsMessages.next()) {
+        String messageId = rsMessages.getString("MESSAGE_ID").trim();
+        String message = rsMessages.getString("MESSAGE_TEXT").trim();
+        // Format the timestamp as a string
+        
+        // Print in a formatted table-like structure
+        extra.put(messageId, message);
+      } 
+    } catch (SQLException e) {
+      if (verbose) System.out.println("Could not get messages.");
+      if (debug) e.printStackTrace();
+      throw new RuntimeException("Could not get messages.");
+    }
+    return extra;
   }
 
   public void getJoblogMessages(Timestamp commandTime){
