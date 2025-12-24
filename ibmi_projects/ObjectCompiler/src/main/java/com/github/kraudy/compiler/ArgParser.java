@@ -45,12 +45,14 @@ public class ArgParser {
       /* Extract option name (strip leading - or --) */
       String optName = arg.startsWith("--") ? arg.substring(2) : arg.substring(1);
 
+      
       if (optName.isEmpty()) throw new IllegalArgumentException("Empty option: " + arg);
-
+      
       // Handle combined short options (e.g., -vx means -v -x)
       if (!arg.startsWith("--") && optName.length() > 1) {
         for (char c : optName.toCharArray()) {
           String shortOpt = String.valueOf(c);
+
           String fieldName = validOptions.get(shortOpt);
           if (fieldName == null) throw new IllegalArgumentException("Unknown option: -" + shortOpt);
 
@@ -63,7 +65,7 @@ public class ArgParser {
 
       // Map short/long to valid names
       String fieldName = validOptions.get(optName);
-      if (fieldName == null) throw new IllegalArgumentException("Unknown option: --" + optName + " or -" + optName);
+      if (fieldName == null) throw new IllegalArgumentException("Unknown option: " + arg);
 
       // Check if it's a flag (no value expected next)
       if(booleanOptions.contains(fieldName)){
@@ -109,7 +111,6 @@ public class ArgParser {
     return (boolean) options.getOrDefault("diff", false);
   }
 
-  // Simple validation helpers (extend as needed)
   private boolean isValidFile(String path) {
     File f = new File(path);
     return f.exists() && f.canRead() && path.endsWith(".yaml");
