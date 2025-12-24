@@ -7,7 +7,7 @@ import java.util.List;
  *  Simple POJO for param's value encapsulation and history tracking.
  */
 public class ParamValue {
-    private String current = "";
+    private String current = null;
     private Integer count = 0;
     private final List<String> history = new ArrayList<String>();
 
@@ -35,7 +35,9 @@ public class ParamValue {
     }
 
     public String getPrevious() {
-      if (count < 1) return this.history.getFirst();
+      //if (count < 1) return this.history.getFirst();
+      //if (this.history.isEmpty()) return null;
+      if (count <= 1) return null; //this.history.getFirst();
       return this.history.get(count - 1);
     }
 
@@ -51,6 +53,10 @@ public class ParamValue {
 
     public List<String> getHistory() {
         return new ArrayList<String>(history);  // Return copy to prevent external mutation
+    }
+
+    public Integer getCount() {
+        return this.count;
     }
 
     public String getLastChange() {

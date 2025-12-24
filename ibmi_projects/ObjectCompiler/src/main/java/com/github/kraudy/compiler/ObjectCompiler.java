@@ -111,22 +111,19 @@ public class ObjectCompiler implements Runnable{
 
   private void buildTargets(BuildSpec globalSpec) throws Exception{
     /* This is intended for a YAML file with multiple objects in a toposort order */
-    //TODO: Here, to compile only object with changes, just use a diff, filter the keys and do a continue. Coming soon.
     for (Map.Entry<TargetKey, BuildSpec.TargetSpec> entry : globalSpec.targets.entrySet()) {
       TargetKey key = entry.getKey();
       BuildSpec.TargetSpec targetSpec = entry.getValue();
       /* Init object descriptor */
       ObjectDescription odes = new ObjectDescription(connection, debug, verbose, key);
 
-      /* Get object creation timestamp */
-      odes.getObjectCreation();
-
-      odes.getSourceMemberLastChange();
-
       /* Skip target if diff and no build required */
-      if (diff && !key.needsRebuild()) {
-        if (verbose) System.out.println("Skipping unchanged target: " + key.asString() + key.getTimestmaps());
-        continue; 
+      if (diff) {
+        odes.getObjectTimestamps();
+        if (!key.needsRebuild()) {
+          if (verbose) System.out.println("Skipping unchanged target: " + key.asString() + key.getTimestmaps());
+          continue; 
+        }
       }
 
       if (verbose) System.out.println("Building: " + key.asString());

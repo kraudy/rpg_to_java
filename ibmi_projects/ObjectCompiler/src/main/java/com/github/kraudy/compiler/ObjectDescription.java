@@ -95,12 +95,27 @@ public class ObjectDescription {
         return;
       }
 
-      if (verbose) System.out.println("Found object '" + this.targetKey.asString());
+      if (verbose) System.out.println("Found object creation data '" + this.targetKey.asString());
 
       this.targetKey.setLastBuild(rsObjCreationInfo.getTimestamp("CREATE_TIMESTAMP"));
       this.targetKey.setLastEdit(rsObjCreationInfo.getTimestamp("SOURCE_FILE_CHANGE_TIMESTAMP"));
 
     }
+  }
+
+  public void getObjectTimestamps() throws SQLException {
+    /* Get object creation timestamp */
+    getObjectCreation();
+
+    /* Get source stream file last change */
+    if (this.targetKey.containsStreamFile()){
+      //TODO: Add git diff
+      getSourceStreamFileLastChange();
+      return;
+    }
+    /* Get source member last change */
+    getSourceMemberLastChange();
+    return;
   }
 
   public void getSourceMemberLastChange() throws SQLException {
@@ -117,11 +132,35 @@ public class ObjectDescription {
               "WHERE TABLE_NAME = '" + this.targetKey.getSourceFile() + "' " +
               "AND TABLE_PARTITION = '" + this.targetKey.getSourceName() + "'" +
               "AND SOURCE_TYPE = '" + this.targetKey.getSourceType() + "'")) {
-        if (rs.next()) {
-            this.targetKey.setLastEdit(rs.getTimestamp("LAST_SOURCE_UPDATE_TIMESTAMP"));
-            return;
+        if (!rs.next()) {
+          if (verbose) System.out.println("Could not get source member last change: " + this.targetKey.getSourceName());
+          this.targetKey.setLastEdit(null);  // File not found
+          return;  
         }
-        this.targetKey.setLastEdit(null);  // File not found
+
+        if (verbose) System.out.println("Found source member last change: " + this.targetKey.getSourceName());
+        this.targetKey.setLastEdit(rs.getTimestamp("LAST_SOURCE_UPDATE_TIMESTAMP"));
+        return;
+    }
+  }
+
+  public void getSourceStreamFileLastChange() throws SQLException {
+    try (Statement stmt = connection.createStatement();
+          ResultSet rs = stmt.executeQuery(
+            "SELECT DATA_CHANGE_TIMESTAMP " + 
+            "FROM TABLE (QSYS2.IFS_OBJECT_STATISTICS( " +
+                    "START_PATH_NAME => '" + this.targetKey.getStreamFile() +  "', " +
+                    "SUBTREE_DIRECTORIES => 'NO' " +
+                ") " +
+            ")")) {
+        if (!rs.next()) {
+            if (verbose) System.out.println("Could not get source stream file last change: " + this.targetKey.getStreamFile());
+          this.targetKey.setLastEdit(null);  // File not found
+          return;
+        }
+        
+        if (verbose) System.out.println("Found source stream file last change: " + this.targetKey.getStreamFile());
+        this.targetKey.setLastEdit(rs.getTimestamp("DATA_CHANGE_TIMESTAMP"));
         return;
     }
   }

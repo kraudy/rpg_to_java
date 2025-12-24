@@ -102,7 +102,7 @@ public class TargetKey {
   }
 
   public boolean containsStreamFile() {
-    return !("").equals(this.sourceStmf);
+    return this.sourceStmf != null;
   }
 
   public boolean isModule() {
@@ -157,6 +157,8 @@ public class TargetKey {
   }
 
   public String getStreamFile() {
+    //TODO: Is this really necessary?
+    if (this.sourceStmf == null && this.ParamCmdSequence.containsKey(ParamCmd.SRCSTMF)) this.sourceStmf = get(ParamCmd.SRCSTMF);
     return this.sourceStmf;
   }
 
