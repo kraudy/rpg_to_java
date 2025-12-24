@@ -23,7 +23,6 @@ public class CompilerException extends RuntimeException {
 
   /* Constructor for no target command */
   public CompilerException(String message, Throwable cause, String failedCommand, Timestamp commandTime, Map<String, String> extraContext) {
-    //super(message + " | Command: " + failedCommand + " | Time: " + commandTime, cause);
     super(message, cause);
     this.failedCommand = failedCommand;
     this.targetKey = null;
@@ -35,7 +34,6 @@ public class CompilerException extends RuntimeException {
   public CompilerException(String message, Throwable cause,
                             String failedCommand, TargetKey targetKey,
                             Timestamp commandTime, Map<String, String> extraContext) {
-    //super(message + " | Command: " + failedCommand + " | Target: " + targetKey.asString() +
     super(message, cause);
     this.failedCommand = failedCommand;
     this.targetKey = targetKey;
