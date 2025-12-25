@@ -8,7 +8,6 @@ import java.sql.Statement;
 
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
-import com.github.kraudy.migrator.SourceMigrator;
 
 /* Core struct for capturing compilation specs */
 public class ObjectDescription {
@@ -22,54 +21,6 @@ public class ObjectDescription {
     this.debug = debug;
     this.verbose = verbose;
     this.targetKey = targetKey;
-  }
-
-
-  public void migrateSource(SourceMigrator migrator){
-    switch (this.targetKey.getCompilationCommand()){
-      case CRTCLMOD:
-      case CRTRPGMOD:
-      case CRTBNDRPG:
-      case CRTBNDCL:
-      case CRTSQLRPGI:
-      case CRTSRVPGM:
-      case RUNSQLSTM:
-      case CRTCMD:
-        /* 
-         * Migrate from source member to stream file
-         */
-        if (!this.targetKey.containsKey(ParamCmd.SRCSTMF) && 
-          this.targetKey.containsKey(ParamCmd.SRCFILE)) {
-          migrator.setMigrationParams(this.targetKey.getQualifiedSourceFile(), this.targetKey.getObjectName(), "sources");
-          migrator.api(); // Try to migrate this thing
-          
-          this.targetKey.setStreamSourceFile(migrator.getFirstPath());
-          this.targetKey.put(ParamCmd.SRCSTMF, this.targetKey.getStreamFile());
-        }
-        break;
-
-      case CRTCLPGM:
-      case CRTRPGPGM:
-      case CRTDSPF:
-      case CRTPF:
-      case CRTLF:
-      case CRTPRTF:
-      case CRTMNU:
-      case CRTQMQRY:
-        /* 
-         * Migrate from stream file to source member
-         */
-        if (this.targetKey.containsStreamFile()) {
-          /* I'd like this to be migrated to QTEMP but the migrator needs some changes for that */
-          migrator.setReverseMigrationParams(this.targetKey.getQualifiedSourceFile(), this.targetKey.getObjectName(), this.targetKey.getStreamFile());
-          migrator.api(); // Try to migrate this thing
-          
-          this.targetKey.setStreamSourceFile(migrator.getFirstPath());
-          this.targetKey.put(ParamCmd.SRCFILE, this.targetKey.getQualifiedSourceFile());
-          this.targetKey.put(ParamCmd.SRCMBR, this.targetKey.getObjectName());
-        }
-        break;
-    }
   }
 
   public boolean sourcePfExists() throws SQLException{
@@ -92,7 +43,7 @@ public class ObjectDescription {
   public boolean sourceMemberExists() throws SQLException {
     try (Statement stmt = connection.createStatement();
          ResultSet rs = stmt.executeQuery(
-             "SELECT CAST(SYSTEM_TABLE_MEMBER AS VARCHAR(10) CCSID " + SourceMigrator.INVARIANT_CCSID + ") AS Member " +
+             "SELECT CAST(SYSTEM_TABLE_MEMBER AS VARCHAR(10) CCSID " + ObjectCompiler.INVARIANT_CCSID + ") AS Member " +
              "FROM QSYS2.SYSPARTITIONSTAT " +
              "WHERE SYSTEM_TABLE_SCHEMA = '" + this.targetKey.getLibrary() + "' " +
              "AND SYSTEM_TABLE_NAME = '" + this.targetKey.getSourceFile() + "' " +

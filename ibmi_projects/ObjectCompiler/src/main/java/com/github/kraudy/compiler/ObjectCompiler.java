@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.SysCmd;
-import com.github.kraudy.migrator.SourceMigrator;
 import com.ibm.as400.access.AS400;
 import com.ibm.as400.access.AS400JDBCDataSource;
 import com.ibm.as400.access.AS400Message;
@@ -163,11 +162,6 @@ public class ObjectCompiler{
         key.putAll(targetSpec.params);
 
         /* Migrate source file */
-        // Re-create migrator fresh for every target, fix this. TODO: Send the key?
-
-        //SourceMigrator migrator = new SourceMigrator(this.system, this.connection, true, true);
-        //odes.migrateSource(migrator);
-
         migrateSource(key, odes);
 
         /* Execute compilation command */
@@ -221,10 +215,6 @@ public class ObjectCompiler{
         if (!key.containsKey(ParamCmd.SRCSTMF) && 
           key.containsKey(ParamCmd.SRCFILE)) {
 
-          //migrator.setMigrationParams(key.getQualifiedSourceFile(), key.getObjectName(), "sources");
-          //migrator.api(); // Try to migrate this thing
-          //key.setStreamSourceFile(migrator.getFirstPath());
-
           migrateMemberToStreamFile(key);
           key.put(ParamCmd.SRCSTMF, key.getStreamFile());
         }
@@ -242,11 +232,7 @@ public class ObjectCompiler{
          * Migrate from stream file to source member
          */
         if (key.containsStreamFile()) {
-          /* I'd like this to be migrated to QTEMP but the migrator needs some changes for that */
-          //migrator.setReverseMigrationParams(key.getQualifiedSourceFile(), key.getObjectName(), key.getStreamFile());
-          //migrator.api(); // Try to migrate this thing
-          //key.setStreamSourceFile(migrator.getFirstPath());
-
+          //TODO: Should this be migrated to QTEMP?
           if (!odes.sourcePfExists()) createSourcePf(key);
           if (!odes.sourceMemberExists()) createSourceMember(key);
           migrateStreamFileToMember(key);
@@ -258,7 +244,6 @@ public class ObjectCompiler{
   }
 
   public void createSourcePf(TargetKey key){
-    /* If the source pf is not found, create it */
     ParamMap map = new ParamMap();
     map.put(SysCmd.CRTSRCPF, ParamCmd.FILE, key.getQualifiedSourceFile());
     
