@@ -114,6 +114,14 @@ public class TargetKey {
     return this.sourceStmf != null;
   }
 
+  public boolean isSql() {
+    return this.sourceType == SourceType.SQL;
+  }
+
+  public boolean isDds() {
+    return this.sourceType == SourceType.DDS;
+  }
+
   public boolean isModule() {
     return this.objectType == ObjectType.MODULE;
   }
@@ -186,6 +194,10 @@ public class TargetKey {
 
   public String getObjectType() {
     return this.objectType.toParam();
+  }
+
+  public String getObjectTypeName() {
+    return this.objectType.name();
   }
 
   public String getSourceType() {

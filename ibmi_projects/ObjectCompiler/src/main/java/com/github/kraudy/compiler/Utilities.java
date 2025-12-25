@@ -17,6 +17,13 @@ import com.github.kraudy.compiler.CompilationPattern.ValCmd;
  */
 public class Utilities {
 
+  public static final String CteLibraryList = 
+    "Libs (Libraries) As ( " +
+      "SELECT DISTINCT(SCHEMA_NAME) FROM QSYS2.LIBRARY_LIST_INFO " + 
+      "WHERE TYPE NOT IN ('SYSTEM','PRODUCT') AND SCHEMA_NAME NOT IN ('QGPL', 'GAMES400') " +
+    ") "
+  ;
+
   public static void SetDefaultParams(TargetKey targetKey) {
 
     /* Set source Pf and source member */

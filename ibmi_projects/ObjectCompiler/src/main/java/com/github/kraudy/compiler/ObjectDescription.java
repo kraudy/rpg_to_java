@@ -79,10 +79,7 @@ public class ObjectDescription {
     try (Statement stmt = connection.createStatement();
         ResultSet rsObj = stmt.executeQuery(
           "With " +
-          "Libs (Libraries) As ( " +
-              "SELECT DISTINCT(SCHEMA_NAME) FROM QSYS2.LIBRARY_LIST_INFO " + 
-              "WHERE TYPE NOT IN ('SYSTEM','PRODUCT') AND SCHEMA_NAME NOT IN ('QGPL', 'GAMES400') " +
-          ") " +
+          Utilities.CteLibraryList +
           "SELECT PROGRAM_LIBRARY, " + // programLibrary
               "PROGRAM_NAME, " + // programName
               "COALESCE(PROGRAM_TYPE,'') As PROGRAM_TYPE, " +  // [ILE, OPM] 
@@ -197,10 +194,7 @@ public class ObjectDescription {
     try (Statement stmt = connection.createStatement();
         ResultSet rsMod = stmt.executeQuery(
           "With " +
-          "Libs (Libraries) As ( " +
-              "SELECT DISTINCT(SCHEMA_NAME) FROM QSYS2.LIBRARY_LIST_INFO " + 
-              "WHERE TYPE NOT IN ('SYSTEM','PRODUCT') AND SCHEMA_NAME NOT IN ('QGPL', 'GAMES400') " +
-          ") " +
+          Utilities.CteLibraryList +
           "SELECT " +
                 "MODULE_CREATE_TIMESTAMP, " +
                 "SOURCE_CHANGE_TIMESTAMP, " +
@@ -270,11 +264,8 @@ public class ObjectDescription {
     
     try (Statement stmt = connection.createStatement();
         ResultSet rsCmdInfo = stmt.executeQuery(
-          "With " + //TODO: Put this lib CTE in a String
-          "Libs (Libraries) As ( " +
-              "SELECT DISTINCT(SCHEMA_NAME) FROM QSYS2.LIBRARY_LIST_INFO " + 
-              "WHERE TYPE NOT IN ('SYSTEM','PRODUCT') AND SCHEMA_NAME NOT IN ('QGPL', 'GAMES400') " +
-          ") " +
+          "With " + 
+          Utilities.CteLibraryList +
           "SELECT " +
             "(TRIM(COMMAND_LIBRARY) || '/' || TRIM(COMMAND_NAME)) As CMD, " +
             "TEXT_DESCRIPTION As TEXT, " +
@@ -314,19 +305,11 @@ public class ObjectDescription {
       }
   }
 
-  //TODO: Change this view for QSYS2.SYSFILES and use it for crtsqlrpgle isntead
-  private void getSqlInfo(TargetKey key) throws SQLException{
-    
-  }
-
   private void getSqlRpgInfo(TargetKey key)throws SQLException{
     try (Statement stmt = connection.createStatement();
         ResultSet rsSqlRpgInfo = stmt.executeQuery(
           "With " +
-          "Libs (Libraries) As ( " +
-              "SELECT DISTINCT(SCHEMA_NAME) FROM QSYS2.LIBRARY_LIST_INFO " + 
-              "WHERE TYPE NOT IN ('SYSTEM','PRODUCT') AND SCHEMA_NAME NOT IN ('QGPL', 'GAMES400') " +
-          ") " +
+          Utilities.CteLibraryList +
           "SELECT PROGRAM_LIBRARY, " + // programLibrary
               "PROGRAM_NAME, " + // programName
               "OBJECT_TYPE, " +   // typeOfProgram
@@ -379,12 +362,7 @@ public class ObjectDescription {
       String tgtrls = rsSqlRpgInfo.getString("TGTRLS").trim();
       if(!tgtrls.isEmpty()) key.put(ParamCmd.TGTRLS, tgtrls); 
 
-      //String srcfile = rsSqlRpgInfo.getString("SRCFILE").trim();
-      //if(!srcfile.isEmpty()) key.put(ParamCmd.SRCFILE, srcfile); 
-      //String srcmbr = rsSqlRpgInfo.getString("SRCMBR").trim();
-      //if(!srcmbr.isEmpty()) key.put(ParamCmd.SRCMBR, srcmbr); 
-
-      //TODO: The service does not returns data for these filed. They need to fix that.
+      //TODO: The service does not returns data for these filed.
 
       //key.put(ParamCmd.COMMIT, ValCmd.fromString(rsSqlRpgInfo.getString("COMMIT"))); 
       //key.put(ParamCmd.NAMING, ValCmd.fromString(rsSqlRpgInfo.getString("NAMING"))); 
@@ -410,10 +388,7 @@ public class ObjectDescription {
     try (Statement stmt = connection.createStatement();
         ResultSet rsSrvPgm = stmt.executeQuery(
           "With " +
-          "Libs (Libraries) As ( " +
-              "SELECT DISTINCT(SCHEMA_NAME) FROM QSYS2.LIBRARY_LIST_INFO " + 
-              "WHERE TYPE NOT IN ('SYSTEM','PRODUCT') AND SCHEMA_NAME NOT IN ('QGPL', 'GAMES400') " +
-          ") " +
+          Utilities.CteLibraryList +
           "SELECT PROGRAM_LIBRARY, " + // programLibrary
               "PROGRAM_NAME, " + // programName
               "COALESCE(PROGRAM_TYPE,'') As PROGRAM_TYPE, " +  // [ILE, OPM] 
@@ -481,8 +456,14 @@ public class ObjectDescription {
     }
   }
   
-  private void getDdsInfo(TargetKey key){
+  private void getSqlInfo(TargetKey key) throws SQLException{
+    //TODO: I tried using QSYS2.SYSFILES but it does not shows coompilation params
+    return;
+  }
 
+  private void getDdsInfo(TargetKey key){
+    //TODO: What view should we use here?
+    return;
   }
 
   

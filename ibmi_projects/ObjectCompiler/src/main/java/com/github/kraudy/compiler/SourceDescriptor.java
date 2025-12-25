@@ -16,15 +16,12 @@ public class SourceDescriptor {
     this.verbose = verbose;
   }
 
-  /* Get Pgm, Module and SrvPgm objects creation timestamp */
-  public void getObjectCreation (TargetKey key) throws SQLException {
+  /* Get Pgm and SrvPgm objects creation timestamp */
+  public void getPgmSrvPgmCreation (TargetKey key) throws SQLException {
     try (Statement stmt = connection.createStatement();
         ResultSet rsObjCreationInfo = stmt.executeQuery(
           "With " +
-          "Libs (Libraries) As ( " +
-              "SELECT DISTINCT(SCHEMA_NAME) FROM QSYS2.LIBRARY_LIST_INFO " + 
-              "WHERE TYPE NOT IN ('SYSTEM','PRODUCT') AND SCHEMA_NAME NOT IN ('QGPL', 'GAMES400') " +
-          ") " +
+          Utilities.CteLibraryList +
           "SELECT " +
               "CREATE_TIMESTAMP, " + // creationDateTime
               "SOURCE_FILE_CHANGE_TIMESTAMP " + // sourceUpdatedDateTime
@@ -48,9 +45,52 @@ public class SourceDescriptor {
     }
   }
 
+  public void getModCreation (TargetKey key) throws SQLException {
+
+  }
+
+  public void getSqlCreation (TargetKey key) throws SQLException {
+    try (Statement stmt = connection.createStatement();
+        ResultSet rsSql = stmt.executeQuery(
+          "With " +
+          Utilities.CteLibraryList +
+          "SELECT " +
+              "LAST_ALTERED_TIMESTAMP " +
+            "FROM QSYS2.SYSFILES " + 
+            "INNER JOIN Libs " +
+            "ON (TABLE_SCHEMA = Libs.Libraries) " +
+            "WHERE " + 
+                "TABLE_NAME = '" + key.getObjectName() + "' " +
+                "AND SQL_OBJECT_TYPE = '" + key.getObjectTypeName() + "' "
+          )) {
+      if (!rsSql.next()) {
+        System.err.println(("Could not extract sql object creation time '" + key.asString() ));
+        return;
+      }
+
+      if (verbose) System.out.println("Found sql object creation data '" + key.asString());
+
+      key.setLastBuild(rsSql.getTimestamp("LAST_ALTERED_TIMESTAMP"));
+      
+    }
+  }
+
+  public void getDdsCreation (TargetKey key) throws SQLException {
+
+  }
+
   public void getObjectTimestamps(TargetKey key) throws SQLException {
     /* Get object creation timestamp */
-    getObjectCreation(key);
+    if (key.isProgram() || key.isServiceProgram()) {
+      getPgmSrvPgmCreation(key);
+    } else if (key.isModule()) {
+      getModCreation(key);
+    } else if (key.isSql()) {
+      getSqlCreation(key);
+    } else if (key.isDds()) {
+      getDdsCreation(key);
+    } 
+    
 
     /* Get source stream file last change */
     if (key.containsStreamFile()){
@@ -67,10 +107,7 @@ public class SourceDescriptor {
     try (Statement stmt = connection.createStatement();
           ResultSet rs = stmt.executeQuery(
             "With " +
-            "Libs (Libraries) As ( " +
-                "SELECT DISTINCT(SCHEMA_NAME) FROM QSYS2.LIBRARY_LIST_INFO " + 
-                "WHERE TYPE NOT IN ('SYSTEM','PRODUCT') AND SCHEMA_NAME NOT IN ('QGPL', 'GAMES400') " +
-            ") " +
+            Utilities.CteLibraryList +
               "SELECT LAST_SOURCE_UPDATE_TIMESTAMP FROM QSYS2.SYSPARTITIONSTAT " +
               "INNER JOIN Libs " +
               "ON (TABLE_SCHEMA = Libs.Libraries) " +
