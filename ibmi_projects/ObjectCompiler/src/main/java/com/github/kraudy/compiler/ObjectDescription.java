@@ -94,39 +94,19 @@ public class ObjectDescription {
               "USE_ADOPTED_AUTHORITY, " +
               "RELEASE_CREATED_ON, " +
               "COALESCE(TARGET_RELEASE, '') As TGTRLS, " +
-              "MINIMUM_NUMBER_PARMS, " + // minParameters
-              "MAXIMUM_NUMBER_PARMS, " + // maxParameters
               "COALESCE(ALLOW_RTVCLSRC, '') As ALWRTVSRC, " + // allowRTVCLSRC
               "CONVERSION_REQUIRED, " +
               "CONVERSION_DETAIL, " +
               //-- These seem to be for ILE objects
               "COALESCE(ACTIVATION_GROUP, '') AS ACTGRP, " + // activationGroupAttribute
               "SHARED_ACTIVATION_GROUP, " +
-              "OBSERVABLE_INFO_COMPRESSED, " +
-              "RUNTIME_INFO_COMPRESSED, " +
               "ALLOW_UPDATE, " +
               "ALLOW_BOUND_SRVPGM_LIBRARY_UPDATE, " +
               "ALL_CREATION_DATA, " +
               "COALESCE(PROFILING_DATA, '') As PRFDTA, " +
-              "TERASPACE_STORAGE_ENABLED_MODULES, " +
-              "TERASPACE_STORAGE_ENABLED_PEP, " +
               "COALESCE(STORAGE_MODEL , '') As STGMDL, " +
               "ARGUMENT_OPTIMIZATION, " +
               "NUMBER_OF_UNRESOLVED_REFERENCES, " +
-              // Module related data
-              "COPYRIGHTS, " +
-              "COPYRIGHT_STRINGS, " +
-              "EXPORT_SOURCE_LIBRARY, " +
-              "EXPORT_SOURCE_FILE, " +
-              "EXPORT_SOURCE_FILE_MEMBER, " +
-              "EXPORT_SOURCE_STREAM_FILE, " +
-              "PROCEDURE_EXPORTS, " + // Symbols info
-              "MAXIMUM_PROCEDURE_EXPORTS, " +
-              "DATA_EXPORTS, " +
-              "MAXIMUM_DATA_EXPORTS, " +
-              "SIGNATURES, " +
-              "EXPORT_SIGNATURES, " +
-              "MAXIMUM_SIGNATURES, " +
               // Source file related data
               "(TRIM(SOURCE_FILE_LIBRARY) || '/' || TRIM(SOURCE_FILE)) As SRCFILE, " +
               "SOURCE_FILE_MEMBER As SRCMBR, " +
@@ -153,67 +133,7 @@ public class ObjectDescription {
 
 
       switch (key.getCompilationCommand()) {
-        case CRTSRVPGM:
         case CRTBNDRPG:
-        case CRTBNDCL:
-          String actgrp = rsObj.getString("ACTGRP").trim();
-          if (!actgrp.isEmpty()) key.put(ParamCmd.ACTGRP, actgrp);
-          if ("QILE".equals(actgrp)) key.put(ParamCmd.DFTACTGRP, ValCmd.NO);
-        case CRTRPGMOD:
-          String stgMdl = rsObj.getString("STGMDL").trim();
-          if (!stgMdl.isEmpty()) key.put(ParamCmd.STGMDL, stgMdl);
-        case CRTCLMOD:
-        case CRTRPGPGM:
-        case CRTCLPGM:
-          String tgtRls = rsObj.getString("TGTRLS").trim();
-          key.put(ParamCmd.TGTRLS, ValCmd.CURRENT);
-          if (!tgtRls.isEmpty()) key.put(ParamCmd.TGTRLS, tgtRls);
-        case CRTDSPF:
-        case CRTPF:
-        case CRTLF:
-          String text = rsObj.getString("TEXT").trim();
-          if (!text.isEmpty()) key.put(ParamCmd.TEXT, text);
-          break;
-      }
-
-      switch (key.getCompilationCommand()) {
-        case CRTSRVPGM:
-        case CRTBNDRPG:
-        case CRTBNDCL:
-        case CRTRPGPGM:
-        case CRTCLPGM:
-          String tgtRls = rsObj.getString("TGTRLS").trim();
-          key.put(ParamCmd.TGTRLS, ValCmd.CURRENT);
-          if (!tgtRls.isEmpty()) key.put(ParamCmd.TGTRLS, tgtRls);
-
-          String usrPrf = rsObj.getString("USRPRF").trim();
-          if (!usrPrf.isEmpty()) key.put(ParamCmd.USRPRF, usrPrf);
-          break;
-      }
-
-      switch (key.getCompilationCommand()) {
-        case CRTBNDRPG:
-        case CRTBNDCL:
-        case CRTRPGMOD:
-        case CRTCLMOD:
-          String optimize = rsObj.getString("OPTIMIZE").trim();
-          if (!optimize.isEmpty()) key.put(ParamCmd.OPTIMIZE, optimize);
-        case CRTRPGPGM:
-        case CRTCLPGM:
-        case CRTDSPF:
-        case CRTPF:
-        case CRTLF:
-          String srtSeq = rsObj.getString("SRTSEQ").trim();
-          if (!srtSeq.isEmpty()) key.put(ParamCmd.SRTSEQ, srtSeq);          
-
-          String langId = rsObj.getString("LANGID").trim();
-          if (!langId.isEmpty()) key.put(ParamCmd.LANGID, langId);
-          break;
-      }
-      
-      switch (key.getCompilationCommand()) {
-        case CRTBNDRPG:
-        case CRTRPGMOD:
           String fixNbr = rsObj.getString("FIXNBR").trim();
           if (!fixNbr.isEmpty()){
             key.put(ParamCmd.FIXNBR, fixNbr.equals("1") ? ValCmd.YES : ValCmd.NO);
@@ -221,12 +141,41 @@ public class ObjectDescription {
 
           String prfDta = rsObj.getString("PRFDTA").trim();
           if (!prfDta.isEmpty()) key.put(ParamCmd.PRFDTA, prfDta);
+
+        case CRTBNDCL:
+          String actgrp = rsObj.getString("ACTGRP").trim();
+          if (!actgrp.isEmpty()) key.put(ParamCmd.ACTGRP, actgrp);
+          if ("QILE".equals(actgrp)) key.put(ParamCmd.DFTACTGRP, ValCmd.NO);
+
+          String stgMdl = rsObj.getString("STGMDL").trim();
+          if (!stgMdl.isEmpty()) key.put(ParamCmd.STGMDL, stgMdl);
+
+          String optimize = rsObj.getString("OPTIMIZE").trim();
+          if (!optimize.isEmpty()) key.put(ParamCmd.OPTIMIZE, optimize);
+
+        case CRTRPGPGM:
+        case CRTCLPGM:
+          String tgtRls = rsObj.getString("TGTRLS").trim();
+          key.put(ParamCmd.TGTRLS, ValCmd.CURRENT);
+          if (!tgtRls.isEmpty()) key.put(ParamCmd.TGTRLS, tgtRls);
+
+          String text = rsObj.getString("TEXT").trim();
+          if (!text.isEmpty()) key.put(ParamCmd.TEXT, text);
+
+          String usrPrf = rsObj.getString("USRPRF").trim();
+          if (!usrPrf.isEmpty()) key.put(ParamCmd.USRPRF, usrPrf);
+
+          String srtSeq = rsObj.getString("SRTSEQ").trim();
+          if (!srtSeq.isEmpty()) key.put(ParamCmd.SRTSEQ, srtSeq);          
+
+          String langId = rsObj.getString("LANGID").trim();
+          if (!langId.isEmpty()) key.put(ParamCmd.LANGID, langId);
+
           break;
       }
 
       switch (key.getCompilationCommand()) {
         case CRTBNDCL:
-        case CRTCLMOD:
         case CRTCLPGM:
           String logCmds = rsObj.getString("LOG").trim();
           if (!logCmds.isEmpty()) key.put(ParamCmd.LOG, logCmds.equals("1") ? ValCmd.YES : ValCmd.NO);
@@ -235,7 +184,6 @@ public class ObjectDescription {
           if (!alwRtvSrc.isEmpty()) key.put(ParamCmd.ALWRTVSRC, alwRtvSrc.equals("1") ? ValCmd.YES : ValCmd.NO);
           break;
       }
-
 
     }
   }
@@ -253,21 +201,11 @@ public class ObjectDescription {
               "SELECT DISTINCT(SCHEMA_NAME) FROM QSYS2.LIBRARY_LIST_INFO " + 
               "WHERE TYPE NOT IN ('SYSTEM','PRODUCT') AND SCHEMA_NAME NOT IN ('QGPL', 'GAMES400') " +
           ") " +
-          "SELECT PROGRAM_LIBRARY, " +
-                "PROGRAM_NAME, " +
-                "OBJECT_TYPE, " +
-                "BOUND_MODULE_LIBRARY, " +
-                "BOUND_MODULE, " +
-                "MODULE_ATTRIBUTE, " +
+          "SELECT " +
                 "MODULE_CREATE_TIMESTAMP, " +
-                "COALESCE(SOURCE_FILE_LIBRARY, '') As SOURCE_FILE_LIBRARY, " +
-                "COALESCE(SOURCE_FILE, '') As SOURCE_FILE, " +
-                "COALESCE(SOURCE_FILE_MEMBER, '') As SOURCE_FILE_MEMBER, " +
-                "COALESCE(SOURCE_STREAM_FILE_PATH, '') As SOURCE_STREAM_FILE_PATH, " +
                 "SOURCE_CHANGE_TIMESTAMP, " +
                 "MODULE_CCSID, " +
-                "SORT_SEQUENCE_LIBRARY, " +
-                "SORT_SEQUENCE, " +
+                "COALESCE((TRIM(SQL_SORT_SEQUENCE_LIBRARY) || '/' || TRIM(SQL_SORT_SEQUENCE)), '') As SRTSEQ, " +
                 "LANGUAGE_ID As LANGID, " +
                 "DEBUG_DATA, " +
                 "COALESCE(OPTIMIZATION_LEVEL, '') As OPTIMIZE, " +
@@ -277,42 +215,19 @@ public class ObjectDescription {
                 "TARGET_RELEASE AS TGTRLS, " +
                 "CREATION_DATA, " +
                 "TERASPACE_STORAGE_ENABLED, " +
-                "STORAGE_MODEL, " +
+                "STORAGE_MODEL As STGMDL, " +
                 "NUMBER_PROCEDURES, " +
                 "PROFILING_DATA As PRFDTA, " +
                 "ALLOW_RTVCLSRC As ALWRTVSRC, " +
                 "USER_MODIFIED, " +
-                "LIC_OPTIONS, " +
-                "LICENSED_PROGRAM, " +
-                "PTF_NUMBER, " +
-                "APAR_ID, " +
-                "SQL_RELATIONAL_DATABASE, " +
-                "SQL_COMMITMENT_CONTROL, " +
-                "SQL_NAMING, " +
-                "SQL_DATE_FORMAT, " +
-                "SQL_DATE_SEPARATOR, " +
-                "SQL_TIME_FORMAT, " +
-                "SQL_TIME_SEPARATOR, " +
-                "SQL_SORT_SEQUENCE_LIBRARY, " +
-                "SQL_SORT_SEQUENCE, " +
-                "SQL_LANGUAGE_ID, " +
-                "SQL_DEFAULT_SCHEMA, " +
-                "SQL_PATH, " +
-                "SQL_DYNAMIC_USER_PROFILE, " +
-                "SQL_ALLOW_COPY_DATA, " +
-                "SQL_CLOSE_SQL_CURSOR, " +
-                "SQL_DELAY_PREPARE, " +
-                "SQL_ALLOW_BLOCK, " +
-                "SQL_PACKAGE_LIBRARY, " +
-                "SQL_PACKAGE, " +
-                "SQL_RDB_CONNECTION_METHOD " + 
+                "COALESCE(LIC_OPTIONS, '') As LICOPT " +
           "FROM QSYS2.BOUND_MODULE_INFO " +
           "INNER JOIN Libs " +
-            "ON (PROGRAM_LIBRARY = Libs.Libraries " +
-            "AND BOUND_MODULE_LIBRARY = Libs.Libraries) " +
+          /* Here we need to also use the PROGRAM_LIBRARY, otherwise, the query becomes slow */
+            "ON (PROGRAM_LIBRARY = Libs.Libraries AND BOUND_MODULE_LIBRARY = Libs.Libraries) " +
           "WHERE " +
-            "PROGRAM_NAME = '" + key.getObjectName() + "' " +
-            "AND BOUND_MODULE = '" + key.getObjectName() + "' " //TODO: Fix this
+            "BOUND_MODULE = '" + key.getObjectName() + "' " +
+            "AND MODULE_ATTRIBUTE = '" + key.getSourceType() + "' "
         )) {
       if (!rsMod.next()) {
         if(verbose) System.err.println("Could not find module '" + key.asString());
@@ -331,21 +246,22 @@ public class ObjectDescription {
         }
       }
 
-        // Update source if more accurate
-        String modSrcLib = rsMod.getString("SOURCE_FILE_LIBRARY").trim();
-        if (!modSrcLib.isEmpty()) {
-          //TODO: I'm not sure if this will work the first time.
-          String sourceLibrary = modSrcLib.toUpperCase();
-          //TODO: if you want to do this, change the sourceFile in the targetKey and then put() it
-          //ParamCmdSequence.put(this.compilationCommand, ParamCmd.SRCFILE, sourceLibrary + "/" + sourceFile);  // Update
-        }
-        String modSrcFil = rsMod.getString("SOURCE_FILE").trim();
-        String modSrcMbr = rsMod.getString("SOURCE_FILE_MEMBER").trim();
-        String modSteamFile = rsMod.getString("SOURCE_STREAM_FILE_PATH").trim();
-        String modCCSID = rsMod.getString("MODULE_CCSID").trim();
+      String srtSeq = rsMod.getString("SRTSEQ").trim();
+      if (!srtSeq.isEmpty()) key.put(ParamCmd.SRTSEQ, srtSeq); 
 
-        // Add more mappings (e.g., DEFINE, INCDIR, PPGENOPT)
-      
+      key.put(ParamCmd.LANGID, rsMod.getString("LANGID").trim()); 
+      key.put(ParamCmd.TGTRLS, rsMod.getString("TGTRLS").trim()); 
+      key.put(ParamCmd.STGMDL, rsMod.getString("STGMDL").trim()); 
+      key.put(ParamCmd.PRFDTA, rsMod.getString("PRFDTA").trim()); 
+
+      switch (key.getCompilationCommand()) {
+      case CRTCLMOD:
+        key.put(ParamCmd.ALWRTVSRC, rsMod.getString("ALWRTVSRC").trim()); 
+        break;
+      }
+
+      String licopt = rsMod.getString("LICOPT").trim();
+      if(!licopt.isEmpty()) key.put(ParamCmd.LICOPT, licopt); 
     }
   }
 

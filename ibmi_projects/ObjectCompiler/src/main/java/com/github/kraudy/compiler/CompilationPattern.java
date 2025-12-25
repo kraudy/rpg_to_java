@@ -612,45 +612,45 @@ public class CompilationPattern {
   public static final List<ParamCmd> RpgModulePattern = Arrays.asList(
     ParamCmd.MODULE, 
     ParamCmd.SRCFILE,
-    ParamCmd.SRCMBR, 
-    ParamCmd.SRCSTMF,
-    ParamCmd.GENLVL, 
-    ParamCmd.TEXT,   
-    ParamCmd.OPTION,   
-    ParamCmd.DBGVIEW,
+    ParamCmd.SRCMBR,    // Source member
+    ParamCmd.SRCSTMF,   // Source stream file
+    ParamCmd.GENLVL,    // Generation severity level
+    ParamCmd.TEXT,      // Text 'description'
+    ParamCmd.OPTION,    // Compiler options
+    ParamCmd.DBGVIEW,   // Debugging views
     
-    ParamCmd.DBGENCKEY,  
-    ParamCmd.OUTPUT,     
-    ParamCmd.OPTIMIZE,   
-    ParamCmd.INDENT,     
-    ParamCmd.CVTOPT,     
-    ParamCmd.SRTSEQ,     
-    ParamCmd.LANGID,     
-    ParamCmd.REPLACE,    
-    ParamCmd.AUT,        
-    ParamCmd.TRUNCNBR,   
-    ParamCmd.FIXNBR,     
-    ParamCmd.TGTRLS,     
-    ParamCmd.ALWNULL,    
+    ParamCmd.DBGENCKEY, // Debug encryption key
+    ParamCmd.OUTPUT,    // Output
+    ParamCmd.OPTIMIZE,  // Optimization level 
+    ParamCmd.INDENT,    // Source listing indentation
+    ParamCmd.CVTOPT,    // Type conversion options
+    ParamCmd.SRTSEQ,    // Sort sequence  
+    ParamCmd.LANGID,    // Language identifier
+    ParamCmd.REPLACE,   // Replace module
+    ParamCmd.AUT,       // Authority
+    ParamCmd.TRUNCNBR,  // Truncate numeric
+    ParamCmd.FIXNBR,    // Fix numeric
+    ParamCmd.TGTRLS,    // Target release 
+    ParamCmd.ALWNULL,   // Allow null values  
 
-    ParamCmd.DEFINE,            
-    ParamCmd.ENBPFRCOL,
-    ParamCmd.PRFDTA,   
-    ParamCmd.STGMDL,   
-    ParamCmd.BNDDIR,   
+    ParamCmd.DEFINE,    // Define condition names        
+    ParamCmd.ENBPFRCOL, // Enable performance collection 
+    ParamCmd.PRFDTA,    // Profiling data
+    ParamCmd.STGMDL,    // Storage model
+    ParamCmd.BNDDIR,    // Binding directory
 
-    ParamCmd.LICOPT,   
-    ParamCmd.INCDIR,   
-    ParamCmd.PGMINFO,
+    ParamCmd.LICOPT,    // Licensed Internal Code options
+    ParamCmd.INCDIR,    // Include directory
+    ParamCmd.PGMINFO,   // Program interface information 
     
-    ParamCmd.INFOSTMF,   
-    ParamCmd.PPGENOPT,   
-    ParamCmd.PPSRCFILE,  
-    ParamCmd.PPSRCMBR,   
-    ParamCmd.PPSRCSTMF,  
-    ParamCmd.TGTCCSID,   
-    ParamCmd.REQPREXP,   
-    ParamCmd.PPMINOUTLN
+    ParamCmd.INFOSTMF,  // Program interface stream file
+    ParamCmd.PPGENOPT,  // Preprocessor options 
+    ParamCmd.PPSRCFILE, // Output source file
+    ParamCmd.PPSRCMBR,  // Output source member
+    ParamCmd.PPSRCSTMF, // Output stream file
+    ParamCmd.TGTCCSID,  // Target CCSID
+    ParamCmd.REQPREXP,  // Require prototype for export 
+    ParamCmd.PPMINOUTLN // MINIMUM OUTPUT LINE LENGTH
   );
 
   // CRTCLMOD
