@@ -40,7 +40,6 @@ public class ObjectDescription {
          */
         if (!this.targetKey.containsKey(ParamCmd.SRCSTMF) && 
           this.targetKey.containsKey(ParamCmd.SRCFILE)) {
-          System.out.println("SRCFILE data: " + this.targetKey.get(ParamCmd.SRCFILE));
           migrator.setMigrationParams(this.targetKey.getQualifiedSourceFile(), this.targetKey.getObjectName(), "sources");
           migrator.api(); // Try to migrate this thing
           
@@ -70,6 +69,40 @@ public class ObjectDescription {
           this.targetKey.put(ParamCmd.SRCMBR, this.targetKey.getObjectName());
         }
         break;
+    }
+  }
+
+  public boolean sourcePfExists() throws SQLException{
+    //TODO: Change this for library list
+    // Validate if Source PF exists
+    try (Statement validateStmt = connection.createStatement();
+        ResultSet validateRs = validateStmt.executeQuery(
+            "SELECT 1 AS Exist FROM QSYS2. SYSPARTITIONSTAT " +
+                "WHERE SYSTEM_TABLE_SCHEMA = '" + this.targetKey.getLibrary() + "' " +
+                "AND SYSTEM_TABLE_NAME = '" + this.targetKey.getSourceFile() + "' " +
+                "AND TRIM(SOURCE_TYPE) <> '' LIMIT 1")) {
+      if (validateRs.next()) {
+        if (verbose) System.err.println(" *Source PF " + this.targetKey.getSourceFile() + " already exist in library " + this.targetKey.getLibrary());
+        return true;
+      }
+      return false;
+    }
+  }
+
+  public boolean sourceMemberExists() throws SQLException {
+    try (Statement stmt = connection.createStatement();
+         ResultSet rs = stmt.executeQuery(
+             "SELECT CAST(SYSTEM_TABLE_MEMBER AS VARCHAR(10) CCSID " + SourceMigrator.INVARIANT_CCSID + ") AS Member " +
+             "FROM QSYS2.SYSPARTITIONSTAT " +
+             "WHERE SYSTEM_TABLE_SCHEMA = '" + this.targetKey.getLibrary() + "' " +
+             "AND SYSTEM_TABLE_NAME = '" + this.targetKey.getSourceFile() + "' " +
+             "AND SYSTEM_TABLE_MEMBER = '" + this.targetKey.getSourceName() + "' " +
+             "AND TRIM(SOURCE_TYPE) <> '' ")) { 
+      if (rs.next()) {
+        if (verbose) System.err.println("Member " + this.targetKey.getSourceName() + " already exist in library " + this.targetKey.getLibrary());
+        return true;
+      }
+      return false;
     }
   }
 

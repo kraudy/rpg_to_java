@@ -200,6 +200,14 @@ public class TargetKey {
     return this.sourceName;
   }
 
+  public String getLibrary() {
+    return this.library;
+  }
+
+  public String getMemberPath() {
+    return "/QSYS.lib/" + getLibrary() + ".lib/" + getSourceFile() + ".file/" + getSourceName()+ ".mbr";
+  }
+
   public CompCmd getCompilationCommand() {
     return this.compilationCommand;
   }

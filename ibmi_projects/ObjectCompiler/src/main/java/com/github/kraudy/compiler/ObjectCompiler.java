@@ -1,14 +1,26 @@
 package com.github.kraudy.compiler;
 
+import java.beans.PropertyVetoException;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
+import com.github.kraudy.compiler.CompilationPattern.SysCmd;
 import com.github.kraudy.migrator.SourceMigrator;
 import com.ibm.as400.access.AS400;
 import com.ibm.as400.access.AS400JDBCDataSource;
+import com.ibm.as400.access.AS400Message;
+import com.ibm.as400.access.AS400SecurityException;
+import com.ibm.as400.access.CommandCall;
+import com.ibm.as400.access.ErrorCompletingRequestException;
 import com.ibm.as400.access.User;
 
 import io.github.theprez.dotenv_ibmi.IBMiDotEnv;
@@ -17,8 +29,9 @@ import io.github.theprez.dotenv_ibmi.IBMiDotEnv;
 /*
  * Cool object compiler.
  */
-public class ObjectCompiler implements Runnable{
+public class ObjectCompiler{
   public static final String INVARIANT_CCSID = "37"; // EBCDIC
+  public static final String UTF8_CCSID = "1208";
   private final AS400 system;
   private final Connection connection;
   private final User currentUser;
@@ -59,7 +72,7 @@ public class ObjectCompiler implements Runnable{
     this.diff = diff;
   }
 
-  public void run() {
+  public void build() {
 
     /* Init command executor */
     commandExec = new CommandExecutor(connection, debug, verbose, dryRun);
@@ -151,8 +164,11 @@ public class ObjectCompiler implements Runnable{
 
         /* Migrate source file */
         // Re-create migrator fresh for every target, fix this. TODO: Send the key?
-        SourceMigrator migrator = new SourceMigrator(this.system, this.connection, true, true);
-        odes.migrateSource(migrator);
+
+        //SourceMigrator migrator = new SourceMigrator(this.system, this.connection, true, true);
+        //odes.migrateSource(migrator);
+
+        migrateSource(key, odes);
 
         /* Execute compilation command */
         commandExec.executeCommand(key);
@@ -187,6 +203,104 @@ public class ObjectCompiler implements Runnable{
       }
     }
 
+  }
+
+  public void migrateSource(TargetKey key, ObjectDescription odes) throws SQLException{
+    switch (key.getCompilationCommand()){
+      case CRTCLMOD:
+      case CRTRPGMOD:
+      case CRTBNDRPG:
+      case CRTBNDCL:
+      case CRTSQLRPGI:
+      case CRTSRVPGM:
+      case RUNSQLSTM:
+      case CRTCMD:
+        /* 
+         * Migrate from source member to stream file
+         */
+        if (!key.containsKey(ParamCmd.SRCSTMF) && 
+          key.containsKey(ParamCmd.SRCFILE)) {
+
+          //migrator.setMigrationParams(key.getQualifiedSourceFile(), key.getObjectName(), "sources");
+          //migrator.api(); // Try to migrate this thing
+          //key.setStreamSourceFile(migrator.getFirstPath());
+
+          migrateMemberToStreamFile(key);
+          key.put(ParamCmd.SRCSTMF, key.getStreamFile());
+        }
+        break;
+
+      case CRTCLPGM:
+      case CRTRPGPGM:
+      case CRTDSPF:
+      case CRTPF:
+      case CRTLF:
+      case CRTPRTF:
+      case CRTMNU:
+      case CRTQMQRY:
+        /* 
+         * Migrate from stream file to source member
+         */
+        if (key.containsStreamFile()) {
+          /* I'd like this to be migrated to QTEMP but the migrator needs some changes for that */
+          //migrator.setReverseMigrationParams(key.getQualifiedSourceFile(), key.getObjectName(), key.getStreamFile());
+          //migrator.api(); // Try to migrate this thing
+          //key.setStreamSourceFile(migrator.getFirstPath());
+
+          if (!odes.sourcePfExists()) createSourcePf(key);
+          if (!odes.sourceMemberExists()) createSourceMember(key);
+          migrateStreamFileToMember(key);
+          key.put(ParamCmd.SRCFILE, key.getQualifiedSourceFile());
+          key.put(ParamCmd.SRCMBR, key.getObjectName());
+        }
+        break;
+    }
+  }
+
+  public void createSourcePf(TargetKey key){
+    /* If the source pf is not found, create it */
+    ParamMap map = new ParamMap();
+    map.put(SysCmd.CRTSRCPF, ParamCmd.FILE, key.getQualifiedSourceFile());
+    
+    commandExec.executeCommand(map.getCommandString(SysCmd.CRTSRCPF));
+  }
+
+  public void createSourceMember(TargetKey key){
+
+    ParamMap map = new ParamMap();
+
+    map.put(SysCmd.ADDPFM, ParamCmd.FILE, key.getQualifiedSourceFile());
+    map.put(SysCmd.ADDPFM, ParamCmd.MBR, key.getSourceName());
+    map.put(SysCmd.ADDPFM, ParamCmd.SRCTYPE, key.getSourceType());
+
+    commandExec.executeCommand(map.getCommandString(SysCmd.ADDPFM));
+
+  }
+
+  public void migrateMemberToStreamFile(TargetKey key){
+    ParamMap map = new ParamMap();
+
+    if(!key.containsStreamFile()) key.setStreamSourceFile(currentUser.getHomeDirectory() + "/" + "sources" + "/" + key.asString());
+
+    map.put(SysCmd.CPYTOSTMF, ParamCmd.FROMMBR, key.getMemberPath());
+    map.put(SysCmd.CPYTOSTMF, ParamCmd.TOSTMF, key.getStreamFile());
+    map.put(SysCmd.CPYTOSTMF, ParamCmd.STMFOPT, "*REPLACE");
+    map.put(SysCmd.CPYTOSTMF, ParamCmd.STMFCCSID, UTF8_CCSID);
+    map.put(SysCmd.CPYTOSTMF, ParamCmd.ENDLINFMT, "*LF");
+
+    commandExec.executeCommand(map.getCommandString(SysCmd.CPYTOSTMF));
+  }
+
+  public void migrateStreamFileToMember(TargetKey key){
+    ParamMap map = new ParamMap();
+
+    map.put(SysCmd.CPYFRMSTMF, ParamCmd.FROMSTMF, key.getStreamFile());
+    map.put(SysCmd.CPYFRMSTMF, ParamCmd.TOMBR, key.getMemberPath());
+    map.put(SysCmd.CPYFRMSTMF, ParamCmd.MBROPT, "*REPLACE");
+    map.put(SysCmd.CPYFRMSTMF, ParamCmd.CVTDTA, "*AUTO");
+    map.put(SysCmd.CPYFRMSTMF, ParamCmd.STMFCODPAG, UTF8_CCSID);
+
+    commandExec.executeCommand(map.getCommandString(SysCmd.CPYFRMSTMF));
   }
 
   private void showLibraryList() throws SQLException{
@@ -238,7 +352,7 @@ public class ObjectCompiler implements Runnable{
             parser.isVerbose(),
             parser.isDiff()
         );
-      compiler.run();
+      compiler.build();
     } catch (IllegalArgumentException e) {
       System.err.println("Error: " + e.getMessage());
       ArgParser.printUsage();

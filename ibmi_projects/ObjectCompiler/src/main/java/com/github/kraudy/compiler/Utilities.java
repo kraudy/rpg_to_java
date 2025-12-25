@@ -195,6 +195,10 @@ public class Utilities {
     switch (param) {
       case TEXT:
       case SRCSTMF:
+      case FROMSTMF:
+      case TOMBR:
+      case FROMMBR:
+      case TOSTMF:
         return "''" + value + "''";
     
       case MODULE:

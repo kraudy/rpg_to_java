@@ -42,6 +42,10 @@ public class CompilationPattern {
     OVRDBF, OVRPRTF,
     //
     CHGOBJD, 
+    // Source pf
+    CRTSRCPF, ADDPFM,
+    // Migration
+    CPYFRMSTMF, CPYTOSTMF
     
     ;
 
@@ -172,6 +176,17 @@ public class CompilationPattern {
     // CRTQMQRY
     QMQRY,
 
+    // CRTSRCPF
+    ACCPTH,
+
+    // ADDPFM
+    SRCTYPE,
+
+    // CPYFRMSTMF
+    FROMSTMF, TOMBR, MBROPT, CVTDTA, TABEXPN, STMFCODPAG,
+
+    // CPYTOSTMF
+    FROMMBR, STMFOPT, DBFCCSID, STMFCCSID, ENDLINFMT
     ;
 
     /* Convert string to param enum */
@@ -406,6 +421,71 @@ public class CompilationPattern {
     ParamCmd.SHARE,   
     ParamCmd.OPNSCOPE
   );
+
+  // CRTSRCPF
+  public static final List<ParamCmd> CrtSrcPfPattern = Arrays.asList(
+    ParamCmd.FILE,
+    ParamCmd.RCDLEN,
+    ParamCmd.MBR,   
+    ParamCmd.TEXT,
+    ParamCmd.SYSTEM,   
+    ParamCmd.EXPDATE,  
+    ParamCmd.MAXMBRS,  
+    ParamCmd.ACCPTHSIZ,
+    ParamCmd.PAGESIZE, 
+    ParamCmd.ACCPTH,   
+    ParamCmd.MAINT,
+    ParamCmd.RECOVER,  
+    ParamCmd.FRCACCPTH,
+    ParamCmd.SIZE,
+    ParamCmd.ALLOCATE,
+    ParamCmd.CONTIG,  
+    ParamCmd.UNIT,    
+    ParamCmd.FRCRATIO,
+    ParamCmd.WAITFILE,
+    ParamCmd.WAITRCD, 
+    ParamCmd.SHARE,   
+    ParamCmd.DLTPCT,  
+    ParamCmd.CCSID,   
+    ParamCmd.ALWUPD,
+    ParamCmd.ALWDLT,
+    ParamCmd.AUT
+  );
+
+  // ADDPFM
+  public static final List<ParamCmd> AddPfmPattern = Arrays.asList(
+    ParamCmd.FILE,
+    ParamCmd.MBR, 
+    ParamCmd.TEXT,
+    ParamCmd.EXPDATE,
+    ParamCmd.SHARE,  
+    ParamCmd.SRCTYPE
+  );
+
+  // CPYFRMSTMF
+  public static final List<ParamCmd> CpyFrmStmfPattern = Arrays.asList(
+    ParamCmd.FROMSTMF,
+    ParamCmd.TOMBR,
+    ParamCmd.MBROPT,
+    ParamCmd.CVTDTA,
+    ParamCmd.STMFCCSID,
+    ParamCmd.DBFCCSID,   
+    ParamCmd.ENDLINFMT,  
+    ParamCmd.TABEXPN,    
+    ParamCmd.STMFCODPAG
+  );
+
+  // CPYTOSTMF
+  public static final List<ParamCmd> CpyToStmfPattern = Arrays.asList(
+    ParamCmd.FROMMBR,
+    ParamCmd.TOSTMF,
+    ParamCmd.STMFOPT,
+    ParamCmd.CVTDTA,  
+    ParamCmd.DBFCCSID,  
+    ParamCmd.STMFCCSID,
+    ParamCmd.ENDLINFMT,
+    ParamCmd.AUT
+  );    
 
 
   /* 
@@ -993,6 +1073,12 @@ public class CompilationPattern {
     /* Ovr */
     commandToPatternMap.put(SysCmd.OVRDBF, OvrDbfPattern);
     commandToPatternMap.put(SysCmd.OVRPRTF, OvrPrtfPattern);
+    /* Source pf */
+    commandToPatternMap.put(SysCmd.CRTSRCPF, CrtSrcPfPattern);
+    commandToPatternMap.put(SysCmd.ADDPFM, AddPfmPattern);
+    /* Migration */
+    commandToPatternMap.put(SysCmd.CPYFRMSTMF, CpyFrmStmfPattern);
+    commandToPatternMap.put(SysCmd.CPYTOSTMF, CpyToStmfPattern);
 
     /* 
      * Maps compilation command to its pattern 
