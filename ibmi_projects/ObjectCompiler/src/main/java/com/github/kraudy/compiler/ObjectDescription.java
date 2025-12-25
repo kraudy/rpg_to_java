@@ -221,6 +221,7 @@ public class ObjectDescription {
                 "ALLOW_RTVCLSRC As ALWRTVSRC, " +
                 "USER_MODIFIED, " +
                 "COALESCE(LIC_OPTIONS, '') As LICOPT " +
+          /*  QSYS2.PROGRAM_INFO does not shows module objects */
           "FROM QSYS2.BOUND_MODULE_INFO " +
           "INNER JOIN Libs " +
           /* Here we need to also use the PROGRAM_LIBRARY, otherwise, the query becomes slow */
@@ -405,12 +406,85 @@ public class ObjectDescription {
     }
   }
 
+  private void getSrvpgmInfo(TargetKey key) throws SQLException {
+    try (Statement stmt = connection.createStatement();
+        ResultSet rsSrvPgm = stmt.executeQuery(
+          "With " +
+          "Libs (Libraries) As ( " +
+              "SELECT DISTINCT(SCHEMA_NAME) FROM QSYS2.LIBRARY_LIST_INFO " + 
+              "WHERE TYPE NOT IN ('SYSTEM','PRODUCT') AND SCHEMA_NAME NOT IN ('QGPL', 'GAMES400') " +
+          ") " +
+          "SELECT PROGRAM_LIBRARY, " + // programLibrary
+              "PROGRAM_NAME, " + // programName
+              "COALESCE(PROGRAM_TYPE,'') As PROGRAM_TYPE, " +  // [ILE, OPM] 
+              "OBJECT_TYPE, " +   // typeOfProgram
+              "COALESCE(TEXT_DESCRIPTION, '') As TEXT, " + // textDescription
+              "PROGRAM_OWNER, " + // owner
+              "PROGRAM_ATTRIBUTE, " + // attribute
+              "USER_PROFILE As USRPRF, " +
+              "USE_ADOPTED_AUTHORITY, " +
+              "RELEASE_CREATED_ON, " +
+              "COALESCE(TARGET_RELEASE, '') As TGTRLS, " +
+              "COALESCE(ALLOW_RTVCLSRC, '') As ALWRTVSRC, " + // allowRTVCLSRC
+              "CONVERSION_REQUIRED, " +
+              "CONVERSION_DETAIL, " +
+              //-- These seem to be for ILE objects
+              "COALESCE(ACTIVATION_GROUP, '') AS ACTGRP, " + // activationGroupAttribute
+              "SHARED_ACTIVATION_GROUP, " +
+              "ALLOW_UPDATE, " +
+              "ALLOW_BOUND_SRVPGM_LIBRARY_UPDATE, " +
+              "ALL_CREATION_DATA, " +
+              "COALESCE(PROFILING_DATA, '') As PRFDTA, " +
+              "COALESCE(STORAGE_MODEL , '') As STGMDL, " +
+              "ARGUMENT_OPTIMIZATION, " +
+              "NUMBER_OF_UNRESOLVED_REFERENCES, " +
+              // Source file related data
+              "(TRIM(SOURCE_FILE_LIBRARY) || '/' || TRIM(SOURCE_FILE)) As SRCFILE, " +
+              "SOURCE_FILE_MEMBER As SRCMBR, " +
+              "COALESCE((TRIM(SQL_SORT_SEQUENCE_LIBRARY) || '/' || TRIM(SQL_SORT_SEQUENCE)), '') As SRTSEQ, " +
+              "COALESCE(LANGUAGE_ID, '') As LANGID, " +
+              "OBSERVABLE, " + // observable
+              "COALESCE(OPTIMIZATION, '') As OPTIMIZE, " +
+              "COALESCE(LOG_COMMANDS, '' ) As LOG, " +
+              "COALESCE(FIX_DECIMAL_DATA, '') As FIXNBR, " + // fixDecimalData
+              "TERASPACE_STORAGE_ENABLED_PROGRAM " + // teraspaceEnabled
+            "FROM QSYS2.PROGRAM_INFO " +
+            "INNER JOIN Libs " +
+            "ON (PROGRAM_LIBRARY = Libs.Libraries) " +
+            "WHERE " + 
+                "PROGRAM_NAME = '" + key.getObjectName() + "' " +
+                "AND OBJECT_TYPE = '" + key.getObjectType() + "' "
+          )) {
+      if (!rsSrvPgm.next()) {
+        System.err.println(("Could not get object '" + key.asString() ));
+        return;
+      }
+
+      if (verbose) System.out.println("Found object '" + key.asString());
+
+      String actgrp = rsSrvPgm.getString("ACTGRP").trim();
+      if (!actgrp.isEmpty()) key.put(ParamCmd.ACTGRP, actgrp);
+      if ("QILE".equals(actgrp)) key.put(ParamCmd.DFTACTGRP, ValCmd.NO);
+
+      String stgMdl = rsSrvPgm.getString("STGMDL").trim();
+      if (!stgMdl.isEmpty()) key.put(ParamCmd.STGMDL, stgMdl);
+
+      String tgtRls = rsSrvPgm.getString("TGTRLS").trim();
+      key.put(ParamCmd.TGTRLS, ValCmd.CURRENT);
+      if (!tgtRls.isEmpty()) key.put(ParamCmd.TGTRLS, tgtRls);
+
+      String text = rsSrvPgm.getString("TEXT").trim();
+      if (!text.isEmpty()) key.put(ParamCmd.TEXT, text);
+
+      String usrPrf = rsSrvPgm.getString("USRPRF").trim();
+      if (!usrPrf.isEmpty()) key.put(ParamCmd.USRPRF, usrPrf);
+    }
+  }
+  
   private void getDdsInfo(TargetKey key){
 
   }
 
-  private void getSrvpgmInfo(TargetKey key) {
-    
-  }
+  
 
 }
