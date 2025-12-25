@@ -1,0 +1,116 @@
+package com.github.kraudy.compiler;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+
+import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
+import com.github.kraudy.compiler.CompilationPattern.SysCmd;
+import com.ibm.as400.access.User;
+
+/*
+ * Source files migrator
+ */
+public class Migrator {
+  private final boolean debug;
+  private final boolean verbose;
+  private final User currentUser;
+  private CommandExecutor commandExec;
+
+  public Migrator(boolean debug, boolean verbose, User currentUser, CommandExecutor commandExec) {
+    this.debug = debug;
+    this.verbose = verbose;
+    this.currentUser = currentUser;
+    this.commandExec = commandExec;
+  }
+
+  public void migrateSource(TargetKey key, ObjectDescription odes) throws SQLException{
+    switch (key.getCompilationCommand()){
+      case CRTCLMOD:
+      case CRTRPGMOD:
+      case CRTBNDRPG:
+      case CRTBNDCL:
+      case CRTSQLRPGI:
+      case CRTSRVPGM:
+      case RUNSQLSTM:
+      case CRTCMD:
+        /* 
+         * Migrate from source member to stream file
+         */
+        if (!key.containsKey(ParamCmd.SRCSTMF) && 
+          key.containsKey(ParamCmd.SRCFILE)) {
+          if(debug) System.err.println("Migrating source member to stream file");
+          migrateMemberToStreamFile(key);
+          key.put(ParamCmd.SRCSTMF, key.getStreamFile());
+        }
+        break;
+
+      case CRTCLPGM:
+      case CRTRPGPGM:
+      case CRTDSPF:
+      case CRTPF:
+      case CRTLF:
+      case CRTPRTF:
+      case CRTMNU:
+      case CRTQMQRY:
+        /* 
+         * Migrate from stream file to source member
+         */
+        if (key.containsStreamFile()) {
+          //TODO: Should this be migrated to QTEMP?
+          if(debug) System.err.println("Migrating stream file to source member");
+          if (!odes.sourcePfExists()) createSourcePf(key);
+          if (!odes.sourceMemberExists()) createSourceMember(key);
+          migrateStreamFileToMember(key);
+          key.put(ParamCmd.SRCFILE, key.getQualifiedSourceFile());
+          key.put(ParamCmd.SRCMBR, key.getObjectName());
+        }
+        break;
+    }
+  }
+
+  public void createSourcePf(TargetKey key){
+    ParamMap map = new ParamMap();
+    map.put(SysCmd.CRTSRCPF, ParamCmd.FILE, key.getQualifiedSourceFile());
+    
+    commandExec.executeCommand(map.getCommandString(SysCmd.CRTSRCPF));
+  }
+
+  public void createSourceMember(TargetKey key){
+
+    ParamMap map = new ParamMap();
+
+    map.put(SysCmd.ADDPFM, ParamCmd.FILE, key.getQualifiedSourceFile());
+    map.put(SysCmd.ADDPFM, ParamCmd.MBR, key.getSourceName());
+    map.put(SysCmd.ADDPFM, ParamCmd.SRCTYPE, key.getSourceType());
+
+    commandExec.executeCommand(map.getCommandString(SysCmd.ADDPFM));
+
+  }
+
+  public void migrateMemberToStreamFile(TargetKey key){
+    ParamMap map = new ParamMap();
+
+    if(!key.containsStreamFile()) key.setStreamSourceFile(currentUser.getHomeDirectory() + "/" + "sources" + "/" + key.asString());
+
+    map.put(SysCmd.CPYTOSTMF, ParamCmd.FROMMBR, key.getMemberPath());
+    map.put(SysCmd.CPYTOSTMF, ParamCmd.TOSTMF, key.getStreamFile());
+    map.put(SysCmd.CPYTOSTMF, ParamCmd.STMFOPT, "*REPLACE");
+    map.put(SysCmd.CPYTOSTMF, ParamCmd.STMFCCSID, ObjectCompiler.UTF8_CCSID);
+    map.put(SysCmd.CPYTOSTMF, ParamCmd.ENDLINFMT, "*LF");
+
+    commandExec.executeCommand(map.getCommandString(SysCmd.CPYTOSTMF));
+  }
+
+  public void migrateStreamFileToMember(TargetKey key){
+    ParamMap map = new ParamMap();
+
+    map.put(SysCmd.CPYFRMSTMF, ParamCmd.FROMSTMF, key.getStreamFile());
+    map.put(SysCmd.CPYFRMSTMF, ParamCmd.TOMBR, key.getMemberPath());
+    map.put(SysCmd.CPYFRMSTMF, ParamCmd.MBROPT, "*REPLACE");
+    map.put(SysCmd.CPYFRMSTMF, ParamCmd.CVTDTA, "*AUTO");
+    map.put(SysCmd.CPYFRMSTMF, ParamCmd.STMFCODPAG, ObjectCompiler.UTF8_CCSID);
+
+    commandExec.executeCommand(map.getCommandString(SysCmd.CPYFRMSTMF));
+  }
+
+}

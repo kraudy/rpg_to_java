@@ -35,6 +35,7 @@ public class ObjectCompiler{
   private final Connection connection;
   private final User currentUser;
   private CommandExecutor commandExec;
+  private Migrator migrator;
 
   private String yamlFile;          // yaml build file
   private boolean dryRun = false;   // Compile commands without executing 
@@ -75,6 +76,9 @@ public class ObjectCompiler{
 
     /* Init command executor */
     commandExec = new CommandExecutor(connection, debug, verbose, dryRun);
+
+    /* Init migrator */
+    migrator = new Migrator(debug, verbose, currentUser, commandExec);
 
     /* Get build globalSpec from yaml file */
     BuildSpec globalSpec = Utilities.deserializeYaml(yamlFile);
@@ -162,7 +166,7 @@ public class ObjectCompiler{
         key.putAll(targetSpec.params);
 
         /* Migrate source file */
-        migrateSource(key, odes);
+        migrator.migrateSource(key, odes);
 
         /* Execute compilation command */
         commandExec.executeCommand(key);
@@ -197,96 +201,7 @@ public class ObjectCompiler{
       }
     }
 
-  }
-
-  public void migrateSource(TargetKey key, ObjectDescription odes) throws SQLException{
-    switch (key.getCompilationCommand()){
-      case CRTCLMOD:
-      case CRTRPGMOD:
-      case CRTBNDRPG:
-      case CRTBNDCL:
-      case CRTSQLRPGI:
-      case CRTSRVPGM:
-      case RUNSQLSTM:
-      case CRTCMD:
-        /* 
-         * Migrate from source member to stream file
-         */
-        if (!key.containsKey(ParamCmd.SRCSTMF) && 
-          key.containsKey(ParamCmd.SRCFILE)) {
-
-          migrateMemberToStreamFile(key);
-          key.put(ParamCmd.SRCSTMF, key.getStreamFile());
-        }
-        break;
-
-      case CRTCLPGM:
-      case CRTRPGPGM:
-      case CRTDSPF:
-      case CRTPF:
-      case CRTLF:
-      case CRTPRTF:
-      case CRTMNU:
-      case CRTQMQRY:
-        /* 
-         * Migrate from stream file to source member
-         */
-        if (key.containsStreamFile()) {
-          //TODO: Should this be migrated to QTEMP?
-          if (!odes.sourcePfExists()) createSourcePf(key);
-          if (!odes.sourceMemberExists()) createSourceMember(key);
-          migrateStreamFileToMember(key);
-          key.put(ParamCmd.SRCFILE, key.getQualifiedSourceFile());
-          key.put(ParamCmd.SRCMBR, key.getObjectName());
-        }
-        break;
-    }
-  }
-
-  public void createSourcePf(TargetKey key){
-    ParamMap map = new ParamMap();
-    map.put(SysCmd.CRTSRCPF, ParamCmd.FILE, key.getQualifiedSourceFile());
-    
-    commandExec.executeCommand(map.getCommandString(SysCmd.CRTSRCPF));
-  }
-
-  public void createSourceMember(TargetKey key){
-
-    ParamMap map = new ParamMap();
-
-    map.put(SysCmd.ADDPFM, ParamCmd.FILE, key.getQualifiedSourceFile());
-    map.put(SysCmd.ADDPFM, ParamCmd.MBR, key.getSourceName());
-    map.put(SysCmd.ADDPFM, ParamCmd.SRCTYPE, key.getSourceType());
-
-    commandExec.executeCommand(map.getCommandString(SysCmd.ADDPFM));
-
-  }
-
-  public void migrateMemberToStreamFile(TargetKey key){
-    ParamMap map = new ParamMap();
-
-    if(!key.containsStreamFile()) key.setStreamSourceFile(currentUser.getHomeDirectory() + "/" + "sources" + "/" + key.asString());
-
-    map.put(SysCmd.CPYTOSTMF, ParamCmd.FROMMBR, key.getMemberPath());
-    map.put(SysCmd.CPYTOSTMF, ParamCmd.TOSTMF, key.getStreamFile());
-    map.put(SysCmd.CPYTOSTMF, ParamCmd.STMFOPT, "*REPLACE");
-    map.put(SysCmd.CPYTOSTMF, ParamCmd.STMFCCSID, UTF8_CCSID);
-    map.put(SysCmd.CPYTOSTMF, ParamCmd.ENDLINFMT, "*LF");
-
-    commandExec.executeCommand(map.getCommandString(SysCmd.CPYTOSTMF));
-  }
-
-  public void migrateStreamFileToMember(TargetKey key){
-    ParamMap map = new ParamMap();
-
-    map.put(SysCmd.CPYFRMSTMF, ParamCmd.FROMSTMF, key.getStreamFile());
-    map.put(SysCmd.CPYFRMSTMF, ParamCmd.TOMBR, key.getMemberPath());
-    map.put(SysCmd.CPYFRMSTMF, ParamCmd.MBROPT, "*REPLACE");
-    map.put(SysCmd.CPYFRMSTMF, ParamCmd.CVTDTA, "*AUTO");
-    map.put(SysCmd.CPYFRMSTMF, ParamCmd.STMFCODPAG, UTF8_CCSID);
-
-    commandExec.executeCommand(map.getCommandString(SysCmd.CPYFRMSTMF));
-  }
+  }  
 
   private void showLibraryList() throws SQLException{
     System.out.println("Library list: ");
