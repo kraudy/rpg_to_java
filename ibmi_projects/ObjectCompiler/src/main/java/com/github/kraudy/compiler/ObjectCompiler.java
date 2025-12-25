@@ -36,7 +36,7 @@ public class ObjectCompiler{
   private final User currentUser;
   private CommandExecutor commandExec;
   private Migrator migrator;
-  //private ObjectDescription odes;
+  private ObjectDescription odes;
   private SourceDescriptor sourceDes;
 
   private String yamlFile;          // yaml build file
@@ -82,8 +82,11 @@ public class ObjectCompiler{
     /* Init migrator */
     migrator = new Migrator(connection, debug, verbose, currentUser, commandExec);
 
-    /* Init migrator */
+    /* Init source descriptor */
     sourceDes = new SourceDescriptor(connection, debug, verbose);
+
+    /* Init object descriptor */
+    odes = new ObjectDescription(connection, debug, verbose);
 
     /* Get build globalSpec from yaml file */
     BuildSpec globalSpec = Utilities.deserializeYaml(yamlFile); //TODO: do this directly in ArgParser
@@ -141,8 +144,6 @@ public class ObjectCompiler{
     for (Map.Entry<TargetKey, BuildSpec.TargetSpec> entry : globalSpec.targets.entrySet()) {
       TargetKey key = entry.getKey();
       BuildSpec.TargetSpec targetSpec = entry.getValue();
-      /* Init object descriptor */
-      ObjectDescription odes = new ObjectDescription(connection, debug, verbose, key);
 
       /* Skip target if diff and no build required */
       if (diff) {
@@ -162,7 +163,7 @@ public class ObjectCompiler{
         }
 
         /* If the object exists, we try to extract its compilation params */
-        odes.getObjectInfo();
+        odes.getObjectInfo(key);
 
         /* Set global defaults params per target */
         key.putAll(globalSpec.defaults);
@@ -171,7 +172,7 @@ public class ObjectCompiler{
         key.putAll(targetSpec.params);
 
         /* Migrate source file */
-        migrator.migrateSource(key, odes);
+        migrator.migrateSource(key);
 
         /* Execute compilation command */
         commandExec.executeCommand(key);

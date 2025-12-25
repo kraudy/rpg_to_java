@@ -27,7 +27,7 @@ public class Migrator {
     this.commandExec = commandExec;
   }
 
-  public void migrateSource(TargetKey key, ObjectDescription odes) throws SQLException{
+  public void migrateSource(TargetKey key) throws SQLException{
     switch (key.getCompilationCommand()){
       case CRTCLMOD:
       case CRTRPGMOD:

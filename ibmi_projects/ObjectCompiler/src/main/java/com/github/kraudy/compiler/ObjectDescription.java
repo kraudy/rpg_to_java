@@ -9,50 +9,48 @@ import java.sql.Statement;
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 
-/* Core struct for capturing compilation specs */
+/* Core struct for capturing compilation params */
 public class ObjectDescription {
   private final Connection connection;
   private final boolean debug;
   private final boolean verbose;
-  private TargetKey targetKey;
 
-  public ObjectDescription(Connection connection, boolean debug, boolean verbose, TargetKey targetKey) {
+  public ObjectDescription(Connection connection, boolean debug, boolean verbose) {
     this.connection = connection;
     this.debug = debug;
     this.verbose = verbose;
-    this.targetKey = targetKey;
   }
 
-  public void getObjectInfo () throws SQLException {
+  public void getObjectInfo(TargetKey key) throws SQLException {
 
-    switch (this.targetKey.getCompilationCommand()) {
+    switch (key.getCompilationCommand()) {
       /* PGM info */
       case CRTBNDRPG:
       case CRTBNDCL:
       case CRTRPGPGM:
       case CRTCLPGM:
-        getPgmInfo();
+        getPgmInfo(key);
         break;
 
       /* Sql Rpg info */
       case CRTSQLRPGI:
-        getSqlRpgInfo();
+        getSqlRpgInfo(key);
         break;
 
       /* SrvPgm info */
       case CRTSRVPGM:
-        getSrvpgmInfo();
+        getSrvpgmInfo(key);
         break;
      
       /* Module info */
       case CRTRPGMOD :
       case CRTCLMOD :
-        getModuleInfo(); 
+        getModuleInfo(key); 
         break;
 
       /* Sql info */
       case RUNSQLSTM :
-        getSqlInfo();
+        getSqlInfo(key);
         break;
 
       /* Dds info */
@@ -60,12 +58,12 @@ public class ObjectDescription {
       case CRTPF:
       case CRTLF:
       case CRTPRTF:
-        getDdsInfo();
+        getDdsInfo(key);
         break;
 
       /* Cmd info */
       case CRTCMD :
-        getCmdInfo();
+        getCmdInfo(key);
         break;
     
       default:
@@ -76,7 +74,7 @@ public class ObjectDescription {
   }
 
   /* This should work for *PGM, *SRVPGM, *MODULE */
-  private void getPgmInfo() throws SQLException {
+  private void getPgmInfo(TargetKey key) throws SQLException {
     
     try (Statement stmt = connection.createStatement();
         ResultSet rsObj = stmt.executeQuery(
@@ -143,98 +141,98 @@ public class ObjectDescription {
             "INNER JOIN Libs " +
             "ON (PROGRAM_LIBRARY = Libs.Libraries) " +
             "WHERE " + 
-                "PROGRAM_NAME = '" + this.targetKey.getObjectName() + "' " +
-                "AND OBJECT_TYPE = '" + this.targetKey.getObjectType() + "' "
+                "PROGRAM_NAME = '" + key.getObjectName() + "' " +
+                "AND OBJECT_TYPE = '" + key.getObjectType() + "' "
           )) {
       if (!rsObj.next()) {
-        System.err.println(("Could not get object '" + this.targetKey.asString() ));
+        System.err.println(("Could not get object '" + key.asString() ));
         return;
       }
 
-      if (verbose) System.out.println("Found object '" + this.targetKey.asString());
+      if (verbose) System.out.println("Found object '" + key.asString());
 
 
-      switch (this.targetKey.getCompilationCommand()) {
+      switch (key.getCompilationCommand()) {
         case CRTSRVPGM:
         case CRTBNDRPG:
         case CRTBNDCL:
           String actgrp = rsObj.getString("ACTGRP").trim();
-          if (!actgrp.isEmpty()) this.targetKey.put(ParamCmd.ACTGRP, actgrp);
-          if ("QILE".equals(actgrp)) this.targetKey.put(ParamCmd.DFTACTGRP, ValCmd.NO);
+          if (!actgrp.isEmpty()) key.put(ParamCmd.ACTGRP, actgrp);
+          if ("QILE".equals(actgrp)) key.put(ParamCmd.DFTACTGRP, ValCmd.NO);
         case CRTRPGMOD:
           String stgMdl = rsObj.getString("STGMDL").trim();
-          if (!stgMdl.isEmpty()) this.targetKey.put(ParamCmd.STGMDL, stgMdl);
+          if (!stgMdl.isEmpty()) key.put(ParamCmd.STGMDL, stgMdl);
         case CRTCLMOD:
         case CRTRPGPGM:
         case CRTCLPGM:
           String tgtRls = rsObj.getString("TGTRLS").trim();
-          this.targetKey.put(ParamCmd.TGTRLS, ValCmd.CURRENT);
-          if (!tgtRls.isEmpty()) this.targetKey.put(ParamCmd.TGTRLS, tgtRls);
+          key.put(ParamCmd.TGTRLS, ValCmd.CURRENT);
+          if (!tgtRls.isEmpty()) key.put(ParamCmd.TGTRLS, tgtRls);
         case CRTDSPF:
         case CRTPF:
         case CRTLF:
           String text = rsObj.getString("TEXT").trim();
-          if (!text.isEmpty()) this.targetKey.put(ParamCmd.TEXT, text);
+          if (!text.isEmpty()) key.put(ParamCmd.TEXT, text);
           break;
       }
 
-      switch (this.targetKey.getCompilationCommand()) {
+      switch (key.getCompilationCommand()) {
         case CRTSRVPGM:
         case CRTBNDRPG:
         case CRTBNDCL:
         case CRTRPGPGM:
         case CRTCLPGM:
           String tgtRls = rsObj.getString("TGTRLS").trim();
-          this.targetKey.put(ParamCmd.TGTRLS, ValCmd.CURRENT);
-          if (!tgtRls.isEmpty()) this.targetKey.put(ParamCmd.TGTRLS, tgtRls);
+          key.put(ParamCmd.TGTRLS, ValCmd.CURRENT);
+          if (!tgtRls.isEmpty()) key.put(ParamCmd.TGTRLS, tgtRls);
 
           String usrPrf = rsObj.getString("USRPRF").trim();
-          if (!usrPrf.isEmpty()) this.targetKey.put(ParamCmd.USRPRF, usrPrf);
+          if (!usrPrf.isEmpty()) key.put(ParamCmd.USRPRF, usrPrf);
           break;
       }
 
-      switch (this.targetKey.getCompilationCommand()) {
+      switch (key.getCompilationCommand()) {
         case CRTBNDRPG:
         case CRTBNDCL:
         case CRTRPGMOD:
         case CRTCLMOD:
           String optimize = rsObj.getString("OPTIMIZE").trim();
-          if (!optimize.isEmpty()) this.targetKey.put(ParamCmd.OPTIMIZE, optimize);
+          if (!optimize.isEmpty()) key.put(ParamCmd.OPTIMIZE, optimize);
         case CRTRPGPGM:
         case CRTCLPGM:
         case CRTDSPF:
         case CRTPF:
         case CRTLF:
           String srtSeq = rsObj.getString("SRTSEQ").trim();
-          if (!srtSeq.isEmpty()) this.targetKey.put(ParamCmd.SRTSEQ, srtSeq);          
+          if (!srtSeq.isEmpty()) key.put(ParamCmd.SRTSEQ, srtSeq);          
 
           String langId = rsObj.getString("LANGID").trim();
-          if (!langId.isEmpty()) this.targetKey.put(ParamCmd.LANGID, langId);
+          if (!langId.isEmpty()) key.put(ParamCmd.LANGID, langId);
           break;
       }
       
-      switch (this.targetKey.getCompilationCommand()) {
+      switch (key.getCompilationCommand()) {
         case CRTBNDRPG:
         case CRTRPGMOD:
           String fixNbr = rsObj.getString("FIXNBR").trim();
           if (!fixNbr.isEmpty()){
-            this.targetKey.put(ParamCmd.FIXNBR, fixNbr.equals("1") ? ValCmd.YES : ValCmd.NO);
+            key.put(ParamCmd.FIXNBR, fixNbr.equals("1") ? ValCmd.YES : ValCmd.NO);
           }
 
           String prfDta = rsObj.getString("PRFDTA").trim();
-          if (!prfDta.isEmpty()) this.targetKey.put(ParamCmd.PRFDTA, prfDta);
+          if (!prfDta.isEmpty()) key.put(ParamCmd.PRFDTA, prfDta);
           break;
       }
 
-      switch (this.targetKey.getCompilationCommand()) {
+      switch (key.getCompilationCommand()) {
         case CRTBNDCL:
         case CRTCLMOD:
         case CRTCLPGM:
           String logCmds = rsObj.getString("LOG").trim();
-          if (!logCmds.isEmpty()) this.targetKey.put(ParamCmd.LOG, logCmds.equals("1") ? ValCmd.YES : ValCmd.NO);
+          if (!logCmds.isEmpty()) key.put(ParamCmd.LOG, logCmds.equals("1") ? ValCmd.YES : ValCmd.NO);
 
           String alwRtvSrc = rsObj.getString("ALWRTVSRC").trim();
-          if (!alwRtvSrc.isEmpty()) this.targetKey.put(ParamCmd.ALWRTVSRC, alwRtvSrc.equals("1") ? ValCmd.YES : ValCmd.NO);
+          if (!alwRtvSrc.isEmpty()) key.put(ParamCmd.ALWRTVSRC, alwRtvSrc.equals("1") ? ValCmd.YES : ValCmd.NO);
           break;
       }
 
@@ -243,8 +241,11 @@ public class ObjectDescription {
   }
 
   /* Query BOUND_MODULE_INFO for module-specific fields */
-  private void getModuleInfo() throws SQLException {
-
+  private void getModuleInfo(TargetKey key) throws SQLException {
+    if (!key.isModule()) {
+      if(verbose) System.err.println(key.asString() + " Is not a module");
+        return;
+    }
     try (Statement stmt = connection.createStatement();
         ResultSet rsMod = stmt.executeQuery(
           "With " +
@@ -310,23 +311,23 @@ public class ObjectDescription {
             "ON (PROGRAM_LIBRARY = Libs.Libraries " +
             "AND BOUND_MODULE_LIBRARY = Libs.Libraries) " +
           "WHERE " +
-            "PROGRAM_NAME = '" + this.targetKey.getObjectName() + "' " +
-            "AND BOUND_MODULE = '" + this.targetKey.getObjectName() + "' " //TODO: Fix this
+            "PROGRAM_NAME = '" + key.getObjectName() + "' " +
+            "AND BOUND_MODULE = '" + key.getObjectName() + "' " //TODO: Fix this
         )) {
       if (!rsMod.next()) {
-        if(verbose) System.err.println("Could not find module '" + this.targetKey.asString());
+        if(verbose) System.err.println("Could not find module '" + key.asString());
         return;
       }
 
-      if (verbose) System.out.println("Found module '" + this.targetKey.asString());
+      if (verbose) System.out.println("Found module '" + key.asString());
 
       String modOptimize = rsMod.getString("OPTIMIZE").trim();
       if (!modOptimize.isEmpty()) {
         switch (modOptimize) {
-          case "10": this.targetKey.put(ParamCmd.OPTIMIZE, ValCmd.NONE);   break;
-          case "20": this.targetKey.put(ParamCmd.OPTIMIZE, ValCmd.BASIC);  break;
-          case "30": this.targetKey.put(ParamCmd.OPTIMIZE, ValCmd.BASIC);  break;
-          case "40": this.targetKey.put(ParamCmd.OPTIMIZE, ValCmd.FULL);   break;
+          case "10": key.put(ParamCmd.OPTIMIZE, ValCmd.NONE);   break;
+          case "20": key.put(ParamCmd.OPTIMIZE, ValCmd.BASIC);  break;
+          case "30": key.put(ParamCmd.OPTIMIZE, ValCmd.BASIC);  break;
+          case "40": key.put(ParamCmd.OPTIMIZE, ValCmd.FULL);   break;
         }
       }
 
@@ -348,7 +349,7 @@ public class ObjectDescription {
     }
   }
 
-  private void getCmdInfo() throws SQLException {
+  private void getCmdInfo(TargetKey key) throws SQLException {
     
     try (Statement stmt = connection.createStatement();
         ResultSet rsCmdInfo = stmt.executeQuery(
@@ -368,43 +369,40 @@ public class ObjectDescription {
             "INNER JOIN Libs " +
             "ON (COMMAND_LIBRARY = Libs.Libraries) " +
             "WHERE " + 
-                "COMMAND_NAME = '" + this.targetKey.getObjectName() + "' "
+                "COMMAND_NAME = '" + key.getObjectName() + "' "
           )) {
       if (!rsCmdInfo.next()) {
-        System.err.println(("Could not get command '" + this.targetKey.asString()));
+        System.err.println(("Could not get command '" + key.asString()));
         return;
       }
 
-      if (verbose) System.out.println("Found command '" + this.targetKey.asString());
+      if (verbose) System.out.println("Found command '" + key.asString());
       
       // -- Missing: REXSRCFILE, REXSRCMBR, REXCMDENV, REXEXITPGM
       String cmd = rsCmdInfo.getString("CMD").trim();
-      if(!cmd.isEmpty()) this.targetKey.put(ParamCmd.CMD, cmd); 
+      if(!cmd.isEmpty()) key.put(ParamCmd.CMD, cmd); 
 
       String pgm = rsCmdInfo.getString("PGM").trim();
-      if(!pgm.isEmpty()) this.targetKey.put(ParamCmd.PGM, pgm); 
+      if(!pgm.isEmpty()) key.put(ParamCmd.PGM, pgm); 
 
       String srcfile = rsCmdInfo.getString("SRCFILE").trim();
-      if(!srcfile.isEmpty()) this.targetKey.put(ParamCmd.SRCFILE, srcfile); 
+      if(!srcfile.isEmpty()) key.put(ParamCmd.SRCFILE, srcfile); 
 
       String srcmbr = rsCmdInfo.getString("SRCMBR").trim();
-      if(!srcmbr.isEmpty()) this.targetKey.put(ParamCmd.SRCMBR, srcmbr); 
+      if(!srcmbr.isEmpty()) key.put(ParamCmd.SRCMBR, srcmbr); 
 
       ValCmd threadsafe = ValCmd.fromString(rsCmdInfo.getString("THDSAFE").trim());
-      this.targetKey.put(ParamCmd.THDSAFE, threadsafe); 
-
-      
-
+      key.put(ParamCmd.THDSAFE, threadsafe); 
 
       }
   }
 
   //TODO: Change this view for QSYS2.SYSFILES and use it for crtsqlrpgle isntead
-  private void getSqlInfo() throws SQLException{
+  private void getSqlInfo(TargetKey key) throws SQLException{
     
   }
 
-  private void getSqlRpgInfo()throws SQLException{
+  private void getSqlRpgInfo(TargetKey key)throws SQLException{
     try (Statement stmt = connection.createStatement();
         ResultSet rsSqlRpgInfo = stmt.executeQuery(
           "With " +
@@ -448,54 +446,54 @@ public class ObjectDescription {
             "INNER JOIN Libs " +
             "ON (PROGRAM_LIBRARY = Libs.Libraries) " +
             "WHERE " + 
-                "PROGRAM_NAME = '" + this.targetKey.getObjectName() + "' " +
-                "AND OBJECT_TYPE = '" + this.targetKey.getObjectType() + "' "
+                "PROGRAM_NAME = '" + key.getObjectName() + "' " +
+                "AND OBJECT_TYPE = '" + key.getObjectType() + "' "
           )) {
       if (!rsSqlRpgInfo.next()) {
-        System.err.println(("Could not get object '" + this.targetKey.asString() ));
+        System.err.println(("Could not get object '" + key.asString() ));
         return;
       }
 
-      if (verbose) System.out.println("Found object '" + this.targetKey.asString());
+      if (verbose) System.out.println("Found object '" + key.asString());
 
-      this.targetKey.put(ParamCmd.TEXT, rsSqlRpgInfo.getString("TEXT").trim()); 
-      this.targetKey.put(ParamCmd.USRPRF, rsSqlRpgInfo.getString("USRPRF").trim()); 
+      key.put(ParamCmd.TEXT, rsSqlRpgInfo.getString("TEXT").trim()); 
+      key.put(ParamCmd.USRPRF, rsSqlRpgInfo.getString("USRPRF").trim()); 
 
       String tgtrls = rsSqlRpgInfo.getString("TGTRLS").trim();
-      if(!tgtrls.isEmpty()) this.targetKey.put(ParamCmd.TGTRLS, tgtrls); 
+      if(!tgtrls.isEmpty()) key.put(ParamCmd.TGTRLS, tgtrls); 
 
       //String srcfile = rsSqlRpgInfo.getString("SRCFILE").trim();
-      //if(!srcfile.isEmpty()) this.targetKey.put(ParamCmd.SRCFILE, srcfile); 
+      //if(!srcfile.isEmpty()) key.put(ParamCmd.SRCFILE, srcfile); 
       //String srcmbr = rsSqlRpgInfo.getString("SRCMBR").trim();
-      //if(!srcmbr.isEmpty()) this.targetKey.put(ParamCmd.SRCMBR, srcmbr); 
+      //if(!srcmbr.isEmpty()) key.put(ParamCmd.SRCMBR, srcmbr); 
 
       //TODO: The service does not returns data for these filed. They need to fix that.
 
-      //this.targetKey.put(ParamCmd.COMMIT, ValCmd.fromString(rsSqlRpgInfo.getString("COMMIT"))); 
-      //this.targetKey.put(ParamCmd.NAMING, ValCmd.fromString(rsSqlRpgInfo.getString("NAMING"))); 
+      //key.put(ParamCmd.COMMIT, ValCmd.fromString(rsSqlRpgInfo.getString("COMMIT"))); 
+      //key.put(ParamCmd.NAMING, ValCmd.fromString(rsSqlRpgInfo.getString("NAMING"))); 
 
-      //this.targetKey.put(ParamCmd.DATFMT, ValCmd.fromString(rsSqlRpgInfo.getString("DATFMT"))); 
-      //this.targetKey.put(ParamCmd.DATSEP, ValCmd.fromString(rsSqlRpgInfo.getString("DATSEP"))); 
+      //key.put(ParamCmd.DATFMT, ValCmd.fromString(rsSqlRpgInfo.getString("DATFMT"))); 
+      //key.put(ParamCmd.DATSEP, ValCmd.fromString(rsSqlRpgInfo.getString("DATSEP"))); 
 
-      //this.targetKey.put(ParamCmd.TIMFMT, ValCmd.fromString(rsSqlRpgInfo.getString("TIMFMT"))); 
-      //this.targetKey.put(ParamCmd.TIMSEP, ValCmd.fromString(rsSqlRpgInfo.getString("TIMSEP"))); 
+      //key.put(ParamCmd.TIMFMT, ValCmd.fromString(rsSqlRpgInfo.getString("TIMFMT"))); 
+      //key.put(ParamCmd.TIMSEP, ValCmd.fromString(rsSqlRpgInfo.getString("TIMSEP"))); 
 
-      //this.targetKey.put(ParamCmd.SRTSEQ, rsSqlRpgInfo.getString("SRTSEQ").trim()); 
-      //this.targetKey.put(ParamCmd.LANGID, rsSqlRpgInfo.getString("LANGID").trim()); 
+      //key.put(ParamCmd.SRTSEQ, rsSqlRpgInfo.getString("SRTSEQ").trim()); 
+      //key.put(ParamCmd.LANGID, rsSqlRpgInfo.getString("LANGID").trim()); 
 
-      //this.targetKey.put(ParamCmd.DYNUSRPRF, ValCmd.fromString(rsSqlRpgInfo.getString("DYNUSRPRF"))); 
-      //this.targetKey.put(ParamCmd.ALWCPYDTA, ValCmd.fromString(rsSqlRpgInfo.getString("ALWCPYDTA"))); 
-      //this.targetKey.put(ParamCmd.CLOSQLCSR, ValCmd.fromString(rsSqlRpgInfo.getString("CLOSQLCSR"))); 
-      //this.targetKey.put(ParamCmd.DLYPRP, ValCmd.fromString(rsSqlRpgInfo.getString("DLYPRP"))); 
-      //this.targetKey.put(ParamCmd.ALWBLK, ValCmd.fromString(rsSqlRpgInfo.getString("ALWBLK"))); 
+      //key.put(ParamCmd.DYNUSRPRF, ValCmd.fromString(rsSqlRpgInfo.getString("DYNUSRPRF"))); 
+      //key.put(ParamCmd.ALWCPYDTA, ValCmd.fromString(rsSqlRpgInfo.getString("ALWCPYDTA"))); 
+      //key.put(ParamCmd.CLOSQLCSR, ValCmd.fromString(rsSqlRpgInfo.getString("CLOSQLCSR"))); 
+      //key.put(ParamCmd.DLYPRP, ValCmd.fromString(rsSqlRpgInfo.getString("DLYPRP"))); 
+      //key.put(ParamCmd.ALWBLK, ValCmd.fromString(rsSqlRpgInfo.getString("ALWBLK"))); 
     }
   }
 
-  private void getDdsInfo(){
+  private void getDdsInfo(TargetKey key){
 
   }
 
-  private void getSrvpgmInfo() {
+  private void getSrvpgmInfo(TargetKey key) {
     
   }
 
