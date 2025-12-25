@@ -36,6 +36,8 @@ public class ObjectCompiler{
   private final User currentUser;
   private CommandExecutor commandExec;
   private Migrator migrator;
+  //private ObjectDescription odes;
+  private SourceDescriptor sourceDes;
 
   private String yamlFile;          // yaml build file
   private boolean dryRun = false;   // Compile commands without executing 
@@ -78,10 +80,13 @@ public class ObjectCompiler{
     commandExec = new CommandExecutor(connection, debug, verbose, dryRun);
 
     /* Init migrator */
-    migrator = new Migrator(debug, verbose, currentUser, commandExec);
+    migrator = new Migrator(connection, debug, verbose, currentUser, commandExec);
+
+    /* Init migrator */
+    sourceDes = new SourceDescriptor(connection, debug, verbose);
 
     /* Get build globalSpec from yaml file */
-    BuildSpec globalSpec = Utilities.deserializeYaml(yamlFile);
+    BuildSpec globalSpec = Utilities.deserializeYaml(yamlFile); //TODO: do this directly in ArgParser
 
     try {
       /* Global before */
@@ -141,7 +146,7 @@ public class ObjectCompiler{
 
       /* Skip target if diff and no build required */
       if (diff) {
-        odes.getObjectTimestamps();
+        sourceDes.getObjectTimestamps(key);
         if (!key.needsRebuild()) {
           if (verbose) System.out.println("Skipping unchanged target: " + key.asString() + key.getTimestmaps());
           continue; 

@@ -2,6 +2,8 @@ package com.github.kraudy.compiler;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.ResultSet;
+import java.sql.Statement;
 
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.SysCmd;
@@ -11,12 +13,14 @@ import com.ibm.as400.access.User;
  * Source files migrator
  */
 public class Migrator {
+  private final Connection connection;
   private final boolean debug;
   private final boolean verbose;
   private final User currentUser;
   private CommandExecutor commandExec;
 
-  public Migrator(boolean debug, boolean verbose, User currentUser, CommandExecutor commandExec) {
+  public Migrator(Connection connection, boolean debug, boolean verbose, User currentUser, CommandExecutor commandExec) {
+    this.connection = connection;
     this.debug = debug;
     this.verbose = verbose;
     this.currentUser = currentUser;
@@ -58,8 +62,8 @@ public class Migrator {
         if (key.containsStreamFile()) {
           //TODO: Should this be migrated to QTEMP?
           if(debug) System.err.println("Migrating stream file to source member");
-          if (!odes.sourcePfExists()) createSourcePf(key);
-          if (!odes.sourceMemberExists()) createSourceMember(key);
+          if (!sourcePfExists(key)) createSourcePf(key);
+          if (!sourceMemberExists(key)) createSourceMember(key);
           migrateStreamFileToMember(key);
           key.put(ParamCmd.SRCFILE, key.getQualifiedSourceFile());
           key.put(ParamCmd.SRCMBR, key.getObjectName());
@@ -111,6 +115,41 @@ public class Migrator {
     map.put(SysCmd.CPYFRMSTMF, ParamCmd.STMFCODPAG, ObjectCompiler.UTF8_CCSID);
 
     commandExec.executeCommand(map.getCommandString(SysCmd.CPYFRMSTMF));
+  }
+
+  /* Validate if Source PF exists */
+  public boolean sourcePfExists(TargetKey key) throws SQLException{
+    //TODO: Change this for library list
+    try (Statement validateStmt = connection.createStatement();
+        ResultSet validateRs = validateStmt.executeQuery(
+            "SELECT 1 AS Exist FROM QSYS2. SYSPARTITIONSTAT " +
+                "WHERE SYSTEM_TABLE_SCHEMA = '" + key.getLibrary() + "' " +
+                "AND SYSTEM_TABLE_NAME = '" + key.getSourceFile() + "' " +
+                "AND TRIM(SOURCE_TYPE) <> '' LIMIT 1")) {
+      if (validateRs.next()) {
+        if (verbose) System.err.println(" *Source PF " + key.getSourceFile() + " already exist in library " + key.getLibrary());
+        return true;
+      }
+      return false;
+    }
+  }
+
+  /* Validate if Source Member exists */
+  public boolean sourceMemberExists(TargetKey key) throws SQLException {
+    try (Statement stmt = connection.createStatement();
+         ResultSet rs = stmt.executeQuery(
+             "SELECT CAST(SYSTEM_TABLE_MEMBER AS VARCHAR(10) CCSID " + ObjectCompiler.INVARIANT_CCSID + ") AS Member " +
+             "FROM QSYS2.SYSPARTITIONSTAT " +
+             "WHERE SYSTEM_TABLE_SCHEMA = '" + key.getLibrary() + "' " +
+             "AND SYSTEM_TABLE_NAME = '" + key.getSourceFile() + "' " +
+             "AND SYSTEM_TABLE_MEMBER = '" + key.getSourceName() + "' " +
+             "AND TRIM(SOURCE_TYPE) <> '' ")) { 
+      if (rs.next()) {
+        if (verbose) System.err.println("Member " + key.getSourceName() + " already exist in library " + key.getLibrary());
+        return true;
+      }
+      return false;
+    }
   }
 
 }
