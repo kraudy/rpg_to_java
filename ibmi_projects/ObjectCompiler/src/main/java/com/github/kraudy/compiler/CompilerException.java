@@ -20,22 +20,20 @@ public class CompilerException extends RuntimeException {
     this.extraContext = null;
   }
 
-  /* Constructor for no target command */
+  /* Constructor for target compilation command */
+  public CompilerException(String message, Throwable cause, TargetKey targetKey) {
+    super(message, cause);
+    this.failedCommand = null;
+    this.targetKey = targetKey;
+    this.commandTime = null;
+    this.extraContext = null;
+  }
+
+  /* Constructor for command execution */
   public CompilerException(String message, Throwable cause, String failedCommand, Timestamp commandTime, String extraContext) {
     super(message, cause);
     this.failedCommand = failedCommand;
     this.targetKey = null;
-    this.commandTime = commandTime;
-    this.extraContext = extraContext;
-  }
-
-  /* Constructor for target and compilation command */
-  public CompilerException(String message, Throwable cause,
-                            String failedCommand, TargetKey targetKey,
-                            Timestamp commandTime, String extraContext) {
-    super(message, cause);
-    this.failedCommand = failedCommand;
-    this.targetKey = targetKey;
     this.commandTime = commandTime;
     this.extraContext = extraContext;
   }
@@ -53,13 +51,14 @@ public class CompilerException extends RuntimeException {
     sb.append("CompilerException Details:\n");
 
     sb.append("- Message: ").append(getMessage()).append("\n");
-    sb.append("- Command: ").append(failedCommand != null ? failedCommand : "(none)").append("\n");
+
+    if (failedCommand != null) sb.append("- Command: ").append(failedCommand).append("\n");
 
     if (targetKey != null) sb.append("- Target: ").append(targetKey.asString()).append("\n");
 
     if (commandTime != null) sb.append("- Time: ").append(commandTime).append("\n");
 
-    if (extraContext != null) sb.append("- Joblog Messages: ").append(extraContext).append("\n");
+    if (extraContext != null) sb.append("- Joblog Messages: ").append("\n").append(extraContext).append("\n");
 
     Throwable cause = getCause();
     /* No previous cause */

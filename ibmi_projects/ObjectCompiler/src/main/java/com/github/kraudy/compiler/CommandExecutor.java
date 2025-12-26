@@ -34,28 +34,14 @@ public class CommandExecutor {
     Timestamp commandTime = getCurrentTime();
     String command = key.getCommandString();
 
-    if (this.CmdExecutionChain.length() > 0) {
-      this.CmdExecutionChain.append(" => ");
-    }
-    this.CmdExecutionChain.append(command);
-
-    /* Dry run just returns before executing the command */
-    if(dryRun){
-      return;
-    }
-
-    try (Statement cmdStmt = connection.createStatement()) {
-      cmdStmt.execute("CALL QSYS2.QCMDEXC('" + command + "')");
-    } catch (SQLException e) {
-      System.err.println("Command failed: " + command);
+    try {
+      executeCommand(command);
+    } catch (CompilerException e) {
       if(verbose) showCompilationSpool(commandTime);
-
-      String joblog = buildJoblogMessagesString(commandTime);
-      throw new CompilerException("Target compilation failed", e, command, key, commandTime, joblog);
+      throw new CompilerException("Target compilation failed", e, key);
+    } catch (Exception e) {
+      throw new CompilerException("Unexpected exception in target compilation command", e, key);
     }
-
-    System.out.println("Command successful: " + command);
-    if(verbose) System.out.println(buildJoblogMessagesString(commandTime));
 
     /* Set build time */
     key.setLastBuild(commandTime);
@@ -96,9 +82,7 @@ public class CommandExecutor {
         currentTime = rsTime.getTimestamp("Command_Time");
       }
     } catch (SQLException e) {
-      if (verbose) System.err.println("Could not get command time.");
-      if (debug) e.printStackTrace();
-      throw new RuntimeException("Could not get command time.");
+      throw new CompilerException("Error retrieving command time", e);
     }
     return currentTime;
   }
@@ -136,7 +120,6 @@ public class CommandExecutor {
         }
 
     } catch (SQLException e) {
-      if (verbose) System.out.println("Error retrieving joblog.");
       throw new CompilerException("Error retrieving joblog", e);
     }
 
