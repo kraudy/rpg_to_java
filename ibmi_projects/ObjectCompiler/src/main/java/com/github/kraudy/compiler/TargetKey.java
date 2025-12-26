@@ -183,8 +183,6 @@ public class TargetKey {
   }
 
   public String getStreamFile() {
-    //TODO: Is this really necessary?
-    //if (this.sourceStmf == null && this.ParamCmdSequence.containsKey(ParamCmd.SRCSTMF)) this.sourceStmf = get(ParamCmd.SRCSTMF);
     return this.sourceStmf;
   }
 
