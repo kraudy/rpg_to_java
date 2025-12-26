@@ -37,7 +37,7 @@ public class ParamMap {
     return paramMap;
   }
 
-  /* Get specific param value */
+  /* Get specific param value. Note how we don't need the command here. */
   public String get(ParamCmd param) {
     ParamValue pv = this.paramMap.get(param);
     if (pv == null) return "";
@@ -81,7 +81,7 @@ public class ParamMap {
 
     value = Utilities.validateParamValue(param, value);
 
-    /* At this point there should be not invalid command params. If present, an error is thrown */
+    /* At this point there should be no invalid command params. If present, an exception is thrown */
     if (!Utilities.validateCommandParam(cmd, param)) {
       throw new IllegalArgumentException("Parameters " + param.name() + " not valid for command " + cmd.name());
     }

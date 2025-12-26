@@ -1,25 +1,14 @@
 package com.github.kraudy.compiler;
 
-import java.beans.PropertyVetoException;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.HashSet;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
-import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
-import com.github.kraudy.compiler.CompilationPattern.SysCmd;
 import com.ibm.as400.access.AS400;
 import com.ibm.as400.access.AS400JDBCDataSource;
-import com.ibm.as400.access.AS400Message;
-import com.ibm.as400.access.AS400SecurityException;
-import com.ibm.as400.access.CommandCall;
-import com.ibm.as400.access.ErrorCompletingRequestException;
 import com.ibm.as400.access.User;
 
 import io.github.theprez.dotenv_ibmi.IBMiDotEnv;
@@ -39,7 +28,7 @@ public class ObjectCompiler{
   private ObjectDescription odes;
   private SourceDescriptor sourceDes;
 
-  private String yamlFile;          // yaml build file
+  private BuildSpec globalSpec;     // global build spec
   private boolean dryRun = false;   // Compile commands without executing 
   private boolean debug = false;    // Debug flag
   private boolean verbose = false;  // Verbose output flag
@@ -63,11 +52,11 @@ public class ObjectCompiler{
 
   }
 
-  public ObjectCompiler(AS400 system, String yamlFile, boolean dryRun, boolean debug, boolean verbose, boolean diff) throws Exception {
+  public ObjectCompiler(AS400 system, BuildSpec globalSpec, boolean dryRun, boolean debug, boolean verbose, boolean diff) throws Exception {
     this(system, new AS400JDBCDataSource(system).getConnection());
 
     /* Set params */
-    this.yamlFile = yamlFile;
+    this.globalSpec = globalSpec;
     this.dryRun = dryRun;
     this.debug = debug;
     this.verbose = verbose;
@@ -88,9 +77,6 @@ public class ObjectCompiler{
     /* Init object descriptor */
     odes = new ObjectDescription(connection, debug, verbose);
 
-    /* Get build globalSpec from yaml file */
-    BuildSpec globalSpec = Utilities.deserializeYaml(yamlFile); //TODO: do this directly in ArgParser
-
     try {
       /* Global before */
       if(!globalSpec.before.isEmpty()){
@@ -100,7 +86,7 @@ public class ObjectCompiler{
       if(verbose) showLibraryList();
 
       /* Build each target */
-      buildTargets(globalSpec);
+      buildTargets(globalSpec.targets);
 
       /* Execute global after */
       if(!globalSpec.after.isEmpty()){
@@ -139,9 +125,9 @@ public class ObjectCompiler{
 
   }
 
-  private void buildTargets(BuildSpec globalSpec) throws Exception{
+  private void buildTargets(LinkedHashMap<TargetKey, BuildSpec.TargetSpec> targets) throws Exception{
     /* This is intended for a YAML file with multiple objects in a toposort order */
-    for (Map.Entry<TargetKey, BuildSpec.TargetSpec> entry : globalSpec.targets.entrySet()) {
+    for (Map.Entry<TargetKey, BuildSpec.TargetSpec> entry : targets.entrySet()) {
       TargetKey key = entry.getKey();
       BuildSpec.TargetSpec targetSpec = entry.getValue();
 
@@ -198,7 +184,7 @@ public class ObjectCompiler{
         throw e; // Raise
 
       } catch (Exception e){
-        if (verbose) System.err.println("Unhandled error in Target: " + key.asString());
+        if (verbose) System.err.println("Unhandled exception in Target: " + key.asString());
 
         throw e; // Raise
 
@@ -245,20 +231,20 @@ public class ObjectCompiler{
     ObjectCompiler compiler = null;
     try {
       ArgParser parser = new ArgParser(args);
-      //TODO: Should i add an scanner here if run locally to prompt for the params?
-      // add the read string back to args as a list split by space
+      //TODO: This should be able to run locally in debug mode.
       if (args.length == 0) ArgParser.printUsage();
         
       system = IBMiDotEnv.getNewSystemConnection(true); // Get system
       compiler = new ObjectCompiler(
             system,
-            parser.getYamlFile(),
+            parser.getSpecFromYamlFile(),
             parser.isDryRun(),
             parser.isDebug(),
             parser.isVerbose(),
             parser.isDiff()
         );
       compiler.build();
+
     } catch (IllegalArgumentException e) {
       System.err.println("Error: " + e.getMessage());
       ArgParser.printUsage();

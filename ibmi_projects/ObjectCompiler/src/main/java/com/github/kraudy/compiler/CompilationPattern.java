@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 
 /*
  * Defines all the commands and params as enums.

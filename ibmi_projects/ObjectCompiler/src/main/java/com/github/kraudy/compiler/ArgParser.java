@@ -4,6 +4,11 @@ import java.util.List;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 import java.io.File;
 
 /*
@@ -95,6 +100,20 @@ public class ArgParser {
       return file;
   }
 
+  private boolean isValidFile(String path) {
+    File f = new File(path);
+    return f.exists() && f.canRead() && path.endsWith(".yaml");
+  }
+
+
+  public BuildSpec getSpecFromYamlFile() {
+      String file = (String) options.get("yamlFile");
+
+      if (file == null) throw new IllegalArgumentException("Required: -f or --file <YAML build file>");
+
+      return Utilities.deserializeYaml(file);
+  }
+
   public boolean isDryRun() {
     return (boolean) options.getOrDefault("dryRun", false);
   }
@@ -111,10 +130,7 @@ public class ArgParser {
     return (boolean) options.getOrDefault("diff", false);
   }
 
-  private boolean isValidFile(String path) {
-    File f = new File(path);
-    return f.exists() && f.canRead() && path.endsWith(".yaml");
-  }
+  
 
   // Print usage (call on error)
   public static void printUsage() {

@@ -26,7 +26,7 @@ public class Utilities {
 
   public static void SetDefaultParams(TargetKey targetKey) {
 
-    /* Set source Pf and source member */
+    /* Set source Pf and source member values */
     switch (targetKey.getCompilationCommand()) {
       case CRTSQLRPGI:
       case CRTBNDRPG:
@@ -97,7 +97,7 @@ public class Utilities {
         break;
     }
 
-    /* Set override value */
+    /* Set creation override value */
     switch (targetKey.getCompilationCommand()) {
       case CRTSRVPGM:
       case CRTBNDRPG:
