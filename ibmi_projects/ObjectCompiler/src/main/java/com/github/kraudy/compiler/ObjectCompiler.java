@@ -262,7 +262,10 @@ public class ObjectCompiler{
     } catch (IllegalArgumentException e) {
       System.err.println("Error: " + e.getMessage());
       ArgParser.printUsage();
-    } catch (Exception e) {
+    } catch (CompilerException e){
+      System.err.println(e.getFullContext());
+
+    }catch (Exception e) {
       e.printStackTrace();
     }
   }
