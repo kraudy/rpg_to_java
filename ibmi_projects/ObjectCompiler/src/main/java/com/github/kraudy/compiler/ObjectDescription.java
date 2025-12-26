@@ -1,6 +1,5 @@
 package com.github.kraudy.compiler;
 
-import java.sql.Timestamp;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;

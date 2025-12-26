@@ -6,9 +6,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class CommandExecutor {
   private final Connection connection;
@@ -51,12 +49,13 @@ public class CommandExecutor {
     } catch (SQLException e) {
       System.err.println("Command failed: " + command);
       if(verbose) showCompilationSpool(commandTime);
-      Map<String, String> extra = getMapMessages(commandTime);
-      throw new CompilerException("Target compilation failed", e, command, key, commandTime, extra);
+
+      String joblog = buildJoblogMessagesString(commandTime);
+      throw new CompilerException("Target compilation failed", e, command, key, commandTime, joblog);
     }
 
     System.out.println("Command successful: " + command);
-    if(verbose) getJoblogMessages(commandTime);
+    if(verbose) System.out.println(buildJoblogMessagesString(commandTime));
 
     /* Set build time */
     key.setLastBuild(commandTime);
@@ -81,12 +80,12 @@ public class CommandExecutor {
     } catch (SQLException e) {
       System.err.println("Command failed: " + command);
 
-      Map<String, String> extra = getMapMessages(commandTime);
-      throw new CompilerException("Command execution failed", e, command, commandTime, extra);  // No target here
+      String joblog = buildJoblogMessagesString(commandTime);
+      throw new CompilerException("Command execution failed", e, command, commandTime, joblog);  // No target here
     }
 
     System.out.println("Command successful: " + command);
-    if(verbose) getJoblogMessages(commandTime);
+    if(verbose) System.out.println(buildJoblogMessagesString(commandTime));
   }
 
   public Timestamp getCurrentTime(){
@@ -104,64 +103,45 @@ public class CommandExecutor {
     return currentTime;
   }
 
-  public Map<String, String> getMapMessages(Timestamp commandTime){
-      //TODO: Add an enum of messages
-    Map<String, String> extra = new HashMap<String, String>();
+  private String buildJoblogMessagesString(Timestamp commandTime) {
+    StringBuilder messages = new StringBuilder();
 
     try (Statement stmt = connection.createStatement();
-        ResultSet rsMessages = stmt.executeQuery(
-          "SELECT MESSAGE_TIMESTAMP, MESSAGE_ID, SEVERITY, MESSAGE_TEXT, COALESCE(MESSAGE_SECOND_LEVEL_TEXT, '') As MESSAGE_SECOND_LEVEL_TEXT " +
-          "FROM TABLE(QSYS2.JOBLOG_INFO('*')) " + 
-          "WHERE FROM_USER = USER " +
-          "AND MESSAGE_TIMESTAMP > '" + commandTime + "' " +
-          "AND MESSAGE_ID NOT IN ('SQL0443', 'CPC0904', 'CPF2407') " +
-          "ORDER BY MESSAGE_TIMESTAMP ASC " /* Show from first to last */
-        )) {
-      while (rsMessages.next()) {
-        String messageId = rsMessages.getString("MESSAGE_ID").trim();
-        String message = rsMessages.getString("MESSAGE_TEXT").trim();
-        // Format the timestamp as a string
-        
-        // Print in a formatted table-like structure
-        extra.put(messageId, message);
-      } 
-    } catch (SQLException e) {
-      if (verbose) System.out.println("Could not get messages.");
-      if (debug) e.printStackTrace();
-      throw new RuntimeException("Could not get messages.");
-    }
-    return extra;
-  }
+         ResultSet rsMessages = stmt.executeQuery(
+             "SELECT MESSAGE_TIMESTAMP, MESSAGE_ID, SEVERITY, MESSAGE_TEXT " +
+             "FROM TABLE(QSYS2.JOBLOG_INFO('*')) " +
+             "WHERE FROM_USER = USER " +
+             "AND MESSAGE_TIMESTAMP > '" + commandTime + "' " +
+             "AND MESSAGE_ID NOT IN ('SQL0443', 'CPC0904', 'CPF2407') " +
+             "ORDER BY MESSAGE_TIMESTAMP ASC"
+         )) {
 
-  public void getJoblogMessages(Timestamp commandTime){
-    try (Statement stmt = connection.createStatement();
-        ResultSet rsMessages = stmt.executeQuery(
-          "SELECT MESSAGE_TIMESTAMP, MESSAGE_ID, SEVERITY, MESSAGE_TEXT, COALESCE(MESSAGE_SECOND_LEVEL_TEXT, '') As MESSAGE_SECOND_LEVEL_TEXT " +
-          "FROM TABLE(QSYS2.JOBLOG_INFO('*')) " + 
-          "WHERE FROM_USER = USER " +
-          "AND MESSAGE_TIMESTAMP > '" + commandTime + "' " +
-          "AND MESSAGE_ID NOT IN ('SQL0443', 'CPC0904', 'CPF2407') " +
-          "ORDER BY MESSAGE_TIMESTAMP ASC " /* Show from first to last */
-        )) {
-      while (rsMessages.next()) {
-        Timestamp messageTime = rsMessages.getTimestamp("MESSAGE_TIMESTAMP");
-        String messageId = rsMessages.getString("MESSAGE_ID").trim();
-        String severity = rsMessages.getString("SEVERITY").trim();
-        String message = rsMessages.getString("MESSAGE_TEXT").trim();
-        String messageSecondLevel = rsMessages.getString("MESSAGE_SECOND_LEVEL_TEXT").trim();
-        // Format the timestamp as a string
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        String formattedTime = sdf.format(messageTime);
-        
-        // Print in a formatted table-like structure
-        System.out.printf("%-20s | %-10s | %-4s | %s%n", formattedTime, messageId, severity, message);
-      } 
+        boolean hasMessages = false;
+
+        while (rsMessages.next()) {
+            hasMessages = true;
+            Timestamp messageTime = rsMessages.getTimestamp("MESSAGE_TIMESTAMP");
+            String messageId = rsMessages.getString("MESSAGE_ID").trim();
+            String severity = rsMessages.getString("SEVERITY").trim();
+            String message = rsMessages.getString("MESSAGE_TEXT").trim();
+
+            String formattedTime = sdf.format(messageTime);
+            messages.append(String.format("%-20s | %-10s | %-4s | %s%n",
+                    formattedTime, messageId, severity, message));
+        }
+
+        if (!hasMessages) {
+            messages.append("No relevant joblog messages found.\n");
+        }
+
     } catch (SQLException e) {
-      if (verbose) System.out.println("Could not get messages.");
-      if (debug) e.printStackTrace();
-      throw new RuntimeException("Could not get messages.");
+      if (verbose) System.out.println("Error retrieving joblog.");
+      throw new CompilerException("Error retrieving joblog", e);
     }
-  }
+
+    return messages.toString();
+}
 
   public String getExecutionChain() {
     return CmdExecutionChain.toString();
