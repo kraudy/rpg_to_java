@@ -122,9 +122,13 @@ public class Migrator {
     //TODO: Change this for library list
     try (Statement validateStmt = connection.createStatement();
         ResultSet validateRs = validateStmt.executeQuery(
-            "SELECT 1 AS Exist FROM QSYS2. SYSPARTITIONSTAT " +
-                "WHERE SYSTEM_TABLE_SCHEMA = '" + key.getLibrary() + "' " +
-                "AND SYSTEM_TABLE_NAME = '" + key.getSourceFile() + "' " +
+            "With " +
+            Utilities.CteLibraryList +
+            "SELECT 1 AS Exist " +
+            "FROM QSYS2. SYSPARTITIONSTAT " +
+            "INNER JOIN Libs " +
+            "ON (SYSTEM_TABLE_SCHEMA = Libs.Libraries) " +
+                "WHERE SYSTEM_TABLE_NAME = '" + key.getSourceFile() + "' " +
                 "AND TRIM(SOURCE_TYPE) <> '' LIMIT 1")) {
       if (validateRs.next()) {
         if (verbose) System.err.println(" *Source PF " + key.getSourceFile() + " already exist in library " + key.getLibrary());
@@ -138,12 +142,15 @@ public class Migrator {
   public boolean sourceMemberExists(TargetKey key) throws SQLException {
     try (Statement stmt = connection.createStatement();
          ResultSet rs = stmt.executeQuery(
-             "SELECT CAST(SYSTEM_TABLE_MEMBER AS VARCHAR(10) CCSID " + ObjectCompiler.INVARIANT_CCSID + ") AS Member " +
-             "FROM QSYS2.SYSPARTITIONSTAT " +
-             "WHERE SYSTEM_TABLE_SCHEMA = '" + key.getLibrary() + "' " +
-             "AND SYSTEM_TABLE_NAME = '" + key.getSourceFile() + "' " +
-             "AND SYSTEM_TABLE_MEMBER = '" + key.getSourceName() + "' " +
-             "AND TRIM(SOURCE_TYPE) <> '' ")) { 
+            "With " +
+            Utilities.CteLibraryList +
+            "SELECT CAST(SYSTEM_TABLE_MEMBER AS VARCHAR(10) CCSID " + ObjectCompiler.INVARIANT_CCSID + ") AS Member " +
+            "FROM QSYS2.SYSPARTITIONSTAT " +
+            "INNER JOIN Libs " +
+            "ON (SYSTEM_TABLE_SCHEMA = Libs.Libraries) " +
+            "WHERE SYSTEM_TABLE_NAME = '" + key.getSourceFile() + "' " +
+            "AND SYSTEM_TABLE_MEMBER = '" + key.getSourceName() + "' " +
+            "AND TRIM(SOURCE_TYPE) <> '' ")) { 
       if (rs.next()) {
         if (verbose) System.err.println("Member " + key.getSourceName() + " already exist in library " + key.getLibrary());
         return true;
