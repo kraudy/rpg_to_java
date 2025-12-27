@@ -70,16 +70,13 @@ public class CommandExecutor {
     try (Statement cmdStmt = connection.createStatement()) {
       cmdStmt.execute("CALL QSYS2.QCMDEXC('" + command + "')");
     } catch (SQLException e) {
-      //System.err.println("Command failed: " + command);
       logger.error("Command failed: " + command);
 
       String joblog = buildJoblogMessagesString(commandTime);
       throw new CompilerException("Command execution failed", e, command, commandTime, joblog);  // No target here
     }
 
-    //System.out.println("Command successful: " + command);
     logger.info("\nCommand successful: " + command);
-    //if(verbose) System.out.println(buildJoblogMessagesString(commandTime));
     if(verbose) logger.info(buildJoblogMessagesString(commandTime));
   }
 
@@ -156,9 +153,7 @@ public class CommandExecutor {
         ") " +
         "LIMIT 1 "
       )){
-        if (!rsCheckSpool.next()) {
-          //if(verbose) System.err.println("No spool found for compilation command");
-          
+        if (!rsCheckSpool.next()) {          
           return spool.append("No spool found for compilation command").toString();
         }
     }
@@ -183,7 +178,6 @@ public class CommandExecutor {
         ") As d On 1=1" 
       )){
         while (rsCompilationSpool.next()) {
-          //System.out.println(rsCompilationSpool.getString("SPOOLED_DATA").trim());
           spool.append(rsCompilationSpool.getString("SPOOLED_DATA").trim()).append("\n");
         }
       return spool.toString();

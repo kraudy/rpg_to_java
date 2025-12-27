@@ -5,7 +5,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class SourceDescriptor {
+  private static final Logger logger = LoggerFactory.getLogger(SourceDescriptor.class);
+
   private final Connection connection;
   private final boolean debug;
   private final boolean verbose;
@@ -33,11 +38,11 @@ public class SourceDescriptor {
                 "AND OBJECT_TYPE = '" + key.getObjectType() + "' "
           )) {
       if (!rsObjCreationInfo.next()) {
-        System.err.println(("Could not extract object creation time '" + key.asString() ));
+        if (verbose) logger.info(("\nCould not extract object creation time '" + key.asString() ));
         return;
       }
 
-      if (verbose) System.out.println("Found object creation data '" + key.asString());
+      if (verbose) logger.info("\nFound object creation data '" + key.asString());
 
       key.setLastBuild(rsObjCreationInfo.getTimestamp("CREATE_TIMESTAMP"));
       key.setLastEdit(rsObjCreationInfo.getTimestamp("SOURCE_FILE_CHANGE_TIMESTAMP"));
@@ -64,11 +69,11 @@ public class SourceDescriptor {
                 "AND SQL_OBJECT_TYPE = '" + key.getObjectTypeName() + "' "
           )) {
       if (!rsSql.next()) {
-        System.err.println(("Could not extract sql object creation time '" + key.asString() ));
+        if (verbose) logger.info(("\nCould not extract sql object creation time '" + key.asString() ));
         return;
       }
 
-      if (verbose) System.out.println("Found sql object creation data '" + key.asString());
+      if (verbose) logger.info("\nFound sql object creation data '" + key.asString());
 
       key.setLastBuild(rsSql.getTimestamp("LAST_ALTERED_TIMESTAMP"));
       
@@ -115,12 +120,12 @@ public class SourceDescriptor {
               "AND TABLE_PARTITION = '" + key.getSourceName() + "'" +
               "AND SOURCE_TYPE = '" + key.getSourceType() + "'")) {
         if (!rs.next()) {
-          if (verbose) System.out.println("Could not get source member last change: " + key.getSourceName());
+          if (verbose) logger.info("\nCould not get source member last change: " + key.getSourceName());
           key.setLastEdit(null);  // File not found
           return;  
         }
 
-        if (verbose) System.out.println("Found source member last change: " + key.getSourceName());
+        if (verbose) logger.info("\nFound source member last change: " + key.getSourceName());
         key.setLastEdit(rs.getTimestamp("LAST_SOURCE_UPDATE_TIMESTAMP"));
         return;
     }
@@ -136,12 +141,12 @@ public class SourceDescriptor {
                 ") " +
             ")")) {
         if (!rs.next()) {
-            if (verbose) System.out.println("Could not get source stream file last change: " + key.getStreamFile());
+            if (verbose) logger.info("\nCould not get source stream file last change: " + key.getStreamFile());
           key.setLastEdit(null);  // File not found
           return;
         }
         
-        if (verbose) System.out.println("Found source stream file last change: " + key.getStreamFile());
+        if (verbose) logger.info("\nFound source stream file last change: " + key.getStreamFile());
         key.setLastEdit(rs.getTimestamp("DATA_CHANGE_TIMESTAMP"));
         return;
     }
