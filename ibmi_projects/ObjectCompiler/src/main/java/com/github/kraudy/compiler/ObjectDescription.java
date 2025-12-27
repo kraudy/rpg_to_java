@@ -77,7 +77,7 @@ public class ObjectDescription {
     return;
   }
 
-  /* This should work for *PGM, *SRVPGM, *MODULE */
+  /* *PGM */
   private void getPgmInfo(TargetKey key) throws SQLException {
     
     try (Statement stmt = connection.createStatement();
@@ -126,12 +126,11 @@ public class ObjectDescription {
                 "AND OBJECT_TYPE = '" + key.getObjectType() + "' "
           )) {
       if (!rsObj.next()) {
-        System.err.println(("Could not get object '" + key.asString() ));
+        if(verbose) logger.info(("\nCould not retrieve pgm object compilation info " + key.asString() ));
         return;
       }
 
-      if (verbose) System.out.println("Found object '" + key.asString());
-
+      if (verbose) logger.info("\nFound pgm object compilation info '" + key.asString());
 
       switch (key.getCompilationCommand()) {
         case CRTBNDRPG:
@@ -192,8 +191,8 @@ public class ObjectDescription {
   /* Query BOUND_MODULE_INFO for module-specific fields */
   private void getModuleInfo(TargetKey key) throws SQLException {
     if (!key.isModule()) {
-      if(verbose) System.err.println(key.asString() + " Is not a module");
-        return;
+      if(verbose) logger.info("\n" + key.asString() + " Is not a module");
+      return;
     }
     try (Statement stmt = connection.createStatement();
         ResultSet rsMod = stmt.executeQuery(
@@ -229,11 +228,11 @@ public class ObjectDescription {
             "AND MODULE_ATTRIBUTE = '" + key.getSourceType() + "' "
         )) {
       if (!rsMod.next()) {
-        if(verbose) System.err.println("Could not find module '" + key.asString());
+        if(verbose) logger.info("\nCould not retrieve module compilation info " + key.asString());
         return;
       }
 
-      if (verbose) System.out.println("Found module '" + key.asString());
+      if (verbose) logger.info("\nFound module compilation info " + key.asString());
 
       String modOptimize = rsMod.getString("OPTIMIZE").trim();
       if (!modOptimize.isEmpty()) {
@@ -284,11 +283,11 @@ public class ObjectDescription {
                 "COMMAND_NAME = '" + key.getObjectName() + "' "
           )) {
       if (!rsCmdInfo.next()) {
-        System.err.println(("Could not get command '" + key.asString()));
+        if(verbose) logger.info(("\nCould not retrieve command compilation info " + key.asString()));
         return;
       }
 
-      if (verbose) System.out.println("Found command '" + key.asString());
+      if (verbose) logger.info("\nFound command compilation info" + key.asString());
       
       // -- Missing: REXSRCFILE, REXSRCMBR, REXCMDENV, REXEXITPGM
       String cmd = rsCmdInfo.getString("CMD").trim();
@@ -354,11 +353,11 @@ public class ObjectDescription {
                 "AND OBJECT_TYPE = '" + key.getObjectType() + "' "
           )) {
       if (!rsSqlRpgInfo.next()) {
-        System.err.println(("Could not get object '" + key.asString() ));
+        if(verbose) logger.info(("\nCould not retrieve sql object compilation info " + key.asString() ));
         return;
       }
 
-      if (verbose) System.out.println("Found object '" + key.asString());
+      if (verbose) logger.info("\nFound sql object compilation info " + key.asString());
 
       key.put(ParamCmd.TEXT, rsSqlRpgInfo.getString("TEXT").trim()); 
       key.put(ParamCmd.USRPRF, rsSqlRpgInfo.getString("USRPRF").trim()); 
@@ -435,11 +434,11 @@ public class ObjectDescription {
                 "AND OBJECT_TYPE = '" + key.getObjectType() + "' "
           )) {
       if (!rsSrvPgm.next()) {
-        System.err.println(("Could not get object '" + key.asString() ));
+        if (verbose) logger.info(("Could not retrieve srvpgm object compilation info " + key.asString() ));
         return;
       }
 
-      if (verbose) System.out.println("Found object '" + key.asString());
+      if (verbose) logger.info("Found srvpgm object compilation info " + key.asString());
 
       String actgrp = rsSrvPgm.getString("ACTGRP").trim();
       if (!actgrp.isEmpty()) key.put(ParamCmd.ACTGRP, actgrp);

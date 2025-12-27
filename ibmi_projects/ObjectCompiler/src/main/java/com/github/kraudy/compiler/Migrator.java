@@ -5,6 +5,9 @@ import java.sql.SQLException;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.SysCmd;
 import com.ibm.as400.access.User;
@@ -13,6 +16,8 @@ import com.ibm.as400.access.User;
  * Source files migrator
  */
 public class Migrator {
+  private static final Logger logger = LoggerFactory.getLogger(Migrator.class);
+
   private final Connection connection;
   private final boolean debug;
   private final boolean verbose;
@@ -42,7 +47,7 @@ public class Migrator {
          */
         if (!key.containsKey(ParamCmd.SRCSTMF) && 
           key.containsKey(ParamCmd.SRCFILE)) {
-          if(debug) System.err.println("Migrating source member to stream file");
+          if(verbose) logger.info("\nMigrating source member to stream file");
           migrateMemberToStreamFile(key);
           key.put(ParamCmd.SRCSTMF, key.getStreamFile());
         }
@@ -61,7 +66,7 @@ public class Migrator {
          */
         if (key.containsStreamFile()) {
           //TODO: Should this be migrated to QTEMP?
-          if(debug) System.err.println("Migrating stream file to source member");
+          if(verbose) logger.info("\nMigrating stream file to source member");
           if (!sourcePfExists(key)) createSourcePf(key);
           if (!sourceMemberExists(key)) createSourceMember(key);
           migrateStreamFileToMember(key);
@@ -131,7 +136,7 @@ public class Migrator {
                 "WHERE SYSTEM_TABLE_NAME = '" + key.getSourceFile() + "' " +
                 "AND TRIM(SOURCE_TYPE) <> '' LIMIT 1")) {
       if (validateRs.next()) {
-        if (verbose) System.err.println(" *Source PF " + key.getSourceFile() + " already exist in library " + key.getLibrary());
+        if (verbose) logger.info("\nSource PF " + key.getSourceFile() + " already exist in library " + key.getLibrary());
         return true;
       }
       return false;
@@ -152,7 +157,7 @@ public class Migrator {
             "AND SYSTEM_TABLE_MEMBER = '" + key.getSourceName() + "' " +
             "AND TRIM(SOURCE_TYPE) <> '' ")) { 
       if (rs.next()) {
-        if (verbose) System.err.println("Member " + key.getSourceName() + " already exist in library " + key.getLibrary());
+        if (verbose) logger.info("\nMember " + key.getSourceName() + " already exist in library " + key.getLibrary());
         return true;
       }
       return false;

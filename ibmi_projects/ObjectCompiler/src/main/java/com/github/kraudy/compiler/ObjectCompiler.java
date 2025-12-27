@@ -87,7 +87,6 @@ public class ObjectCompiler{
         commandExec.executeCommand(globalSpec.before);
       }
 
-      //if(verbose) System.err.println(showLibraryList());
       if(verbose) logger.info(showLibraryList());
 
       /* Build each target */
@@ -104,8 +103,10 @@ public class ObjectCompiler{
       }
       
     } catch (CompilerException e){
-      //if (verbose) System.err.println("Compilation failed");
-      if (verbose) logger.error("Compilation failed");
+      if (verbose) logger.error("\nCompilation failed");
+
+      /* Get full compiler exception context */
+      logger.error(e.getFullContext());
 
       /* Global compiler failure */
       try{
@@ -114,22 +115,15 @@ public class ObjectCompiler{
         }
       } catch (Exception failureErr) {
           throw new CompilerException("Target failure hook also failed", failureErr);
-          //logger.error(new CompilerException("Target failure hook also failed", failureErr).getFullContext());
       }
-
-      /* Get full compiler exception context */
-      //System.err.println(e.getFullContext());
-      logger.error(e.getFullContext());
 
     } catch (Exception e) {
       /* Unhandled Exception. Fail loudly */
-      //e.printStackTrace();
-      logger.error("Unhandled Exception. Fail loudly", e);
+      logger.error("\nUnhandled Exception. Fail loudly", e);
 
     } finally {
       /* Show chain of commands */
-      //if (verbose) System.err.println("Chain of commands: " + commandExec.getExecutionChain());
-      if (verbose) logger.info("Chain of commands: {}", commandExec.getExecutionChain());
+      if (verbose) logger.info("\nChain of commands: {}", commandExec.getExecutionChain());
 
       cleanup();
     }
@@ -146,12 +140,11 @@ public class ObjectCompiler{
       if (diff) {
         sourceDes.getObjectTimestamps(key);
         if (!key.needsRebuild()) {
-          if (verbose) System.out.println("Skipping unchanged target: " + key.asString() + key.getTimestmaps());
+          if (verbose) logger.info("\nSkipping unchanged target: " + key.asString() + key.getTimestmaps());
           continue; 
         }
       }
 
-      //if (verbose) System.out.println("Building: " + key.asString());
       if (verbose) logger.info("\nBuilding: " + key.asString());
 
       try{
@@ -186,7 +179,6 @@ public class ObjectCompiler{
         } 
 
       } catch (CompilerException e){
-        //if (verbose) System.err.println("Target compilation failed: " + key.asString());
         if (verbose) logger.error("Target compilation failed: " + key.asString());
 
         /* Per target failure */
@@ -197,13 +189,12 @@ public class ObjectCompiler{
         throw e; // Raise
 
       } catch (Exception e){
-        //if (verbose) System.err.println("Unhandled exception in Target: " + key.asString());
         if (verbose) logger.error("Unhandled exception in Target: " + key.asString());
 
         throw e; // Raise
 
       } finally {
-        //TODO: Here do Logging, Reset or something
+        //TODO: What should we do here?
       }
     }
 
@@ -211,8 +202,7 @@ public class ObjectCompiler{
 
   private String showLibraryList() throws SQLException{
     StringBuilder sb = new StringBuilder();;
-    sb.append("Library list: \n");
-    //System.out.println("Library list: ");
+    sb.append("\nLibrary list: \n");
     try(Statement stmt = connection.createStatement();
         ResultSet rsLibList = stmt.executeQuery(
           "SELECT DISTINCT(SCHEMA_NAME) As Libraries FROM QSYS2.LIBRARY_LIST_INFO " + 
@@ -220,13 +210,11 @@ public class ObjectCompiler{
           
         )){
       while (rsLibList.next()) {
-        //System.out.println(rsLibList.getString("Libraries"));
         sb.append(rsLibList.getString("Libraries")).append("\n");
       }
       return sb.toString();
 
     } catch (SQLException e){
-      //System.err.println("Could not get library list.");
       logger.error("Error retrieving library list");
       throw e;
     }
@@ -242,7 +230,7 @@ public class ObjectCompiler{
       }
 
     } catch (SQLException e) {
-      e.printStackTrace();
+      logger.error("Error cleaning up", e);
     }
   }
 

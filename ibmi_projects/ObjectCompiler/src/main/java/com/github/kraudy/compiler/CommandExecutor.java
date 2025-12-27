@@ -98,6 +98,7 @@ public class CommandExecutor {
 
   private String buildJoblogMessagesString(Timestamp commandTime) {
     StringBuilder messages = new StringBuilder();
+    messages.append("\nJoblog info\n");
 
     try (Statement stmt = connection.createStatement();
          ResultSet rsMessages = stmt.executeQuery(

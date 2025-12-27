@@ -71,7 +71,7 @@ public class ParamMap {
        *  No error is thrown. This is useful for default params and alike.
        */
       if (!Utilities.validateCommandParam(cmd, param)) {
-        System.err.println("Rejected: Parameter " + param.name() + " not valid for command " + cmd.name());
+        logger.info("\nRejected: Parameter " + param.name() + " not valid for command " + cmd.name());
         return;
       }
       put(cmd, param, value);
@@ -105,16 +105,13 @@ public class ParamMap {
   }
 
   public void getChangesSummary(Command cmd) {
-    System.out.println(cmd.name());
-
     List<ParamCmd> compilationPattern = getPattern(cmd);
 
     StringBuilder history = new StringBuilder();
-    history.append("\n");
+    history.append("\nCommand " + cmd.name() + " summary\n");
     for (ParamCmd param : compilationPattern) {
       ParamValue pv = this.paramMap.get(param);
       if (pv == null) continue;
-      //System.out.println(param.name() + ":" + pv.getHistory());
       history.append(param.name() + ":" + pv.getHistory()).append("\n");
     }
     logger.info(history.toString());
