@@ -110,6 +110,7 @@ public class ParamMap {
     List<ParamCmd> compilationPattern = getPattern(cmd);
 
     StringBuilder history = new StringBuilder();
+    history.append("\n");
     for (ParamCmd param : compilationPattern) {
       ParamValue pv = this.paramMap.get(param);
       if (pv == null) continue;

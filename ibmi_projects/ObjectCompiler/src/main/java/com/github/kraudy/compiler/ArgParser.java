@@ -129,14 +129,17 @@ public class ArgParser {
   
 
   // Print usage (call on error)
-  public static void printUsage() {
-    System.err.println("Usage: compiler [-f|--file <YAML>] [--diff] [--dry-run] [-x] [-v]");
-    System.err.println("  -f, --file     YAML build file (required)");
-    System.err.println("  --diff         Only build changed objects");
-    System.err.println("  --dry-run      Show commands without executing");
-    System.err.println("  -x,            Debug mode");
-    System.err.println("  -v,            Verbose output");
-    System.exit(1);
+  public static String getUsage() {
+    StringBuilder sb = new StringBuilder();
+
+    sb.append("Usage: compiler [-f|--file <YAML>] [--diff] [--dry-run] [-x] [-v]").append("\n");
+    sb.append("  -f, --file     YAML build file (required)").append("\n");
+    sb.append("  --diff         Only build changed objects").append("\n");
+    sb.append("  --dry-run      Show commands without executing").append("\n");
+    sb.append("  -x,            Debug mode").append("\n");
+    sb.append("  -v,            Verbose output");
+
+    return sb.toString();
   }
 
 }

@@ -78,7 +78,7 @@ public class CommandExecutor {
     }
 
     //System.out.println("Command successful: " + command);
-    logger.info("Command successful: " + command);
+    logger.info("\nCommand successful: " + command);
     //if(verbose) System.out.println(buildJoblogMessagesString(commandTime));
     if(verbose) logger.info(buildJoblogMessagesString(commandTime));
   }

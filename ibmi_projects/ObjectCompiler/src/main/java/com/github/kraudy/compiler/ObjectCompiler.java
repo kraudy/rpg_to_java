@@ -152,7 +152,7 @@ public class ObjectCompiler{
       }
 
       //if (verbose) System.out.println("Building: " + key.asString());
-      if (verbose) logger.info("Building: " + key.asString());
+      if (verbose) logger.info("\nBuilding: " + key.asString());
 
       try{
         /* Per target before */
@@ -252,7 +252,7 @@ public class ObjectCompiler{
     try {
       ArgParser parser = new ArgParser(args);
       //TODO: This should be able to run locally in debug mode.
-      if (args.length == 0) ArgParser.printUsage();
+      if (args.length == 0) throw new IllegalArgumentException("Params are required");
         
       system = IBMiDotEnv.getNewSystemConnection(true); // Get system
       compiler = new ObjectCompiler(
@@ -266,13 +266,14 @@ public class ObjectCompiler{
       compiler.build();
 
     } catch (IllegalArgumentException e) {
-      System.err.println("Error: " + e.getMessage());
-      ArgParser.printUsage();
+      logger.error("Parsing error: ", e);
+      logger.info(ArgParser.getUsage());
+      
     } catch (CompilerException e){
-      System.err.println(e.getFullContext());
+      logger.error(e.getFullContext());
 
     }catch (Exception e) {
-      e.printStackTrace();
+      logger.error("Unhandled  exception", e);
     }
   }
 }
