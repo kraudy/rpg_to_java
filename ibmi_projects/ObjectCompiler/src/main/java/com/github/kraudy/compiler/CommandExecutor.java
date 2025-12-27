@@ -8,7 +8,12 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class CommandExecutor {
+  private static final Logger logger = LoggerFactory.getLogger(CommandExecutor.class);
+
   private final Connection connection;
   private final boolean debug;
   private final boolean verbose;
@@ -37,7 +42,8 @@ public class CommandExecutor {
     try {
       executeCommand(command);
     } catch (CompilerException e) {
-      if(verbose) showCompilationSpool(commandTime);
+      //if(verbose) showCompilationSpool(commandTime);
+      if(verbose) logger.info(showCompilationSpool(commandTime));
       throw new CompilerException("Target compilation failed", e, key);
     } catch (Exception e) {
       throw new CompilerException("Unexpected exception in target compilation command", e, key);
@@ -64,14 +70,17 @@ public class CommandExecutor {
     try (Statement cmdStmt = connection.createStatement()) {
       cmdStmt.execute("CALL QSYS2.QCMDEXC('" + command + "')");
     } catch (SQLException e) {
-      System.err.println("Command failed: " + command);
+      //System.err.println("Command failed: " + command);
+      logger.error("Command failed: " + command);
 
       String joblog = buildJoblogMessagesString(commandTime);
       throw new CompilerException("Command execution failed", e, command, commandTime, joblog);  // No target here
     }
 
-    System.out.println("Command successful: " + command);
-    if(verbose) System.out.println(buildJoblogMessagesString(commandTime));
+    //System.out.println("Command successful: " + command);
+    logger.info("Command successful: " + command);
+    //if(verbose) System.out.println(buildJoblogMessagesString(commandTime));
+    if(verbose) logger.info(buildJoblogMessagesString(commandTime));
   }
 
   public Timestamp getCurrentTime(){
@@ -130,7 +139,9 @@ public class CommandExecutor {
     return CmdExecutionChain.toString();
   }
 
-  private void showCompilationSpool(Timestamp compilationTime) throws SQLException{
+  private String showCompilationSpool(Timestamp compilationTime) throws SQLException{
+    StringBuilder spool = new StringBuilder();
+
     /* Is there a spool file? */
     try(Statement stmt = connection.createStatement();
       ResultSet rsCheckSpool = stmt.executeQuery(
@@ -145,8 +156,9 @@ public class CommandExecutor {
         "LIMIT 1 "
       )){
         if (!rsCheckSpool.next()) {
-          if(verbose) System.err.println("No spool found for compilation command");
-          return;
+          //if(verbose) System.err.println("No spool found for compilation command");
+          
+          return spool.append("No spool found for compilation command").toString();
         }
     }
 
@@ -170,8 +182,10 @@ public class CommandExecutor {
         ") As d On 1=1" 
       )){
         while (rsCompilationSpool.next()) {
-          System.out.println(rsCompilationSpool.getString("SPOOLED_DATA").trim());
+          //System.out.println(rsCompilationSpool.getString("SPOOLED_DATA").trim());
+          spool.append(rsCompilationSpool.getString("SPOOLED_DATA").trim()).append("\n");
         }
+      return spool.toString();
     }
   }
 }

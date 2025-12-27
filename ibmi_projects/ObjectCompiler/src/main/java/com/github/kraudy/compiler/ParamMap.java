@@ -4,6 +4,10 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.List;
 
 import com.github.kraudy.compiler.CompilationPattern.Command;
@@ -18,6 +22,8 @@ import com.github.kraudy.compiler.CompilationPattern.ValCmd;
  *  Handles logic to set param:value pairs per command
  */
 public class ParamMap {
+  private static final Logger logger = LoggerFactory.getLogger(ParamMap.class);
+
   private final EnumMap<ParamCmd, ParamValue> paramMap = new EnumMap<>(ParamCmd.class);
 
   public ParamMap() {
@@ -103,11 +109,14 @@ public class ParamMap {
 
     List<ParamCmd> compilationPattern = getPattern(cmd);
 
+    StringBuilder history = new StringBuilder();
     for (ParamCmd param : compilationPattern) {
       ParamValue pv = this.paramMap.get(param);
       if (pv == null) continue;
-      System.out.println(param.name() + ":" + pv.getHistory());
+      //System.out.println(param.name() + ":" + pv.getHistory());
+      history.append(param.name() + ":" + pv.getHistory()).append("\n");
     }
+    logger.info(history.toString());
   }
   
   /* Here we need the command to ResolveConflincts */

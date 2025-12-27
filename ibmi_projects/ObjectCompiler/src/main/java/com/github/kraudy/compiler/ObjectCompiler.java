@@ -13,11 +13,15 @@ import com.ibm.as400.access.User;
 
 import io.github.theprez.dotenv_ibmi.IBMiDotEnv;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /*
  * Cool object compiler.
  */
 public class ObjectCompiler{
+  private static final Logger logger = LoggerFactory.getLogger(ObjectCompiler.class); // Per-class logger
+
   public static final String INVARIANT_CCSID = "37"; // EBCDIC
   public static final String UTF8_CCSID = "1208";
   private final AS400 system;
@@ -83,7 +87,8 @@ public class ObjectCompiler{
         commandExec.executeCommand(globalSpec.before);
       }
 
-      if(verbose) showLibraryList();
+      //if(verbose) System.err.println(showLibraryList());
+      if(verbose) logger.info(showLibraryList());
 
       /* Build each target */
       buildTargets(globalSpec.targets);
@@ -99,7 +104,9 @@ public class ObjectCompiler{
       }
       
     } catch (CompilerException e){
-      if (verbose) System.err.println("Compilation failed");
+      //if (verbose) System.err.println("Compilation failed");
+      if (verbose) logger.error("Compilation failed");
+
       /* Global compiler failure */
       try{
         if(!globalSpec.failure.isEmpty()){
@@ -107,18 +114,22 @@ public class ObjectCompiler{
         }
       } catch (Exception failureErr) {
           throw new CompilerException("Target failure hook also failed", failureErr);
+          //logger.error(new CompilerException("Target failure hook also failed", failureErr).getFullContext());
       }
 
       /* Get full compiler exception context */
-      System.err.println(e.getFullContext());
+      //System.err.println(e.getFullContext());
+      logger.error(e.getFullContext());
 
     } catch (Exception e) {
       /* Unhandled Exception. Fail loudly */
-      e.printStackTrace();
+      //e.printStackTrace();
+      logger.error("Unhandled Exception. Fail loudly", e);
 
     } finally {
       /* Show chain of commands */
-      if(verbose) System.err.println("Chain of commands: " + commandExec.getExecutionChain());
+      //if (verbose) System.err.println("Chain of commands: " + commandExec.getExecutionChain());
+      if (verbose) logger.info("Chain of commands: {}", commandExec.getExecutionChain());
 
       cleanup();
     }
@@ -140,7 +151,8 @@ public class ObjectCompiler{
         }
       }
 
-      if (verbose) System.out.println("Building: " + key.asString());
+      //if (verbose) System.out.println("Building: " + key.asString());
+      if (verbose) logger.info("Building: " + key.asString());
 
       try{
         /* Per target before */
@@ -174,7 +186,8 @@ public class ObjectCompiler{
         } 
 
       } catch (CompilerException e){
-        if (verbose) System.err.println("Target compilation failed: " + key.asString());
+        //if (verbose) System.err.println("Target compilation failed: " + key.asString());
+        if (verbose) logger.error("Target compilation failed: " + key.asString());
 
         /* Per target failure */
         if(!targetSpec.failure.isEmpty()){
@@ -184,7 +197,8 @@ public class ObjectCompiler{
         throw e; // Raise
 
       } catch (Exception e){
-        if (verbose) System.err.println("Unhandled exception in Target: " + key.asString());
+        //if (verbose) System.err.println("Unhandled exception in Target: " + key.asString());
+        if (verbose) logger.error("Unhandled exception in Target: " + key.asString());
 
         throw e; // Raise
 
@@ -195,8 +209,10 @@ public class ObjectCompiler{
 
   }  
 
-  private void showLibraryList() throws SQLException{
-    System.out.println("Library list: ");
+  private String showLibraryList() throws SQLException{
+    StringBuilder sb = new StringBuilder();;
+    sb.append("Library list: \n");
+    //System.out.println("Library list: ");
     try(Statement stmt = connection.createStatement();
         ResultSet rsLibList = stmt.executeQuery(
           "SELECT DISTINCT(SCHEMA_NAME) As Libraries FROM QSYS2.LIBRARY_LIST_INFO " + 
@@ -204,10 +220,14 @@ public class ObjectCompiler{
           
         )){
       while (rsLibList.next()) {
-        System.out.println(rsLibList.getString("Libraries"));
+        //System.out.println(rsLibList.getString("Libraries"));
+        sb.append(rsLibList.getString("Libraries")).append("\n");
       }
+      return sb.toString();
+
     } catch (SQLException e){
-      System.err.println("Could not get library list.");
+      //System.err.println("Could not get library list.");
+      logger.error("Error retrieving library list");
       throw e;
     }
   }

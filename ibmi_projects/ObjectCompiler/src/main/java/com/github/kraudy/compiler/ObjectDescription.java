@@ -5,11 +5,16 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.github.kraudy.compiler.CompilationPattern.ParamCmd;
 import com.github.kraudy.compiler.CompilationPattern.ValCmd;
 
 /* Core struct for capturing compilation params */
 public class ObjectDescription {
+  private static final Logger logger = LoggerFactory.getLogger(ObjectDescription.class);
+
   private final Connection connection;
   private final boolean debug;
   private final boolean verbose;
